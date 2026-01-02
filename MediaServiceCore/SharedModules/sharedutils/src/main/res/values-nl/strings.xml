@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="log_stored_in_path">Logbestand bewaard: %s</string>
+    <string name="log_to_file_started">Logbestand gestart: %s</string>
+    <string name="yes_btn">Ja</string>
+    <string name="no_btn">Nee</string>
+</resources>

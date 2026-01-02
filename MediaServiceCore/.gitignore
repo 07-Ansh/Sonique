@@ -1,0 +1,33 @@
+# test data
+# youtube-requests.http
+# youtube-requests2.http
+
+/android.keystore
+/android-upd2.keystore
+build.log
+notes.txt
+deps.txt
+/releases
+/files
+/misc
+/other
+/TODO.txt
+tmp/
+*_bak*
+*_tmp
+*.bak*
+/.idea
+*.apk
+*.7z
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+fabric.properties
+*BAK.java
+/googleapi/build/

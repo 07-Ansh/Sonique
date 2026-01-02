@@ -1,0 +1,3 @@
+[submodule "SharedModules"]
+	path = SharedModules
+	url = https://github.com/maxrave-dev/SharedModules

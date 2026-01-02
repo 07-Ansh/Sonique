@@ -1,0 +1,1 @@
+# Various utilities for my projects like [SmartYouTubeTV](https://github.com/yuliskov/SmartYouTubeTV) etc

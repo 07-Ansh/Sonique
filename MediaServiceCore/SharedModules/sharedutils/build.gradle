@@ -1,0 +1,92 @@
+import com.android.build.gradle.internal.tasks.CompileArtProfileTask
+
+apply from: '../constants.gradle'
+apply plugin: 'kotlin-android'
+apply plugin: 'com.android.library'
+
+android {
+    namespace "com.liskovsoft.sharedutils"
+    compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
+    testOptions.unitTests.includeAndroidResources = true
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    defaultConfig {
+        minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+        versionCode 3
+        versionName "1.3"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError true
+        lintConfig rootProject.file('lint.xml')
+    }
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    testImplementation 'junit:junit:' + junitVersion
+    testImplementation 'org.robolectric:robolectric:' + robolectricVersion
+    testImplementation project(path: ':sharedtests')
+    testImplementation project(path: ':sharedutils')
+
+//    implementation project(path: ':commons-io-2.8.0')
+    implementation("commons-io:commons-io:2.5")
+
+    implementation 'androidx.appcompat:appcompat:' + appCompatXLibraryVersion
+    // Note: 1.2.0 Requires multiple androidx.lifecycle libs
+    implementation 'androidx.preference:preference:' + preferenceXLibraryVersion
+
+    implementation 'com.squareup.okhttp3:okhttp:' + okhttpVersion
+    implementation 'com.squareup.okhttp3:okhttp-dnsoverhttps:' + okhttpVersion
+    implementation 'com.squareup.okhttp3:logging-interceptor:' + okhttpVersion
+    implementation 'com.squareup.okhttp3:okhttp-brotli:' + okhttpBrotliVersion
+    implementation('com.localebro:okhttpprofiler:' + okhttpProfilerVersion) {
+        exclude group: 'com.squareup.okhttp3', module: 'okhttp' // force global version
+    }
+
+    // Both libraries should be present.
+    // Use specific version of Cronet instead of one hardcoded inside okhttp extension
+    // implementation 'com.google.android.gms:play-services-cronet:' + playServicesCronetVersion
+    implementation 'org.chromium.net:cronet-api:' + cronetApiVersion
+    
+    // Cronet provider support (native, gms).
+    implementation 'org.chromium.net:cronet-embedded:' + cronetApiVersion
+
+    implementation 'com.google.code.gson:gson:' + gsonVersion
+
+    implementation 'io.reactivex.rxjava2:rxandroid:' + rxAndroidVersion
+    implementation 'io.reactivex.rxjava2:rxjava:' + rxJavaVersion
+    implementation 'com.jakewharton:disklrucache:' + diskLruCacheVersion
+
+    // Add modern TLS ciphers to HttpUrlConnection
+    // https://stackoverflow.com/questions/16299531/how-to-override-the-cipherlist-sent-to-the-server-by-android-when-using-httpsurl
+    implementation 'info.guardianproject.netcipher:netcipher:' + netcipherVersion
+
+    // Add kotlin support libs
+    implementation 'androidx.core:core-ktx:' + kotlinCoreXVersion
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:' + kotlinVersion
+}
+
+tasks.withType(CompileArtProfileTask).configureEach {
+    enabled false
+}

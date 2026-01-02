@@ -1,0 +1,123 @@
+project.ext {
+    // ExoPlayer (Android Codec APIs) requires API 16+
+    // Leanback requires API 17+
+    minSdkVersion = 17
+    // Fix AppSettingsActivity crash: "Only fullscreen opaque activities can request orientation".
+    // Error happen only on Android 8.0 (api 26) when you set activity orientation in manifest.
+    // Possible fix is to set targetSdkVersion to 26.
+    // More info: https://stackoverflow.com/questions/48072438/java-lang-illegalstateexception-only-fullscreen-opaque-activities-can-request-o
+    // NOTE: target sdk >= 28 cause weird behavior on Android 9 (slow text scroll speed etc)
+    // NOTE: target sdk >= 30 needed to support manifest queries tag
+    // NOTE: api 26 orientation error fix: https://stackoverflow.com/a/52426009/1279056
+    // NOTE: set api to 26 to fix text scroll speed and crashes on samsung
+    targetSdkVersion = 26 // set target api = 26 to fix Android 8.0 error: "Only fullscreen opaque activities can request orientation"
+    compileSdkVersion = 36
+    buildToolsVersion = '36'
+    gradleVersion = '6.9.1' // https://developer.android.com/studio/releases/gradle-plugin#updating-gradle
+    androidGradleVersion = '4.0.0+' // last version compatible with IntellJ 2020.3
+    
+    testSupportLibraryVersion = '0.5'
+    testXSupportLibraryVersion = '1.1.0'
+    kotlinVersion = '1.8.10' // latest for android-gradle 4.0.0 https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib-jdk7
+    kotlinxVersion = '1.7.3' // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-android
+    // NOTE: Kotlin core 1.7.0 has 'resource android:attr/lStar not found' error (dialog black background bug)
+    kotlinCoreXVersion = '1.12.0' // latest for sdk 17. https://mvnrepository.com/artifact/androidx.core/core-ktx
+    coreXLibraryVersion = '1.9.0' // the latest compatible with kotlin core and cronet 119
+    appCompatXLibraryVersion = '1.2.0' // old: 1.0.0
+    leanbackXLibraryVersion = '1.0.0'
+    annotationXLibraryVersion = '1.1.0'
+    recyclerviewXLibraryVersion = '1.1.0'
+    preferenceXLibraryVersion = '1.1.0' // Note: 1.2.0 Requires multiple androidx.lifecycle libs
+    mediaXLibraryVersion = '1.2.0' // exoplayer fix
+    constraintLayoutXVersion = '1.1.2'
+    supportLibraryVersion = '28.0.0'
+    dexmakerVersion = '1.2'
+    mockitoVersion = '1.9.5'
+    junitVersion = '4.12'
+    retromockVersion = '1.1.1'
+    truthVersion = '0.39'
+    robolectricVersion = '4.6.1'
+    autoValueVersion = '1.6'
+    checkerframeworkVersion = '2.5.0'
+    testRunnerVersion = '1.0.2'
+    // materialVersion = '1.2.1'
+    materialVersion = '1.5.0' // MaterialPicker dark style fix
+    flexboxVersion = '3.0.0'
+    
+    legacyExoplayerVersion = '2.9.6'
+    // exoplayerVersion = '2.10.8' // Old
+    exoplayerVersion = '2.12.3'
+    // amazonExoplayerVersion = '2.10.6' // Old
+    // amazonExoplayerVersion = '2.13.3' // New
+    amazonExoplayerVersion = '2.10.6'
+    amazonExoplayerJitpackVersion = 'amazon~r2.12.1-SNAPSHOT'
+    // playServicesCronetVersion = '18.0.1'
+    // cronetApiVersion = '119.6045.31' // for testing
+    // cronetApiVersion = '105.5195.68' // latest version with Android 7.0 support
+    cronetApiVersion = '141.7340.3' // 16kb page size
+    // cronetApiVersion = '75.3770.101' // the fastest one (best choice)
+    cronetOkHttpVersion = '0.1.0'
+    
+    espressoVersion = '3.2.0'
+    retrofitVersion = '2.5.0'
+    gsonVersion = '2.8.2'
+    jsonPathVersion = '2.4.0'
+    
+    ottoVersion = '1.3.8'
+    okhttpVersion = '3.12.13' // Latest version with Android 4+ support
+    // okhttpVersion = '4.9.1'
+    okhttpProfilerVersion = '1.0.8' // Android 5+!!! (fix: force global okhttp)
+    okhttpBrotliVersion = '4.1.0' // Latest version with Android 4+ support
+    // okhttpBrotliVersion = '4.9.1'
+    okioVersion = '2.10.0' // Old
+    // okioVersion = '3.0.0-alpha.4'
+    
+    multiDexVersion = '2.0.1' // crashlytics fix on Android 4.4
+    stethoVersion = '1.5.0' // Chrome Dev Tools
+    glideVersion = '4.11.0'
+    webpDecoderVersion = '2.0.' + glideVersion // should end with glide version
+    rxAndroidVersion = '2.1.1'
+    rxJavaVersion = '2.2.21'
+    diskLruCacheVersion = '2.0.2'
+    diskLruCacheDevVersion = '3e016356cfc7e5f9644a7a732fe0223e9742e024' // com.github.JakeWharton:DiskLruCache:
+    dnsjavaVersion = '2.1.8'
+    xwalkSharedLibraryVersion = '23.53.589.4'
+    xwalkCoreLibraryVersion = '23.53.589.4'
+    commonsIOVersion = '2.8.0'
+    //crashlyticsVersion = '2.10.1@aar'
+    assertJVersion = '3.11.1'
+    espressoCoreVersion = '2.2.2'
+    previewSeekBarDevVersion = '5e04501dfce1fe9de61f519fef2278aa751fe8ab'
+    previewSeekBarExoDevVersion = '5e04501dfce1fe9de61f519fef2278aa751fe8ab'
+    asmVersion = '5.0.4'
+    nanoHttpdVersion = '2.3.1'
+    voiceOverlayVersion = '1.0.0-beta02' // https://github.com/algolia/voice-overlay-android
+    apacheCommonsLangVersion = '3.10'
+    firebaseCrashlyticsVersion = '17.2.2'
+    
+    //duktapeVersion = '1.4.0' // js interpreter
+    duktapeVersion = '1.1.0' // old one contains more *.so binaries and has smaller size than 1.2.0
+    quickjsVersion = '0.9.0' // duktape fork?
+    rhinoVersion = '1.7.13' // latest for Android 4,5,6
+    j2v8Version = '1.0'
+    //j2v8Version = '6.2.0' // latest for Android 4
+    
+    // My commons-io deps (Android 4.3 fix)
+    commonsLangVersion = '3.11'
+    jimfsVersion = '1.2'
+    jupiterVersion = '5.7.0'
+    junitPioneerVersion = '1.3.0'
+    mockitoVersion = '3.7.7'
+    // End My commons-io deps (Android 4.3 fix)
+    
+    workVersion = '2.9.1' // latest with kotlin 1.6.0 support. https://mvnrepository.com/artifact/androidx.work/work-runtime
+    guavaVersion = '31.1-android' // Work library deps
+    liveDataVersion = '2.1.0'
+    browserXVersion = '1.3.0'
+
+    chatkitVersion = 'v0.4.1'
+    gotevSpeechVersion = '1.1.7' // The latest with minSdk 17. The previous one: '1.1.2'
+
+    phoenixVersion = '3.0.0'
+    netcipherVersion = '2.1.0'
+}

@@ -1,0 +1,3 @@
+gradle.ext.sharedModulesRoot = settingsDir
+
+apply from: 'core_settings.gradle'

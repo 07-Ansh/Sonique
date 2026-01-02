@@ -1,0 +1,47 @@
+import com.android.build.gradle.internal.tasks.CompileArtProfileTask
+
+apply from: '../SharedModules/constants.gradle'
+apply plugin: 'com.android.library'
+
+android {
+    namespace "com.liskovsoft.mediaserviceinterfaces"
+    compileSdkVersion project.ext.compileSdkVersion
+    buildToolsVersion project.ext.buildToolsVersion
+    testOptions.unitTests.includeAndroidResources = true
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    defaultConfig {
+        minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+        versionCode 11
+        versionName "0.3.1"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    testImplementation 'junit:junit:' + junitVersion
+    testImplementation 'org.robolectric:robolectric:' + robolectricVersion
+
+    implementation project(':sharedutils')
+
+    implementation 'io.reactivex.rxjava2:rxandroid:' + rxAndroidVersion
+    implementation 'io.reactivex.rxjava2:rxjava:' + rxJavaVersion
+    implementation 'androidx.annotation:annotation:' + annotationXLibraryVersion
+}
+
+tasks.withType(CompileArtProfileTask).configureEach {
+    enabled false
+}

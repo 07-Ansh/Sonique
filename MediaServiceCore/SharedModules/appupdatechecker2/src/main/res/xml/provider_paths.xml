@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Details: https://developer.android.com/reference/android/support/v4/content/FileProvider.html#SpecifyFiles -->
+    <!-- Commented out to fix? IllegalArgumentException: Failed to resolve canonical path for /storage/emulated/0/. -->
+    <!--<external-path name="external_files" path="."/>-->
+    <external-cache-path name="external_cache_files" path="."/>
+    <cache-path name="cache_files" path="."/>
+</paths>

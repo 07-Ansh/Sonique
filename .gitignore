@@ -1,0 +1,53 @@
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+/build
+.gradle
+.kotlin
+.idea/
+*.iml
+.vscode/
+
+# Local configuration file (sdk.dir is shared by Android Studio)
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio Navigation editor temp files
+.navigation/
+
+# Captures
+/captures
+*.hprof
+
+# External native build folder
+.cxx
+.externalNativeBuild
+
+# Keystores
+*.jks
+*.keystore
+public.jks
+build_and_sign_apk.sh
+
+# Google Services (if applicable)
+google-services.json
+
+# Build directories
+**/build/
+**/release/
+

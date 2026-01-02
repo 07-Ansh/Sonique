@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- WebViewUtils -->
+    <uses-feature android:name="android.hardware.usb.host" />
+
+    <!-- NOTE: use older api -->
+    <uses-sdk tools:overrideLibrary="
+        com.squareup.quickjs,
+        androidx.webkit"/>
+</manifest>

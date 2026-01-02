@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="log_stored_in_path">Лог активирован: %s</string>
+    <string name="log_to_file_started">Начинается запись лога: %s</string>
+    <string name="yes_btn">Да</string>
+    <string name="no_btn">Нет</string>
+</resources>

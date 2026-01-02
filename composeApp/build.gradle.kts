@@ -5,7 +5,12 @@ import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-
+val isFullBuild: Boolean =
+    try {
+        extra["isFullBuild"] == "true"
+    } catch (e: Exception) {
+        false
+    }
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -90,7 +95,11 @@ kotlin {
             implementation(projects.media3)
             implementation(projects.media3Ui)
 
-
+            if (isFullBuild) {
+                implementation(projects.crashlytics)
+            } else {
+                implementation(projects.crashlyticsEmpty)
+            }
         }
         commonMain.dependencies {
             implementation(libs.runtime)

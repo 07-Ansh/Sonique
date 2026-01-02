@@ -1,0 +1,25 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+.vscode/
+
+# Kotlin
+.kotlin
+
+# Build artifacts
+**/build/
+*.apk
+*.aar
+
+# Security & Signing
+build_and_sign_apk.sh
+*.jks
+*.keystore
+public.jks

@@ -73,4 +73,16 @@ Distributed under the **GNU General Public License v3.0**. See `LICENSE` for mor
 
 **Ansh Sharma**
 
+## ☕ Support the Project   
+
+If you enjoy using Sonique and want to support its development, you can buy me a coffee!   
+
+<a href="https://buymeacoffee.com/07Ansh">
+  <img src="asset/qr-code.png" width="200" alt="Buy Me A Coffee QR Code">
+</a>
+
+[buymeacoffee.com/07Ansh](https://buymeacoffee.com/07Ansh)
+
+---
+
 *   Built with ❤️ in [Kotlin](https://kotlinlang.org/). Fueled by coffee ☕.

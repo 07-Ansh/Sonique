@@ -186,6 +186,8 @@ class SettingsViewModel(
     private var _spotifyCanvas: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val spotifyCanvas: StateFlow<Boolean> = _spotifyCanvas
 
+
+
     init {
         getYoutubeSubtitleLanguage()
 
@@ -238,7 +240,9 @@ class SettingsViewModel(
         getCanvasCache()
         getYoutubeSubtitleLanguage()
         getSponsorBlockEnabled()
+        getSponsorBlockEnabled()
         getSponsorBlockCategories()
+
         viewModelScope.launch {
             calculateDataFraction(
                 cacheRepository,
@@ -599,6 +603,8 @@ class SettingsViewModel(
             getSponsorBlockCategories()
         }
     }
+
+
 
     private var _quality: MutableStateFlow<String?> = MutableStateFlow(null)
     val quality: StateFlow<String?> = _quality

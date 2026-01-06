@@ -12,6 +12,8 @@ import androidx.media3.exoplayer.offline.DownloadService
 import androidx.media3.exoplayer.scheduler.PlatformScheduler
 import androidx.media3.exoplayer.scheduler.Scheduler
 import com.sonique.media3.R
+import com.sonique.domain.data.entities.DownloadState
+
 import com.sonique.domain.mediaservice.handler.DownloadHandler
 import org.koin.android.ext.android.inject
 
@@ -33,19 +35,36 @@ internal class MusicDownloadService :
     override fun getForegroundNotification(
         downloads: MutableList<Download>,
         notMetRequirements: Int,
-    ): Notification =
-        (downloadUtil as DownloadUtils).downloadNotificationHelper.buildProgressNotification(
+    ): Notification {
+        val message = if (downloads.size == 1) {
+            Util.fromUtf8Bytes(downloads[0].request.data)
+        } else {
+             val remainingCount = downloads.size
+             "$remainingCount left"
+        }
+        
+        val intent = packageManager.getLaunchIntentForPackage(packageName)?.apply {
+            data = android.net.Uri.parse("com.sonique.com.sonique.app://downloads")
+            flags = android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP or android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = if (intent != null) {
+            android.app.PendingIntent.getActivity(
+                this,
+                0,
+                intent,
+                android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else null
+
+        return (downloadUtil as DownloadUtils).downloadNotificationHelper.buildProgressNotification(
             this,
             R.drawable.ic_stat_noti,
-            null,
-            if (downloads.size == 1) {
-                Util.fromUtf8Bytes(downloads[0].request.data)
-            } else {
-                resources.getQuantityString(R.plurals.n_song, downloads.size, downloads.size)
-            },
+            pendingIntent,
+            message,
             downloads,
             notMetRequirements,
         )
+    }
 
     class TerminalStateNotificationHelper(
         private val context: Context,

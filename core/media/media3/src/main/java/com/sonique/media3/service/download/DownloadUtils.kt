@@ -37,7 +37,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
+import java.io.IOException
 import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 @UnstableApi
 internal class DownloadUtils(
@@ -98,7 +100,7 @@ internal class DownloadUtils(
                             dataSpecReturn = dataSpec.withUri(it.toUri())
                         }
                 } else {
-                    streamRepository.getNewFormat(mediaId).lastOrNull()?.let {
+                    streamRepository.getNewFormat(mediaId).firstOrNull()?.let {
                         val audioUrl = it.audioUrl
                         if (audioUrl != null && it.expiredTime > now()) {
                             Logger.d("Stream", audioUrl)
@@ -110,16 +112,19 @@ internal class DownloadUtils(
                             }
                         }
                     }
-                    streamRepository
+                    val streamUrl = streamRepository
                         .getStream(
                             dataStoreManager,
                             mediaId,
                             isDownloading = true,
                             isVideo = false,
-                        ).lastOrNull()
-                        ?.let {
-                            dataSpecReturn = dataSpec.withUri(it.toUri())
-                        }
+                        ).firstOrNull()
+                    
+                    if (streamUrl != null) {
+                        dataSpecReturn = dataSpec.withUri(streamUrl.toUri())
+                    } else {
+                        throw IOException("Failed to resolve stream URL for $mediaId")
+                    }
                 }
             }
             return@Factory dataSpecReturn
@@ -135,7 +140,7 @@ internal class DownloadUtils(
             databaseProvider,
             downloadCache,
             dataSourceFactory,
-            Executor(Runnable::run),
+            Executors.newFixedThreadPool(6),
         ).apply {
             maxParallelDownloads = 20
             minRetryCount = 3
@@ -245,6 +250,12 @@ internal class DownloadUtils(
                             null to Download.STATE_COMPLETED -> DownloadState.STATE_DOWNLOADING
                             null to Download.STATE_QUEUED -> DownloadState.STATE_PREPARING
                             null to Download.STATE_FAILED -> DownloadState.STATE_NOT_DOWNLOADED
+                            Download.STATE_STOPPED to Download.STATE_STOPPED -> DownloadState.STATE_NOT_DOWNLOADED
+                            Download.STATE_STOPPED to null -> DownloadState.STATE_NOT_DOWNLOADED
+                            null to Download.STATE_STOPPED -> DownloadState.STATE_NOT_DOWNLOADED
+                            Download.STATE_REMOVING to null -> DownloadState.STATE_NOT_DOWNLOADED
+                            null to Download.STATE_REMOVING -> DownloadState.STATE_NOT_DOWNLOADED
+                            Download.STATE_REMOVING to Download.STATE_REMOVING -> DownloadState.STATE_NOT_DOWNLOADED
                             else -> DownloadState.STATE_DOWNLOADING
                         }
                     _downloadTask.update {
@@ -353,6 +364,33 @@ internal class DownloadUtils(
                             }
                             else -> {
                             }
+                        }
+                    }
+                }
+
+                override fun onDownloadRemoved(
+                    downloadManager: DownloadManager,
+                    download: Download,
+                ) {
+                    download.request.id.let { id ->
+                        val songId =
+                            if (id.contains(MERGING_DATA_TYPE.VIDEO)) {
+                                id.removePrefix(MERGING_DATA_TYPE.VIDEO)
+                            } else {
+                                id
+                            }
+                        _downloads.update { map ->
+                            map.toMutableMap().apply {
+                                remove(songId)
+                            }
+                        }
+                        _downloadTask.update { map ->
+                            map.toMutableMap().apply {
+                                remove(songId)
+                            }
+                        }
+                        coroutineScope.launch {
+                             songRepository.updateDownloadState(songId, DownloadState.STATE_NOT_DOWNLOADED)
                         }
                     }
                 }

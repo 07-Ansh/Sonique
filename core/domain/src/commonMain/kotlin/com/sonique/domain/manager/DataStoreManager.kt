@@ -250,6 +250,8 @@ interface DataStoreManager {
 
     suspend fun setCrossfadeDuration(duration: Int)
 
+
+
     val youtubeSubtitleLanguage: Flow<String>
 
     suspend fun setYoutubeSubtitleLanguage(language: String)
@@ -295,6 +297,8 @@ interface DataStoreManager {
         const val LOCAL_PLAYLIST_FILTER_NEWER_FIRST = "newer_first"
         const val LOCAL_PLAYLIST_FILTER_TITLE = "title"
         const val LOCAL_PLAYLIST_FILTER_CUSTOM_ORDER = "custom_order"
+
+
     }
 }
 

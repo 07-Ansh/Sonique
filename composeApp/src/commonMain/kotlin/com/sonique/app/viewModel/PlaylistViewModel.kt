@@ -154,10 +154,11 @@ class PlaylistViewModel(
     private fun updatePlaylistDownloadState(
         id: String,
         state: Int,
+        withDelay: Boolean = true,
     ) {
         viewModelScope.launch {
             playlistRepository.updatePlaylistDownloadState(id, state)
-            delay(500)
+            if (withDelay) delay(500)
             _playlistEntity.update {
                 it?.copy(downloadState = state)
             }
@@ -666,6 +667,10 @@ class PlaylistViewModel(
                 downloadFullPlaylist()
             }
 
+            PlaylistUIEvent.CancelDownload -> {
+                cancelDownload()
+            }
+
             PlaylistUIEvent.Favorite -> {
                 updatePlaylistLiked(!liked.value, data.id)
             }
@@ -734,10 +739,36 @@ class PlaylistViewModel(
             makeToast(getString(Res.string.downloading))
             updatePlaylistDownloadState(id, STATE_DOWNLOADING)
             getFullTracks { tracks ->
-                tracks.forEach {
-                    viewModelScope.launch {
-                        downloadUtils.downloadTrack(it.videoId, it.title, it.thumbnails?.lastOrNull()?.url ?: "")
+                viewModelScope.launch {
+                    tracks.chunked(2).forEach { chunk ->
+                        chunk.forEach { track ->
+                            viewModelScope.launch {
+                                downloadUtils.downloadTrack(
+                                    track.videoId,
+                                    track.title,
+                                    track.thumbnails?.lastOrNull()?.url ?: ""
+                                )
+                            }
+                        }
+                        delay(200)
                     }
+                }
+            }
+        }
+    }
+
+    fun cancelDownload() {
+        viewModelScope.launch {
+            val id = playlistEntity.value?.id ?: return@launch
+            makeToast("Download removed")
+            updatePlaylistDownloadState(
+                id,
+                com.sonique.domain.data.entities.DownloadState.STATE_NOT_DOWNLOADED,
+                false
+            )
+            tracks.value.forEach {
+                viewModelScope.launch {
+                    downloadUtils.removeDownload(it.videoId)
                 }
             }
         }
@@ -804,9 +835,11 @@ sealed class PlaylistUIEvent {
         val videoId: String,
     ) : PlaylistUIEvent()
 
-    data object Favorite : PlaylistUIEvent()
-
     data object Download : PlaylistUIEvent()
+
+    data object CancelDownload : PlaylistUIEvent()
+
+    data object Favorite : PlaylistUIEvent()
 }
 
 enum class ListState {

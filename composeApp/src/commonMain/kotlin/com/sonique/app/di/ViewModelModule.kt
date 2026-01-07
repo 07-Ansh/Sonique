@@ -17,6 +17,7 @@ import com.sonique.app.viewModel.RecentlySongsViewModel
 import com.sonique.app.viewModel.SearchViewModel
 import com.sonique.app.viewModel.SettingsViewModel
 import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.viewModel.UpdateViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
@@ -138,6 +139,11 @@ val viewModelModule =
         viewModel {
             MoodViewModel(
                 get(),
+                get(),
+            )
+        }
+        viewModel {
+            UpdateViewModel(
                 get(),
             )
         }

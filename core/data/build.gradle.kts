@@ -83,6 +83,12 @@ kotlin {
                 implementation(libs.androidx.sqlite.bundled)
                 implementation(libs.androidx.room.migration)
 
+                // Ktor
+                implementation(libs.ktor.client.core)
+                implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+
                 // Koin
                 implementation(libs.koin.core)
             }

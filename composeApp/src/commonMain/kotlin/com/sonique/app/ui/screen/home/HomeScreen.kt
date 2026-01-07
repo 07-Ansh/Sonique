@@ -127,6 +127,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.app_name
 import sonique.composeapp.generated.resources.baseline_settings_24
+import com.sonique.app.expect.ui.rememberNotificationPermissionLauncher
 import sonique.composeapp.generated.resources.energize
 import sonique.composeapp.generated.resources.feel_good
 import sonique.composeapp.generated.resources.focus
@@ -636,8 +637,13 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
+             val notificationPermissionLauncher = rememberNotificationPermissionLauncher {
+                 if (it) {
+                     navController.navigate(NotificationDestination)
+                 }
+             }
              RippleIconButton(resId = Res.drawable.outline_notifications_24) {
-                navController.navigate(NotificationDestination)
+                notificationPermissionLauncher()
             }
              Spacer(modifier = Modifier.width(8.dp))
              RippleIconButton(resId = Res.drawable.baseline_settings_24) {

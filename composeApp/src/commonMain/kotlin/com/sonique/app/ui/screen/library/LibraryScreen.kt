@@ -21,10 +21,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -80,6 +82,7 @@ import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.baseline_arrow_back_ios_new_24
 import sonique.composeapp.generated.resources.create
+import sonique.composeapp.generated.resources.cancel
 import sonique.composeapp.generated.resources.downloaded_playlists
 import sonique.composeapp.generated.resources.favorite_playlists
 import sonique.composeapp.generated.resources.favorite_podcasts
@@ -123,6 +126,7 @@ fun LibraryScreen(
     val favoritePodcasts by viewModel.favoritePodcasts.collectAsStateWithLifecycle()
     val recentlyAdded by viewModel.recentlyAdded.collectAsStateWithLifecycle()
     val accountThumbnail by viewModel.accountThumbnail.collectAsStateWithLifecycle()
+    val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
 
     var showAddSheet by remember { mutableStateOf(false) }
     var isScrollingUp by remember { mutableStateOf(true) }
@@ -226,6 +230,53 @@ fun LibraryScreen(
                                         ),
                                     navController = navController,
                                 )
+                            }
+                        }
+
+
+                        if (activeDownloads > 0) {
+                            item {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF242424) // Dark gray/black
+                                    ),
+                                    onClick = {
+                                        viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)
+                                    },
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = Color.White,
+                                            strokeWidth = 2.dp
+                                        )
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                        Text(
+                                            text = "Downloading $activeDownloads items...",
+                                            style = typo().bodyMedium,
+                                            color = Color.White
+                                        )
+                                        Spacer(modifier = Modifier.weight(1f))
+                                        TextButton(
+                                            onClick = {
+                                                viewModel.cancelActiveDownloads()
+                                            }
+                                        ) {
+                                            Text(
+                                                text = stringResource(Res.string.cancel),
+                                                style = typo().bodyMedium,
+                                                color = Color.Red
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
 

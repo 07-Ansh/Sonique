@@ -1330,6 +1330,7 @@ fun NowPlayingBottomSheet(
     }
     var isBottomSheetVisible by rememberSaveable { mutableStateOf(false) }
     var changePlaybackSpeedPitch by remember { mutableStateOf(false) }
+    var showCancelDownloadDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
         if (uiState.songUIState.videoId.isNotEmpty() && !isBottomSheetVisible) {
@@ -1425,6 +1426,34 @@ fun NowPlayingBottomSheet(
             },
         )
     }
+
+    if (showCancelDownloadDialog) {
+        AlertDialog(
+            containerColor = Color(0xFF242424),
+            onDismissRequest = { showCancelDownloadDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCancelDownloadDialog = false
+                    viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                }) {
+                    Text(text = stringResource(Res.string.yes), style = typo().labelSmall)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDownloadDialog = false }) {
+                    Text(text = stringResource(Res.string.cancel), style = typo().labelSmall)
+                }
+            },
+            title = {
+                Text(text = "Warning", style = typo().labelSmall)
+            },
+            text = {
+                val text = if (uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADED) "Do you want to remove this download?" else "Do you want to cancel the download?"
+                Text(text = text, style = typo().bodyMedium)
+            },
+        )
+    }
+
 
 
 
@@ -1598,7 +1627,14 @@ fun NowPlayingBottomSheet(
                                 else -> Res.string.download
                             },
                     ) {
-                        viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                        if (uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADING ||
+                            uiState.songUIState.downloadState == DownloadState.STATE_PREPARING ||
+                            uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADED
+                        ) {
+                            showCancelDownloadDialog = true
+                        } else {
+                            viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                        }
                     }
                     ActionButton(
                         icon = painterResource(Res.drawable.baseline_playlist_add_24),

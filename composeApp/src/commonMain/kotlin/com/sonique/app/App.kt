@@ -71,6 +71,8 @@ import com.sonique.app.ui.screen.player.NowPlayingScreenContent
 import com.sonique.app.ui.theme.AppTheme
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.viewModel.UpdateViewModel
+import com.sonique.app.ui.component.UpdateDialog
 
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
@@ -97,6 +99,16 @@ fun App(
     val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
     val intent by viewModel.intent.collectAsStateWithLifecycle()
+    
+    val updateViewModel: UpdateViewModel = koinInject()
+    val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
+
+    if (updateAvailable != null) {
+        UpdateDialog(
+            releaseInfo = updateAvailable!!,
+            onDismiss = { updateViewModel.dismissUpdate() }
+        )
+    }
     
 
 

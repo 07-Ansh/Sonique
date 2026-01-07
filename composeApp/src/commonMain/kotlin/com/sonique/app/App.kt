@@ -59,6 +59,7 @@ import com.sonique.app.ui.component.AppNavigationRail
 
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.NotificationDestination
+import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.list.AlbumDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
@@ -83,6 +84,8 @@ import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class, ExperimentalFoundationApi::class)
 @Composable
 fun App(
@@ -93,8 +96,9 @@ fun App(
 
     val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
-
     val intent by viewModel.intent.collectAsStateWithLifecycle()
+    
+
 
     // MiniPlayer visibility logic
     var isShowMiniPlayer by rememberSaveable {
@@ -119,6 +123,20 @@ fun App(
 
 
 
+    val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
+
+    LaunchedEffect(reloadDestination) {
+        val destination = reloadDestination
+        if (destination != null) {
+            try {
+                navController.popBackStack(destination, false)
+            } catch (e: Exception) {
+                Logger.e("App", "Error reloading destination", e)
+            }
+            viewModel.reloadDestinationDone()
+        }
+    }
+
     LaunchedEffect(nowPlayingData) {
         isShowMiniPlayer = !(nowPlayingData?.mediaItem == null || nowPlayingData?.mediaItem == GenericMediaItem.EMPTY)
     }
@@ -132,6 +150,13 @@ fun App(
                 viewModel.setIntent(null)
                 navController.navigate(
                     NotificationDestination,
+                )
+            } else if (data == "com.sonique.com.sonique.app://downloads".toUri()) {
+                viewModel.setIntent(null)
+                navController.navigate(
+                    LibraryDestination(
+                        openDownloads = true,
+                    ),
                 )
             } else {
                 Logger.d("MainActivity", "onCreate: $data")

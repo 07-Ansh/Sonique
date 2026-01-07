@@ -7,6 +7,7 @@ import com.sonique.domain.data.entities.AlbumEntity
 import com.sonique.domain.data.entities.LocalPlaylistEntity
 import com.sonique.domain.data.entities.PlaylistEntity
 import com.sonique.domain.data.entities.SongEntity
+import com.sonique.domain.data.entities.DownloadState
 import com.sonique.domain.data.model.searchResult.playlists.PlaylistsResult
 import com.sonique.domain.data.type.PlaylistType
 import com.sonique.domain.data.type.RecentlyType
@@ -19,6 +20,7 @@ import com.sonique.domain.repository.PodcastRepository
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.utils.LocalResource
 import com.sonique.app.viewModel.base.BaseViewModel
+import com.sonique.domain.mediaservice.handler.DownloadHandler
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -30,6 +32,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDateTime
@@ -53,6 +57,7 @@ class LibraryViewModel(
     private val localPlaylistRepository: LocalPlaylistRepository,
     private val albumRepository: AlbumRepository,
     private val podcastRepository: PodcastRepository,
+    private val downloadHandler: DownloadHandler,
 ) : BaseViewModel() {
     private val _currentScreen: MutableStateFlow<LibraryChipType> = MutableStateFlow(LibraryChipType.YOUR_LIBRARY)
     val currentScreen: StateFlow<LibraryChipType> get() = _currentScreen.asStateFlow()
@@ -93,6 +98,23 @@ class LibraryViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val youtubeLoggedIn = dataStoreManager.loggedIn.mapLatest { it == DataStoreManager.TRUE }
+
+    val activeDownloads = downloadHandler.downloadTask.mapLatest { tasks ->
+        tasks.count {
+            it.value == DownloadState.STATE_DOWNLOADING || it.value == DownloadState.STATE_PREPARING
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+// ...
+
+    fun cancelActiveDownloads() {
+        val tasks = downloadHandler.downloadTask.value
+        tasks.filter { it.value == DownloadState.STATE_DOWNLOADING || it.value == DownloadState.STATE_PREPARING }
+            .keys
+            .forEach { videoId ->
+                downloadHandler.removeDownload(videoId)
+            }
+    }
 
     init {
         viewModelScope.launch {
@@ -310,5 +332,7 @@ class LibraryViewModel(
             getRecentlyAdded()
         }
     }
+
+
 }
 

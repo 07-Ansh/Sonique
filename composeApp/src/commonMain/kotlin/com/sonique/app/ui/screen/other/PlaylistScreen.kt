@@ -42,6 +42,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -164,6 +165,7 @@ fun PlaylistScreen(
     val tracksListState by viewModel.tracksListState.collectAsStateWithLifecycle()
 
     var showSearchBar by rememberSaveable { mutableStateOf(false) }
+    var showCancelDownloadDialog by remember { mutableStateOf(false) }
 
     val lazyState = rememberLazyListState()
     val firstItemVisible by remember {
@@ -311,6 +313,39 @@ fun PlaylistScreen(
                 val data = state.data
                 Logger.d(tag, "data: $data")
                 if (data == null) return@Crossfade
+
+                if (showCancelDownloadDialog) {
+                    androidx.compose.material3.AlertDialog(
+                        containerColor = Color(0xFF242424),
+                        onDismissRequest = { showCancelDownloadDialog = false },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showCancelDownloadDialog = false
+                                viewModel.onUIEvent(PlaylistUIEvent.CancelDownload)
+                            }) {
+                                Text(text = "Yes", style = typo().labelSmall)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showCancelDownloadDialog = false }) {
+                                Text(text = "Cancel", style = typo().labelSmall)
+                            }
+                        },
+                        title = {
+                            Text(text = "Warning", style = typo().labelSmall)
+                        },
+                        text = {
+                            val text =
+                                if (downloadState == DownloadState.STATE_DOWNLOADED) {
+                                    "Do you want to remove this download?"
+                                } else {
+                                    "Do you want to cancel the download?"
+                                }
+                            Text(text = text, style = typo().bodyMedium)
+                        },
+                    )
+                }
+
                 LazyColumn(
                     modifier =
                         Modifier
@@ -515,7 +550,7 @@ fun PlaylistScreen(
                                                                                 .clip(
                                                                                     CircleShape,
                                                                                 ).clickable {
-                                                                                    viewModel.makeToast(getStringBlocking(Res.string.downloaded))
+                                                                                    showCancelDownloadDialog = true
                                                                                 },
                                                                     ) {
                                                                         Icon(
@@ -538,7 +573,7 @@ fun PlaylistScreen(
                                                                                 .clip(
                                                                                     CircleShape,
                                                                                 ).clickable {
-                                                                                    viewModel.makeToast(getStringBlocking(Res.string.downloading))
+                                                                                    showCancelDownloadDialog = true
                                                                                 },
                                                                     ) {
                                                                         Image(

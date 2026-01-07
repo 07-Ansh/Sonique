@@ -34,7 +34,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -138,6 +140,7 @@ fun AlbumScreen(
 
     var showBottomSheet by rememberSaveable { mutableStateOf(false) }
     var chosenSong: Track? by remember { mutableStateOf(null) }
+    var showCancelDownloadDialog by remember { mutableStateOf(false) }
 
     val composition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
@@ -182,6 +185,38 @@ fun AlbumScreen(
     Crossfade(uiState.loadState) {
         when (it) {
             LocalPlaylistState.PlaylistLoadState.Success -> {
+                if (showCancelDownloadDialog) {
+                    androidx.compose.material3.AlertDialog(
+                        containerColor = Color(0xFF242424),
+                        onDismissRequest = { showCancelDownloadDialog = false },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showCancelDownloadDialog = false
+                                viewModel.cancelDownload()
+                            }) {
+                                Text(text = "Yes", style = typo().labelSmall)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showCancelDownloadDialog = false }) {
+                                Text(text = "Cancel", style = typo().labelSmall)
+                            }
+                        },
+                        title = {
+                            Text(text = "Warning", style = typo().labelSmall)
+                        },
+                        text = {
+                            val text =
+                                if (uiState.downloadState == DownloadState.STATE_DOWNLOADED) {
+                                    "Do you want to remove this download?"
+                                } else {
+                                    "Do you want to cancel the download?"
+                                }
+                            Text(text = text, style = typo().bodyMedium)
+                        },
+                    )
+                }
+
                 LazyColumn(
                     modifier =
                         Modifier
@@ -362,11 +397,7 @@ fun AlbumScreen(
                                                                         .clip(
                                                                             CircleShape,
                                                                         ).clickable {
-                                                                            viewModel.makeToast(
-                                                                                runBlocking {
-                                                                                    getString(Res.string.downloaded)
-                                                                                },
-                                                                            )
+                                                                            showCancelDownloadDialog = true
                                                                         },
                                                             ) {
                                                                 Icon(
@@ -389,11 +420,7 @@ fun AlbumScreen(
                                                                         .clip(
                                                                             CircleShape,
                                                                         ).clickable {
-                                                                            viewModel.makeToast(
-                                                                                runBlocking {
-                                                                                    getString(Res.string.downloading)
-                                                                                },
-                                                                            )
+                                                                            showCancelDownloadDialog = true
                                                                         },
                                                             ) {
                                                                 Image(

@@ -53,8 +53,8 @@ fun LibraryTilingBox(
         listOf(
             LibraryTilingState.Downloaded,
             LibraryTilingState.Playlists,
-            LibraryTilingState.YouTubePlaylists,
             LibraryTilingState.MixForYou,
+            LibraryTilingState.YouTubePlaylists,
             LibraryTilingState.Followed,
         )
     Row(

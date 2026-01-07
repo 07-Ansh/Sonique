@@ -21,6 +21,7 @@ import com.sonique.logger.LogLevel
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -270,14 +271,30 @@ class AlbumViewModel(
                 return@launch
             }
             albumRepository.updateAlbumDownloadState(uiState.value.browseId, DownloadState.STATE_DOWNLOADING)
-            listJob.forEach {
-                log("Download: ${it.videoId} ${it.thumbnails}")
-                downloadUtils.downloadTrack(
-                    it.videoId,
-                    it.title,
-                    it.thumbnails ?: "",
-                )
+            listJob.chunked(2).forEach { chunk ->
+                chunk.forEach {
+                    log("Download: ${it.videoId} ${it.thumbnails}")
+                    downloadUtils.downloadTrack(
+                        it.videoId,
+                        it.title,
+                        it.thumbnails ?: "",
+                    )
+                }
+                delay(200)
             }
+        }
+    }
+
+    fun cancelDownload() {
+        viewModelScope.launch {
+            albumRepository.updateAlbumDownloadState(uiState.value.browseId, DownloadState.STATE_NOT_DOWNLOADED)
+            _uiState.update {
+                it.copy(downloadState = DownloadState.STATE_NOT_DOWNLOADED)
+            }
+            uiState.value.listTrack.forEach {
+                downloadUtils.removeDownload(it.videoId)
+            }
+            makeToast("Download removed")
         }
     }
 }

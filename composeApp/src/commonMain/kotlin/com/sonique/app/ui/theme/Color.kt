@@ -46,6 +46,8 @@ val md_theme_dark_shadow = musica_black
 val md_theme_dark_surfaceTint = musica_accent
 val md_theme_dark_outlineVariant = musica_light_grey
 val md_theme_dark_scrim = musica_black
+
+
 val colorPrimaryDark = Color(0x19000000)
 val back_button_color = Color(0x197E7E7E)
 

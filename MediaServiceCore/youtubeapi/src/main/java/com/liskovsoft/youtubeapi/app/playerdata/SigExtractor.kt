@@ -5,9 +5,7 @@ import com.liskovsoft.sharedutils.mylogger.Log
 import com.liskovsoft.googlecommon.common.js.JSInterpret
 import java.util.regex.Pattern
 
-/**
- * yt_dlp.extractor.youtube._video.YoutubeIE._parse_sig_js
- */
+ 
 internal object SigExtractor {
     private val TAG = SigExtractor::class.java.simpleName
     private val mSigPattern = Pattern.compile("""(?xs)
@@ -16,22 +14,16 @@ internal object SigExtractor {
                 ;\w+\ [$\w]+=\{[\S\s]{10,200}?[\w]\.reverse\(\)[\S\s]*?
                 function\ ([$\w]+)\(([\w])\)\{.*[\w]\.split\((?:""|[$\w]+\[\d+\])\).*;return\ [\w]\.join\((?:""|[$\w]+\[\d+\])\)\}""", Pattern.COMMENTS)
 
-    /**
-     * yt_dlp.extractor.youtube.YoutubeIE._extract_n_function_code
-     *
-     * yt-dlp\yt_dlp\extractor\youtube.py
-     */
+     
     fun extractSigCode(jsCode: String, globalVar: Triple<String?, List<String>?, String?>): Pair<List<String>, String>? {
         val funcName = extractSigFunctionName(jsCode) ?: return null
 
-        //val funcCode = fixupSigFunctionCode(JSInterpret.extractFunctionCode(jsCode, funcName), globalVarData)
+         
 
         return fixupGlobalObjIfNeeded(jsCode, JSInterpret.extractFunctionCode(jsCode, funcName), globalVar) ?: extractSigFunctionCodeAlt(jsCode, globalVar)
     }
 
-    /**
-     * yt_dlp.extractor.youtube._video.YoutubeIE._parse_sig_js
-     */
+     
     private fun extractSigFunctionName(jsCode: String): String? {
         val sigFuncMatcher = mSigPattern.matcher(jsCode)
 
@@ -59,7 +51,7 @@ internal object SigExtractor {
     private fun fixupGlobalObjIfNeeded(jsCode: String, funcCode: Pair<List<String>, String>, globalVar: Triple<String?, List<String>?, String?>, nestedCount: Int = 0): Pair<List<String>, String>? {
         var fixedFuncCode = fixupSigFunctionCode(funcCode, globalVar)
 
-        // Test the function works
+         
         try {
             extractSig(fixedFuncCode, "5cNpZqIJ7ixNqU68Y7S")
         } catch (error: V8ScriptExecutionException) {

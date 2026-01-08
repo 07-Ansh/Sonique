@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class WeakHashSet<T> {
-    private final List<WeakReference<T>> mWeakReferences = new CopyOnWriteArrayList<>(); // ConcurrentModificationException fix
+    private final List<WeakReference<T>> mWeakReferences = new CopyOnWriteArrayList<>();  
     private boolean mIsBlocked;
     private boolean mIsStopped;
 

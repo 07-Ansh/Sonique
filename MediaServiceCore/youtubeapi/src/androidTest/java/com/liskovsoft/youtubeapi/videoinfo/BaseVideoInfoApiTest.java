@@ -40,8 +40,8 @@ abstract class BaseVideoInfoApiTest {
     protected void testThatLiveVideoContainsSpecificFields(VideoInfo result) {
         assertNotNull("Result not null", result);
         assertNotNull("Contains dash url", result.getDashManifestUrl());
-        // V2 doesn't contains legacy hls urls
-        //assertNotNull("Contains hls url", result.getHlsManifestUrl());
+         
+         
 
         testThatVideoInfoContainsRequiredFields(result);
     }
@@ -73,7 +73,7 @@ abstract class BaseVideoInfoApiTest {
 
     protected void testThatVideoInfoContainsRequiredFields(VideoInfo result) {
         assertNotNull("Result not null", result);
-        //assertFalse("Video available externally", result.isEmbedRestricted());
+         
         List<AdaptiveVideoFormat> formats = result.getAdaptiveFormats();
         assertTrue("Formats not empty", formats.size() > 0);
         assertTrue("Contains fps", formats.get(0).getFps() != 0);
@@ -101,7 +101,7 @@ abstract class BaseVideoInfoApiTest {
     @NonNull
     protected AdaptiveVideoFormat getSmallestAudio(VideoInfo videoInfo) {
         AdaptiveVideoFormat format = Helpers.findFirst(videoInfo.getAdaptiveFormats(),
-                item -> MediaFormatUtils.isAudio(item.getMimeType())); // smallest format
+                item -> MediaFormatUtils.isAudio(item.getMimeType()));  
 
         format.getUrlHolder().setSignature(mAppService.extractSig(format.getUrlHolder().getSParam()));
         format.getUrlHolder().setNParam(mAppService.extractNSig(format.getUrlHolder().getNParam()));
@@ -170,7 +170,7 @@ abstract class BaseVideoInfoApiTest {
 
         for (VideoUrlHolder urlHolder : urlHolders) {
             result.add(urlHolder.getNParam());
-            // All throttled strings has same values
+             
         }
 
         return result;
@@ -181,7 +181,7 @@ abstract class BaseVideoInfoApiTest {
             return;
         }
 
-        // All throttled strings has same values
+         
         boolean sameSize = nSignatures.size() == urlHolders.size();
 
         for (int i = 0; i < urlHolders.size(); i++) {

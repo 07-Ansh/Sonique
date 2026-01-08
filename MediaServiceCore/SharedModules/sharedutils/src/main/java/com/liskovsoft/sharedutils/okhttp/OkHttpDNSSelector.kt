@@ -5,15 +5,7 @@ import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
 
-/**
- * Fix for the [issue](https://github.com/facebook/react-native/issues/32730)
- *
- * See also:
- * [1](https://gist.github.com/danmaas/c60af5fed9f55d2bc616ce302696540d)
- * [2](https://github.com/square/okhttp/issues/6954)
- * [3](https://github.com/yschimke/okurl/blob/b24caf077223cf54e2ab26589839e5ba2205c691/src/main/java/com/baulsupp/oksocial/network/DnsSelector.java)
- * [4](https://stackoverflow.com/questions/64559405/how-do-i-force-my-android-app-to-use-ipv4-instead-of-ipv6)
- */
+ 
 class OkHttpDNSSelector(private val mode: IPvMode) : Dns {
 
     enum class IPvMode(val code: String) {
@@ -41,7 +33,7 @@ class OkHttpDNSSelector(private val mode: IPvMode) : Dns {
             IPvMode.SYSTEM -> addresses
         }
 
-        //logger.fine("DJMOKHTTP ($hostname): " + addresses.joinToString(", ") { it.toString() })
+         
 
         return addresses
     }

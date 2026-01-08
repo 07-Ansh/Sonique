@@ -33,11 +33,7 @@ public class AuthService {
         return sInstance;
     }
 
-    /**
-     * Returns user code that user should apply on the page<br/>
-     * <a href=https://youtube.com/activate>https://youtube.com/activate</a>
-     * @return response with user code and device code
-     */
+     
     public UserCode getUserCode() {
         Call<UserCode> wrapper = mAuthApi.getUserCode(
                 mAppService.getClientId(),
@@ -45,12 +41,7 @@ public class AuthService {
         return RetrofitHelper.get(wrapper);
     }
 
-    /**
-     * Note, before calling this method user should apply the 'user code' on the page<br/>
-     * <a href=https://youtube.com/activate>https://youtube.com/activate</a>
-     * @param deviceCode the code contained inside the response of the method {@link #getUserCode()}
-     * @return refresh token that should be stored inside the com.sonique.app registry for future use
-     */
+     
     public AccessToken getAccessToken(String deviceCode) {
         Call<AccessToken> wrapper = mAuthApi.getAccessToken(
                 deviceCode,
@@ -60,11 +51,7 @@ public class AuthService {
         return RetrofitHelper.get(wrapper);
     }
 
-    /**
-     * Returns temporal access token that should be refreshed after some period of time
-     * @param refreshToken token obtained from previous method
-     * @return temporal access token
-     */
+     
     public AccessToken updateAccessToken(String refreshToken) {
         Call<AccessToken> wrapper = mAuthApi.updateAccessToken(
                 refreshToken,

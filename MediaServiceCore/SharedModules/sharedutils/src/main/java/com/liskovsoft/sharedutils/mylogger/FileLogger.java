@@ -69,7 +69,7 @@ class FileLogger extends MyLogger {
             buf.append(text);
             buf.newLine();
         } catch (Exception e) {
-            //MessageHelpers.showMessage(mContext, "Can't initialize log file " + e.getMessage());
+             
             e.printStackTrace();
         }
     }
@@ -84,7 +84,7 @@ class FileLogger extends MyLogger {
 
             FileHelpers.ensureFileExists(logFile);
 
-            //BufferedWriter for performance, true to set append to file flag
+             
             mWriter = new BufferedWriter(new FileWriter(logFile, false));
             writeLogHeader();
 
@@ -131,14 +131,14 @@ class FileLogger extends MyLogger {
         writeLogcatHeader();
 
         try {
-            BufferedReader bufferedReader = Helpers.exec("logcat", "-d"); // dump logcat content
+            BufferedReader bufferedReader = Helpers.exec("logcat", "-d");  
 
             String line;
             while ((line = bufferedReader.readLine()) != null){
                 append(line);
             }
 
-            Helpers.exec("logcat", "-c"); // clear logcat
+            Helpers.exec("logcat", "-c");  
         } catch (IOException e) {
             e.printStackTrace();
         }

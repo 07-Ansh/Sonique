@@ -16,8 +16,8 @@ import java.util.List;
 
 public class AppUpdateChecker implements AppVersionCheckerListener, AppDownloaderListener {
     private static final String TAG = AppUpdateChecker.class.getSimpleName();
-    private static final int FRESH_TIME_MS = 15 * 60 * 1_000; // 15 minutes
-    private static final int MIN_APK_SIZE_BYTES = 1_000_000; // 1 MB
+    private static final int FRESH_TIME_MS = 15 * 60 * 1_000;  
+    private static final int MIN_APK_SIZE_BYTES = 1_000_000;  
     private final Context mContext;
     private final AppVersionChecker mVersionChecker;
     private final AppDownloader mDownloader;
@@ -34,7 +34,7 @@ public class AppUpdateChecker implements AppVersionCheckerListener, AppDownloade
     public AppUpdateChecker(Context context, AppUpdateCheckerListener listener, int minApkSizeBytes) {
         Log.d(TAG, "Starting...");
 
-        FileHelpers.checkCachePermissions(context); // should be an Activity context
+        FileHelpers.checkCachePermissions(context);  
 
         mContext = context.getApplicationContext();
         mListener = listener;
@@ -42,15 +42,11 @@ public class AppUpdateChecker implements AppVersionCheckerListener, AppDownloade
         mDownloader = new AppDownloader(mContext, this, minApkSizeBytes);
         mSettingsManager = new SettingsManager(mContext);
 
-        // Cleanup the storage. I don't want to accidentally install old version.
-        //FileHelpers.delete(mSettingsManager.getApkPath());
+         
+         
     }
 
-    /**
-     * You normally shouldn't need to call this, as {@link #checkForUpdates(String[] versionListUrls)} checks it before doing any updates.
-     *
-     * @return true if the updater should check for updates
-     */
+     
     private boolean isStale() {
         if (mSettingsManager.getMinIntervalMs() < 0) {
             return false;
@@ -63,9 +59,7 @@ public class AppUpdateChecker implements AppVersionCheckerListener, AppDownloade
         checkForUpdates(new String[]{updateManifestUrl});
     }
 
-    /**
-     * Checks for updates if updates haven't been checked for recently and if checking is enabled.
-     */
+     
     public void checkForUpdates(String[] updateManifestUrls) {
         if (isUpdateCheckEnabled() && isStale()) {
             checkForUpdatesInt(updateManifestUrls);
@@ -120,10 +114,10 @@ public class AppUpdateChecker implements AppVersionCheckerListener, AppDownloade
                 }
             }
         } else {
-            // No update is needed.
+             
             mSettingsManager.setLastCheckedMs(System.currentTimeMillis());
 
-            // Remove old apks.
+             
             FileHelpers.delete(mSettingsManager.getApkPath());
 
             mListener.onUpdateError(new IllegalStateException(AppUpdateCheckerListener.LATEST_VERSION));
@@ -193,7 +187,7 @@ public class AppUpdateChecker implements AppVersionCheckerListener, AppDownloade
     }
 
     private boolean checkApk(String path) {
-        // package is not broken
+         
         return FileHelpers.isFreshFile(path, FRESH_TIME_MS) && mContext.getPackageManager().getPackageArchiveInfo(path, 0) != null;
     }
 }

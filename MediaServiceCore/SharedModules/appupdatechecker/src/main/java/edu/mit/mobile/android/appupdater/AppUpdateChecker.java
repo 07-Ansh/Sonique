@@ -25,36 +25,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-/**
- * A fairly simple non-Market app update checker. Give it a URL pointing to a JSON file
- * and it will compare its version (from the manifest file) to the versions listed in the JSON.
- * If there are newer version(s), it will provide the changelog between the installed version
- * and the latest version. The updater checks against the versionCode, but displays the versionName.
- *
- * While you can create your own OnAppUpdateListener to listen for new updates, OnUpdateDialog is
- * a handy implementation that displays a Dialog with a bulleted list and a button to do the upgrade.
- *
- * The JSON format looks like this:
- * <pre>
- * {
- * "package": {
- * "downloadUrl": "http://locast.mit.edu/connects/lcc.apk"
- * },
- *
- * "1.4.3": {
- * "versionCode": 6,
- * "changelog": ["New automatic update checker", "Improved template interactions"]
- * "changelog_ru": ["Новая система проверки оьновлений", "Улучшенное взаимодействие шаблонов"]
- * },
- * "1.4.2": {
- * "versionCode": 5,
- * "changelog": ["fixed crash when saving cast"]
- * }
- * }
- * </pre>
- *
- * @author <a href="mailto:spomeroy@mit.edu">Steve Pomeroy</a>
- */
+ 
 public class AppUpdateChecker {
     private final static String TAG = AppUpdateChecker.class.getSimpleName();
 
@@ -84,12 +55,12 @@ public class AppUpdateChecker {
         }
 
         mPrefs = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
-        // defaults are kept in the preference file for ease of tweaking
-        // TODO put this on a thread somehow
+         
+         
         PreferenceManager.setDefaultValues(context, SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE, R.xml.preferences, true);
     }
 
-    // min interval is stored as a string so a preference editor could potentially edit it using a text edit widget
+     
 
     public int getMinInterval() {
         return Integer.parseInt(mPrefs.getString(PREF_MIN_INTERVAL, "60"));
@@ -107,48 +78,33 @@ public class AppUpdateChecker {
         mPrefs.edit().putBoolean(PREF_ENABLED, enabled).apply();
     }
 
-    /**
-     * You normally shouldn't need to call this, as {@link #checkForUpdates(String[] versionListUrls)} checks it before doing any updates.
-     *
-     * @return true if the updater should check for updates
-     */
+     
     public boolean isStale() {
         return System.currentTimeMillis() - mPrefs.getLong(PREF_LAST_UPDATED, 0) > getMinInterval() * MILLISECONDS_IN_MINUTE;
     }
 
-    /**
-     * Checks for updates if updates haven't been checked for recently and if checking is enabled.
-     */
+     
     public void checkForUpdates(String[] versionListUrls) {
         if (getEnabled() && isStale()) {
             forceCheckForUpdates(versionListUrls);
         }
     }
 
-    /**
-     * Like {@link #forceCheckForUpdates} but only if updates is enabled
-     */
+     
     public void forceCheckForUpdatesIfEnabled(String[] versionListUrls) {
         if (getEnabled()) {
             forceCheckForUpdates(versionListUrls);
         }
     }
 
-    /**
-     * Minimize server payload!<br/>
-     * Like {@link #forceCheckForUpdates} but only if prev update was long enough
-     */
+     
     public void forceCheckForUpdatesIfStalled(String[] versionListUrls) {
         if (isStale()) {
             forceCheckForUpdates(versionListUrls);
         }
     }
 
-    /**
-     * Checks for updates regardless of when the last check happened or if checking for updates is enabled.<br/>
-     * URL pointing to a JSON file with the update list <br/>
-     * @param versionListUrls url array, tests url by access, first worked is used
-     */
+     
     public void forceCheckForUpdates(String[] versionListUrls) {
         Log.d(TAG, "checking for updates...");
 
@@ -166,14 +122,14 @@ public class AppUpdateChecker {
         }
     }
 
-    // why oh why is the JSON API so poorly integrated into java?
+     
     @SuppressWarnings("unchecked")
     private void triggerFromJson(JSONObject jo) throws JSONException {
 
         final ArrayList<String> changelog = new ArrayList<String>();
 
-        // keep a sorted map of versionCode to the version information objects.
-        // Most recent is at the top.
+         
+         
         final TreeMap<Integer, JSONObject> versionMap = new TreeMap<Integer, JSONObject>(new Comparator<Integer>() {
             public int compare(Integer object1, Integer object2) {
                 return object2.compareTo(object1);
@@ -217,7 +173,7 @@ public class AppUpdateChecker {
             return;
         }
 
-        // construct the changelog. Newest entries are at the top.
+         
         for (final Entry<Integer, JSONObject> version : versionMap.headMap(currentAppVersion).entrySet()) {
             final JSONObject versionInfo = version.getValue();
 
@@ -255,9 +211,7 @@ public class AppUpdateChecker {
     }
 
     private class VersionCheckException extends Exception {
-        /**
-         *
-         */
+         
         private static final long serialVersionUID = 397593559982487816L;
 
         public VersionCheckException(String msg) {
@@ -265,9 +219,7 @@ public class AppUpdateChecker {
         }
     }
 
-    /**
-     * Send off an intent to start the download of the app.
-     */
+     
     public void startUpgrade() {
         try {
             final Uri downloadUri = Uri.parse(pkgInfo.getString("downloadUrl"));
@@ -317,7 +269,7 @@ public class AppUpdateChecker {
                 InputStream content = manager.getStreamForDownloadedFile(reqId);
                 jo = new JSONObject(StreamUtils.inputStreamToString(content));
 
-                // this line may not be executed because of json error above
+                 
                 mPrefs.edit().putLong(PREF_LAST_UPDATED, System.currentTimeMillis()).apply();
             } catch (final IllegalStateException | JSONException ex) {
                 Log.e(TAG, ex.getMessage(), ex);

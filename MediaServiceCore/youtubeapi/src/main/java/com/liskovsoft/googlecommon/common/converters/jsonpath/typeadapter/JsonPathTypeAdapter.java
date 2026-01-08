@@ -43,7 +43,7 @@ public class JsonPathTypeAdapter<T> {
 
         String[] jsonPath = getJsonPath(getGenericType());
 
-        if (jsonPath != null) { // annotation on the same collection class
+        if (jsonPath != null) {  
             DocumentContext parser = mParser.parse(is);
             for (String path : jsonPath) {
                 try {
@@ -53,32 +53,30 @@ public class JsonPathTypeAdapter<T> {
                     Log.e(TAG, e.getMessage());
                 }
             }
-        } else { // annotation on field
+        } else {  
             jsonContent = Helpers.toString(is);
         }
 
-        //long startTimeMs = System.currentTimeMillis();
+         
 
         T result = (T) readType(getGenericType(), jsonContent);
 
         if (result == null) {
-            // Dump root object
+             
             ReflectionHelper.dumpDebugInfo(getGenericType(), jsonContent);
         }
 
-        //long endTimeMs = System.currentTimeMillis();
-        //
-        //Log.d(TAG, "Parse time is %s ms", endTimeMs - startTimeMs);
+         
+         
+         
 
-        // Dumping all data for debug purposes
-        //ReflectionHelper.dumpDebugInfo(getGenericType(), jsonContent);
+         
+         
 
         return result;
     }
 
-    /**
-     * Enable additional processing like skipping first line etc
-     */
+     
     protected InputStream process(InputStream is) {
         return is;
     }
@@ -87,40 +85,40 @@ public class JsonPathTypeAdapter<T> {
         return mType;
     }
 
-    //private Object readType(Class<?> type, String jsonContent) {
-    //    if (type == null || jsonContent == null) {
-    //        return null;
-    //    }
-    //
-    //    try {
-    //        Constructor<?> constructor = type.getConstructor();
-    //        final Object obj = constructor.newInstance();
-    //
-    //        DocumentContext parser = mParser.parse(jsonContent);
-    //
-    //        List<Field> fields = ReflectionHelper.getAllFields(type);
-    //
-    //        List<Boolean> results = RxUtils.fromIterable(fields)
-    //                .map(field -> processField(field, obj, type, parser))
-    //                .subscribeOn(Schedulers.io())
-    //                .observeOn(Schedulers.io())
-    //                .toList()
-    //                .blockingGet();
-    //
-    //        for (Boolean result : results) {
-    //            // At least one field is set
-    //            if (result) {
-    //                return obj;
-    //            }
-    //        }
-    //
-    //    } catch (Exception e) {
-    //        Log.e(TAG, e.getMessage());
-    //        e.printStackTrace();
-    //    }
-    //
-    //    return null;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     private Object readType(Class<?> type, String jsonContent) {
         if (type == null || jsonContent == null) {
@@ -141,7 +139,7 @@ public class JsonPathTypeAdapter<T> {
             for (Field field : fields) {
                 boolean result = processField(field, obj, type, parser);
 
-                // At least one field is set
+                 
                 if (result) {
                     done = true;
                 }
@@ -154,7 +152,7 @@ public class JsonPathTypeAdapter<T> {
     }
 
     private boolean processField(Field field, Object obj, Class<?> type, DocumentContext parser) {
-        //Log.d(TAG, "Processing on thread: %s", Thread.currentThread().getName());
+         
 
         boolean done = false;
         field.setAccessible(true);
@@ -220,7 +218,7 @@ public class JsonPathTypeAdapter<T> {
                 field.set(obj, val);
             }
 
-            done = field.get(obj) != null; // field is set
+            done = field.get(obj) != null;  
         } catch (IllegalArgumentException e) {
             Log.d(TAG, "%s: Incompatible json value found %s. Same path on different types?", field.getType().getSimpleName(), jsonVal);
         } catch (IllegalAccessException e) {
@@ -257,14 +255,14 @@ public class JsonPathTypeAdapter<T> {
 
         if (jsonVal.isNumber()) {
             if (jsonVal.toString().contains(".")) {
-                val = jsonVal.getAsFloat(); // Float
+                val = jsonVal.getAsFloat();  
             } else {
-                val = jsonVal.getAsInt(); // Integer
+                val = jsonVal.getAsInt();  
             }
         } else if (jsonVal.isBoolean()) {
-            val = jsonVal.getAsBoolean(); // Boolean
+            val = jsonVal.getAsBoolean();  
         } else {
-            val = jsonVal.getAsString(); // String
+            val = jsonVal.getAsString();  
         }
 
         return val;

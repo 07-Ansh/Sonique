@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface JsonPath {
-    /**
-     * Path for the desired json element
-     */
+     
     String[] value();
 }

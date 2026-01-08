@@ -19,9 +19,7 @@ public class AppServiceInt {
         mAppApi = RetrofitHelper.create(AppApi.class);
     }
 
-    /**
-     * Obtains info with respect of anonymous browsing data (visitor cookie)
-     */
+     
     protected AppInfo getAppInfo(String userAgent) {
         String visitorCookie = getData().getVisitorCookie();
         Call<AppInfo> wrapper = mAppApi.getAppInfo(userAgent, visitorCookie);
@@ -30,9 +28,9 @@ public class AppServiceInt {
         Response<AppInfo> response = RetrofitHelper.getResponse(wrapper);
 
         if (response != null) {
-            //String visitorInfoCookie = RetrofitHelper.getCookie(response, AppConstants.VISITOR_INFO_COOKIE);
-            //String visitorPrivacyCookie = RetrofitHelper.getCookie(response, AppConstants.VISITOR_PRIVACY_COOKIE);
-            //getData().setVisitorCookie(Helpers.join("; ", visitorInfoCookie, visitorPrivacyCookie));
+             
+             
+             
             getData().setVisitorCookie(RetrofitHelper.getCookies(response));
             result = response.body();
         }
@@ -52,7 +50,7 @@ public class AppServiceInt {
         Call<ClientData> wrapper = mAppApi.getClientData(clientUrl);
         ClientData clientData = RetrofitHelper.get(wrapper);
 
-        // Seems that legacy script encountered.
+         
         if (clientData == null) {
             clientData = RetrofitHelper.get(mAppApi.getClientData(getLegacyClientUrl(clientUrl)));
         }
@@ -75,45 +73,41 @@ public class AppServiceInt {
     }
 
     public void invalidateCache() {
-        // NOP
+         
     }
 
     public boolean isPlayerCacheActual() {
-        // NOP
+         
         return false;
     }
 
-    // Moved from AppService
+     
 
     public String getClientId() {
-        // TODO: NPE 1.6K!!!
+         
         ClientData clientData = getClientData();
         return clientData != null ? clientData.getClientId() : null;
     }
 
-    /**
-     * Constant used in AuthApi
-     */
+     
     public String getClientSecret() {
         return getClientData() != null ? getClientData().getClientSecret() : null;
     }
 
-    /**
-     * Used with get_video_info, anonymous search and suggestions
-     */
+     
     public String getVisitorData() {
-        // TODO: NPE 300!!!
+         
         return getAppInfoData() != null ? getAppInfoData().getVisitorData() : null;
     }
 
     public String getPlayerUrl() {
-        // NOTE: NPE 2.5K
-        //return getData().getPlayerUrl() != null ? getData().getPlayerUrl() : mCachedAppInfo != null ? mCachedAppInfo.getPlayerUrl() : null;
+         
+         
         return getAppInfoData() != null ? getAppInfoData().getPlayerUrl() : null;
     }
 
     public String getClientUrl() {
-        // NOTE: NPE 143K!!!
+         
         return getAppInfoData() != null ? getAppInfoData().getClientUrl() : null;
     }
 

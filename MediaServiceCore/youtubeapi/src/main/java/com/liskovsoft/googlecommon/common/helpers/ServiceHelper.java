@@ -26,7 +26,7 @@ public class ServiceHelper {
     private static final String BULLET_SYMBOL = "\u2022";
     private static final String ITEMS_DIVIDER = " " + BULLET_SYMBOL + " ";
     private static final String TIME_TEXT_DELIM = ":";
-    // Regex to extract hours, minutes, and seconds
+     
     private static final Pattern sIsoDurationPattern = Pattern.compile("PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?");
 
     @Nullable
@@ -46,12 +46,7 @@ public class ServiceHelper {
         return String.format("https://www.youtube.com/channel/%s", channelId);
     }
 
-    /**
-     * Convert YouTube video length text to milliseconds<br/>
-     * Example of input text: <b>4:44:51</b>
-     * @param lengthText video length
-     * @return length in milliseconds
-     */
+     
     public static long timeTextToMillis(String lengthText) {
         if (lengthText == null || lengthText.contains(",")) {
             return -1;
@@ -60,7 +55,7 @@ public class ServiceHelper {
         String[] timeParts = lengthText.split(TIME_TEXT_DELIM);
         int length = timeParts.length;
 
-        // TODO: time conversion doesn't take into account locale specific delimiters (e.g ".", ",")
+         
         int hours = Helpers.parseInt(timeParts, length - 3, 0);
         int minutes = Helpers.parseInt(timeParts, length - 2, 0);
         int seconds = Helpers.parseInt(timeParts, length - 1, 0);
@@ -77,9 +72,7 @@ public class ServiceHelper {
                 String.format(Locale.US, "%d%s%02d", minutes, TIME_TEXT_DELIM, seconds);
     }
 
-    /**
-     * Additional video info such as user, published etc.
-     */
+     
     public static @Nullable CharSequence createInfo(Object... items) {
         return combineItems(ITEMS_DIVIDER, items);
     }
@@ -88,9 +81,7 @@ public class ServiceHelper {
         return combineItems(null, items);
     }
 
-    /**
-     * NOTE: ADDS SPECIAL BIDI CHARS. DON'T USE THIS INSIDE JSON
-     */
+     
     public static @Nullable CharSequence combineItems(CharSequence divider, Object... items) {
         SpannableStringBuilder result = new SpannableStringBuilder();
 
@@ -106,7 +97,7 @@ public class ServiceHelper {
                     continue;
                 }
 
-                // Fix mixed RTL and LTR content
+                 
                 strItem = BidiFormatter.getInstance().unicodeWrap(strItem);
 
                 if (divider == null || result.length() == 0) {
@@ -120,11 +111,7 @@ public class ServiceHelper {
         return result.length() != 0 ? result : null;
     }
 
-    /**
-     * Create absolute url from relative if needed<br/>
-     * There was a serious bug when absolute url prepended twice<br/>
-     * Also unescapes url for some cases
-     */
+     
     public static String tidyUrl(String url) {
         if (url == null) {
             return null;
@@ -137,7 +124,7 @@ public class ServiceHelper {
 
     public static String unescapeUrl(String url) {
         url = url.replace("\\/", "/");
-        url = url.replace("\\x3d", "="); // Hexadecimal escape sequences
+        url = url.replace("\\x3d", "=");  
         return url;
     }
 
@@ -230,7 +217,7 @@ public class ServiceHelper {
             return null;
         }
 
-        // Remove Bearer prefix
+         
         String[] split = authorization.split("\\s+");
 
         return split.length == 2 ? split[1] : split[0];
@@ -287,17 +274,17 @@ public class ServiceHelper {
         Matcher matcher = sIsoDurationPattern.matcher(duration);
 
         if (matcher.matches()) {
-            // Extract hours, minutes, and seconds (default to 0 if null)
+             
             String hours = matcher.group(1) != null ? matcher.group(1) : "0";
             String minutes = matcher.group(2) != null ? matcher.group(2) : "0";
             String seconds = matcher.group(3) != null ? matcher.group(3) : "0";
 
-            // Parse integers
+             
             int hoursInt = Integer.parseInt(hours);
             int minutesInt = Integer.parseInt(minutes);
             int secondsInt = Integer.parseInt(seconds);
 
-            // Build the duration string dynamically
+             
             if (hoursInt > 0) {
                 return String.format("%d:%02d:%02d", hoursInt, minutesInt, secondsInt);
             } else {

@@ -52,7 +52,7 @@ public class YouTubeAccount implements Account {
 
         account.mImageUrl = YouTubeHelper.avatarBlockFix(account.mImageUrl);
 
-        if (account.mRefreshToken == null) { // the account is broken
+        if (account.mRefreshToken == null) {  
             return null;
         }
 
@@ -140,18 +140,12 @@ public class YouTubeAccount implements Account {
         mIsSelected = selected;
     }
 
-    /**
-     * Every YouTube account has a channel<br/>
-     * This method could be served as a simple testing<br/>
-     * whether the account is belongs to YouTube
-     */
+     
     public boolean hasChannel() {
         return mHasChannel;
     }
 
-    /**
-     * This token token used along with the access token to support restricted videos
-     */
+     
     public String getPageIdToken() {
         return mPageIdToken;
     }

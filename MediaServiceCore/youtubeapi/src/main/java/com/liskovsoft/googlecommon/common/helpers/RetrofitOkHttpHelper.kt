@@ -31,7 +31,7 @@ internal object RetrofitOkHttpHelper {
 
     private val commonHeaders =
         mapOf(
-            // Enable compression in production
+             
             "Accept-Encoding" to DefaultHeaders.ACCEPT_ENCODING,
         )
 
@@ -52,9 +52,7 @@ internal object RetrofitOkHttpHelper {
             "https://clients1.google.com/complete/",
         )
 
-    /**
-     * NOTE: visitor header could broke many apis. E.g. VisitorService
-     */
+     
     private val visitorApiSuffixes = arrayOf(
         "/youtubei/v1/browse",
         "/youtubei/v1/search",
@@ -69,7 +67,7 @@ internal object RetrofitOkHttpHelper {
     private fun createClient(): OkHttpClient {
         val builder = OkHttpManager.instance().client.newBuilder()
         addCommonHeaders(builder)
-        //addCronetInterceptor(builder)
+         
         return builder.build()
     }
 
@@ -86,7 +84,7 @@ internal object RetrofitOkHttpHelper {
             if (apiPrefixes.any { url.startsWith(it) }) {
                 val doSkipAuth = authSkipList.remove(request)
 
-                // Empty Home fix (anonymous user) and improve Recommendations for everyone
+                 
                 if (visitorApiSuffixes.any { url.contains(it) })
                     headers["X-Goog-Visitor-Id"] ?: AppService.instance().visitorData?.let { requestBuilder.header("X-Goog-Visitor-Id", it) }
 
@@ -120,8 +118,8 @@ internal object RetrofitOkHttpHelper {
                 continue
             }
 
-            // Don't override existing headers
-            oldHeaders[header.key] ?: header.value?.let { builder.header(header.key, it) } // NOTE: don't remove null check
+             
+            oldHeaders[header.key] ?: header.value?.let { builder.header(header.key, it) }  
         }
     }
 
@@ -135,7 +133,7 @@ internal object RetrofitOkHttpHelper {
         var newUrlBuilder: HttpUrl.Builder? = null
 
         for (entry in keys) {
-            // Don't override existing keys
+             
             originUrl.queryParameter(entry.key) ?: run {
                 if (entry.value == null) {
                     return@run

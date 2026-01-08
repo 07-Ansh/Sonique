@@ -32,18 +32,14 @@ public class LocaleUpdater {
         try {
             return createLocale();
         } catch (NullPointerException e) {
-            // NullPointerException: com.liskovsoft.sharedutils.locale.LocaleUtility.getCurrentLocale (LocaleUtility.java:772)
+             
             e.printStackTrace();
         }
 
         return null;
     }
 
-    /**
-     * Get locale in http format (e.g. zh, ru-RU etc)<br/>
-     * Example: <code>ru,en-US;q=0.9,en;q=0.8,uk;q=0.7</code>
-     * @return lang code
-     */
+     
     public String getPreferredBrowserLocale() {
         String locale = getPreferredLanguage();
 
@@ -54,20 +50,14 @@ public class LocaleUpdater {
         return locale.replace("_", "-").toLowerCase();
     }
 
-    /**
-     * Get locale as lang code (e.g. zh, ru_RU etc)
-     * @return lang code
-     */
+     
     public String getPreferredLanguage() {
         String language = mPrefs.getPreferredLanguage();
 
         return language != null ? language : "";
     }
 
-    /**
-     * E.g. ru, uk, en
-     * @param langCode lang
-     */
+     
     public void setPreferredLanguage(String langCode) {
         mPrefs.setPreferredLanguage(langCode);
     }
@@ -111,7 +101,7 @@ public class LocaleUpdater {
             StringTokenizer tokenizer = new StringTokenizer(countryCode, "_");
             countryCode = tokenizer.nextToken();
             if (tokenizer.hasMoreTokens()) {
-                countryCode = tokenizer.nextToken(); // E.g. fr_BE
+                countryCode = tokenizer.nextToken();  
             }
         }
 

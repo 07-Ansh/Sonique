@@ -19,19 +19,7 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 
-/**
- * Try to resolve address with Google's dns below
- * <pre>
- * IPv4:
- * 8.8.8.8
- * 8.8.4.4
- * </pre>
- * <pre>
- * IPv6:
- * 2001:4860:4860::8888
- * 2001:4860:4860::8844
- * </pre>
- */
+ 
 public class GoogleResolver {
     private static final String TAG = GoogleResolver.class.getSimpleName();
     private static final String GOOGLE_DNS_IPV4 = "8.8.8.8";
@@ -84,8 +72,8 @@ public class GoogleResolver {
                 NetworkInterface network = networks.nextElement();
                 for (InterfaceAddress address : network.getInterfaceAddresses()) {
                     if (address.getAddress() instanceof Inet4Address) {
-                        // found IPv4 address
-                        // do any other validation of address you may need here
+                         
+                         
                         return true;
                     }
                 }

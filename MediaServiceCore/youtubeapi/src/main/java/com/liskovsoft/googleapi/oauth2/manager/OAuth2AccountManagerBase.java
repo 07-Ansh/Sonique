@@ -11,7 +11,7 @@ import java.util.Map;
 
 public abstract class OAuth2AccountManagerBase {
     private static final String TAG = OAuth2AccountManagerBase.class.getSimpleName();
-    private static final long TOKEN_REFRESH_PERIOD_MS = 60 * 60 * 1_000; // NOTE: auth token max lifetime is 60 min
+    private static final long TOKEN_REFRESH_PERIOD_MS = 60 * 60 * 1_000;  
     private String mCachedAuthorizationHeader;
     private long mCacheUpdateTime;
 
@@ -36,14 +36,12 @@ public abstract class OAuth2AccountManagerBase {
     private void updateAuthHeaders() {
         Account account = getSelectedAccount();
         String refreshToken = account != null ? ((YouTubeAccount) account).getRefreshToken() : null;
-        // get or create authorization on fly
+         
         mCachedAuthorizationHeader = createAuthorizationHeader(refreshToken);
         syncWithRetrofit();
     }
 
-    /**
-     * For testing purposes
-     */
+     
     public void setAuthorizationHeader(String authorizationHeader) {
         mCachedAuthorizationHeader = authorizationHeader;
         mCacheUpdateTime = System.currentTimeMillis();
@@ -55,9 +53,7 @@ public abstract class OAuth2AccountManagerBase {
         mCachedAuthorizationHeader = null;
     }
 
-    /**
-     * Authorization should be updated periodically (see expire_in field in response)
-     */
+     
     private synchronized String createAuthorizationHeader(String refreshToken) {
         Log.d(TAG, "Updating authorization header...");
 
@@ -86,7 +82,7 @@ public abstract class OAuth2AccountManagerBase {
             headers.put("Authorization", mCachedAuthorizationHeader);
             String pageIdToken = ((YouTubeAccount) getSelectedAccount()).getPageIdToken();
             if (pageIdToken != null) {
-                // Apply branded account rights (restricted videos). Branded refresh token with current account page id.
+                 
                 headers.put("X-Goog-Pageid", pageIdToken);
             }
         }

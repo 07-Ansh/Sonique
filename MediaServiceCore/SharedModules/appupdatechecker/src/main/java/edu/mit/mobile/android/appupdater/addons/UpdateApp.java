@@ -16,13 +16,7 @@ import edu.mit.mobile.android.appupdater.downloadmanager.MyDownloadManager.MyReq
 
 import java.io.File;
 
-/**
- * Usage:
- * <pre>
- *   atualizaApp = new UpdateApp(ctx);
- *   atualizaApp.execute("http://serverurl/appfile.apk");
- * </pre>
- */
+ 
 public class UpdateApp extends AsyncTask<Uri[],Void,Void> {
     private static final String TAG = UpdateApp.class.getSimpleName();
     private final Context mContext;
@@ -91,17 +85,17 @@ public class UpdateApp extends AsyncTask<Uri[],Void,Void> {
                 long id = manager.enqueue(request);
                 int size = manager.getSizeForDownloadedFile(id);
                 Uri destination = manager.getUriForDownloadedFile(id);
-                path = size > 1_000_000 ? destination.getPath() : null; // it could be a web page instead of apk
-            } catch (IllegalStateException ex) { // 403 or something else
+                path = size > 1_000_000 ? destination.getPath() : null;  
+            } catch (IllegalStateException ex) {  
                 Log.d(TAG, ex.toString());
             }
-        } catch (IllegalStateException ex) { // CANNOT OBTAIN WRITE PERMISSIONS
+        } catch (IllegalStateException ex) {  
             Log.e(TAG, ex.getMessage(), ex);
         }
         return path;
     }
 
-    // Smart update logic
+     
 
     public boolean cancelPendingUpdate() {
         mCancelInstall = true;

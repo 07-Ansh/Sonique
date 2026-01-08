@@ -28,7 +28,7 @@ internal object V8ChallengeProvider: JsRuntimeChalBaseJCP() {
     private fun v8NpmSource(scriptType: ScriptType): Script? {
         if (scriptType != ScriptType.LIB)
             return null
-        // V8-specific lib scripts that uses Deno NPM imports
+         
         val code = loadScript(v8NpmLibFilename, "Failed to read v8 challenge solver lib script")
         return Script(scriptType, ScriptVariant.V8_NPM, ScriptSource.BUILTIN, scriptVersion, code)
     }
@@ -53,7 +53,7 @@ internal object V8ChallengeProvider: JsRuntimeChalBaseJCP() {
             }
         } catch (e: V8ScriptExecutionException) {
             if (e.message?.contains("Invalid or unexpected token") ?: false)
-                ie.cache.clear(cacheSection) // cached data broken?
+                ie.cache.clear(cacheSection)  
             throw JsChallengeProviderError("V8 runtime error: ${e.message}", e)
         }
     }
@@ -62,13 +62,13 @@ internal object V8ChallengeProvider: JsRuntimeChalBaseJCP() {
         if (v8Runtime != null)
             return
         v8Runtime = V8.createV8Runtime()
-        runV8(constructCommonStdin()) // ignore the result, just warm up
+        runV8(constructCommonStdin())  
     }
 
     private fun disposeRuntime() {
         val runtime = v8Runtime ?: return
 
-        // NOTE: getting lock fixes "Invalid V8 thread access: the locker has been released!"
+         
         runtime.withLock {
             it.release(false)
         }
@@ -96,8 +96,8 @@ internal object V8ChallengeProvider: JsRuntimeChalBaseJCP() {
     }
 
     private fun shutdownIfNeeded() {
-        // NOTE: Possible Invalid thread access if using RxHelper runAsync
-        // NOTE: Shutdown should run on the same thread that created V8 engine.
+         
+         
         disposeRuntime()
     }
 }

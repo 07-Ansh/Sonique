@@ -1,9 +1,6 @@
 package com.liskovsoft.mediaserviceinterfaces.data;
 
-/**
- * <a href="https://wiki.sponsor.ajay.app/w/Segment_Categories">Segment specs</a><br/>
- * <a href="https://wiki.sponsor.ajay.app/w/API_Docs">Segment API</a><br/>
- */
+ 
 public interface SponsorSegment {
     String CATEGORY_SPONSOR = "sponsor";
     String CATEGORY_INTRO = "intro";

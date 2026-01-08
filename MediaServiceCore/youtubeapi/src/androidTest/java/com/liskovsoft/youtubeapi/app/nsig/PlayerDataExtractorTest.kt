@@ -78,7 +78,7 @@ class PlayerDataExtractorTest {
     @Test
     fun testSingleNSigPlayerVersion() {
         testNSigPlayerUrl("https://www.youtube.com/s/player/17ad44a3/tv-player-es6.vflset/tv-player-es6.js")
-        //testNSigPlayerUrl("https://www.youtube.com/s/player/a61444a1/tv-player-es6.vflset/tv-player-es6.js")
+         
         testNSigPlayerUrl("https://www.youtube.com/s/player/a61444a1/tv-player-ias.vflset/tv-player-ias.js")
 
         testNSigPlayerUrl("https://www.youtube.com/s/player/3d3ba064/player_ias_tce.vflset/en_US/base.js")
@@ -89,12 +89,12 @@ class PlayerDataExtractorTest {
     fun testSingleSigPlayerVersion() {
         testSigPlayerUrl("https://www.youtube.com/s/player/17ad44a3/tv-player-es6.vflset/tv-player-es6.js")
         testSigPlayerUrl("https://www.youtube.com/s/player/2b83d2e0/tv-player-ias.vflset/tv-player-ias.js")
-        //testSigPlayerUrl("https://www.youtube.com/s/player/2b83d2e0/tv-player-es6.vflset/tv-player-es6.js")
+         
     }
 
     @Test
     fun testSingleCPNPlayerVersion() {
-        //testNSigPlayerUrl("https://www.youtube.com/s/player/a61444a1/tv-player-es6.vflset/tv-player-es6.js")
+         
         testCPNPlayerUrl("https://www.youtube.com/s/player/a61444a1/tv-player-ias.vflset/tv-player-ias.js")
 
         testCPNPlayerUrl("https://www.youtube.com/s/player/3d3ba064/player_ias_tce.vflset/en_US/base.js")
@@ -103,7 +103,7 @@ class PlayerDataExtractorTest {
 
     @Test
     fun testSingleTimestampPlayerVersion() {
-        //testNSigPlayerUrl("https://www.youtube.com/s/player/a61444a1/tv-player-es6.vflset/tv-player-es6.js")
+         
         testTimestampPlayerUrl("https://www.youtube.com/s/player/a61444a1/tv-player-ias.vflset/tv-player-ias.js")
 
         testTimestampPlayerUrl("https://www.youtube.com/s/player/3d3ba064/player_ias_tce.vflset/en_US/base.js")
@@ -142,6 +142,6 @@ class PlayerDataExtractorTest {
         assertNotNull("Timestamp not null for url $url", timestamp)
     }
 
-    private fun getTestingUrls(): List<String> = AppConstants.playerUrls.take(5) // do limit to avoid OOM
+    private fun getTestingUrls(): List<String> = AppConstants.playerUrls.take(5)  
 }
 

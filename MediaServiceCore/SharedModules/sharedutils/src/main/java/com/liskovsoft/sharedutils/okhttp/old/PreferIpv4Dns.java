@@ -18,7 +18,7 @@ public class PreferIpv4Dns implements Dns {
             throw new UnknownHostException("Bad host: " + hostname);
         }
 
-        // prefer IPv4; list IPv4 first
+         
         ArrayList<InetAddress> result = new ArrayList<>();
         for (InetAddress address : addresses) {
             if (address instanceof Inet4Address) {

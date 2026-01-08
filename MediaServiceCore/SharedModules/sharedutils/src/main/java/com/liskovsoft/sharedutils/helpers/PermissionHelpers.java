@@ -15,33 +15,26 @@ import androidx.core.app.ActivityCompat;
 
 @TargetApi(16)
 public class PermissionHelpers {
-    // Storage Permissions
+     
     public static final int REQUEST_EXTERNAL_STORAGE = 112;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE
     };
 
-    // Mic Permissions
+     
     public static final int REQUEST_MIC = 113;
     private static String[] PERMISSIONS_MIC = {
             Manifest.permission.RECORD_AUDIO
     };
 
-    // Overlay Permissions
+     
     public static final int REQUEST_OVERLAY = 114;
     private static String[] PERMISSIONS_OVERLAY = {
             Settings.ACTION_MANAGE_OVERLAY_PERMISSION
     };
 
-    /**
-     * Checks if the com.sonique.app has permission to access device storage<br/>
-     * If the com.sonique.app does not has permission then the user will be prompted to grant permissions<br/>
-     * Required for the {@link Context#getExternalCacheDir()}<br/>
-     * NOTE: runs async<br/>
-     *
-     * @param context to apply permissions to
-     */
+     
     public static void verifyStoragePermissions(Context context) {
         requestPermissions(context, PERMISSIONS_STORAGE, REQUEST_EXTERNAL_STORAGE);
     }
@@ -52,7 +45,7 @@ public class PermissionHelpers {
 
     public static void verifyOverlayPermissions(Context context) {
         if (Build.VERSION.SDK_INT >= 29 && !Settings.canDrawOverlays(context) && context instanceof Activity) {
-            //requestPermissions(context, PERMISSIONS_OVERLAY, REQUEST_OVERLAY);
+             
             Intent intent = new Intent(
                     Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + context.getApplicationContext().getPackageName())
@@ -61,18 +54,14 @@ public class PermissionHelpers {
         }
     }
 
-    /**
-     * Only check. There is no prompt.
-     * @param context to apply permissions to
-     * @return whether permission already granted
-     */
+     
     public static boolean hasStoragePermissions(Context context) {
-        // Check if we have write permission
+         
         return hasPermissions(context, PERMISSIONS_STORAGE);
     }
 
     public static boolean hasMicPermissions(Context context) {
-        // Check if we have mic permission
+         
         return hasPermissions(context, PERMISSIONS_MIC);
     }
 
@@ -95,16 +84,13 @@ public class PermissionHelpers {
         return false;
     }
 
-    // Utils
+     
 
-    /**
-     * Shows permissions dialog<br/>
-     * NOTE: runs async
-     */
+     
     private static void requestPermissions(Context activity, String[] permissions, int requestId) {
         if (!hasPermissions(activity, permissions) && !Helpers.isGenymotion()) {
             if (activity instanceof Activity) {
-                // We don't have permission so prompt the user
+                 
                 ActivityCompat.requestPermissions(
                         (Activity) activity,
                         permissions,
@@ -114,11 +100,7 @@ public class PermissionHelpers {
         }
     }
 
-    /**
-     * Only check. There is no prompt.
-     * @param context to apply permissions to
-     * @return whether permission already granted
-     */
+     
     private static boolean hasPermissions(@Nullable Context context, String... permissions) {
         if (context == null) {
             return false;

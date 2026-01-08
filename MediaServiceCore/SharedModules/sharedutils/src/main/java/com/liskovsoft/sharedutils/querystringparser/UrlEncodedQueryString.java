@@ -29,7 +29,7 @@ class UrlEncodedQueryString implements UrlQueryString {
                 mQueryPrefix = String.format("%s://%s%s", parsedUrl.getScheme(), parsedUrl.getHost(), parsedUrl.getPath());
                 mQueryString = UrlEncodedQueryStringBase.parse(parsedUrl);
             }
-        } else { // Only query
+        } else {  
             mQueryString = UrlEncodedQueryStringBase.parse(url);
         }
     }
@@ -41,12 +41,12 @@ class UrlEncodedQueryString implements UrlQueryString {
         }
 
         try {
-            // Fix illegal character exception. E.g.
-            // https://www.youtube.com/results?search_query=Джентльмены удачи
-            // https://www.youtube.com/results?search_query=|FR|+Mrs.+Doubtfire
-            // https://youtu.be/wTw-jreMgCk\ (last char isn't valid)
-            // https://m.youtube.com/watch?v=JsY3_Va6uqI&feature=emb_title###&Urj7svfj=&Rkj2f3jk=&Czj1i9k6= (# isn't valid)
-            return new URI(url.length() > 100 ? // OOM fix: don't replace long string
+             
+             
+             
+             
+             
+            return new URI(url.length() > 100 ?  
                     url : url
                       .replace(" ", "+")
                       .replace("|", "%7C")
@@ -54,7 +54,7 @@ class UrlEncodedQueryString implements UrlQueryString {
                       .replace("#", "")
             );
         } catch (URISyntaxException e) {
-            //throw new RuntimeException(e);
+             
         }
 
         return null;
@@ -109,9 +109,7 @@ class UrlEncodedQueryString implements UrlQueryString {
         return mQueryPrefix != null ? String.format("%s?%s", mQueryPrefix, mQueryString) : mQueryString.toString();
     }
 
-    /**
-     * Check query string
-     */
+     
     @Override
     public boolean isValid() {
         if (mUrl == null) {

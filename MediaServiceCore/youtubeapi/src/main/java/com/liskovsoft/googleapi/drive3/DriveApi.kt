@@ -18,14 +18,10 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-/**
- * https://developers.google.com/drive/api/reference/rest/v3
- */
+ 
 @WithGson
 internal interface DriveApi {
-    /**
-     * Metadata: https://developers.google.com/drive/api/reference/rest/v3/files#File
-     */
+     
     @Multipart
     @POST("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")
     fun uploadFile(@Part("metadata") metadata: FileMetadata, @Part("file") file: RequestBody): Call<FileMetadata?>
@@ -40,9 +36,7 @@ internal interface DriveApi {
     @DELETE("https://www.googleapis.com/drive/v3/files/{fileId}")
     fun deleteFile(@Path("fileId") fileId: String): Call<Unit?>
 
-    /**
-     * https://developers.google.com/drive/api/reference/rest/v3/files/get
-     */
+     
     @GET("https://www.googleapis.com/drive/v3/files/{fileId}?alt=media")
     fun getFile(@Path("fileId") fileId: String): Call<ResponseBody?>
 
@@ -53,21 +47,7 @@ internal interface DriveApi {
     @POST("https://www.googleapis.com/drive/v3/files")
     fun createFolder(@Body metadata: FileMetadata): Call<FileMetadata?>
 
-    /**
-     * Query example: mimeType='text/plain' and parents in '1JfVoj74d1TBf-pAe8GxGVo0LTSWi6sNP'
-     *
-     * https://stackoverflow.com/questions/45432906/how-to-search-file-inside-a-specific-folder-in-google-api-v3
-     *
-     * https://developers.google.com/drive/api/guides/ref-search-terms
-     *
-     * https://developers.google.com/drive/api/reference/rest/v3/drives/list
-     *
-     * https://developers.google.com/drive/api/guides/mime-types
-     *
-     * https://developers.google.com/drive/api/guides/search-files
-     *
-     * https://developers.google.com/drive/api/reference/rest/v3/files/list
-     */
+     
     @GET("https://www.googleapis.com/drive/v3/files")
     fun getList(@Query("q") query: String): Call<ListResult?>
 }

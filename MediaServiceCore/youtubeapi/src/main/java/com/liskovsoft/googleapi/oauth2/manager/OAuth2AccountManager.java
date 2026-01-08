@@ -20,9 +20,7 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
     private final OAuth2Service mOAuth2Service;
     private UserCode mUserCodeResult;
     private Runnable mOnChange;
-    /**
-     * Fix ConcurrentModificationException when using {@link #getSelectedAccount()}
-     */
+     
     private final List<Account> mAccounts = new CopyOnWriteArrayList<Account>() {
         @Override
         public boolean add(Account account) {
@@ -32,7 +30,7 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
 
             merge(account);
 
-            // Don't remove these lines or you won't be able to enter to the account.
+             
             while (contains(account)) {
                 remove(account);
             }
@@ -59,7 +57,7 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
             try {
                 updateAuthHeadersIfNeeded();
             } catch (Exception e) {
-                // Host not found
+                 
                 e.printStackTrace();
             }
         });
@@ -73,32 +71,30 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
         return sInstance;
     }
 
-    //public Observable<String> signInObserve() {
-    //    return RxHelper.createLong(emitter -> {
-    //        UserCode userCodeResult = mOAuth2Service.getUserCode();
-    //
-    //        if (userCodeResult == null) {
-    //            RxHelper.onError(emitter, "User code result is empty");
-    //            return;
-    //        }
-    //
-    //        emitter.onNext(userCodeResult.getUserCode());
-    //
-    //        try {
-    //            AccessToken token = mOAuth2Service.getAccessTokenWait(userCodeResult.getDeviceCode());
-    //
-    //            persistRefreshToken(token.getRefreshToken());
-    //
-    //            emitter.onComplete();
-    //        } catch (InterruptedException e) {
-    //            // NOP
-    //        }
-    //    });
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
-    /**
-     * The code is working limited amount of time. Need to be confirmed instantly.
-     */
+     
     public SignInCode getSignInCode() {
         mUserCodeResult = mOAuth2Service.getUserCode();
         return mUserCodeResult != null ? new SignInCode() {
@@ -124,7 +120,7 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
 
             persistRefreshToken(token.getRefreshToken());
         } catch (InterruptedException e) {
-            // NOP
+             
         } finally {
             mUserCodeResult = null;
         }
@@ -134,39 +130,37 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
         return mAccounts;
     }
 
-    /**
-     * Set selected account token
-     */
+     
     private void persistRefreshToken(String refreshToken) {
         if (refreshToken == null) {
             Log.e(TAG, "Refresh token is null");
             return;
         }
 
-        // Create initial account (with only refresh key)
+         
         YouTubeAccount tempAccount = YouTubeAccount.fromToken(refreshToken);
         addAccount(tempAccount);
 
-        //// Use initial account to create auth header
-        //checkAuth();
-        //
-        //// Remove initial account (with only refresh key)
-        //removeAccount(tempAccount);
-        //
-        //List<AccountInt> accountsInt = mOAuth2Service.getAccounts(); // runs under auth header from above
-        //
-        //if (accountsInt != null) {
-        //    for (AccountInt accountInt : accountsInt) {
-        //        AccountImpl account = AccountImpl.from(accountInt);
-        //        account.setRefreshToken(refreshToken);
-        //        addAccount(account);
-        //    }
-        //}
-        //
-        //fixSelectedAccount();
-        //
-        //// Apply merged tokens
-        //checkAuth();
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
 
         Log.d(TAG, "Success. Refresh token stored successfully in registry: " + refreshToken);
     }
@@ -219,7 +213,7 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
         invalidateCache();
 
         if (mOnChange != null) {
-            // Fix sign in bug
+             
             RxHelper.runUser(mOnChange);
         }
     }
@@ -242,8 +236,8 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
     }
 
     private void setAccountManagerData(String data) {
-        // We don't have context, so can't create instance here.
-        // Let's hope someone already created one for us.
+         
+         
         if (GlobalPreferences.sInstance == null) {
             Log.e(TAG, "GlobalPreferences is null!");
             return;
@@ -253,8 +247,8 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
     }
 
     private String getAccountManagerData() {
-        // We don't have context, so can't create instance here.
-        // Let's hope someone already created one for us.
+         
+         
         if (GlobalPreferences.sInstance == null) {
             Log.e(TAG, "GlobalPreferences is null!");
             return null;
@@ -271,10 +265,7 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
         mOnChange = onChange;
     }
 
-    /**
-     * Fix situations when there is no selected account<br/>
-     * Mark first one as selected.
-     */
+     
     private void fixSelectedAccount() {
         if (mAccounts.isEmpty()) {
             return;
@@ -287,8 +278,8 @@ public class OAuth2AccountManager extends OAuth2AccountManagerBase {
 
     @Override
     protected AccessToken obtainAccessToken(String refreshToken) {
-        // We don't have context, so can't create instance here.
-        // Let's hope someone already created one for us.
+         
+         
         if (GlobalPreferences.sInstance == null) {
             Log.e(TAG, "GlobalPreferences is null!");
             return null;

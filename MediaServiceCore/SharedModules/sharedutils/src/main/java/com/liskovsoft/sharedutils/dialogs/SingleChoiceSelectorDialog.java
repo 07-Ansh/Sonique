@@ -34,7 +34,7 @@ public class SingleChoiceSelectorDialog extends GenericSelectorDialog {
 
         textView.setChecked(true);
 
-        if (item.getChecked() != textView.isChecked()) { // prevent user for click on same item twice
+        if (item.getChecked() != textView.isChecked()) {  
             item.setChecked(textView.isChecked());
 
             updateViews(getRoot());

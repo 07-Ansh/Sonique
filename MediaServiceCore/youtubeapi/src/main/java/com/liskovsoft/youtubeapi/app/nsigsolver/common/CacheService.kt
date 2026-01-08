@@ -43,14 +43,14 @@ internal object CacheService {
     private fun persistToStorage(section: String, key: String, content: CachedData) {
         val prefs = getSharedPrefs(getPrefsName(section))
 
-        prefs.clear() // free some RAM (one value per file)
+        prefs.clear()  
         prefs.putString(getCodeKey(key), content.code)
         prefs.putString(getVersionKey(key), content.version)
         prefs.putString(getVariantKey(key), content.variant)
     }
 
     private fun getSharedPrefs(name: String): SharedPreferencesBase {
-        // Use standalone prefs per section to preserve RAM
+         
         return prefs[name]?.get() ?: SharedPreferencesBase(AppService.instance().context, name)
             .also {
                 prefs[name] = WeakReference(it)

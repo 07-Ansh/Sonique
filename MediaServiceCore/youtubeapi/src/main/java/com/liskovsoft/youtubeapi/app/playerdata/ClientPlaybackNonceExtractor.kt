@@ -8,22 +8,10 @@ internal object ClientPlaybackNonceExtractor {
     private const val FUNCTION_RANDOM_BYTES: String =
         "var window={};window.crypto={getRandomValues:function(arr){for(var i=0;i<arr.length;i++){arr[i]=Math.floor(Math.random()*Math.floor(Math.pow(2,8*arr.BYTES_PER_ELEMENT)))}}};"
 
-    /**
-     * Return Client Playback Nonce (CPN) function that used in tracking as string.<br/>
-     * A nonce is a unique value chosen by an entity in a protocol, and it is used to protect that entity against attacks which fall under the very large umbrella of "replay".<br/>
-     * Used with History and other stuff.<br/>
-     * Note: [\S\s]* - match any char (including new lines) after getRandomValues<br/>
-     * Player url example: <b>https://www.youtube.com/s/player/e49bfb00/tv-player-ias.vflset/tv-player-ias.js</b>
-     */
+     
     private val mClientPlaybackNonceFunctionV1: Pattern = Pattern.compile(";function [$\\w]+\\([\\w]?\\)\\{if\\(window\\.crypto&&window\\.crypto\\.getRandomValues[\\S\\s]*?" +
             "function [$\\w]+\\(\\)\\{for\\(var .*[\\w]\\.push\\(\".*\"\\.charAt\\(.*\\)\\);return [\\w]\\.join\\(\"\"\\)\\}")
-    /**
-     * Return Client Playback Nonce (CPN) function that used in tracking as string.<br/>
-     * A nonce is a unique value chosen by an entity in a protocol, and it is used to protect that entity against attacks which fall under the very large umbrella of "replay".<br/>
-     * Used with History and other stuff.<br/>
-     * Note: [\S\s]* - match any char (including new lines) after getRandomValues<br/>
-     * Player url example: <b>https://www.youtube.com/s/player/e49bfb00/tv-player-ias.vflset/tv-player-ias.js</b>
-     */
+     
     private val mClientPlaybackNonceFunctionV2: Pattern = Pattern.compile("function [$\\w]+\\([\\w]?\\)\\{if\\(window\\.crypto&&window\\.crypto\\.getRandomValues[\\S\\s]*?" +
             "function [$\\w]+\\([\\w]?\\)\\{.*for\\(\\w+ .*[\\w]\\.push\\(\".*\"\\.charAt\\(.*\\)\\);return [\\w]\\.join\\(\"\"\\)\\}")
     private val SIGNATURE_CLIENT_PLAYBACK_NONCE_V1: Pattern = Pattern.compile("function [$\\w]+\\(\\)")

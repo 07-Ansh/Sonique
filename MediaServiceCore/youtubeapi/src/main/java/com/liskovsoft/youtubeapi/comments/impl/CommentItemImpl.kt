@@ -49,6 +49,6 @@ internal data class CommentItemImpl(val commentItemWrapper: CommentItemWrapper):
 
     override fun getReplyCount(): String? = replyCountItem
 
-    override fun isEmpty(): Boolean = replyCountItem == null || nestedCommentKeyItem == null // empty replies fix
+    override fun isEmpty(): Boolean = replyCountItem == null || nestedCommentKeyItem == null  
 }
 

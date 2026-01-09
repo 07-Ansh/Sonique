@@ -138,7 +138,7 @@ actual suspend fun restoreNative(
 
                     entry.name.startsWith("$DOWNLOAD_EXOPLAYER_FOLDER/") -> {
                         Logger.d("BackupRestore", "Found download entry: ${entry.name}")
-                        // Clear download folder on first encounter
+                         
                         if (!downloadFolderCleared) {
                             val downloadFolder = application.filesDir / DOWNLOAD_EXOPLAYER_FOLDER
                             Logger.d("BackupRestore", "=== RESTORE: Download folder contents BEFORE clearing ===")
@@ -160,14 +160,14 @@ actual suspend fun restoreNative(
             }
         }
     }
-    // Final debug check
+     
     val downloadFolder = application.filesDir / DOWNLOAD_EXOPLAYER_FOLDER
     Logger.d("BackupRestore", "=== RESTORE: Download folder contents AFTER RESTORE ===")
     debugFolderContents(downloadFolder)
 
     withContext(Dispatchers.Main) {
         showToast(getString(Res.string.restore_success), ToastGravity.Bottom)
-//                        mediaPlayerHandler.stopMediaService(application)
+ 
         stopService(application)
         getData()
         val ctx = application.applicationContext
@@ -230,9 +230,9 @@ private fun clearFolder(folder: File) {
                 Logger.d("BackupRestore", "Deleting file: ${file.name}")
                 file.delete()
             } else if (file.isDirectory) {
-                clearFolder(file) // Recursive
+                clearFolder(file)  
                 Logger.d("BackupRestore", "Deleting directory: ${file.name}")
-                file.delete() // Delete empty directory
+                file.delete()  
             }
         }
     }
@@ -246,24 +246,24 @@ private fun restoreFolder(
     val application: Context = getKoin().get()
     Logger.d("BackupRestore", "Restoring entry: $entryName")
 
-    // Extract relative path from entry name
+     
     val relativePath = entryName.removePrefix("$baseFolderName/")
     val targetFile = application.filesDir / baseFolderName / relativePath
 
     Logger.d("BackupRestore", "Target file path: ${targetFile.absolutePath}")
     Logger.d("BackupRestore", "Relative path: $relativePath")
 
-    // Create parent directories if they don't exist
+     
     val parentCreated = targetFile.parentFile?.mkdirs()
     Logger.d("BackupRestore", "Parent dir created: $parentCreated, parent exists: ${targetFile.parentFile?.exists()}")
 
     try {
-        // Restore the file content
+         
         targetFile.outputStream().use { outputStream ->
             val bytesWritten = zipInputStream.copyTo(outputStream)
             Logger.d("BackupRestore", "Restored file: ${targetFile.name}, bytes: $bytesWritten")
 
-            // Verify file was created
+             
             if (targetFile.exists()) {
                 Logger.d("BackupRestore", "File exists after restore: ${targetFile.name}, size: ${targetFile.length()}")
             } else {
@@ -307,7 +307,7 @@ actual suspend fun backupNative(
                         outputStream.putNextEntry(ZipEntry(EXOPLAYER_DB_NAME))
                         inputStream.copyTo(outputStream)
                     }
-                // Backup download folder
+                 
                 val downloadFolder = application.filesDir / DOWNLOAD_EXOPLAYER_FOLDER
                 Logger.d("BackupRestore", "=== BACKUP: Download folder contents BEFORE backup ===")
                 debugFolderContents(downloadFolder)

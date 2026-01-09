@@ -26,18 +26,18 @@ public class TileItem {
 
     @JsonPath({
             "$.header.tileHeaderRenderer",
-            "$.header.trackTileHeaderRenderer" // Music playlist
+            "$.header.trackTileHeaderRenderer"  
     })
     private Header mHeader;
 
     @JsonPath({"$.metadata.tileMetadataRenderer",
-            "$.header.tileHeaderRenderer.thumbnailOverlays[0].tileMetadataRenderer"}) // V4 search metadata
+            "$.header.tileHeaderRenderer.thumbnailOverlays[0].tileMetadataRenderer"})  
     private Metadata mMetadata;
 
     @JsonPath({
-            "$.onSelectCommand.reelWatchEndpoint.videoId", // short
-            "$.onSelectCommand.watchEndpoint.videoId", // regular video
-            "$.onSelectCommand.showMenuCommand.contentId" // rent movie
+            "$.onSelectCommand.reelWatchEndpoint.videoId",  
+            "$.onSelectCommand.watchEndpoint.videoId",  
+            "$.onSelectCommand.showMenuCommand.contentId"  
     })
     private String mVideoId;
 
@@ -51,16 +51,16 @@ public class TileItem {
     private String mPlaylistId;
 
     @JsonPath({
-            // New videos row in Music section
+             
             "$.menu.menuRenderer.items[*].menuNavigationItemRenderer.navigationEndpoint.watchEndpoint.videoId",
-            "$.onLongPressCommand.showMenuCommand.menu.menuRenderer.items[*].menuNavigationItemRenderer.navigationEndpoint.watchEndpoint.videoId" // v2 feedback token
+            "$.onLongPressCommand.showMenuCommand.menu.menuRenderer.items[*].menuNavigationItemRenderer.navigationEndpoint.watchEndpoint.videoId"  
     })
     private List<String> mVideoIds;
 
     @JsonPath({
-            // New videos row in Music section
+             
             "$.menu.menuRenderer.items[*].menuNavigationItemRenderer.navigationEndpoint.watchEndpoint.playlistId",
-            "$.onLongPressCommand.showMenuCommand.menu.menuRenderer.items[*].menuNavigationItemRenderer.navigationEndpoint.watchEndpoint.playlistId" // v2 feedback token
+            "$.onLongPressCommand.showMenuCommand.menu.menuRenderer.items[*].menuNavigationItemRenderer.navigationEndpoint.watchEndpoint.playlistId"  
     })
     private List<String> mPlaylistIds;
 
@@ -74,7 +74,7 @@ public class TileItem {
     private String mContentType;
 
     @JsonPath({"$.menu.menuRenderer.items[*].menuServiceItemRenderer.serviceEndpoint.feedbackEndpoint.feedbackToken",
-            "$.onLongPressCommand.showMenuCommand.menu.menuRenderer.items[*].menuServiceItemRenderer.serviceEndpoint.feedbackEndpoint.feedbackToken"}) // v2 feedback token
+            "$.onLongPressCommand.showMenuCommand.menu.menuRenderer.items[*].menuServiceItemRenderer.serviceEndpoint.feedbackEndpoint.feedbackToken"})  
     private List<String> mFeedbackToken;
 
     public Header getHeader() {

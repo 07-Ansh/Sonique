@@ -49,7 +49,7 @@ final class SearchFilterHelper {
 
         sParams = new String[MAX_PARAMS][MAX_PARAMS][MAX_PARAMS][MAX_PARAMS][MAX_PARAMS];
 
-        // Single criteria
+         
 
         sParams[UPLOAD_DATE_LAST_HOUR][DURATION_ANY][TYPE_ANY][FEATURE_ANY][SORT_BY_RELEVANCE] = "EgQIARAB";
         sParams[UPLOAD_DATE_TODAY][DURATION_ANY][TYPE_ANY][FEATURE_ANY][SORT_BY_RELEVANCE] = "EgQIAhAB";
@@ -78,7 +78,7 @@ final class SearchFilterHelper {
         sParams[UPLOAD_DATE_ALL][DURATION_ANY][TYPE_ANY][FEATURE_ANY][SORT_BY_RATING] = "CAESAhAB";
 
 
-        // Various combinations
+         
 
         sParams[UPLOAD_DATE_TODAY][DURATION_UNDER_4][TYPE_ANY][FEATURE_ANY][SORT_BY_RELEVANCE] = "EgYIAhABGAE%3D";
         sParams[UPLOAD_DATE_TODAY][DURATION_BETWEEN_4_20][TYPE_ANY][FEATURE_ANY][SORT_BY_RELEVANCE] = "EgYIAhABGAM%3D";

@@ -8,8 +8,8 @@ private const val JSON_POST_DATA_BASE = "{\"context\":{\"client\":{\"clientName\
         "\"clientScreen\":\"%s\",\"userAgent\":\"%s\",%s\"acceptLanguage\":\"%%s\",\"acceptRegion\":\"%%s\"," +
         "\"utcOffsetMinutes\":\"%%s\",\"visitorData\":\"%%s\"},%%s\"user\":{\"enableSafetyMode\":false,\"lockedSafetyMode\":false}}," +
         "\"racyCheckOk\":true,\"contentCheckOk\":true,%%s}"
-// Merge Shorts with Subscriptions: TV_APP_QUALITY_LIMITED_ANIMATION
-// Separate Shorts from Subscriptions: TV_APP_QUALITY_FULL_ANIMATION
+ 
+ 
 private const val POST_DATA_BROWSE_TV =
     "\"tvAppInfo\":{\"appQuality\":\"TV_APP_QUALITY_FULL_ANIMATION\",\"zylonLeftNav\":true},\"webpSupport\":false,\"animatedWebpSupport\":true,"
 private const val POST_DATA_BROWSE_TV_LEGACY =
@@ -18,35 +18,33 @@ private const val POST_DATA_IOS = "\"deviceModel\":\"%s\",\"osVersion\":\"%s\","
 private const val POST_DATA_ANDROID_OS = "\"osName\":\"Android\",\"osVersion\":\"%s\","
 private const val POST_DATA_ANDROID_SDK = "\"androidSdkVersion\":\"%s\","
 private const val POST_DATA_BROWSER = "\"browserName\":\"%s\",\"browserVersion\":\"%s\","
-private const val CLIENT_SCREEN_WATCH = "WATCH" // won't play 18+ restricted videos
-private const val CLIENT_SCREEN_EMBED = "EMBED" // no 18+ restriction but not all video embeddable, and no descriptions
+private const val CLIENT_SCREEN_WATCH = "WATCH"  
+private const val CLIENT_SCREEN_EMBED = "EMBED"  
 
-/**
- * https://github.com/gamer191/yt-dlp/blob/3ad3676e585d144c16a2c5945eb6e422fb918d44/yt_dlp/extractor/youtube/_base.py#L41
- */
+ 
 enum class AppClient(
     @JvmField val clientName: String, @JvmField val clientVersion: String, val innerTubeName: Int, val userAgent: String, val referer: String?,
     val clientScreen: String = CLIENT_SCREEN_WATCH, val params: String? = null, val postData: String? = null, val postDataBrowse: String? = null
 ): MediaItemFormatInfo.ClientInfo {
-    // Doesn't support 8AEB2AMB param if X-Goog-Pageid is set!
+     
     TV("TVHTML5", "7.20250714.16.00", 7, userAgent = DefaultHeaders.USER_AGENT_TV,
         referer = "https://www.youtube.com/tv", postDataBrowse = POST_DATA_BROWSE_TV),
     TV_LEGACY(TV, postDataBrowse = POST_DATA_BROWSE_TV_LEGACY),
     TV_EMBED("TVHTML5_SIMPLY_EMBEDDED_PLAYER", "2.0", 85, userAgent = DefaultHeaders.USER_AGENT_TV,
         referer = "https://www.youtube.com/tv", clientScreen = CLIENT_SCREEN_EMBED, postDataBrowse = POST_DATA_BROWSE_TV),
-    // Can't use authorization
+     
     TV_SIMPLY("TVHTML5_SIMPLY", "1.0", 75, userAgent = DefaultHeaders.USER_AGENT_TV,
         referer = "https://www.youtube.com/tv", postDataBrowse = POST_DATA_BROWSE_TV),
     TV_KIDS("TVHTML5_KIDS", "3.20231113.03.00", -1, userAgent = DefaultHeaders.USER_AGENT_TV,
         referer = "https://www.youtube.com/tv/kids", postDataBrowse = POST_DATA_BROWSE_TV),
     TV_DOWNGRADED(TV, clientVersion = "5.20251105", userAgent = DefaultHeaders.USER_AGENT_COBALT_DOWNGRADED),
-    // 8AEB2AMB - web client premium formats?
+     
     WEB("WEB", "2.20250312.04.00", 1, userAgent = DefaultHeaders.USER_AGENT_WEB,
         referer = "https://www.youtube.com/"),
-    // Use WEB_EMBEDDED_PLAYER instead of WEB. Some videos have 403 error on WEB.
+     
     WEB_EMBED("WEB_EMBEDDED_PLAYER", "1.20250310.01.00", 56, userAgent = DefaultHeaders.USER_AGENT_WEB,
         referer = "https://www.youtube.com/"),
-    // Request contains an invalid argument.
+     
     WEB_CREATOR("WEB_CREATOR", "1.20220726.00.00", 62, userAgent = DefaultHeaders.USER_AGENT_WEB,
         referer = "https://www.youtube.com/"),
     WEB_REMIX("WEB_REMIX", "1.20240819.01.00", 67, userAgent = DefaultHeaders.USER_AGENT_WEB,
@@ -84,9 +82,9 @@ enum class AppClient(
     val baseTemplate by lazy { String.format(JSON_POST_DATA_BASE, clientName, clientVersion, clientScreen, userAgent,
         (postDataBrowser ?: "") + (postData ?: "")) }
 
-    val isAuthSupported by lazy { Helpers.equalsAny(this, TV, TV_LEGACY, TV_EMBED, TV_KIDS, TV_DOWNGRADED) } // NOTE: TV_SIMPLY doesn't support auth
+    val isAuthSupported by lazy { Helpers.equalsAny(this, TV, TV_LEGACY, TV_EMBED, TV_KIDS, TV_DOWNGRADED) }  
     val isWebPotRequired by lazy { Helpers.equalsAny(this, WEB, MWEB, WEB_EMBED, WEB_SAFARI, INITIAL, GEO) }
-    // TODO: remove after implement SABR
+     
     val isPlaybackBroken by lazy { Helpers.equalsAny(this, INITIAL, WEB, WEB_CREATOR, WEB_REMIX, WEB_SAFARI, ANDROID_VR, GEO, MWEB) }
     val isReelClient by lazy { Helpers.equalsAny(this, ANDROID_REEL) }
     val isTVClient by lazy { name.startsWith("TV") }
@@ -94,7 +92,7 @@ enum class AppClient(
     val isEmbedded by lazy { Helpers.equalsAny(this, WEB_EMBED, TV_EMBED) }
 
     private fun extractBrowserInfo(userAgent: String): Pair<String, String> {
-        // Include Shorts: "browserName":"Cobalt"
+         
         val browserName = "Cobalt"
         val browserVersion = "22.lts.3.306369-gold"
 

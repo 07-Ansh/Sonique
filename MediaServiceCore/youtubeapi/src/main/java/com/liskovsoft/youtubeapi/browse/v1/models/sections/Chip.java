@@ -15,7 +15,7 @@ public class Chip {
     @JsonPath("$.content.horizontalListRenderer.continuations[0].nextContinuationData.continuation")
     private String mNextPageKey;
 
-    // Next section presents only inside suggestions
+     
     @JsonPath("$.content.horizontalListRenderer.items[*]")
     private List<ItemWrapper> mItemWrappers;
 

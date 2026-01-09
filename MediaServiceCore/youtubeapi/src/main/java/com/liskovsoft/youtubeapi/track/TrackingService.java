@@ -53,19 +53,19 @@ public class TrackingService {
 
     private void updateWatchTimeFull(String videoId, float lengthSec, float oldPositionSec, float positionSec, String clientPlaybackNonce,
                                  String eventId, String visitorMonitoringData, String ofParam) {
-        // Mark video as full watched if less than couple minutes remains
+         
         boolean isVideoAlmostWatched = lengthSec - positionSec < getEndThresholdSec(lengthSec);
-        //boolean previouslyAlmostWatched = previouslyAlmostWatched(videoId, lengthSec);
-        //
-        //if (isVideoAlmostWatched && previouslyAlmostWatched) {
-        //    return;
-        //}
+         
+         
+         
+         
+         
 
-        //if (isVideoAlmostWatched) {
-        //    createWatchRecordShort(videoId, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
-        //    updateWatchTimeShort(videoId, lengthSec, lengthSec, lengthSec, clientPlaybackNonce, eventId, visitorMonitoringData, ofParam);
-        //    return;
-        //}
+         
+         
+         
+         
+         
 
         if (isVideoAlmostWatched) {
             positionSec = lengthSec;
@@ -89,7 +89,7 @@ public class TrackingService {
                 ofParam
         );
 
-        RetrofitHelper.get(wrapper); // execute
+        RetrofitHelper.get(wrapper);  
     }
 
     private void updateWatchTimeLong(String videoId, float lengthSec, float oldPositionSec, float positionSec, String clientPlaybackNonce,
@@ -104,7 +104,7 @@ public class TrackingService {
                 ofParam
         );
 
-        RetrofitHelper.get(wrapper); // execute
+        RetrofitHelper.get(wrapper);  
     }
 
     private void createWatchRecordShort(String videoId, String clientPlaybackNonce,
@@ -119,7 +119,7 @@ public class TrackingService {
                 ofParam
         );
 
-        RetrofitHelper.get(wrapper); // execute
+        RetrofitHelper.get(wrapper);  
     }
 
     private void updateWatchTimeShort(String videoId, float lengthSec, float oldPositionSec, float positionSec, String clientPlaybackNonce,
@@ -134,7 +134,7 @@ public class TrackingService {
                 ofParam
         );
 
-        RetrofitHelper.get(wrapper); // execute
+        RetrofitHelper.get(wrapper);  
     }
 
     @NonNull

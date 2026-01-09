@@ -52,8 +52,8 @@ public class YouTubeUrlListBuilder implements UrlListBuilder {
 
         List<String> list = new ArrayList<>();
 
-        // Put hq items on top.
-        // Note, hq items sometimes cannot be played.
+         
+         
         for (MediaFormat item : mVideos) {
             list.add(0, item.getUrl());
         }

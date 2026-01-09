@@ -16,17 +16,15 @@ import org.junit.Ignore
 @Ignore("Won't work with TV auth headers")
 @RunWith(RobolectricTestRunner::class)
 class NotificationsApiTest {
-    /**
-     * Authorization should be updated each hour
-     */
+     
     private var mService: NotificationsApi? = null
 
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
         mService = RetrofitHelper.create(NotificationsApi::class.java)
         RetrofitOkHttpHelper.authHeaders["Authorization"] = TestHelpers.getAuthorization()
         RetrofitOkHttpHelper.disableCompression = true

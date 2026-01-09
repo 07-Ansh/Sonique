@@ -6,11 +6,7 @@ import com.liskovsoft.sharedutils.querystringparser.UrlQueryStringFactory;
 import com.liskovsoft.googlecommon.common.converters.jsonpath.JsonPath;
 import com.liskovsoft.googlecommon.common.models.V2.TextItem;
 
-/**
- * YouTube subs not supported by ExoPlayer?<br/>
- * https://js-jrod.medium.com/the-first-complete-guide-to-youtube-captions-f886e06f7d9d<br/>
- * https://en.wikipedia.org/wiki/Timed_Text_Markup_Language<br/>
- */
+ 
 public class CaptionTrack {
     public enum CaptionFormat {
         TTML("ttml", "stpp", "application/ttml+xml"),
@@ -30,31 +26,21 @@ public class CaptionTrack {
     private static final String TYPE_ASR = "asr";
     public static CaptionFormat sFormat = CaptionFormat.TTML;
 
-    /**
-     * Example: "https://www.youtube.com/api/timedtext?caps=&key=yt…&sparams=caps%2Cv%2Cxorp%2Cexpire&lang=en&name=en"
-     */
+     
     @JsonPath("$.baseUrl")
     private String mBaseUrl;
-    /**
-     * Example: true
-     */
+     
     @JsonPath("$.isTranslatable")
     private boolean mIsTranslatable;
-    /**
-     * Example: "en"
-     */
+     
     @JsonPath("$.languageCode")
     private String mLanguageCode;
-    /**
-     * Example: ".en.nP7-2PuUl7o"
-     */
+     
     @JsonPath("$.vssId")
     private String mVssId;
     @JsonPath("$.name")
     private TextItem mName;
-    /**
-     * E.g. asr (Automatic Speech Recognition)
-     */
+     
     @JsonPath("$.kind")
     private String mType;
     private UrlQueryString mBaseUrlQuery;
@@ -109,7 +95,7 @@ public class CaptionTrack {
             return null;
         }
 
-        if (mBaseUrl.startsWith("/")) { // Fix relative urls (mweb client)
+        if (mBaseUrl.startsWith("/")) {  
             mBaseUrl = "https://www.youtube.com" + mBaseUrl;
         }
 

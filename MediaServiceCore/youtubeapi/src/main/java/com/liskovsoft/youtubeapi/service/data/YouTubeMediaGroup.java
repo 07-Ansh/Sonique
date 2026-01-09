@@ -58,7 +58,7 @@ public class YouTubeMediaGroup implements MediaGroup {
         YouTubeMediaGroup newGroup = new YouTubeMediaGroup(baseGroup.getType());
         newGroup.mTitle = baseGroup.getTitle();
 
-        // Subscribed channel view. Add details.
+         
         if (continuation.getBrowseId() != null) {
             newGroup.mChannelId = continuation.getBrowseId();
         }
@@ -181,7 +181,7 @@ public class YouTubeMediaGroup implements MediaGroup {
 
         if (sections != null && sections.size() > 0) {
             for (Section section : sections) {
-                // Section contains chips (nested sections) or items. Not both.
+                 
                 if (section.getChips() != null) {
                     for (Chip chip : section.getChips()) {
                         result.add(YouTubeMediaGroup.from(chip, type));
@@ -269,7 +269,7 @@ public class YouTubeMediaGroup implements MediaGroup {
             }
         }
 
-        // Fix duplicated items after previous group reuse
+         
         baseGroup.mMediaItems = !mediaItems.isEmpty() ? mediaItems : null;
 
         return baseGroup;
@@ -289,7 +289,7 @@ public class YouTubeMediaGroup implements MediaGroup {
             }
         }
 
-        // Fix duplicated items after previous group reuse
+         
         baseGroup.mMediaItems = !mediaItems.isEmpty() ? mediaItems : null;
         baseGroup.mNextPageKey = nextPageKey;
 

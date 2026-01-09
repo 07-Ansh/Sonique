@@ -36,11 +36,11 @@ public class BrowseApiUnsignedTest extends BrowseApiTestBase {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS");
 
-        ShadowLog.stream = System.out; // catch Log class output
+        ShadowLog.stream = System.out;  
 
         mService = RetrofitHelper.create(BrowseApi.class);
 
@@ -105,8 +105,8 @@ public class BrowseApiUnsignedTest extends BrowseApiTestBase {
         String nextPageKey = firstSection.getNextPageKey();
         assertNotNull("Next page key not null", nextPageKey);
 
-        //String visitorId = browseResult.getVisitorData();
-        //assertNotNull("Next page key not null", visitorId);
+         
+         
 
         Call<SectionContinuation> next = mService.continueSection(BrowseApiHelper.getContinuationQuery(nextPageKey));
         Response<SectionContinuation> execute = next.execute();
@@ -137,8 +137,8 @@ public class BrowseApiUnsignedTest extends BrowseApiTestBase {
         String nextPageKey = firstNotEmptyTab(browseResult1).getSections().get(0).getNextPageKey();
         assertNotNull("Next page key not null", nextPageKey);
 
-        //String visitorId = browseResult1.getVisitorData();
-        //assertNotNull("Next page key not null", visitorId);
+         
+         
 
         Call<SectionContinuation> next = mService.continueSection(BrowseApiHelper.getContinuationQuery(nextPageKey));
         Response<SectionContinuation> execute = next.execute();
@@ -287,14 +287,14 @@ public class BrowseApiUnsignedTest extends BrowseApiTestBase {
     private void nextSectionResultNotEmpty(SectionContinuation browseResult) {
         assertNotNull("Next section result: not empty", browseResult);
         assertTrue("Next section result: item list not empty", browseResult.getItemWrappers() != null);
-        //assertNotNull("Next key not empty", browseResult2.getNextPageKey());
+         
         assertTrue("Next section result: item list > 2", browseResult.getItemWrappers().size() > 2);
     }
 
     private void nextTabbedResultNotEmpty(SectionTabContinuation browseResult) {
         assertNotNull("Tabbed result: not empty", browseResult);
         assertNotNull("Tabbed result: media item list not empty", browseResult.getSections());
-        //assertNotNull("Next key not empty", browseResult2.getNextPageKey());
+         
         Section section = browseResult.getSections().get(0);
         assertNotNull("Tabbed result: media item list not empty", section.getItemWrappers());
     }
@@ -306,7 +306,7 @@ public class BrowseApiUnsignedTest extends BrowseApiTestBase {
 
         SectionTab browseTab = null;
 
-        // get first not empty
+         
         for (SectionTab tab : browseResult.getTabs()) {
             if (tab.getSections() != null) {
                 browseTab = tab;

@@ -82,9 +82,9 @@ public class YouTubeServiceManager implements ServiceManager {
     @Override
     public void invalidateCache() {
         LocaleManager.unhold();
-        getYouTubeSignInService().invalidateCache(); // sections infinite loading fix (request timed out fix)
+        getYouTubeSignInService().invalidateCache();  
         getAppService().invalidateCache();
-        //AppService.instance().invalidateVisitorData();
+         
         getYouTubeMediaItemService().invalidateCache();
         getVideoInfoService().resetInfoType();
     }

@@ -13,10 +13,10 @@ public class ChannelButton {
     private String mCanonicalBaseUrl;
 
     @JsonPath("$.navigationEndpoint.watchEndpoint.videoId")
-    private String mVideoId; // first video
+    private String mVideoId;  
 
     @JsonPath("$.navigationEndpoint.watchEndpoint.params")
-    private String mParams; // something like playlistId
+    private String mParams;  
 
     public String getButtonText() {
         return mButtonText;
@@ -30,16 +30,12 @@ public class ChannelButton {
         return mCanonicalBaseUrl;
     }
 
-    /**
-     * Could be used as a playlistId replacement
-     */
+     
     public String getParams() {
         return mParams;
     }
 
-    /**
-     * First video from the channel uploads
-     */
+     
     public String getVideoId() {
         return mVideoId;
     }

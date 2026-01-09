@@ -35,7 +35,7 @@ public abstract class VideoInfoServiceBase {
         mFileApi = RetrofitHelper.create(FileApi.class);
     }
 
-    // Will be overridden in descendants
+     
     protected AppClient getClient() {
         return null;
     }
@@ -114,7 +114,7 @@ public abstract class VideoInfoServiceBase {
 
         for (VideoUrlHolder urlHolder : urlHolders) {
             result.add(urlHolder.getNParam());
-            // All throttled strings has same values
+             
         }
 
         return result;
@@ -125,7 +125,7 @@ public abstract class VideoInfoServiceBase {
             return;
         }
 
-        // All throttled strings has same values
+         
         boolean sameSize = nParams.size() == urlHolders.size();
 
         for (int i = 0; i < urlHolders.size(); i++) {
@@ -164,8 +164,8 @@ public abstract class VideoInfoServiceBase {
             return null;
         }
 
-        // Range doesn't work???
-        //return RetrofitHelper.getHeaders(mFileApi.getHeaders(url + SMALL_RANGE));
+         
+         
         return new DashInfoHeaders(RetrofitHelper.getHeaders(mFileApi.getHeaders(url)));
     }
 
@@ -176,7 +176,7 @@ public abstract class VideoInfoServiceBase {
 
         DashInfo info = getCumulativeDashInfo(videoInfo);
 
-        // Do retry. Sometimes the previous try failed?
+         
         if (info == null || info.getSegmentDurationUs() <= 0 || info.getStartTimeMs() <= 0 || info.getStartSegmentNum() < 0) {
             info = getCumulativeDashInfo(videoInfo);
         }
@@ -197,7 +197,7 @@ public abstract class VideoInfoServiceBase {
             try {
                 return getDashInfoUrl(format.getUrl());
             } catch (ArithmeticException | NumberFormatException exc) {
-                // Empty results received. Url isn't available or something like that
+                 
                 return getDashInfoContent(format.getUrl());
             }
         }
@@ -205,19 +205,19 @@ public abstract class VideoInfoServiceBase {
 
     private AdaptiveVideoFormat getSmallestAudio(VideoInfo videoInfo) {
         AdaptiveVideoFormat format = Helpers.findFirst(videoInfo.getAdaptiveFormats(),
-                item -> MediaFormatUtils.isAudio(item.getMimeType())); // smallest format
+                item -> MediaFormatUtils.isAudio(item.getMimeType()));  
         return format;
     }
 
     private AdaptiveVideoFormat getSmallestVideo(VideoInfo videoInfo) {
         AdaptiveVideoFormat format = Helpers.findLast(videoInfo.getAdaptiveFormats(),
-                item -> MediaFormatUtils.isVideo(item.getMimeType())); // smallest format
+                item -> MediaFormatUtils.isVideo(item.getMimeType()));  
         return format;
     }
     
     private AdaptiveVideoFormat getLargestVideo(VideoInfo videoInfo) {
         AdaptiveVideoFormat format = Helpers.findFirst(videoInfo.getAdaptiveFormats(),
-                item -> MediaFormatUtils.isVideo(item.getMimeType())); // first is largest
+                item -> MediaFormatUtils.isVideo(item.getMimeType()));  
         return format;
     }
 }

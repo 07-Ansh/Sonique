@@ -7,53 +7,37 @@ import com.liskovsoft.googlecommon.common.converters.regexp.RegExp;
 public class DashInfoUrl implements DashInfo {
     private static final int MAX_DURATION_MS = 24 * 60 * 60 * 1_000;
 
-    /**
-     * yt:earliestMediaSequence="1769487"
-     */
+     
     @RegExp("yt\\:earliestMediaSequence=\"(.*?)\"")
     private String mEarliestMediaSequence;
 
-    /**
-     * startNumber="122185"
-     */
+     
     @RegExp("startNumber=\"(.*?)\"")
-    private String mStartNumber; // usually the same as above but may be different on non-seekable streams
+    private String mStartNumber;  
 
-    /**
-     * Period start="PT14185.270S"
-     */
-    //@RegExp("Period start=\"PT(.*?)S\"")
-    private String mPeriodStartSec; // start segment in seconds
+     
+     
+    private String mPeriodStartSec;  
 
-    /**
-     * minimumUpdatePeriod="PT5.000S"
-     */
+     
     @RegExp("minimumUpdatePeriod=\"PT(.*?)S\"")
     private String mMinimumUpdatePeriodSec;
 
-    /**
-     * yt:mpdRequestTime="2022-09-16T23:04:59.728"
-     */
+     
     @RegExp("yt\\:mpdRequestTime=\"(.*?)\"")
-    private String mMpdRequestTime; // use System.currentTime instead?
+    private String mMpdRequestTime;  
 
-    /**
-     * timeShiftBufferDepth="PT14400.000S"
-     */
+     
     @RegExp("timeShiftBufferDepth=\"PT(.*?)S\"")
-    private String mTimeShiftBufferDepthSec; // not useful. always 4hrs
+    private String mTimeShiftBufferDepthSec;  
 
-    /**
-     * availabilityStartTime="2022-09-15T07:31:41"
-     */
+     
     @RegExp("availabilityStartTime=\"(.*?)\"")
-    private String mAvailabilityStartTime; // not useful. truncated to 4hrs.
+    private String mAvailabilityStartTime;  
 
-    /**
-     * yt:segmentIngestTime="2022-09-25T11:40:58.028"
-     */
-    //@RegExp("yt:segmentIngestTime=\"(.*?)\"")
-    private String mSegmentIngestTime; // start of period???
+     
+     
+    private String mSegmentIngestTime;  
 
     private long mStartTimeMs = -1;
     private int mStartSegmentNum = -1;
@@ -116,11 +100,11 @@ public class DashInfoUrl implements DashInfo {
 
     private long getPeriodStartTimeMs() {
         if (mPeriodStartTimeMs == -1) {
-            if (getSequenceStartNumber() == 0) { // stream length < 4hrs
+            if (getSequenceStartNumber() == 0) {  
                 mPeriodStartTimeMs = getAvailabilityStartTimeMs();
-            } else if (!isSeekable()) { // non-seekable stream
+            } else if (!isSeekable()) {  
                 mPeriodStartTimeMs = getMpdRequestTimeMs();
-            } else { // stream length > 4hrs
+            } else {  
                 mPeriodStartTimeMs = getMpdRequestTimeMs() - getTimeShiftBufferDepthMs();
             }
         }
@@ -179,7 +163,7 @@ public class DashInfoUrl implements DashInfo {
 
             if (startSegmentNum > 0) {
                 mStartSegmentNum = startSegmentNum;
-                //mStartTimeMs = getPeriodStartTimeMs() - (getSequenceStartNumber() * getMinimumUpdatePeriodMs());
+                 
                 mStartTimeMs = getPeriodStartTimeMs() - additionalDurationMs;
             } else {
                 mStartSegmentNum = 0;

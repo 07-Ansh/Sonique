@@ -43,7 +43,7 @@ internal object ChannelGroupServiceImpl: MediaServicePrefs.ProfileChangeListener
     }
 
     override fun addChannelGroup(group: ItemGroup) {
-        // Move to the top
+         
         mChannelGroups.remove(group)
         mChannelGroups.add(0, group)
         persistData()
@@ -80,13 +80,13 @@ internal object ChannelGroupServiceImpl: MediaServicePrefs.ProfileChangeListener
         return null
     }
 
-    //fun backupSubscribedChannels(subscribedChannels: MediaGroup) {
-    //    val items = subscribedChannels.mediaItems?.map {
-    //        ItemImpl(it.channelId, it.title, it.cardImageUrl, it.videoId, it.secondTitle)
-    //    } ?: return
-    //    val group = ItemGroupImpl(SUBSCRIPTION_GROUP_ID, SUBSCRIPTION_GROUP_NAME, null, items.toMutableList())
-    //    addChannelGroup(group)
-    //}
+     
+     
+     
+     
+     
+     
+     
 
     fun getSubscribedChannelGroup(): ItemGroup {
         return findOrInitGroup(SUBSCRIPTIONS_GROUP_ID, SUBSCRIPTIONS_GROUP_NAME)
@@ -162,7 +162,7 @@ internal object ChannelGroupServiceImpl: MediaServicePrefs.ProfileChangeListener
         val groups = mImportServices.firstNotNullOfOrNull {
             val result = it.importGroups(file)
             if (it is NewPipeService && result != null) {
-                // NewPipe can export only subscribed channels
+                 
                 result.firstOrNull()?.items?.let {
                     getSubscribedChannelGroup().addAll(it)
                 }
@@ -177,10 +177,10 @@ internal object ChannelGroupServiceImpl: MediaServicePrefs.ProfileChangeListener
         val result = mutableListOf<ItemGroup>()
 
         groups.forEach {
-            //val idx = mChannelGroups?.indexOf(it) ?: -1
+             
             val contains = Helpers.containsIf(mChannelGroups) { item -> item.title == it.title }
-            if (contains) { // already exists
-                //mChannelGroups?.add(ChannelGroupImpl(title = "${it.title} 2", iconUrl = it.iconUrl, channels = it.channels))
+            if (contains) {  
+                 
                 return@forEach
             }
 

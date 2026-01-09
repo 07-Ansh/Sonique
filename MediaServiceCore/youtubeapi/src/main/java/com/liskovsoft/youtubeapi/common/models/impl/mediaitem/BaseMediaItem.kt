@@ -31,9 +31,9 @@ open class BaseMediaItem : MediaItem {
     private var _isShortsItem: Boolean? = null
         get() = field ?: isShortsItem
 
-    //private val _id by lazy { videoId?.hashCode() ?: channelId?.hashCode() ?: sId++ }
+     
     private val _id by lazy { hashCode() }
-    // TODO: time conversion doesn't take into account locale specific delimiters
+     
     private val durationMsItem by lazy { ServiceHelper.timeTextToMillis(lengthText ?: badgeTextItem) }
 
     protected open val reloadPageKeyItem: String? = null
@@ -68,7 +68,7 @@ open class BaseMediaItem : MediaItem {
     protected open val searchQueryItem: String? = null
 
     protected companion object {
-        //var sId: Int = 0
+         
         fun fromString(spec: String?): MediaItem? {
             if (spec == null) {
                 return null
@@ -237,7 +237,7 @@ open class BaseMediaItem : MediaItem {
         return searchQueryItem
     }
 
-    // Fake params
+     
 
     override fun getWidth(): Int {
         return 1280
@@ -267,7 +267,7 @@ open class BaseMediaItem : MediaItem {
         return 4.0
     }
 
-    // End Fake params
+     
 
     fun sync(metadata: MediaItemMetadata?) {
         if (metadata == null) {
@@ -301,7 +301,7 @@ open class BaseMediaItem : MediaItem {
     }
 
     override fun hashCode(): Int {
-        //return Helpers.hashCode(videoId, playlistId, channelId, reloadPageKey)
+         
         val hashCodeAny = YouTubeHelper.hashCodeAny(this)
         return if (hashCodeAny != -1) hashCodeAny else super.hashCode()
     }

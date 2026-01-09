@@ -112,17 +112,17 @@ fun App(
     
 
 
-    // MiniPlayer visibility logic
+     
     var isShowMiniPlayer by rememberSaveable {
         mutableStateOf(true)
     }
 
-    // Now playing screen
+     
     var isShowNowPlaylistScreen by rememberSaveable {
         mutableStateOf(false)
     }
 
-    // Fullscreen
+     
     var isInFullscreen by rememberSaveable {
         mutableStateOf(false)
     }
@@ -317,7 +317,7 @@ fun App(
                                                     
                                                     val shouldExpand = if (playerOffsetY.value < expandThreshold) true else isShowNowPlaylistScreen
                                                     
-                                                    // Updated smooth spec
+                                                     
                                                     val spec = androidx.compose.animation.core.tween<Float>(
                                                         durationMillis = 500,
                                                         easing = androidx.compose.animation.core.EaseInOut
@@ -359,7 +359,7 @@ fun App(
                             Row(
                                 Modifier.fillMaxSize(),
                             ) {
-                                // ... (Tablet Navigation Rail Logic - Unchanged)
+                                 
                                 if (isTablet && !isInFullscreen) {
                                     AppNavigationRail(
                                         navController = navController,
@@ -431,7 +431,7 @@ fun App(
                                         )
                                     }
                                 }
-                                // ... (Tablet Landscape Logic - Unchanged)
+                                 
                                 if (isTablet && isTabletLandscape && !isInFullscreen) {
                                     AnimatedVisibility(
                                         isShowNowPlaylistScreen,

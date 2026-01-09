@@ -132,9 +132,7 @@ internal open class WatchNextService {
         return RetrofitHelper.get(wrapper)
     }
 
-    /**
-     * For testing (mocking) purposes only
-     */
+     
     fun setWatchNextApi(watchNextApi: WatchNextApi) {
         mWatchNextApi = watchNextApi
     }

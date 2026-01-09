@@ -5,9 +5,7 @@ import com.liskovsoft.googlecommon.common.models.items.Thumbnail;
 
 import java.util.List;
 
-/**
- * Alt path to get like/subscribe status (when no such info in metadata section, e.g. YouTube Music items)
- */
+ 
 public class ButtonStates {
     @JsonPath("$.subscribeButton.toggleButtonRenderer.isToggled")
     private Boolean mIsSubscribeToggled;

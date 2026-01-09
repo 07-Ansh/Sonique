@@ -19,7 +19,7 @@ import java.util.Map;
 
 public class YouTubeSignInService implements SignInService {
     private static final String TAG = YouTubeSignInService.class.getSimpleName();
-    private static final long TOKEN_REFRESH_PERIOD_MS = 60 * 60 * 1_000; // NOTE: auth token max lifetime is 60 min
+    private static final long TOKEN_REFRESH_PERIOD_MS = 60 * 60 * 1_000;  
     private static YouTubeSignInService sInstance;
     private final YouTubeAccountManager mAccountManager;
     private String mCachedAuthorizationHeader;
@@ -33,7 +33,7 @@ public class YouTubeSignInService implements SignInService {
             try {
                 updateAuthHeadersIfNeeded();
             } catch (Exception e) {
-                // Host not found
+                 
                 e.printStackTrace();
             }
         });
@@ -70,7 +70,7 @@ public class YouTubeSignInService implements SignInService {
     private void updateAuthHeaders() {
         Account account = mAccountManager.getSelectedAccount();
         String refreshToken = account != null ? ((YouTubeAccount) account).getRefreshToken() : null;
-        // get or create authorization on fly
+         
         mCachedAuthorizationHeader = createAuthorizationHeader(refreshToken);
         syncWithRetrofit();
         mAccountManager.syncStorage();
@@ -78,7 +78,7 @@ public class YouTubeSignInService implements SignInService {
 
     @Override
     public boolean isSigned() {
-        // Condition created for the case when a device in offline mode.
+         
         return mAccountManager.getSelectedAccount() != null;
     }
 
@@ -98,7 +98,7 @@ public class YouTubeSignInService implements SignInService {
         mCacheUpdateTime = 0;
     }
 
-    // Fix empty content when quickly switch accounts???
+     
     @Override
     public synchronized void selectAccount(Account account) {
         mAccountManager.selectAccount(account);
@@ -133,9 +133,7 @@ public class YouTubeSignInService implements SignInService {
         return String.format("name=%s;header=%s;token=%s", name, header, token);
     }
 
-    /**
-     * Authorization should be updated periodically (see expire_in field in response)
-     */
+     
     private String createAuthorizationHeader(String refreshToken) {
         Log.d(TAG, "Updating authorization header...");
 
@@ -153,8 +151,8 @@ public class YouTubeSignInService implements SignInService {
     }
 
     private AccessToken obtainAccessToken(String refreshToken) {
-        // We don't have context, so can't create instance here.
-        // Let's hope someone already created one for us.
+         
+         
         if (GlobalPreferences.sInstance == null) {
             Log.e(TAG, "GlobalPreferences is null!");
             return null;
@@ -183,7 +181,7 @@ public class YouTubeSignInService implements SignInService {
             headers.put("Authorization", mCachedAuthorizationHeader);
             String pageIdToken = ((YouTubeAccount) selectedAccount).getPageIdToken();
             if (pageIdToken != null) {
-                // Apply branded account rights (restricted videos). Branded refresh token with current account page id.
+                 
                 headers.put("X-Goog-Pageid", pageIdToken);
             }
         }

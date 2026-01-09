@@ -33,7 +33,7 @@ internal abstract class BaseMediaGroup(private val options: MediaGroupOptions): 
             ?.let { WrapperMediaItem(it).apply { playlistIndex = index } }
             ?.let { if (legacyFilter.invoke(it)) null else it }
         }?.let {
-            // Move Watch Later to the top
+             
             if (options.groupType != MediaGroup.TYPE_USER_PLAYLISTS)
                 return@let it
 

@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class YouTubeRssParser {
-    // We don't use namespaces
+     
     private static final String ns = null;
     private static final String TAG_MEDIA_ITEM = "entry";
     private static final String TAG_VIDEO_ID = "yt:videoId";
@@ -69,21 +69,21 @@ public class YouTubeRssParser {
         return result;
     }
 
-    //private List<MediaItem> readRssFeed() throws IOException, XmlPullParserException {
-    //    List<MediaItem> mediaItems = new ArrayList<>();
-    //
-    //    while (mParser.next() != XmlPullParser.END_TAG) {
-    //        if (mParser.getEventType() != XmlPullParser.START_TAG) {
-    //            continue;
-    //        }
-    //        String name = mParser.getName();
-    //        // Starts by looking for the entry tag
-    //        if (name.equals(TAG_MEDIA_GROUP)) {
-    //            mediaItems.addAll(readMediaGroup());
-    //        }
-    //    }
-    //    return mediaItems;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     private void skip() throws XmlPullParserException, IOException {
         if (mParser.getEventType() != XmlPullParser.START_TAG) {

@@ -28,7 +28,7 @@ internal class VideoUrlHolder(private var url: String? = null,
     fun getUrl(): String? {
         parseCipher()
 
-        // Bypass query creation if url isn't transformed
+         
         return urlQuery?.toString() ?: url
     }
 
@@ -77,11 +77,11 @@ internal class VideoUrlHolder(private var url: String? = null,
         val urlQuery = getUrlQuery() ?: return null
         val xtags = urlQuery.get("xtags") ?: return null
 
-        // Example: acont=dubbed:lang=ar
+         
         val xtagsQuery = UrlQueryStringFactory.parse(xtags.replace(":", "&"))
         val lang = xtagsQuery.get("lang")
         val acont = xtagsQuery.get("acont")
-        // original, descriptive, dubbed, dubbed-auto, secondary
+         
         return if (lang != null && acont != null) String.format("%s (%s)", YouTubeHelper.exoNameFix(lang), acont) else lang
     }
 
@@ -104,7 +104,7 @@ internal class VideoUrlHolder(private var url: String? = null,
     }
 
     private fun parseCipher() {
-        if (url == null) { // items signatures are ciphered
+        if (url == null) {  
             val cipherUri: String? = cipher ?: signatureCipher
 
             if (cipherUri != null) {

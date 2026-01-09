@@ -23,11 +23,11 @@ public class WatchNextApiSignedTest extends WatchNextManagerTestBase {
 
     @Before
     public void setUp() throws Exception {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS");
 
-        ShadowLog.stream = System.out; // catch Log class output
+        ShadowLog.stream = System.out;  
 
         mManager = RetrofitHelper.create(WatchNextApi.class);
 

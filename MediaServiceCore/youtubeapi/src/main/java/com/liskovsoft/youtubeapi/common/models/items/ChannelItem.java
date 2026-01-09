@@ -5,7 +5,7 @@ import com.liskovsoft.googlecommon.common.models.items.Thumbnail;
 
 import java.util.List;
 
-// root element: pivotChannelRenderer
+ 
 public class ChannelItem {
     @JsonPath("$.thumbnail.thumbnails[*]")
     private List<Thumbnail> mThumbnails;

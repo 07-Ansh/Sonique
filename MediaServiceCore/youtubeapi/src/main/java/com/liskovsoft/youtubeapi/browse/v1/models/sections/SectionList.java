@@ -6,19 +6,13 @@ import com.liskovsoft.googlecommon.common.converters.jsonpath.JsonPath;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Used as Channel content
- */
+ 
 public class SectionList {
-    /**
-     * Sections == Rows in web com.sonique.app version
-     */
+     
     @JsonPath("$.contents.tvBrowseRenderer.content.tvSurfaceContentRenderer.content.sectionListRenderer.contents[*].shelfRenderer")
     private List<Section> mSections;
 
-    /**
-     * New type of playlist. Example: type in search page: "Сто лучших клипов 90-х"
-     */
+     
     @JsonPath("$.contents.tvBrowseRenderer.content.tvSurfaceContentRenderer.content.twoColumnRenderer")
     private TwoColumnSection mTwoColumnSection;
 

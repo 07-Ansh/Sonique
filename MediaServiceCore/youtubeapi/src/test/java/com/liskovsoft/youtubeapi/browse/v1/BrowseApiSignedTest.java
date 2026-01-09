@@ -32,18 +32,16 @@ import static org.junit.Assert.assertTrue;
 @Ignore("Old api")
 @RunWith(RobolectricTestRunner.class)
 public class BrowseApiSignedTest extends BrowseApiTestBase {
-    /**
-     * Authorization should be updated each hour
-     */
+     
     private BrowseApi mService;
 
     @Before
     public void setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS");
 
-        ShadowLog.stream = System.out; // catch Log class output
+        ShadowLog.stream = System.out;  
 
         mService = RetrofitHelper.create(BrowseApi.class);
 
@@ -83,7 +81,7 @@ public class BrowseApiSignedTest extends BrowseApiTestBase {
 
         assertNotNull("Contains tabs", browseResult.getTabs());
 
-        // First tab is subscriptions. Others are channels.
+         
         for (GridTab tab : browseResult.getTabs().subList(1, browseResult.getTabs().size())) {
             checkChannelTab(tab);
         }
@@ -188,7 +186,7 @@ public class BrowseApiSignedTest extends BrowseApiTestBase {
 
         GridTabContinuation lastContinuation = null;
 
-        for (int i = 5; i < gridTabResult.getTabs().size(); i++) { // starting from the users playlists
+        for (int i = 5; i < gridTabResult.getTabs().size(); i++) {  
             GridTab lastGridTab = gridTabResult.getTabs().get(i);
             Call<GridTabContinuation> wrapper2 =  mService.continueGridTab(BrowseApiHelper.getContinuationQuery(lastGridTab.getReloadPageKey()));
             GridTabContinuation gridTabContinuation = RetrofitHelper.get(wrapper2);
@@ -211,8 +209,8 @@ public class BrowseApiSignedTest extends BrowseApiTestBase {
         assertNotNull("Guide not null", guide);
         assertTrue("Guide contains items", guide.getItems().size() > 5);
 
-        // No SUGGEST param in the result (probably a bug!!!)
-        //assertNotNull("Guide contains suggest token", guide.getSuggestToken());
+         
+         
     }
 
     @Ignore("Old api")
@@ -272,7 +270,7 @@ public class BrowseApiSignedTest extends BrowseApiTestBase {
     private void tabbedNextResultNotEmpty(SectionContinuation browseResult) {
         assertNotNull("Tabbed result not empty", browseResult);
         assertNotNull("Video list not empty", browseResult.getItemWrappers());
-        //assertNotNull("Next key not empty", browseResult.getNextPageKey());
+         
         assertTrue("Video list > 2", browseResult.getItemWrappers().size() > 2);
     }
 

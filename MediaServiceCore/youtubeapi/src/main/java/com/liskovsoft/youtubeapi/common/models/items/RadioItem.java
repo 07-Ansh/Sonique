@@ -5,7 +5,7 @@ import com.liskovsoft.googlecommon.common.models.items.Thumbnail;
 
 import java.util.List;
 
-// root element: pivotRadioRenderer (e.g. YouTube Mix)
+ 
 public class RadioItem {
     @JsonPath({"$.playlistId", "$.navigationEndpoint.watchEndpoint.playlistId"})
     private String mPlaylistId;

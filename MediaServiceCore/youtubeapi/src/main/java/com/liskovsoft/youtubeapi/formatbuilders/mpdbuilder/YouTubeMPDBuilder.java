@@ -22,9 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-/**
- * Demos: https://github.com/Dash-Industry-Forum/dash-live-source-simulator/wiki/Test-URLs
- */
+ 
 public class YouTubeMPDBuilder implements MPDBuilder {
     private static final String NULL_INDEX_RANGE = "0-0";
     private static final String NULL_CONTENT_LENGTH = "0";
@@ -93,31 +91,31 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         attribute("", "xsi:schemaLocation", "urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd");
         attribute("", "minBufferTime", "PT1.500S");
 
-        // https://docs.unified-streaming.com/documentation/live/configure-dynamic-mpd.html
+         
         if (isLive()) {
-            attribute("", "profiles", "urn:mpeg:dash:profile:isoff-on-demand:2011"); // Better caching. Default is isoff-main.
+            attribute("", "profiles", "urn:mpeg:dash:profile:isoff-on-demand:2011");  
             attribute("", "type", "dynamic");
-            attribute("", "minimumUpdatePeriod", "P100Y"); // no refresh (there is no dash url)
+            attribute("", "minimumUpdatePeriod", "P100Y");  
 
-            // TESTING
-            //attribute("", "minimumBufferTime", "PT30S"); // no effect?
-            //attribute("", "profiles", "urn:mpeg:dash:profile:isoff-live:2011");
-            //attribute("", "profiles", "urn:mpeg:dash:profile:isoff-main:2011");
-            //attribute("", "minimumUpdatePeriod", "PT5.000S");
-            // availabilityStartTime="2019-01-06T17:04:49"
-            //attribute("", "publishTime", "2022-08-25T00:00:00Z");
-            //attribute("", "availabilityStartTime", "2022-08-25T00:00:00Z");
-            //attribute("", "timeShiftBufferDepth", "PT120M");
-            //attribute("", "maxSegmentDuration", "PT2S");
+             
+             
+             
+             
+             
+             
+             
+             
+             
+             
 
-            // TESTING (live position)
-            //attribute("", "timeShiftBufferDepth", "PT43200.000S");
-            //attribute("", "publishTime", "2022-09-04T10:00:00");
-            //attribute("", "profiles", "urn:mpeg:dash:profile:isoff-main:2011");
-            //attribute("", "minimumUpdatePeriod", "PT2.000S");
-            //attribute("", "timeShiftBufferDepth", "PT7200.000S");
-            //attribute("", "minBufferTime", "PT1.500S");
-            //attribute("", "availabilityStartTime", "2022-09-20T23:15:31");
+             
+             
+             
+             
+             
+             
+             
+             
         } else {
             attribute("", "profiles", "urn:mpeg:dash:profile:isoff-on-demand:2011");
             attribute("", "type", "static");
@@ -128,11 +126,11 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         startTag("", "Period");
 
         if (isLive()) {
-            // yt:segmentIngestTime="2019-01-06T17:55:24.836"
-            attribute("", "start", "PT0S"); // mandatory attr
-            // TESTING
-            //attribute("", "start", "PT3050.000S");
-            //attribute("", "duration", "PT3050.000S");
+             
+            attribute("", "start", "PT0S");  
+             
+             
+             
         } else {
             attribute("", "duration", durationParam);
         }
@@ -149,7 +147,7 @@ public class YouTubeMPDBuilder implements MPDBuilder {
             writeLiveHeaderSegmentList();
         }
 
-        // MXPlayer fix: write high quality formats first
+         
         writeMediaTagsForGroup(mMP4Videos);
         writeMediaTagsForGroup(mWEBMVideos);
 
@@ -165,25 +163,25 @@ public class YouTubeMPDBuilder implements MPDBuilder {
     }
 
     private void writeLiveHeaderSegmentList() {
-        //startTag("", "SegmentList");
-        //
-        //attribute("", "presentationTimeOffset", "3050000");
-        //attribute("", "startNumber", "610");
-        //attribute("", "timescale", "1000");
-        //
-        //startTag("", "SegmentTimeline");
-        //
-        //for (int i = 0; i < 3; i++) {
-        //    startTag("", "S");
-        //
-        //    attribute("", "d", "5000");
-        //
-        //    endTag("", "S");
-        //}
-        //
-        //endTag("", "SegmentTimeline");
-        //
-        //endTag("", "SegmentList");
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
     }
 
     private void writeMediaTagsForGroup(List<MediaSubtitle> subs) {
@@ -219,7 +217,7 @@ public class YouTubeMPDBuilder implements MPDBuilder {
 
         writeMediaListPrologue(String.valueOf(mId++), MediaFormatUtils.extractMimeType(firstItem), firstItem.getLanguage());
 
-        // Representation
+         
         for (MediaFormat item : filtered) {
             if (mLimitVideoCodec != null && isVideo(item) && !item.getMimeType().contains(mLimitVideoCodec)) {
                 continue;
@@ -248,7 +246,7 @@ public class YouTubeMPDBuilder implements MPDBuilder {
 
         startTag("", "SegmentTimeline");
 
-        // SegmentURL tag
+         
         for (String segment : format.getGlobalSegmentList()) {
             startTag("", "S");
             attribute("", "d", segment);
@@ -351,12 +349,12 @@ public class YouTubeMPDBuilder implements MPDBuilder {
             return;
         }
 
-        // NOTE: FORMAT_STREAM_TYPE_OTF not supported
+         
         if (!MediaFormatUtils.isDash(mediaItem)) {
             return;
         }
 
-        //fixOTF(mediaItem);
+         
 
         Set<MediaFormat> placeholder = null;
         String mimeType = MediaFormatUtils.extractMimeType(mediaItem);
@@ -378,7 +376,7 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         }
 
         if (placeholder != null) {
-            placeholder.add(mediaItem); // NOTE: reverse order
+            placeholder.add(mediaItem);  
         }
     }
 
@@ -401,13 +399,13 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         attribute("", "bandwidth", format.getBitrate());
 
         if (isVideo(format)) {
-            // video attrs
+             
             attribute("", "width", String.valueOf(format.getWidth()));
             attribute("", "height", String.valueOf(format.getHeight()));
             attribute("", "maxPlayoutRate", "1");
             attribute("", "frameRate", format.getFps());
         } else {
-            // audio attrs
+             
             attribute("", "audioSamplingRate", ITagUtils.getAudioRateByTag(format.getITag()));
         }
 
@@ -425,13 +423,13 @@ public class YouTubeMPDBuilder implements MPDBuilder {
             endTag("", "BaseURL");
         }
 
-        // SegmentList tag
+         
         if (isLive()) {
             writeLiveMediaSegmentList(format);
         } else if (format.getSegmentUrlList() != null) {
             writeSegmentList(format);
         } else if (format.getIndex() != null &&
-                !format.getIndex().equals(NULL_INDEX_RANGE)) { // json format fix: index is null
+                !format.getIndex().equals(NULL_INDEX_RANGE)) {  
             writeSegmentBase(format);
         }
 
@@ -439,7 +437,7 @@ public class YouTubeMPDBuilder implements MPDBuilder {
     }
 
     private void writeSegmentBase(MediaFormat item) {
-        // SegmentBase
+         
         startTag("", "SegmentBase");
 
         if (item.getIndex() != null) {
@@ -459,14 +457,14 @@ public class YouTubeMPDBuilder implements MPDBuilder {
     private void writeSegmentList(MediaFormat item) {
         startTag("", "SegmentList");
 
-        // Initialization tag
+         
         if (item.getSourceUrl() != null) {
             startTag("", "Initialization");
             attribute("", "sourceURL", item.getSourceUrl());
             endTag("", "Initialization");
         }
 
-        // SegmentURL tag
+         
         for (String url : item.getSegmentUrlList()) {
             startTag("", "SegmentURL");
             attribute("", "media", url);
@@ -477,82 +475,82 @@ public class YouTubeMPDBuilder implements MPDBuilder {
     }
 
     private void writeLiveMediaSegmentList(MediaFormat format) {
-        //startTag("", "SegmentList");
-        //
-        //for (String mediaDesc : new String[]{
-        //        "sq/610/lmt/1546797364563137",
-        //        "sq/611/lmt/1546797365000899",
-        //        "sq/612/lmt/1546797369574434"}) {
-        //    startTag("", "SegmentURL");
-        //
-        //    attribute("", "media", mediaDesc);
-        //
-        //    endTag("", "SegmentURL");
-        //}
-        //
-        //endTag("", "SegmentList");
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
+         
 
-        // Last segment index:
-        // https://docs.aws.amazon.com/mediapackage/latest/ug/segtemp-format-duration.html#how-stemp-dur-works
-        // ((wall clock time - availabilityStartTime ) / (duration / timescale )) + startNumber
+         
+         
+         
 
         int unitsPerSecond = 1_000_000;
 
-        // Present on live streams only.
+         
         int segmentDurationUs = mInfo.getSegmentDurationUs();
 
         if (segmentDurationUs <= 0) {
-            // Inaccurate. Present on past (!) live streams.
+             
             segmentDurationUs = format.getTargetDurationSec() * 1_000_000;
         }
 
         int lengthSeconds = Integer.parseInt(mInfo.getLengthSeconds());
 
         if (mInfo.isLive() || lengthSeconds <= 0) {
-            // For premiere streams (length > 0) or regular streams (length == 0) set window that exceeds normal limits - 48hrs
+             
             lengthSeconds = MAX_DURATION_SEC;
         }
 
-        // To make long streams (12hrs) seekable we should decrease size of the segment a bit
-        //long segmentDurationUnits = (long) targetDurationSec * unitsPerSecond * 9999 / 10000;
+         
+         
         int segmentDurationUnits = (int)(segmentDurationUs * (long) unitsPerSecond / 1_000_000);
-        // Increase count a bit to compensate previous tweak
-        //long segmentCount = (long) lengthSeconds / targetDurationSec * 10000 / 9999;
-        //int segmentCount = (int)(lengthSeconds * (long) unitsPerSecond / segmentDurationUnits);
+         
+         
+         
         int segmentCount = (int) Math.ceil(lengthSeconds * (double) unitsPerSecond / segmentDurationUnits);
-        // Increase offset a bit to compensate previous tweaks
-        // Streams to check:
-        // https://www.youtube.com/watch?v=drdemkJpgao
+         
+         
+         
         long offsetUnits = (long) segmentDurationUnits * mInfo.getStartSegmentNum();
 
         String segmentDurationUnitsStr = String.valueOf(segmentDurationUnits);
-        // Use offset to sync player timeline with MPD timeline!!!
+         
         String offsetUnitsStr = String.valueOf(offsetUnits);
 
         startTag("", "SegmentTemplate");
 
-        attribute("", "duration", segmentDurationUnitsStr); // segment duration in units (could be safely omitted)
-        attribute("", "timescale", String.valueOf(unitsPerSecond)); // units per second
+        attribute("", "duration", segmentDurationUnitsStr);  
+        attribute("", "timescale", String.valueOf(unitsPerSecond));  
         attribute("", "media", format.getUrl() + "&sq=$Number$");
         attribute("", "startNumber", String.valueOf(mInfo.getStartSegmentNum()));
-        // Used in SegmentBase, SegmentTemplate or BaseURL
-        attribute("", "presentationTimeOffset", offsetUnitsStr); // in units
-        //attribute("", "availabilityTimeOffset", "43200000");
+         
+        attribute("", "presentationTimeOffset", offsetUnitsStr);  
+         
 
-        // lengthSeconds > 0 indicates past live stream
+         
 
-        // https://www.unified-streaming.com/blog/stop-numbering-underappreciated-power-dashs-segmenttimeline
-        //  <SegmentTimeline>
-        //    <S t="0" d="180000" r="394"/>
-        //  </SegmentTimeline>
+         
+         
+         
+         
 
         startTag("", "SegmentTimeline");
 
-        startTag("", "S"); // segment set
+        startTag("", "S");  
 
-        attribute("", "t", offsetUnitsStr); // start time (units)
-        attribute("", "d", segmentDurationUnitsStr); // duration (units)
-        attribute("", "r", String.valueOf(segmentCount)); // repeat counts (number of segments)
+        attribute("", "t", offsetUnitsStr);  
+        attribute("", "d", segmentDurationUnitsStr);  
+        attribute("", "r", String.valueOf(segmentCount));  
 
         endTag("", "S");
 
@@ -597,23 +595,15 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         }
     }
 
-    /**
-     * Ensures that required fields are set. If no, initialize them or throw an exception.
-     * <br/>
-     * Required fields are:
-     * <br/>
-     * {@link MediaItemFormatInfo#getLengthSeconds() MediaItemDetails#getLengthSeconds()}
-     */
+     
     private boolean ensureRequiredFieldsAreSet() {
         return ensureLengthIsSet();
     }
 
-    /**
-     * MPD file is not valid without duration
-     */
+     
     private boolean ensureLengthIsSet() {
         if (mInfo == null) {
-            //throw new IllegalStateException("MediaItemDetails not initialized");
+             
             Log.e(TAG, "MediaItemDetails not initialized");
             return false;
         }
@@ -678,35 +668,33 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         return false;
     }
 
-    /**
-     * TODO: improve segment calculation
-     */
+     
     private void writeOtfSegmentTemplateOld(MediaFormat item) {
-        //<SegmentTemplate timescale="90000" media="&sq=$Number$" startNumber="0">
-        //  <SegmentTimeline>
-        //    <S t="0" d="180000" r="394"/>
-        //    <S t="71100000" d="46800" r="0"/>
-        //  </SegmentTimeline>
-        //</SegmentTemplate>
+         
+         
+         
+         
+         
+         
 
         startTag("", "SegmentTemplate");
 
-        attribute("", "timescale", "1000"); // units per second
-        attribute("", "duration", "5100"); // segment duration (units)
+        attribute("", "timescale", "1000");  
+        attribute("", "duration", "5100");  
         attribute("", "media", item.getUrl() + "&sq=$Number$");
-        attribute("", "initialization", item.getUrl() + "&sq=0"); // segments list and durations (required for stream switch!!!)
+        attribute("", "initialization", item.getUrl() + "&sq=0");  
         attribute("", "startNumber", "1");
 
         endTag("", "SegmentTemplate");
     }
 
     private void writeOtfSegmentTemplate(MediaFormat item) {
-        //<SegmentTemplate timescale="90000" media="&sq=$Number$" startNumber="0">
-        //  <SegmentTimeline>
-        //    <S t="0" d="180000" r="394"/>
-        //    <S t="71100000" d="46800" r="0"/>
-        //  </SegmentTimeline>
-        //</SegmentTemplate>
+         
+         
+         
+         
+         
+         
 
         List<OtfSegment> segments = mSegmentParser.parse(item.getOtfInitUrl());
 
@@ -717,7 +705,7 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         if (segments != null && segments.size() > 0) {
             startTag("", "SegmentTemplate");
 
-            attribute("", "timescale", "1000"); // units per second
+            attribute("", "timescale", "1000");  
             attribute("", "media", mediaUrl);
             attribute("", "initialization", initUrl);
             attribute("", "startNumber", startNumber);
@@ -735,17 +723,17 @@ public class YouTubeMPDBuilder implements MPDBuilder {
             int totalTime = 0;
 
             for (OtfSegment segment : segments) {
-                startTag("", "S"); // segment set
+                startTag("", "S");  
 
-                attribute("", "t", String.valueOf(totalTime)); // start time (units)
-                attribute("", "d", segment.getDuration()); // duration (units)
+                attribute("", "t", String.valueOf(totalTime));  
+                attribute("", "d", segment.getDuration());  
 
-                attribute("", "r", segment.getRepeatCount()); // repeat counts
+                attribute("", "r", segment.getRepeatCount());  
 
                 endTag("", "S");
 
                 int segmentDuration = Integer.parseInt(segment.getDuration());
-                int segmentRepeatCount = Integer.parseInt(segment.getRepeatCount()) + 1; // index zero based
+                int segmentRepeatCount = Integer.parseInt(segment.getRepeatCount()) + 1;  
 
                 totalTime = totalTime + (segmentRepeatCount * segmentDuration);
             }
@@ -754,9 +742,7 @@ public class YouTubeMPDBuilder implements MPDBuilder {
         }
     }
 
-    /**
-     * Filter unplayable videos (init block is unavailable - youtube bug)
-     */
+     
     private List<MediaFormat> filterOtfItems(Set<MediaFormat> items) {
         List<MediaFormat> result = new ArrayList<>();
 

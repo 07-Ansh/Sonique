@@ -12,7 +12,7 @@ import java.util.List;
 public class VideoFormat {
     private static final String FORMAT_STREAM_TYPE_OTF = "FORMAT_STREAM_TYPE_OTF";
 
-    // DASH params
+     
     public static final String CLEN = "clen";
     public static final String BITRATE = "bitrate";
     public static final String PROJECTION_TYPE = "projection_type";
@@ -23,11 +23,11 @@ public class VideoFormat {
     public static final String LMT = "lmt";
     public static final String QUALITY_LABEL = "quality_label";
     public static final String INIT = "init";
-    // End DASH params
+     
 
-    // Regular video params
+     
     public static final String QUALITY = "quality";
-    // End Regular params
+     
     
     @JsonPath("$.itag")
     private int mITag;
@@ -65,9 +65,7 @@ public class VideoFormat {
     private String mSourceURL;
     private List<String> mSegmentUrlList;
     private List<String> mGlobalSegmentList;
-    /**
-     * New format type FORMAT_STREAM_TYPE_OTF or null
-     */
+     
     @JsonPath("$.type")
     private String mFormat;
     private String mTemplateMetadataUrl;
@@ -237,9 +235,7 @@ public class VideoFormat {
         return mFormat != null && mFormat.equals(FORMAT_STREAM_TYPE_OTF);
     }
 
-    /**
-     * Contains segments list and durations (required for stream switch!!!)
-     */
+     
     public String getOtfInitUrl() {
         if (mTemplateMetadataUrl == null && getUrl() != null) {
             mTemplateMetadataUrl = getUrl() + "&sq=0";
@@ -301,9 +297,7 @@ public class VideoFormat {
                 getITag());
     }
 
-    /**
-     * TODO: to be removed. Temp SABR fix
-     */
+     
     public boolean isBroken() {
         return Helpers.allNulls(mUrl, mCipher, mSignatureCipher);
     }

@@ -68,16 +68,16 @@ public class SearchApiTestBase {
         assertNotNull("Search result item not null", videoItem);
         assertTrue("Search result item contains video or channel id", videoItem.getVideoId() != null || videoItem.getChannelId() != null);
         assertNotNull("Search result item contains title", videoItem.getTitle());
-        //assertNotNull("Search result item contains channel id", videoItem.getChannelId()); // not exists in search result
+         
         assertNotNull("Search result item contains view count", videoItem.getViewCountText());
-        //assertNotNull("Search result item contains date", videoItem.getPublishedTime()); // not exists anymore
+         
     }
 
     protected void checkSearchResultMusicItem(MusicItem videoItem) {
         assertNotNull("Search result item not null", videoItem);
         assertNotNull("Search result item contains video id", videoItem.getVideoId());
         assertNotNull("Search result item contains title", videoItem.getTitle());
-        //assertNotNull("Search result item contains channel id", videoItem.getChannelId()); // not exists in search result
+         
         assertNotNull("Search result item contains view count", videoItem.getViewCountText());
         assertNotNull("Search result item contains date", videoItem.getPublishedText());
     }
@@ -86,7 +86,7 @@ public class SearchApiTestBase {
         assertNotNull("Search result item not null", videoItem);
         assertNotNull("Search result item contains video id", videoItem.getVideoId());
         assertNotNull("Search result item contains title", videoItem.getTitle());
-        //assertNotNull("Search result item contains channel id", videoItem.getChannelId()); // not exists in search result
+         
         assertNotNull("Search result item contains view count", videoItem.getViewCountText());
         assertNotNull("Search result item contains date", videoItem.getPublishedDate());
     }

@@ -16,20 +16,20 @@ import org.robolectric.shadows.ShadowLog
 class GrayJayApiTest {
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
     }
 
     @Test
     fun testRawResponse() {
         val grayJayContent = TestHelpers.readResource("channelgroups/grayjay_subscription_groups")
 
-        // replace:
-        // "{ => {
-        // }" => }
-        // \" => "
+         
+         
+         
+         
 
         val grayJayContentFixed = grayJayContent
             ?.replace("\"{", "{")
@@ -48,10 +48,10 @@ class GrayJayApiTest {
     fun testWrongResponse() {
         val grayJayContent = TestHelpers.readResource("channelgroups/grayjay_subscription_groups")
 
-        // replace:
-        // "{ => {
-        // }" => }
-        // \" => "
+         
+         
+         
+         
 
         val grayJayContentFixed = grayJayContent
             ?.replace("\"{", "{")

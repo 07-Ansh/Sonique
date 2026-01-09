@@ -21,9 +21,9 @@ internal object DeArrowService {
                 }
 
                 override fun getTitle(): String? {
-                    // '>' character is used in some titles to tell the DeArrow formatter which words to leave alone
-                    // Example: https://sponsor.ajay.app/api/branding?videoID=dtp6b76pMak
-                    // https://github.com/yuliskov/MediaServiceCore/pull/9
+                     
+                     
+                     
                     return it.titles?.firstOrNull { !(it?.original ?: false) }?.title?.replace(">", "")
                 }
 

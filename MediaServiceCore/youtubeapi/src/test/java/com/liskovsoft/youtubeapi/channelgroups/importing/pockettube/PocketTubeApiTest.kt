@@ -14,23 +14,23 @@ import org.robolectric.shadows.ShadowLog
 class PocketTubeApiTest {
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
     }
 
     @Test
     fun testResult() {
         val pocketTubeContent = TestHelpers.readResource("channelgroups/pockettube.json")
 
-        // Find group names
-        val groupNames: List<String> = JsonPath.read(pocketTubeContent, "$.ysc_collection.*~") // get keys query
+         
+        val groupNames: List<String> = JsonPath.read(pocketTubeContent, "$.ysc_collection.*~")  
 
         assertTrue("Group names not empty", groupNames.isNotEmpty())
 
         for (groupName in groupNames) {
-            // Get groups content
+             
             val channelIds: List<String> = JsonPath.read(pocketTubeContent, "$['$groupName']")
 
             assertTrue("Channel ids not empty", channelIds.isNotEmpty())
@@ -41,7 +41,7 @@ class PocketTubeApiTest {
     fun testWrongResult() {
         val pocketTubeContent = TestHelpers.readResource("channelgroups/pockettube.json")
 
-        // Find group names
+         
         val groupNames: List<String> = try {
             JsonPath.read(pocketTubeContent, "$.ysc_collection.*~")
         } catch (e: PathNotFoundException) {
@@ -51,7 +51,7 @@ class PocketTubeApiTest {
         assertTrue("Group names not empty", groupNames.isNotEmpty())
 
         for (groupName in groupNames) {
-            // Get groups content
+             
             val channelIds: List<String> = JsonPath.read(pocketTubeContent, "$['$groupName']")
 
             assertTrue("Channel ids not empty", channelIds.isNotEmpty())

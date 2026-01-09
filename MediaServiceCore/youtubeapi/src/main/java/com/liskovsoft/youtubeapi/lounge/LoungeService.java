@@ -87,22 +87,20 @@ public class LoungeService {
                 BindParams.QR);
         PairingCodeV2 pairingCode = RetrofitHelper.get(pairingCodeWrapper);
 
-        mLoungeToken = null; // apply changes (restart the service)
+        mLoungeToken = null;  
 
-        // Pairing code XXX-XXX-XXX-XXX
+         
         return pairingCode != null ? pairingCode.getPairingCode() : null;
     }
 
-    /**
-     * Process couldn't be stopped, only interrupted.
-     */
+     
     public void startListening(OnCommand callback) {
-        // It's common to stream to be interrupted multiple times
+         
         while (true) {
             try {
                 initConstants();
                 startListeningInt(callback);
-                Thread.sleep(3_000); // fix too frequent request
+                Thread.sleep(3_000);  
             } catch (SocketTimeoutException e) {
                 Log.e(TAG, "Connection hanged. Reconnecting...");
             } catch (InterruptedIOException e) {
@@ -117,7 +115,7 @@ public class LoungeService {
                 break;
             } catch (Exception e) {
                 Log.e(TAG, e.getMessage());
-                // Continue to listen whichever is happening.
+                 
             }
         }
     }
@@ -171,7 +169,7 @@ public class LoungeService {
         Request request = new Builder().url(url).build();
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        // No command during one minute could be a sign of hanged connection.
+         
         builder.readTimeout(60_000, TimeUnit.MILLISECONDS);
 
         OkHttpClient client = builder.build();
@@ -185,12 +183,12 @@ public class LoungeService {
         String result = "";
         String line = "";
 
-        // Skip initial commands: TYPE_SESSION_ID, TYPE_G_SESSION_ID, TYPE_LOUNGE_STATUS, TYPE_GET_NOW_PLAYING
-        //processCommands(sessionInfos, callback);
+         
+         
 
         while((line = reader.readLine()) != null) {
             if (mLoungeToken == null) {
-                // restart service
+                 
                 break;
             }
 
@@ -228,7 +226,7 @@ public class LoungeService {
     }
 
     public void postStateChange(long positionMs, long durationMs, boolean isPlaying) {
-        // Live stream fix (negative position)
+         
         if (positionMs < 0) {
             positionMs = Math.abs(positionMs);
         }

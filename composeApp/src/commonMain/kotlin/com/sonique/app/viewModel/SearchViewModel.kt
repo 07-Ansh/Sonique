@@ -36,7 +36,7 @@ import sonique.composeapp.generated.resources.podcasts
 import sonique.composeapp.generated.resources.songs
 import sonique.composeapp.generated.resources.videos
 
-// State cho tìm kiếm
+ 
 data class SearchScreenState(
     val searchType: SearchType = SearchType.ALL,
     val searchAllResult: List<SearchResultType> = emptyList(),
@@ -51,7 +51,7 @@ data class SearchScreenState(
     val suggestYTItems: List<SearchResultType> = emptyList(),
 )
 
-// Loại tìm kiếm
+ 
 enum class SearchType {
     ALL,
     SONGS,
@@ -75,7 +75,7 @@ fun SearchType.toStringRes(): StringResource =
         SearchType.PODCASTS -> Res.string.podcasts
     }
 
-// UI state cho tìm kiếm
+ 
 sealed class SearchScreenUIState {
     object Empty : SearchScreenUIState()
 
@@ -253,7 +253,7 @@ class SearchViewModel(
             job6.join()
             job7.join()
 
-            // If all requests failed, show error
+             
             if (errorCount == totalRequests) {
                 _searchScreenUIState.value = SearchScreenUIState.Error
                 return@launch
@@ -295,7 +295,7 @@ class SearchViewModel(
                 }
                 
                 if (temp.isEmpty() && errorCount > 0) {
-                     // If we have no results and some errors, treat it as an error state (likely offline or API issues)
+                      
                      _searchScreenUIState.value = SearchScreenUIState.Error
                 } else {
                      _searchScreenUIState.value = SearchScreenUIState.Success
@@ -324,7 +324,7 @@ class SearchViewModel(
                     }
 
                     is Resource.Error -> {
-                        // Không cần xử lý lỗi đặc biệt cho gợi ý
+                         
                         log("Error fetching suggest queries: ${values.message}", LogLevel.ERROR)
                     }
                 }

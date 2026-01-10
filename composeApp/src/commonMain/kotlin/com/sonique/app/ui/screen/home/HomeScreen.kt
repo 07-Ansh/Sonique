@@ -281,14 +281,14 @@ fun HomeScreen(
         }
     }
 
-//    if (shouldShowGetDataSyncIdBottomSheet) {
-//        GetDataSyncIdBottomSheet(
-//            cookie = youTubeCookie,
-//            onDismissRequest = {
-//                shouldShowGetDataSyncIdBottomSheet = false
-//            },
-//        )
-//    }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
 
 
@@ -524,7 +524,7 @@ fun HomeScreen(
             modifier =
                 Modifier
                     .align(Alignment.TopCenter)
-                    .background(md_theme_dark_background.copy(alpha = 0.8f)) // musica_dark_grey with slight transparency
+                    .background(md_theme_dark_background.copy(alpha = 0.8f))  
                     .onGloballyPositioned { coordinates ->
                         topAppBarHeightPx = coordinates.size.height
                     },

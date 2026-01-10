@@ -20,7 +20,7 @@ expect class Extractor() {
         poToken: String?,
         clientName: String?,
         cookiePath: String?,
-    ): String? // text response
+    ): String?  
 
     fun smartTubePlayer(videoId: String): List<Pair<Int, String>>
 

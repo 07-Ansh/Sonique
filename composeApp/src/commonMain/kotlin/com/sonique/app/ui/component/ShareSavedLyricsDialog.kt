@@ -48,7 +48,7 @@ fun ShareSavedLyricsDialog(
     onDismissRequest: () -> Unit,
     onConfirm: (
         contributor: Pair<String, String>?,
-    ) -> Unit, // contributor name and email, null if anonymous
+    ) -> Unit,  
 ) {
     var useAnonymous by remember {
         mutableStateOf(true)

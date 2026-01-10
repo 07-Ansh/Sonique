@@ -10,14 +10,12 @@ import com.sonique.domain.data.player.PlayerError
 import com.sonique.domain.mediaservice.player.MediaPlayerInterface
 import kotlinx.coroutines.flow.StateFlow
 
-/**
- * Handler interface for managing media playback service operations
- */
+ 
 interface MediaPlayerHandler {
-    // Core player interface
+     
     val player: MediaPlayerInterface
 
-    // State flows
+     
     val simpleMediaState: StateFlow<SimpleMediaState>
     val nowPlaying: StateFlow<GenericMediaItem?>
     val queueData: StateFlow<QueueData?>
@@ -28,12 +26,12 @@ interface MediaPlayerHandler {
     val format: StateFlow<NewFormatEntity?>
     val currentSongIndex: StateFlow<Int>
 
-    // Listeners
+     
     var onUpdateNotification: (List<GenericCommandButton>) -> Unit
     var pushPlayerError: (PlayerError) -> Unit
     var showToast: (ToastType) -> Unit
 
-    // Playback control
+     
     suspend fun onPlayerEvent(playerEvent: PlayerEvent)
 
     fun toggleRadio()
@@ -44,12 +42,12 @@ interface MediaPlayerHandler {
 
     fun resetSongAndQueue()
 
-    // Sleep timer
+     
     fun sleepStart(minutes: Int)
 
     fun sleepStop()
 
-    // Media management
+     
     fun removeMediaItem(position: Int)
 
     fun addMediaItem(
@@ -65,7 +63,7 @@ interface MediaPlayerHandler {
 
     fun currentSongIndex(): Int
 
-    // Index of the currently playing item in the current queue data (shuffled or not)
+     
     fun currentOrderIndex(): Int
 
     suspend fun swap(
@@ -75,7 +73,7 @@ interface MediaPlayerHandler {
 
     fun resetCrossfade()
 
-    // Queue management
+     
     fun shufflePlaylist(randomTrackIndex: Int = 0)
 
     fun loadMore()
@@ -86,7 +84,7 @@ interface MediaPlayerHandler {
 
     fun getCurrentMediaItem(): GenericMediaItem?
 
-    // Track operations
+     
     suspend fun moveItemUp(position: Int)
 
     suspend fun moveItemDown(position: Int)
@@ -127,7 +125,7 @@ interface MediaPlayerHandler {
         index: Int? = null,
     )
 
-    // Playback information
+     
     fun getPlayerDuration(): Long
 
     fun getProgress(): Long
@@ -140,7 +138,7 @@ interface MediaPlayerHandler {
 
     fun stopBufferedUpdate()
 
-    // Settings
+     
     fun mayBeNormalizeVolume()
 
     fun mayBeSaveRecentSong(runBlocking: Boolean = false)
@@ -149,13 +147,13 @@ interface MediaPlayerHandler {
 
     fun mayBeRestoreQueue()
 
-    // Lifecycle
+     
     fun shouldReleaseOnTaskRemoved(): Boolean
 
     fun release()
 }
 
-// State classes and enums - these would need to be defined in domain layer
+ 
 sealed class RepeatState {
     data object None : RepeatState()
 
@@ -223,7 +221,7 @@ data class ControlState(
     val isNextAvailable: Boolean,
     val isPreviousAvailable: Boolean,
     val isCrossfading: Boolean,
-    val volume: Float, // 0f..1f
+    val volume: Float,  
 )
 
 data class NowPlayingTrackState(

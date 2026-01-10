@@ -116,7 +116,7 @@ fun ArtistScreen(
 
     val playingTrack by sharedViewModel.nowPlayingState.map { it?.track?.videoId }.collectAsState(null)
 
-    // Choosing song to show Bottom sheet
+     
     var choosingTrack by remember {
         mutableStateOf<Track?>(null)
     }
@@ -312,7 +312,7 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Popular Songs
+                         
                         AnimatedVisibility(state.data.popularSongs.isNotEmpty()) {
                             Column {
                                 Row(
@@ -380,7 +380,7 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Singles
+                         
                         AnimatedVisibility(
                             state.data.singles != null &&
                                 state.data.singles.results
@@ -447,7 +447,7 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Albums
+                         
                         AnimatedVisibility(
                             state.data.albums != null &&
                                 state.data.albums.results
@@ -514,7 +514,7 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Videos
+                         
                         AnimatedVisibility(
                             state.data.video != null &&
                                 state.data.video.video
@@ -605,7 +605,7 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Feature on
+                         
                         AnimatedVisibility(state.data.featuredOn.isNotEmpty()) {
                             Column {
                                 Row(
@@ -648,7 +648,7 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Related
+                         
                         AnimatedVisibility(
                             state.data.related != null &&
                                 state.data.related.results

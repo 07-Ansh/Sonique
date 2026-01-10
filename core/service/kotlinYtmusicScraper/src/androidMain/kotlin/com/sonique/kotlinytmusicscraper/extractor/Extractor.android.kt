@@ -118,7 +118,7 @@ actual class Extractor {
                 command,
             )
         if (ReturnCode.isSuccess(session.returnCode)) {
-            // SUCCESS
+             
             Logger.d(TAG, "Command succeeded ${session.state}, ${session.returnCode}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.jpg".toPath())
@@ -129,7 +129,7 @@ actual class Extractor {
             }
             return (DownloadProgress.VIDEO_DONE)
         } else if (ReturnCode.isCancel(session.returnCode)) {
-            // CANCEL
+             
             Logger.d(TAG, "Command cancelled ${session.state}, ${session.returnCode}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.jpg".toPath())
@@ -140,7 +140,7 @@ actual class Extractor {
             }
             return (DownloadProgress.failed(session.failStackTrace))
         } else {
-            // FAILURE
+             
             Logger.d(TAG, "Command failed ${session.state}, ${session.returnCode}, ${session.failStackTrace}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.jpg".toPath())
@@ -181,7 +181,7 @@ actual class Extractor {
                 command,
             )
         if (ReturnCode.isSuccess(session.returnCode)) {
-            // SUCCESS
+             
             Logger.d(TAG, "Command succeeded ${session.state}, ${session.returnCode}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.webm".toPath())
@@ -189,7 +189,7 @@ actual class Extractor {
                 e.printStackTrace()
             }
         } else if (ReturnCode.isCancel(session.returnCode)) {
-            // CANCEL
+             
             Logger.d(TAG, "Command cancelled ${session.state}, ${session.returnCode}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.jpg".toPath())
@@ -199,7 +199,7 @@ actual class Extractor {
             }
             return (DownloadProgress.failed("Error"))
         } else {
-            // FAILURE
+             
             Logger.d(TAG, "Command failed ${session.state}, ${session.returnCode}, ${session.failStackTrace}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.jpg".toPath())
@@ -233,7 +233,7 @@ actual class Extractor {
                 commandInject,
             )
         if (ReturnCode.isSuccess(sessionInject.returnCode)) {
-            // SUCCESS
+             
             Logger.d(TAG, "Command succeeded ${sessionInject.state}, ${sessionInject.returnCode}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.mp3".toPath())
@@ -244,7 +244,7 @@ actual class Extractor {
             }
             return (DownloadProgress.AUDIO_DONE)
         } else if (ReturnCode.isCancel(sessionInject.returnCode)) {
-            // CANCEL
+             
             Logger.d(TAG, "Command cancelled ${sessionInject.state}, ${sessionInject.returnCode}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.jpg".toPath())
@@ -255,7 +255,7 @@ actual class Extractor {
             }
             return (DownloadProgress.failed("Error"))
         } else {
-            // FAILURE
+             
             Logger.d(TAG, "Command failed ${sessionInject.state}, ${sessionInject.returnCode}, ${sessionInject.failStackTrace}")
             try {
                 FileSystem.SYSTEM.delete("$filePath.jpg".toPath())

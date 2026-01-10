@@ -130,15 +130,15 @@ class Ytmusic {
     private fun createClient() =
         HttpClient(getEngine()) {
             expectSuccess = true
-//            install(KtorToCurl) {
-//                converter =
-//                    object : CurlLogger {
-//                        override fun log(curl: String) {
-//                            Logger.d(TAG, "Curl command:")
-//                            Logger.d(TAG, curl)
-//                        }
-//                    }
-//            }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
             install(Logging) {
                 logger = io.ktor.client.plugins.logging.Logger.DEFAULT
                 level = LogLevel.ALL
@@ -323,23 +323,23 @@ class Ytmusic {
             setBody("[\"$poTokenChallengeRequestKey\", \"$challenge\"]")
         }
 
-//    curl 'https://jnn-pa.googleapis.com/$rpc/google.internal.waa.v1.Waa/Create' \
-//    -H 'accept: */*' \
-//    -H 'accept-language: vi,en;q=0.9,en-GB;q=0.8,en-US;q=0.7' \
-//    -H 'content-type: application/json+protobuf' \
-//    -H 'origin: https://www.youtube.com' \
-//    -H 'priority: u=1, i' \
-//    -H 'referer: https://www.youtube.com/' \
-//    -H 'sec-ch-ua: "Microsoft Edge";v="131", "Chromium";v="131", "Not_A Brand";v="24"' \
-//    -H 'sec-ch-ua-mobile: ?0' \
-//    -H 'sec-ch-ua-platform: "macOS"' \
-//    -H 'sec-fetch-dest: empty' \
-//    -H 'sec-fetch-mode: cors' \
-//    -H 'sec-fetch-site: cross-site' \
-//    -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0' \
-//    -H 'x-goog-api-key: AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw' \
-//    -H 'x-user-agent: grpc-web-javascript/0.1' \
-//    --data-raw '["O43z0dpjhgX20SCx4KAo"]'
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
     suspend fun noLogInPlayer(
         videoId: String,
@@ -431,14 +431,14 @@ class Ytmusic {
                                 signatureTimestamp = signatureTimestamp ?: 20073,
                             ),
                     ),
-//                serviceIntegrityDimensions =
-//                    if (poToken != null) {
-//                        PlayerBody.ServiceIntegrityDimensions(
-//                            poToken = poToken,
-//                        )
-//                    } else {
-//                        null
-//                    },
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
             ),
         )
     }
@@ -544,10 +544,7 @@ class Ytmusic {
         )
     }
 
-    /***
-     * SponsorBlock testing
-     * @author sonique-dev
-     */
+     
 
     suspend fun getSkipSegments(videoId: String) =
         httpClient.get("https://sponsor.ajay.app/api/skipSegments/") {
@@ -818,7 +815,7 @@ class Ytmusic {
         url: String,
         pathString: String,
     ): Flow<Triple<Boolean, Float, Int>> =
-        // Boolean is for isDone
+         
         channelFlow {
             val fileSystem = FileSystem.SYSTEM
             val path = pathString.toPath()

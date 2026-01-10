@@ -58,7 +58,7 @@ fun AppBottomNavigationBar(
                 is SearchDestination -> BottomNavScreen.Search.ordinal
                 is LikedDestination -> BottomNavScreen.Liked.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
-                else -> BottomNavScreen.Home.ordinal // Default to Home if not recognized
+                else -> BottomNavScreen.Home.ordinal  
             },
         )
     }
@@ -69,7 +69,7 @@ fun AppBottomNavigationBar(
                 .then(
                     if (isTranslucentBackground) {
                         Modifier.background(
-                            Color(0xFF000000).copy(alpha = 0.95f) // musica_black
+                            Color(0xFF000000).copy(alpha = 0.95f)  
                         )
                     } else {
                         Modifier
@@ -82,17 +82,17 @@ fun AppBottomNavigationBar(
                 if (isTranslucentBackground) {
                     Color.Transparent
                 } else {
-                    MaterialTheme.colorScheme.surface // Apple Black
+                    MaterialTheme.colorScheme.surface  
                 },
         ) {
             bottomNavScreens.forEach { screen ->
                 NavigationBarItem(
                     selected = selectedIndex == screen.ordinal,
                     colors = NavigationBarItemDefaults.colors(
-                        selectedIconColor = MaterialTheme.colorScheme.primary, // Apple Red
+                        selectedIconColor = MaterialTheme.colorScheme.primary,  
                         selectedTextColor = MaterialTheme.colorScheme.primary,
-                        indicatorColor = Color.Transparent, // No pill
-                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant, // Grey
+                        indicatorColor = Color.Transparent,  
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,  
                         unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     ),
                     onClick = {
@@ -165,7 +165,7 @@ fun AppNavigationRail(
                 is SearchDestination -> BottomNavScreen.Search.ordinal
                 is LikedDestination -> BottomNavScreen.Liked.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
-                else -> BottomNavScreen.Home.ordinal // Default to Home if not recognized
+                else -> BottomNavScreen.Home.ordinal  
             },
         )
     }

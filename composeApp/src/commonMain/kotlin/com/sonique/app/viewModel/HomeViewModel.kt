@@ -74,7 +74,7 @@ class HomeViewModel(
     private var _params: MutableStateFlow<String?> = MutableStateFlow(null)
     val params: StateFlow<String?> = _params
 
-    // For showing alert that should log in to YouTube
+     
     private val _showLogInAlert: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val showLogInAlert: StateFlow<Boolean> = _showLogInAlert
 
@@ -100,7 +100,7 @@ class HomeViewModel(
             exploreChart(regionCodeChart.value ?: "ZZ")
             language = dataStoreManager.getString(SELECTED_LANGUAGE).first()
                 ?: SUPPORTED_LANGUAGE.codes.first()
-            //  refresh when region change
+             
             val job1 =
                 launch {
                     dataStoreManager.location.distinctUntilChanged().collect {
@@ -108,7 +108,7 @@ class HomeViewModel(
                         getHomeItemList(params.value)
                     }
                 }
-            //  refresh when language change
+             
             val job2 =
                 launch {
                     dataStoreManager.language.distinctUntilChanged().collect {
@@ -143,7 +143,7 @@ class HomeViewModel(
                             if (it.isNotEmpty()) {
                                 Logger.w(tag, "Cookie changed, refreshing home")
                                 loading.value = true
-                                delay(1000) // To wait for the cookie to be saved properly
+                                delay(1000)  
                                 getHomeItemList(params.value)
                             }
                         }
@@ -339,7 +339,7 @@ class HomeViewModel(
     }
 
     companion object {
-        // Home params
+         
         const val HOME_PARAMS_RELAX = "ggM8SgQIBxADSgQIBRABSgQICRABSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"
         const val HOME_PARAMS_SLEEP = "ggM8SgQIBxABSgQIBRADSgQICRABSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"
         const val HOME_PARAMS_ENERGIZE = "ggM8SgQIBxABSgQIBRABSgQICRADSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"

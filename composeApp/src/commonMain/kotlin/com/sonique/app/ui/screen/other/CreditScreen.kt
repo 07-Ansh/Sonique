@@ -60,7 +60,7 @@ fun CreditScreen(
     ) {
         Spacer(modifier = Modifier.height(30.dp))
 
-        // App icon
+         
         Image(
             painter = painterResource(Res.drawable.app_icon),
             contentDescription = "App Icon",
@@ -72,7 +72,7 @@ fun CreditScreen(
 
         Spacer(modifier = Modifier.height(30.dp))
 
-        // App name
+         
         Text(
             text = stringResource(Res.string.app_name),
             style = typo().titleLarge,
@@ -83,7 +83,7 @@ fun CreditScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // App description
+         
         Text(
             text = stringResource(Res.string.credit_app),
             style = typo().bodyMedium,
@@ -102,7 +102,7 @@ fun CreditScreen(
 
 
 
-        // Bottom spacing
+         
         Spacer(modifier = Modifier.height(200.dp))
     }
     TopAppBar(

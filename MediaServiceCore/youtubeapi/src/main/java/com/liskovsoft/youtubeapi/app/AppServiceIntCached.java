@@ -12,7 +12,7 @@ import com.liskovsoft.youtubeapi.service.YouTubeMediaItemService;
 
 public class AppServiceIntCached extends AppServiceInt {
     private static final String TAG = AppServiceIntCached.class.getSimpleName();
-    private static final long CACHE_REFRESH_PERIOD_MS = 10 * 60 * 60 * 1_000; // check updated core files every 10 hours
+    private static final long CACHE_REFRESH_PERIOD_MS = 10 * 60 * 60 * 1_000;  
     private AppInfoCached mAppInfo;
     private ClientDataCached mClientData;
     private PlayerDataExtractor mPlayerDataExtractor;
@@ -83,8 +83,8 @@ public class AppServiceIntCached extends AppServiceInt {
     @Override
     public void invalidateCache() {
         mAppInfo = null;
-        // Don't reset Player's cache. It's too heavy to recreate often.
-        // Better do it inside MediaServiceData after the update
+         
+         
     }
 
     @Override

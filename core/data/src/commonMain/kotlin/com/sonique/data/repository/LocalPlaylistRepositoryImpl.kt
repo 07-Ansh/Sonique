@@ -350,12 +350,7 @@ internal class LocalPlaylistRepositoryImpl(
             Dispatchers.IO,
         )
 
-    /**
-     * Sync local playlist to YouTube playlist
-     * return youtubePlaylistId
-     * @param playlistId
-     * @return Flow<LocalResource<String>>
-     */
+     
     override fun syncLocalPlaylistToYouTubePlaylist(
         playlistId: Long,
         successMessage: String,
@@ -483,7 +478,7 @@ internal class LocalPlaylistRepositoryImpl(
             emit(false)
         }
 
-    // Update
+     
     override fun addTrackToLocalPlaylist(
         id: Long,
         song: SongEntity,
@@ -513,10 +508,10 @@ internal class LocalPlaylistRepositoryImpl(
                     id,
                 )
             }
-            // Emit success message
+             
             emit(LocalResource.Success(successMessage))
 
-            // Add to YouTube playlist
+             
             val ytId = localPlaylist.youtubePlaylistId
             if (ytId != null) {
                 youTube

@@ -3,11 +3,9 @@ package com.sonique.domain.mediaservice.player
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericPlaybackParameters
 
-/**
- * Abstract interface for media player implementations
- */
+ 
 interface MediaPlayerInterface {
-    // Playback control
+     
     fun play()
 
     fun pause()
@@ -31,7 +29,7 @@ interface MediaPlayerInterface {
 
     fun prepare()
 
-    // Media item management
+     
     fun setMediaItem(mediaItem: GenericMediaItem)
 
     fun addMediaItem(mediaItem: GenericMediaItem)
@@ -61,7 +59,7 @@ interface MediaPlayerInterface {
 
     fun getUnshuffledIndex(shuffledIndex: Int): Int
 
-    // Playback state properties
+     
     val isPlaying: Boolean
     val currentPosition: Long
     val duration: Long
@@ -73,28 +71,28 @@ interface MediaPlayerInterface {
     val contentPosition: Long
     val playbackState: Int
 
-    // Navigation
+     
     fun hasNextMediaItem(): Boolean
 
     fun hasPreviousMediaItem(): Boolean
 
-    // Playback modes
+     
     var shuffleModeEnabled: Boolean
     var repeatMode: Int
     var playWhenReady: Boolean
     var playbackParameters: GenericPlaybackParameters
 
-    // Audio settings
+     
     val audioSessionId: Int
     var volume: Float
     var skipSilenceEnabled: Boolean
 
-    // Listener management
+     
     fun addListener(listener: MediaPlayerListener)
 
     fun removeListener(listener: MediaPlayerListener)
 
-    // Release resources
+     
     fun release()
 }
 

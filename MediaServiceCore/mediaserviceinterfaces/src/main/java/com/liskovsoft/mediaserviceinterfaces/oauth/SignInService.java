@@ -13,11 +13,8 @@ public interface SignInService {
     void removeAccount(Account account);
     void setOnChange(Runnable onChange);
 
-    // RxJava interfaces
-    /**
-     * Trying to login using 2-factor authentication
-     * @return user code, user should apply this code on service web page (e.g. https://www.youtube.com/activate)
-     */
+     
+     
     Observable<SignInCode> signInObserve();
     Observable<Void> signOutObserve();
     Observable<Boolean> isSignedObserve();

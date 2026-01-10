@@ -6,11 +6,7 @@ import com.sonique.kotlinytmusicscraper.models.BrowseEndpoint.BrowseEndpointCont
 import com.sonique.kotlinytmusicscraper.models.BrowseEndpoint.BrowseEndpointContextSupportedConfigs.BrowseEndpointContextMusicConfig.Companion.MUSIC_PAGE_TYPE_PLAYLIST
 import kotlinx.serialization.Serializable
 
-/**
- * Two row: a big thumbnail, a title, and a subtitle
- * Used in [GridRenderer] and [MusicCarouselShelfRenderer]
- * Item type: song, video, album, playlist, artist
- */
+ 
 @Serializable
 data class MusicTwoRowItemRenderer(
     val title: Runs,

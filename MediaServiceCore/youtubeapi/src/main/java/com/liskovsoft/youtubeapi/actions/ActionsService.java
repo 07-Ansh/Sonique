@@ -21,33 +21,31 @@ public class ActionsService {
         Call<ActionResult> wrapper =
                 mActionsApi.setLike(ActionsApiHelper.getLikeActionQuery(videoId));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
     public void removeLike(String videoId) {
         Call<ActionResult> wrapper =
                 mActionsApi.removeLike(ActionsApiHelper.getLikeActionQuery(videoId));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
     public void setDislike(String videoId) {
         Call<ActionResult> wrapper =
                 mActionsApi.setDislike(ActionsApiHelper.getLikeActionQuery(videoId));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
     public void removeDislike(String videoId) {
         Call<ActionResult> wrapper =
                 mActionsApi.removeDislike(ActionsApiHelper.getLikeActionQuery(videoId));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
-    /**
-     * params needed for mobile notifications
-     */
+     
     public void subscribe(String channelId, String params) {
         if (channelId == null) {
             Log.e(TAG, "Can't subscribe: ChannelId is null");
@@ -57,7 +55,7 @@ public class ActionsService {
         Call<ActionResult> wrapper =
                 mActionsApi.subscribe(ActionsApiHelper.getSubscribeActionQuery(channelId, params));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
     public void unsubscribe(String channelId) {
@@ -69,7 +67,7 @@ public class ActionsService {
         Call<ActionResult> wrapper =
                 mActionsApi.unsubscribe(ActionsApiHelper.getSubscribeActionQuery(channelId, null));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
     public void pauseWatchHistory() {
@@ -88,8 +86,8 @@ public class ActionsService {
     }
 
     public void clearSearchHistory() {
-        // Empty start suggestions fix: use anonymous search
-        //boolean skipAuth = getBrowseService().getSuggestToken() == null;
+         
+         
 
         Call<Void> wrapper = mActionsApi.clearSearchHistory(ActionsApiHelper.getEmptyQuery());
         RetrofitHelper.get(wrapper);

@@ -23,6 +23,6 @@ public class FeedbackService {
     public void markAsNotInterested(String feedbackToken) {
         Call<FeedbackResponse> wrapper = mFeedbackApi.setNotInterested(
                 FeedbackApiHelper.getNotInterestedQuery(feedbackToken));
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 }

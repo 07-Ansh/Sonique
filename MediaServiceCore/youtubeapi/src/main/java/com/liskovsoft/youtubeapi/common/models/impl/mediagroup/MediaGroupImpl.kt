@@ -17,9 +17,7 @@ import com.liskovsoft.youtubeapi.next.v2.gen.getShelves
 import com.liskovsoft.youtubeapi.notifications.gen.NotificationsResult
 import com.liskovsoft.youtubeapi.notifications.gen.getItems
 
-/**
- *  Always renders first tab
- */
+ 
 internal data class BrowseMediaGroup(
     private val browseResult: BrowseResult,
     private val options: MediaGroupOptions,
@@ -70,7 +68,7 @@ internal data class WatchNexContinuationMediaGroup(
     override fun getItemWrappersInt(): List<ItemWrapper?>? = overrideItems?.sortedByDescending { it?.isLive() ?: false } ?: continuation.getItems() ?: getLastShelf()?.getItems()
     override fun getNextPageKeyInt(): String? = if (overrideItems != null) overrideKey else continuation.getContinuationToken() ?: getLastShelf()?.getContinuationToken()
     override fun getTitleInt(): String? = null
-    private fun getLastShelf() = continuation.getShelves()?.lastOrNull() // Get main content of Channels section and skip SHORTS
+    private fun getLastShelf() = continuation.getShelves()?.lastOrNull()  
 }
 
 internal data class RichSectionMediaGroup(
@@ -95,7 +93,7 @@ internal data class ItemSectionMediaGroup(
     private val itemSectionRenderer: ShelfListWrapper,
     private val options: MediaGroupOptions
 ): BaseMediaGroup(options) {
-    // Fix row continuation (no next key but has channel) by reporting empty content (will be continued as a chip). Example https://www.youtube.com/@hdtvtest
+     
     private val fixContinuation = nextPageKey == null && channelId != null
     override fun getItemWrappersInt(): List<ItemWrapper?>? = if (fixContinuation) null else itemSectionRenderer.getItems()
     override fun getNextPageKeyInt(): String? = if (fixContinuation) null else itemSectionRenderer.getContinuationToken()
@@ -149,11 +147,11 @@ internal data class GuideMediaGroup(
         val result = mutableListOf<MediaItem>()
 
         guideResult.getFirstSubs()?.forEach {
-            it?.let { if (it.thumbnail != null) result.add(GuideMediaItem(it)) } // exclude 'special' items
+            it?.let { if (it.thumbnail != null) result.add(GuideMediaItem(it)) }  
         }
 
         guideResult.getCollapsibleSubs()?.forEach {
-            it?.let { if (it.thumbnail != null) result.add(GuideMediaItem(it)) } // exclude 'special' items
+            it?.let { if (it.thumbnail != null) result.add(GuideMediaItem(it)) }  
         }
 
         if (sort == SORT_BY_NAME) result.sortBy { it.title?.lowercase() }
@@ -174,7 +172,7 @@ internal data class ChannelListMediaGroup(
         val result = mutableListOf<MediaItem>()
 
         tabs.forEachIndexed { idx, it ->
-            // Skip All subscriptions tab
+             
             if (idx == 0 && it.getThumbnails() == null) {
                 return@forEachIndexed
             }

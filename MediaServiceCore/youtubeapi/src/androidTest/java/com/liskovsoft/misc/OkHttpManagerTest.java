@@ -58,7 +58,7 @@ public class OkHttpManagerTest {
         waitForRegister.await();
     }
 
-    // https://stackoverflow.com/questions/35554380/okhttpclient-proxy-authentication-how-to
+     
     private static void setupProxy(Builder builder, String host, String port, String username, String password, Type proxyType) {
         if (host == null || port == null) {
             return;
@@ -74,6 +74,6 @@ public class OkHttpManagerTest {
         }
 
         builder.proxy(new Proxy(proxyType, new InetSocketAddress(host, Helpers.parseInt(port))));
-        //builder.proxyAuthenticator(proxyAuthenticator);
+         
     }
 }

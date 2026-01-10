@@ -18,7 +18,7 @@ public class YouTubeUrlListBuilderTest {
 
     @Before
     public void setUp() throws Exception {
-        // Fix temp video url ban
+         
         Thread.sleep(3_000);
 
         mService = YouTubeServiceManager.instance();

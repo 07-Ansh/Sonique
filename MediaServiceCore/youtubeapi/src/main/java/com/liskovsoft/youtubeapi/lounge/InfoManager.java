@@ -13,10 +13,7 @@ import retrofit2.http.Query;
 
 @WithJsonPath
 public interface InfoManager {
-    /**
-     * <a href="https://square.github.io/retrofit/2.x/retrofit/index.html?retrofit2/http/Field.html">Field</a><br/>
-     * <a href="https://square.github.io/retrofit/2.x/retrofit/retrofit2/http/FieldMap.html">FieldMap</a>
-     */
+     
     @FormUrlEncoded
     @POST("https://www.youtube.com/api/lounge/pairing/get_lounge_token_batch")
     Call<TokenInfoList> getTokenInfo(@Field("screen_ids") String... screenIds);

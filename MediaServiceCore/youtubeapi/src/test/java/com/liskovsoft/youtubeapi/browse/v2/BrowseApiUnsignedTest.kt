@@ -26,17 +26,15 @@ import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 class BrowseApiUnsignedTest {
-    /**
-     * Authorization should be updated each hour
-     */
+     
     private lateinit var mService: BrowseApi
 
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
         mService = RetrofitHelper.create(BrowseApi::class.java)
         RetrofitOkHttpHelper.authHeaders.clear()
         RetrofitOkHttpHelper.disableCompression = true
@@ -92,7 +90,7 @@ class BrowseApiUnsignedTest {
         }
 
         if (tab != null) {
-            //assertNotNull("Section contains title", tab.getTitle())
+             
             assertNotNull("Section contains items", tab.getItems()?.firstOrNull())
         }
 
@@ -111,11 +109,11 @@ class BrowseApiUnsignedTest {
 
         assertNotNull("Contains chips", chips)
 
-        val chip = chips?.getOrNull(2) // first chip is empty, second one is Posts
+        val chip = chips?.getOrNull(2)  
 
         assertNotNull("Chip has title", chip?.getTitle())
 
-        checkContinuationWeb(chip?.getContinuationToken(), false) // Chips usually don't support multiple continuation
+        checkContinuationWeb(chip?.getContinuationToken(), false)  
     }
 
     @Ignore("Doesn't contains chips")
@@ -139,7 +137,7 @@ class BrowseApiUnsignedTest {
     fun testThatSportsCanBeContinued() {
         val sports = getSports()
 
-        // recommended
+         
         val nextPageKey = sports?.getShelves()?.getOrNull(1)?.getContinuationToken()
 
         checkContinuationTV(nextPageKey, true)
@@ -244,7 +242,7 @@ class BrowseApiUnsignedTest {
 
     @Test
     fun testThatChannelVideosNotEmpty() {
-        val channelId = "UCkjot4p29KLU0pwc0srHeGg" // Till Lindemann all videos
+        val channelId = "UCkjot4p29KLU0pwc0srHeGg"  
 
         val videos = getChannelVideos(channelId)
 
@@ -253,7 +251,7 @@ class BrowseApiUnsignedTest {
 
     @Test
     fun testThatChannelVideosHasContinuation() {
-        val channelId = "UCkjot4p29KLU0pwc0srHeGg" // Till Lindemann all videos
+        val channelId = "UCkjot4p29KLU0pwc0srHeGg"  
 
         val videos = getChannelVideos(channelId)
 
@@ -273,13 +271,13 @@ class BrowseApiUnsignedTest {
 
     @Test
     fun testThatPlaylistNotEmpty() {
-        // Starfield songs
+         
         val channelId = "VLPL3irMzbdU-v1liRStfWBD9i9i3AvmLpY5"
 
         val videos = getChannelPlaylist(channelId)
 
         assertNotNull("Not empty", videos?.getItems())
-        //assertNotNull("Has title", videos?.getTitle())
+         
     }
 
     @Ignore("Trending was removed by YouTube")
@@ -302,7 +300,7 @@ class BrowseApiUnsignedTest {
 
     @Test
     fun testChannelTopicContinuation() {
-        // World of tanks recently uploaded
+         
         val browse = mService.getBrowseResult(BrowseApiHelper.getChannelQuery(AppClient.WEB, "UC1dGjtlDiiDM0gc_ghB1nTQ", "EgZyZWNlbnQ%3D"))
 
         val result = RetrofitHelper.get(browse)
@@ -328,13 +326,13 @@ class BrowseApiUnsignedTest {
     }
 
     private fun testFirstReelResult(details: ReelResult?) {
-        // Not present
+         
         assertNotNull("Contains video id", details?.getVideoId())
         assertNotNull("Contains thumbs", details?.getThumbnails())
         assertNotNull("Contains title", details?.getTitle())
         assertNotNull("Contains subtitle", details?.getSubtitle())
         assertNotNull("Contains continuation", details?.getContinuationToken())
-        //assertNotNull("Contains feedback", details?.getFeedbackTokens()?.firstOrNull())
+         
     }
 
     private fun testReelWatchEndpoint(firstEntry: ReelWatchEndpoint?) {
@@ -343,10 +341,10 @@ class BrowseApiUnsignedTest {
     }
 
     private fun testReelResult(details: ReelResult?) {
-        // Not present
+         
         assertNotNull("Contains title", details?.getTitle())
         assertNotNull("Contains subtitle", details?.getSubtitle())
-        //assertNotNull("Contains feedback", details?.getFeedbackTokens()?.firstOrNull())
+         
     }
 
     private fun checkContinuationWeb(token: String?, checkNextToken: Boolean = false) {

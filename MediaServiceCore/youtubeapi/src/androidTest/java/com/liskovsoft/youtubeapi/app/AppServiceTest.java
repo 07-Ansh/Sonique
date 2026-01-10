@@ -21,9 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Note: Robolectric doesn't support loading native libraries (*.so)
- */
+ 
 public class AppServiceTest {
     private AppService mAppService;
 
@@ -36,9 +34,7 @@ public class AppServiceTest {
         mAppService = AppService.instance();
     }
 
-    /**
-     * Note: Robolectric doesn't support loading native libraries (*.so)
-     */
+     
     @Test
     public void testThatItemsDecipheredCorrectly() {
         List<String> ciphered = new ArrayList<>();
@@ -77,15 +73,15 @@ public class AppServiceTest {
         }
     }
 
-    //@Ignore("Removed in the newer versions")
-    //@Test
-    //public void testCipherExtractor() {
-    //    for (String url : AppConstants.playerUrls) {
-    //        PlayerDataExtractor dataExtractor = new PlayerDataExtractor(url);
-    //
-    //        assertNotNull("Cipher found for url: " + url, dataExtractor.extractCipher());
-    //    }
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     @Test
     public void testPlaybackNonce() {

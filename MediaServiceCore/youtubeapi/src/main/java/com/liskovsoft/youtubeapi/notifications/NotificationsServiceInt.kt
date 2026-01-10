@@ -28,11 +28,11 @@ internal open class NotificationsServiceInt {
         if (notificationState is NotificationStateImpl) {
             notificationState.setSelected()
 
-            //if (!notificationState.isSubscribed) {
-            //    ActionsService.instance().subscribe(notificationState.channelId, notificationState.params)
-            //}
+             
+             
+             
 
-            // Fix bug when notification cannot be modified
+             
             ActionsServiceWrapper.instance().subscribe(notificationState.channelId, notificationState.params)
 
             modifyNotification(notificationState.stateParams)

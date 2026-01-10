@@ -8,40 +8,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/*
- * Copyright 2013 Phil Brown
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *     http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- *
- * Get Script name by Locale
- * <br>
- * @author Phil Brown
- * @since 9:47:09 AM Dec 20, 2013
- *
- */
+ 
 
-/*
- * Additional info:
- * https://en.wikipedia.org/wiki/Writing_system
- * https://stackoverflow.com/questions/19153384/how-to-get-the-script-from-a-locale-object-on-android
- * https://docs.oracle.com/javase/7/docs/api/java/util/Locale.html#getScript()
- * http://unicode.org/iso15924/iso15924-codes.html
- *
- * Usage:
- * String script = LocaleUtilities.getScript(Locale.getDefault());
- * String script = LocaleUtilities.getScript(getDefaultLocale(myActivity));
- */
+ 
 public class LocaleUtility {
 
     public static Map<String, Map<String, String>> scriptsByLocale = new HashMap<String, Map<String, String>>();
@@ -733,13 +702,7 @@ public class LocaleUtility {
         scriptsByLocale.put("zza", getScriptsMap("", "Arab"));
     }
 
-    /**
-     * Gets the script (writing type) for the given locale. For example, if a US citizen uses German Locale,
-     * and calls this method with Locale.getDefault(), the result would be "Runr"
-     *
-     * @param locale
-     * @return
-     */
+     
     public static String getScript(Locale locale) {
         initScriptsByLocale();
 
@@ -758,17 +721,12 @@ public class LocaleUtility {
 
     }
 
-    /**
-     * Obtain right locale even if the user changes their Locale in settings after your application process is running.
-     * Android N (Api level 24) update (no warnings).
-     * @param context activity
-     * @return locale
-     */
+     
     public static Locale getCurrentLocale(Context context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
             return context.getResources().getConfiguration().getLocales().get(0);
         } else{
-            //noinspection deprecation
+             
             return context.getResources().getConfiguration().locale;
         }
     }
@@ -780,13 +738,13 @@ public class LocaleUtility {
     public static boolean is24HourLocale(Context context) {
         Locale currentLocale = LocaleUtility.getCurrentLocale(context);
 
-        // Fix weird locale like en_RO
-        //for (Locale locale : Locale.getAvailableLocales()) {
-        //    if (locale.getCountry().equals(currentLocale.getCountry())) {
-        //        currentLocale = locale;
-        //        break;
-        //    }
-        //}
+         
+         
+         
+         
+         
+         
+         
 
         java.text.DateFormat natural =
                 java.text.DateFormat.getTimeInstance(

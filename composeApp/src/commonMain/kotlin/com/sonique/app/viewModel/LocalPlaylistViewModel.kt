@@ -371,45 +371,45 @@ class LocalPlaylistViewModel(
 
     val listJob: MutableStateFlow<ArrayList<SongEntity>> = MutableStateFlow(arrayListOf())
 
-//        var downloadState: StateFlow<List<Download?>>
-//        viewModelScope.launch {
-//            downloadState = downloadUtils.getAllDownloads().stateIn(viewModelScope)
-//            downloadState.collectLatest { down ->
-//                if (down.isNotEmpty()){
-//                    var count = 0
-//                    down.forEach { downloadItem ->
-//                        if (downloadItem?.state == Download.STATE_COMPLETED) {
-//                            count++
-//                        }
-//                        else if (downloadItem?.state == Download.STATE_FAILED) {
-//                            updatePlaylistDownloadState(id, DownloadState.STATE_DOWNLOADING)
-//                        }
-//                    }
-//                    if (count == down.size) {
-//                        mainRepository.getLocalPlaylist(id).collect{ playlist ->
-//                            mainRepository.getSongsByListVideoId(playlist.tracks!!).collect{ tracks ->
-//                                tracks.forEach { track ->
-//                                    if (track.downloadState != DownloadState.STATE_DOWNLOADED) {
-//                                        mainRepository.updateDownloadState(track.videoId, DownloadState.STATE_NOT_DOWNLOADED)
-//                                        Toast.makeText(getApplication(), "Download Failed", Toast.LENGTH_SHORT).show()
-//                                    }
-//                                }
-//                            }
-//                        }
-//                        Logger.d("Check Downloaded", "Downloaded")
-//                        updatePlaylistDownloadState(id, DownloadState.STATE_DOWNLOADED)
-//                        Toast.makeText(getApplication(), "Download Completed", Toast.LENGTH_SHORT).show()
-//                    }
-//                    else {
-//                        updatePlaylistDownloadState(id, DownloadState.STATE_DOWNLOADING)
-//                    }
-//                }
-//                else {
-//                    updatePlaylistDownloadState(id, DownloadState.STATE_NOT_DOWNLOADED)
-//                }
-//            }
-//        }
-//    }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
     fun updatePlaylistTitle(
         title: String,
@@ -576,37 +576,37 @@ class LocalPlaylistViewModel(
                         hideLoadingDialog()
                     },
                 )
-//            mainRepository.createYouTubePlaylist(playlist).collect {
-//                if (it != null) {
-//                    val ytId = "VL$it"
-//                    mainRepository.updateLocalPlaylistYouTubePlaylistId(playlist.id, ytId)
-//                    mainRepository.updateLocalPlaylistYouTubePlaylistSynced(playlist.id, 1)
-//                    mainRepository.getLocalPlaylistByYoutubePlaylistId(ytId).collect { yt ->
-//                        if (yt != null) {
-//                            mainRepository.updateLocalPlaylistYouTubePlaylistSyncState(
-//                                yt.id,
-//                                LocalPlaylistEntity.YouTubeSyncState.Synced,
-//                            )
-//                            mainRepository.getLocalPlaylist(playlist.id).collect { last ->
-//                                _localPlaylist.emit(last)
-//                                Toast
-//                                    .makeText(
-//                                        application,
-//                                        application.getString(Res.string.synced),
-//                                        Toast.LENGTH_SHORT,
-//                                    ).show()
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    Toast
-//                        .makeText(
-//                            application,
-//                            application.getString(Res.string.error),
-//                            Toast.LENGTH_SHORT,
-//                        ).show()
-//                }
-//            }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
         }
     }
 
@@ -717,7 +717,7 @@ class LocalPlaylistViewModel(
                             makeToast(it)
                             viewModelScope.launch {
                                 localPlaylistRepository.getPlaylistPairOfSong(id, track.videoId).lastOrNull()?.let { pair ->
-                                    // Add to UI
+                                     
                                     onApplyActions(PagingActions.Insert(track.toSongEntity() to pair))
                                 }
                             }

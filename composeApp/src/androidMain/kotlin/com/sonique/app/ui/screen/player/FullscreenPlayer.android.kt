@@ -42,7 +42,7 @@ actual fun FullScreenRotationImmersive(
                 show(WindowInsetsCompat.Type.systemBars())
                 systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
-            // restore original orientation when view disappears
+             
             activity.requestedOrientation =
                 when (originalOrientation) {
                     Configuration.ORIENTATION_PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT

@@ -33,7 +33,7 @@ internal object RetrofitOkHttpHelper {
 
     private val headers = mapOf(
         "User-Agent" to DefaultHeaders.APP_USER_AGENT,
-        // Enable compression in production
+         
         "Accept-Encoding" to DefaultHeaders.ACCEPT_ENCODING,
         "Referer" to "https://www.youtube.com/tv"
     )
@@ -51,7 +51,7 @@ internal object RetrofitOkHttpHelper {
         val builder = OkHttpClient.Builder()
         addCommonHeaders(builder)
         OkHttpCommons.setupBuilder(builder)
-        //addCronetInterceptor(builder)
+         
         return builder.build()
     }
 
@@ -71,7 +71,7 @@ internal object RetrofitOkHttpHelper {
                     applyQueryKeys(mapOf("key" to AppConstants.API_KEY, "prettyPrint" to "false"), request, requestBuilder)
                 } else {
                     applyQueryKeys(mapOf("prettyPrint" to "false"), request, requestBuilder)
-                    // Fix suggestions on non branded accounts
+                     
                     applyHeaders(authHeaders, headers, requestBuilder)
                 }
             }
@@ -86,8 +86,8 @@ internal object RetrofitOkHttpHelper {
                 continue
             }
 
-            // Don't override existing headers
-            oldHeaders[header.key] ?: header.value?.let { builder.header(header.key, it) } // NOTE: don't remove null check
+             
+            oldHeaders[header.key] ?: header.value?.let { builder.header(header.key, it) }  
         }
     }
 
@@ -97,7 +97,7 @@ internal object RetrofitOkHttpHelper {
         var newUrlBuilder: HttpUrl.Builder? = null
 
         for (entry in keys) {
-            // Don't override existing keys
+             
             originUrl.queryParameter(entry.key) ?: run {
                 if (newUrlBuilder == null) {
                     newUrlBuilder = originUrl.newBuilder()
@@ -113,7 +113,7 @@ internal object RetrofitOkHttpHelper {
     }
 
     private fun addCronetInterceptor(builder: OkHttpClient.Builder) {
-        val engine = CronetManager.getEngine(GlobalPreferences.sInstance.context)
+        val engine = CronetManager.getEngine(GlobalPreferences.sInstance.context!!)
         if (engine != null) {
             builder.addInterceptor(CronetInterceptor.newBuilder(engine).build())
         }

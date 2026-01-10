@@ -48,7 +48,7 @@ internal object NotificationStorage: MediaServicePrefs.ProfileChangeListener {
             return
         }
 
-        // Disable filter by likes for manually added channels
+         
         if (channel.likeCount == -1) {
             return
         }

@@ -105,22 +105,17 @@ public final class Helpers {
     private static int sAV1MaxHeight;
     private static long sCachedRamSize = -1;
     private static Random sRandom;
-    // https://unicode-table.com/en/
-    // https://www.compart.com/en/unicode/
+     
+     
     public static final String THUMB_UP = "\uD83D\uDC4D";
     public static final String THUMB_DOWN = "\uD83D\uDC4E";
     public static final String NON_BREAKING_SPACE = "\u00A0";
     public static final String SPEECH = "\uD83D\uDDE8";
     public static final String SPEAKER = "\uD83D\uDD08";
-    //public static final String HOURGLASS = "⌛";
+     
     public static final String HOURGLASS = "\u231B";
 
-    /**
-     * Simple wildcard matching routine. Implemented without regex. So you may expect huge performance boost.
-     * @param host
-     * @param mask
-     * @return
-     */
+     
     public static boolean matchSubstr(String host, String mask) {
         String[] sections = mask.split("\\*");
         String text = host;
@@ -151,7 +146,7 @@ public final class Helpers {
 
     public static String encodeURI(byte[] data) {
         try {
-            // make behaviour of java uri-encode the same as javascript's one
+             
             return URLEncoder.encode(new String(data, "UTF-8"), "UTF-8").replace("+", "%20");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException(e);
@@ -162,20 +157,18 @@ public final class Helpers {
         return String.format("%s (%s)", Build.MODEL, Build.PRODUCT);
     }
 
-    /**
-     * Source: https://stackoverflow.com/questions/16704597/how-do-you-get-the-user-defined-device-name-in-android
-     */
+     
     @SuppressLint("MissingPermission")
     public static String getUserDeviceName(Context context) {
-        // 1) No need special permissions
+         
         String bluetoothName = Settings.System.getString(context.getContentResolver(), "bluetooth_name");
 
         if (bluetoothName == null) {
-            // 2) No need special permissions
+             
             bluetoothName = Settings.Secure.getString(context.getContentResolver(), "bluetooth_name");
 
             if (bluetoothName == null) {
-                // 3) Require permission
+                 
                 BluetoothAdapter myDevice = BluetoothAdapter.getDefaultAdapter();
 
                 if (myDevice != null) {
@@ -183,18 +176,18 @@ public final class Helpers {
                 }
 
                 if (bluetoothName == null) {
-                    // 4)
+                     
                     bluetoothName = Settings.System.getString(context.getContentResolver(), "device_name");
 
                     if (bluetoothName == null) {
-                        // 5)
+                         
                         bluetoothName = Settings.Secure.getString(context.getContentResolver(), "lock_screen_owner_info");
                     }
                 }
             }
         }
 
-        // Revert to device name if needed
+         
         return bluetoothName != null ? bluetoothName : Build.MODEL;
     }
 
@@ -319,7 +312,7 @@ public final class Helpers {
             matcher = regex.matcher(input);
 
             if (matcher.find()) {
-                result = matcher.group(matcher.groupCount()); // get last group
+                result = matcher.group(matcher.groupCount());  
                 break;
             }
         }
@@ -337,7 +330,7 @@ public final class Helpers {
             Matcher matcher = pattern.matcher(input);
 
             if (matcher.find()) {
-                result = matcher.group(matcher.groupCount()); // get last group
+                result = matcher.group(matcher.groupCount());  
                 break;
             }
         }
@@ -351,21 +344,17 @@ public final class Helpers {
         return list.size() > 0;
     }
 
-    /**
-     * Format float and remove unneeded zeroes after dot
-     */
+     
     public static String formatFloat(double d) {
-        // This is to show symbol . instead of ,
+         
         DecimalFormatSymbols otherSymbols = new DecimalFormatSymbols(Locale.US);
-        // Define the maximum number of decimals (number of symbols #)
+         
         DecimalFormat df = new DecimalFormat("#.##", otherSymbols);
 
         return df.format(d);
     }
 
-    /**
-     * Limit digits after dot
-     */
+     
     public static double round(double value, int places) {
         if (places < 0) throw new IllegalArgumentException();
 
@@ -375,12 +364,7 @@ public final class Helpers {
         return (double) tmp / factor;
     }
 
-    /**
-     * Get scale for use in {@link android.webkit.WebView} instantiation
-     * @param ctx context
-     * @param picWidth constant that I knew beforehand
-     * @return calculated scale
-     */
+     
     public static int getScale(Context ctx, int picWidth) {
         Point p = new Point();
         Display display = ((WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
@@ -406,9 +390,7 @@ public final class Helpers {
                !Character.isDigit(num.charAt(0));
     }
 
-    /**
-     * Any number, e.g. -1.0, 15
-     */
+     
     public static boolean isNumeric(String s) {
         return s != null && s.matches("^[-+]?\\d*\\.?\\d+$");
     }
@@ -425,18 +407,14 @@ public final class Helpers {
         return s != null && s.matches("^.*[-+]?\\d*\\.?\\d+.*$");
     }
 
-    /**
-     * Force normal font size regardless of the system settings
-     * @param configuration com.sonique.app config
-     * @param ctx activity
-     */
+     
     public static void adjustFontScale(Configuration configuration, Activity ctx) {
         WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) {
             return;
         }
 
-        configuration.fontScale = (float) 1.0; // normal size
+        configuration.fontScale = (float) 1.0;  
         DisplayMetrics metrics = ctx.getResources().getDisplayMetrics();
         wm.getDefaultDisplay().getMetrics(metrics);
         metrics.scaledDensity = configuration.fontScale * metrics.density;
@@ -449,12 +427,7 @@ public final class Helpers {
         return gson.fromJson(jsonContent, type);
     }
 
-    /**
-     * Return true to first matched string from the array
-     * @param fullStr full string
-     * @param nameArr array to match
-     * @return whether ended with arr
-     */
+     
     public static boolean endsWithAny(String fullStr, String... nameArr) {
         if (fullStr == null) {
             return false;
@@ -478,33 +451,33 @@ public final class Helpers {
 
         boolean isMicAvail = pm.hasSystemFeature(PackageManager.FEATURE_MICROPHONE);
 
-        //boolean isLeanback = false;
-        //
-        //if (VERSION.SDK_INT >= 21) {
-        //    // Android TV user likely have mics
-        //    isLeanback = isAndroidTV(context) || isAmazonFireTVDevice();
-        //}
+         
+         
+         
+         
+         
+         
 
         return isMicAvail || VERSION.SDK_INT >= 21;
     }
 
     public static boolean isAndroidTVLauncher(Context context) {
-        return  isPackageExists(context, "com.amazon.tv.leanbacklauncher") || // port of the official Android TV launcher (https://github.com/tsynik/LeanbackLauncher)
+        return  isPackageExists(context, "com.amazon.tv.leanbacklauncher") ||  
                 isPackageExists(context, "com.google.android.leanbacklauncher") ||
-                isPackageExists(context, "com.google.android.tvlauncher") || // Android TV 10
-                isPackageExists(context, "com.google.android.apps.tv.launcherx"); // Google TV Home
+                isPackageExists(context, "com.google.android.tvlauncher") ||  
+                isPackageExists(context, "com.google.android.apps.tv.launcherx");  
     }
 
     public static boolean isGoogleTVLauncher(Context context) {
         String pkgName = "com.google.android.apps.tv.launcherx";
-        //int pkgVersionCode = 413515; // 557827
-        //return isPackageExists(context, pkgName) && getPackageVersionCode(context, pkgName) >= pkgVersionCode;
+         
+         
         return isPackageExists(context, pkgName);
     }
 
-    //public static boolean isAndroidTVRecommendations(Context context) {
-    //    return isPackageExists(context, "com.google.android.leanbacklauncher.recommendations");
-    //}
+     
+     
+     
 
     public static boolean isATVChannelsSupported(Context context) {
         return VERSION.SDK_INT >= 26 && isAndroidTVLauncher(context);
@@ -550,7 +523,7 @@ public final class Helpers {
             if (matcher.groupCount() >= 1) {
                 regExpVal = matcher.group(1);
             } else {
-                regExpVal = matcher.group(0); // all match
+                regExpVal = matcher.group(0);  
             }
         }
 
@@ -586,8 +559,8 @@ public final class Helpers {
         View decorView = activity.getWindow().getDecorView();
 
         if (VERSION.SDK_INT >= 19) {
-            // https://developer.android.com/codelabs/gesture-navigation
-            // Keep navigation bar in gesture mode to support gestures
+             
+             
             int hideNavigation = isEdgeToEdgeEnabled(activity) != 2 ? View.SYSTEM_UI_FLAG_HIDE_NAVIGATION : 0;
             decorView.setSystemUiVisibility(hideNavigation | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
         } else {
@@ -595,33 +568,31 @@ public final class Helpers {
         }
     }
 
-    /**
-     * More advance approach. Including automobile systems support.
-     */
+     
     public static void makeActivityFullscreen2(Activity activity) {
         if (Build.VERSION.SDK_INT >= 30) {
             activity.getWindow().setDecorFitsSystemWindows(false);
             WindowInsetsController controller = activity.getWindow().getInsetsController();
-            // https://developer.android.com/codelabs/gesture-navigation
-            // Keep navigation bar in gesture mode to support gestures???
-            //if (controller != null && isEdgeToEdgeEnabled(activity) != 2) {
+             
+             
+             
             if (controller != null) {
                 controller.hide(WindowInsets.Type.systemBars());
                 controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
             }
         } else {
-            // https://developer.android.com/codelabs/gesture-navigation
-            // Keep navigation bar in gesture mode to support gestures???
-            //int hideNavigation = isEdgeToEdgeEnabled(activity) != 2 ? (View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) : 0;
+             
+             
+             
             int hideNavigation = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
             int sticky = Build.VERSION.SDK_INT >= 19 ? View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY : 0;
             activity.getWindow().getDecorView().setSystemUiVisibility(hideNavigation | sticky | View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_FULLSCREEN);
         }
 
         if (VERSION.SDK_INT >= 19) {
-            // Make status and nav bars transparent
-            // <item name="android:windowTranslucentStatus">false</item>
-            // <item name="android:windowTranslucentNavigation">false</item>
+             
+             
+             
             activity.getWindow().setFlags(LayoutParams.FLAG_TRANSLUCENT_STATUS, LayoutParams.FLAG_TRANSLUCENT_STATUS);
             activity.getWindow().setFlags(LayoutParams.FLAG_TRANSLUCENT_NAVIGATION, LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
         }
@@ -635,12 +606,7 @@ public final class Helpers {
         });
     }
 
-    /**
-     * 0 : Navigation is displaying with 3 buttons<br/>
-     * 1 : Navigation is displaying with 2 button(Android P navigation mode)<br/>
-     * 2 : Full screen gesture(Gesture on android Q)<br/>
-     * <a href="https://developer.android.com/codelabs/gesture-navigation">tutorial</a>
-     */
+     
     private static int isEdgeToEdgeEnabled(Context context) {
         Resources resources = context.getResources();
         int resourceId = resources.getIdentifier("config_navBarInteractionMode", "integer", "android");
@@ -782,12 +748,7 @@ public final class Helpers {
         audioManager.setStreamMute(AudioManager.STREAM_SYSTEM, !enable);
     }
 
-    /**
-     * Find all packages starting for specified name
-     * @param context ctx
-     * @param pkgPrefix starts with
-     * @return packages or empty list if not found
-     */
+     
     public static List<String> findPackagesByPrefix(Context context, String pkgPrefix) {
         List<String> pkgNames = new ArrayList<>();
 
@@ -819,7 +780,7 @@ public final class Helpers {
         try {
             packageInfo = manager.getPackageInfo(pkgName, PackageManager.GET_META_DATA);
         } catch (NameNotFoundException e) {
-            // NOP
+             
         }
 
         return packageInfo;
@@ -837,7 +798,7 @@ public final class Helpers {
         context.startActivityForResult(intent, REMOVE_PACKAGE_CODE);
     }
 
-    // NOTE: as of Oreo you must also add the REQUEST_INSTALL_PACKAGES permission to your manifest. Otherwise it just silently fails
+     
     public static void installPackage(Context context, String packagePath) {
         if (packagePath == null || context == null) {
             return;
@@ -851,19 +812,19 @@ public final class Helpers {
 
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(file, "application/vnd.android.package-archive");
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION); // without this flag android returned a intent error!
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);  
 
         try {
             context.getApplicationContext().startActivity(intent);
         } catch (ActivityNotFoundException | NullPointerException e) {
-            // NullPointerException: Attempt to get length of null array
+             
             e.printStackTrace();
         }
     }
 
     public static List<ApplicationInfo> getInstalledPackages(Context context) {
         final PackageManager pm = context.getPackageManager();
-        //get a list of installed apps.
+         
 
         return pm.getInstalledApplications(PackageManager.GET_META_DATA);
     }
@@ -909,9 +870,7 @@ public final class Helpers {
         }
     }
 
-    /**
-     * Not working!!!
-     */
+     
     public static void bringToBack(View myCurrentView) {
         ViewGroup myViewGroup = ((ViewGroup) myCurrentView.getParent());
         int index = myViewGroup.indexOfChild(myCurrentView);
@@ -940,15 +899,13 @@ public final class Helpers {
         context.runOnUiThread(() -> {
             try {
                 context.getWindow().addFlags(LayoutParams.FLAG_KEEP_SCREEN_ON);
-            } catch (ArrayIndexOutOfBoundsException e) { // A rare unknown crash (length=0; index=16)
+            } catch (ArrayIndexOutOfBoundsException e) {  
                 e.printStackTrace();
             }
         });
     }
 
-    /**
-     * Don't work. Maybe need WRITE_SETTINGS permission?
-     */
+     
     public static void setBrightness(Activity context, float level) {
         if (context == null) {
             return;
@@ -961,10 +918,7 @@ public final class Helpers {
         });
     }
 
-    /**
-     * Utility method to check if device is Amazon Fire TV device
-     * @return {@code true} true if device is Amazon Fire TV device.
-     */
+     
     public static boolean isAmazonFireTVDevice() {
         String deviceName = Build.MODEL;
         String manufacturerName = Build.MANUFACTURER;
@@ -980,9 +934,7 @@ public final class Helpers {
         return intent.resolveActivityInfo(context.getPackageManager(), PackageManager.MATCH_DEFAULT_ONLY) != null;
     }
 
-    /**
-     * Get a MemoryInfo object for the device's current memory status.
-     */
+     
     public static ActivityManager.MemoryInfo getAvailableMemory(Context ctx) {
         ActivityManager activityManager = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
@@ -990,9 +942,7 @@ public final class Helpers {
         return memoryInfo;
     }
 
-    /**
-     * Check that the com.sonique.app could be easily uninstalled without root.
-     */
+     
     public static boolean isUserApp(PackageInfo info) {
         if (info != null && info.applicationInfo != null) {
             ApplicationInfo ai = info.applicationInfo;
@@ -1059,10 +1009,7 @@ public final class Helpers {
         return m.matches();
     }
 
-    /**
-     * Works in most of the cases.<br/>
-     * https://stackoverflow.com/questions/5105354/how-to-show-soft-keyboard-when-edittext-is-focused
-     */
+     
     public static void showKeyboard(@Nullable Context context) {
         if (context == null) {
             return;
@@ -1072,9 +1019,7 @@ public final class Helpers {
         inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
     }
 
-    /**
-     * Sometimes doesn't work. IDK why.
-     */
+     
     public static void showKeyboardAlt(@Nullable Context context, View view) {
         if (context == null) {
             return;
@@ -1093,9 +1038,7 @@ public final class Helpers {
         inputMethodManager.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
-    /**
-     * https://stackoverflow.com/questions/4745988/how-do-i-detect-if-software-keyboard-is-visible-on-android-device-or-not
-     */
+     
     public static boolean isKeyboardShown(@Nullable Context context) {
         if (context == null) {
             return false;
@@ -1130,7 +1073,7 @@ public final class Helpers {
             actManager.getMemoryInfo(memInfo);
             result = memInfo.totalMem;
         } else {
-            result = 500_000_000; // safe value for devices with 1gb or more...
+            result = 500_000_000;  
         }
 
         sCachedRamSize = result;
@@ -1150,13 +1093,13 @@ public final class Helpers {
         try {
             Field f1 = getDeclaredField(these.getClass(), fieldName);
             if (f1 != null) {
-                // Change private modifier to public
+                 
                 f1.setAccessible(true);
-                // Remove final modifier (don't working!!!)
-                //Field modifiersField = Field.class.getDeclaredField("modifiers");
-                //modifiersField.setAccessible(true);
-                //modifiersField.setInt(f1, f1.getModifiers() & ~Modifier.FINAL);
-                // Set field (at last)
+                 
+                 
+                 
+                 
+                 
                 f1.setInt(these, value);
             }
         } catch (Exception e) {
@@ -1168,13 +1111,13 @@ public final class Helpers {
         try {
             Field f1 = getDeclaredField(these.getClass(), fieldName);
             if (f1 != null) {
-                // Change private modifier to public
+                 
                 f1.setAccessible(true);
-                // Remove final modifier (don't working!!!)
-                //Field modifiersField = Field.class.getDeclaredField("modifiers");
-                //modifiersField.setAccessible(true);
-                //modifiersField.setInt(f1, f1.getModifiers() & ~Modifier.FINAL);
-                // Set field (at last)
+                 
+                 
+                 
+                 
+                 
                 f1.setLong(these, value);
             }
         } catch (Exception e) {
@@ -1186,13 +1129,13 @@ public final class Helpers {
         try {
             Field f1 = getDeclaredField(these.getClass(), fieldName);
             if (f1 != null) {
-                // Change private modifier to public
+                 
                 f1.setAccessible(true);
-                // Remove final modifier (don't working!!!)
-                //Field modifiersField = Field.class.getDeclaredField("modifiers");
-                //modifiersField.setAccessible(true);
-                //modifiersField.setInt(f1, f1.getModifiers() & ~Modifier.FINAL);
-                // Set field (at last)
+                 
+                 
+                 
+                 
+                 
                 f1.set(these, value);
             }
         } catch (Exception e) {
@@ -1216,7 +1159,7 @@ public final class Helpers {
     }
 
     private static Field getDeclaredField(Class<?> aClass, String fieldName) {
-        if (aClass == null) { // null if superclass is object
+        if (aClass == null) {  
             return null;
         }
 
@@ -1393,7 +1336,7 @@ public final class Helpers {
             String[] listArr = splitArray(spec);
 
             for (String item : listArr) {
-                //String[] keyValPair = item.split("\\|");
+                 
                 String[] keyValPair = split(item, PAIR_DELIM);
 
                 if (keyValPair.length != 2) {
@@ -1443,7 +1386,7 @@ public final class Helpers {
     public static <T, K> String mergeMap(Map<T, K> map) {
         List<String> pairs = new ArrayList<>();
         for (Entry<T, K> pair : map.entrySet()) {
-            //pairs.add(String.format("%s|%s", pair.getKey(), pair.getValue()));
+             
             pairs.add(merge(PAIR_DELIM, pair.getKey(), pair.getValue()));
         }
 
@@ -1487,7 +1430,7 @@ public final class Helpers {
             return null;
         }
 
-        // NOTE: empty array/object represented by space
+         
         if (data.trim().isEmpty()) {
             return new String[]{};
         }
@@ -1501,7 +1444,7 @@ public final class Helpers {
         }
 
         if (params.length == 0) {
-            return " "; // NOTE: empty array/object represented by space
+            return " ";  
         }
 
         StringBuilder sb = new StringBuilder();
@@ -1551,13 +1494,13 @@ public final class Helpers {
 
     public static void openLink(Context context, String url) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        // Fix: Calling startActivity() from outside of an Activity  context requires the FLAG_ACTIVITY_NEW_TASK flag
+         
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         try {
             context.startActivity(intent);
         } catch (Exception e) {
-            // NOP
+             
         }
     }
 
@@ -1569,9 +1512,7 @@ public final class Helpers {
         return context.getResources().getIdentifier(resourceName, resourceType, context.getPackageName());
     }
 
-    /**
-     * Info: https://stackoverflow.com/questions/7896615/android-how-to-get-value-of-an-attribute-in-code
-     */
+     
     public static int getThemeAttr(Context context, int attrName) {
         TypedValue outValue = new TypedValue();
         context.getTheme().resolveAttribute(attrName, outValue, true);
@@ -1620,18 +1561,12 @@ public final class Helpers {
         return result;
     }
 
-    /**
-     * Creates map from string array resource. Uses '|' as delimiter.
-     * @return key/value map
-     */
+     
     public static Map<String, String> getMap(Context context, int arrayResId) {
         return getMap(context.getResources().getStringArray(arrayResId), "|", new LinkedHashMap<>());
     }
 
-    /**
-     * Creates map from string array. Uses any string as delimiter.
-     * @return key/value map
-     */
+     
     public static Map<String, String> getMap(String[] array, String delim, Map<String, String> defaultMap) {
         for (String item : array) {
             StringTokenizer tokenizer = new StringTokenizer(item, delim);
@@ -1642,9 +1577,7 @@ public final class Helpers {
         return defaultMap;
     }
 
-    /**
-     * Positive hash code generator.
-     */
+     
     public static int hashCode(Object... items) {
         if (items == null || items.length == 0) {
             return -1;
@@ -1661,9 +1594,7 @@ public final class Helpers {
         return Math.abs(hash);
     }
 
-    /**
-     * Positive hash code generator.
-     */
+     
     public static int hashCodeAny(Object... items) {
         if (items == null || items.length == 0) {
             return -1;
@@ -1672,7 +1603,7 @@ public final class Helpers {
         int hash = -1;
 
         for (Object item : items) {
-            // Don't skip zero hash because or you'll broke Home section (id == 0)
+             
             if (item != null && item.hashCode() != -1) {
                 hash = 31 * hash + item.hashCode();
                 break;
@@ -1779,10 +1710,7 @@ public final class Helpers {
         boolean test(T item);
     }
 
-    /**
-     * Predicate replacement function for devices with Android 6.0 and below.
-     * @return removed items (if any) or null (if nothing removed)
-     */
+     
     @Nullable
     public static <T> List<T> removeIf(Collection<T> collection, Filter<T> filter) {
         if (collection == null || filter == null) {
@@ -1802,7 +1730,7 @@ public final class Helpers {
             if (removed != null) {
                 collection.removeAll(removed);
             }
-        } catch (UnsupportedOperationException e) { // read only collection
+        } catch (UnsupportedOperationException e) {  
             removed = null;
             e.printStackTrace();
         }
@@ -1882,15 +1810,13 @@ public final class Helpers {
         return result;
     }
 
-    /**
-     * Fix duplicated items inside ATV channels etc.
-     */
+     
     public static <T> void removeDuplicates(Collection<T> list) {
         try {
             Set<T> set = new LinkedHashSet<>(list);
             list.clear();
             list.addAll(set);
-        } catch (UnsupportedOperationException e) { // read only collection
+        } catch (UnsupportedOperationException e) {  
             e.printStackTrace();
         }
     }
@@ -1936,7 +1862,7 @@ public final class Helpers {
 
     public static boolean isAV1Supported() {
         if (sIsAV1Supported == null) {
-            // Not tested yet!!!
+             
             sIsAV1Supported = getCodecMaxHeight(MIME_AV1) != -1;
         }
         return sIsAV1Supported;
@@ -1947,14 +1873,14 @@ public final class Helpers {
             return false;
         }
 
-        if (sVP9MaxHeight == 0) { // not initialized
-            // TV capabilities sometimes are limited to the screen resolution not real decoder support
+        if (sVP9MaxHeight == 0) {  
+             
             switch (Build.MODEL) {
-                // FHD devices with fake 2K support
-                case "AFTSSS": // fire tv stick 3th gen
+                 
+                case "AFTSSS":  
                     sVP9MaxHeight = 1080;
                     break;
-                // FHD tvs capable 4K
+                 
                 case "MiTV-AXSO0":
                 case "VIDAA_TV":
                 case "PATH_7XPRO":
@@ -1974,11 +1900,11 @@ public final class Helpers {
             return false;
         }
 
-        if (sAV1MaxHeight == 0) { // not initialized
+        if (sAV1MaxHeight == 0) {  
             sAV1MaxHeight = getCodecMaxHeight(MIME_AV1);
 
-            // On Rockchip (and some others) av1 codec info is bugged.
-            // Reported max resolution is 360p.
+             
+             
             if (sAV1MaxHeight > 0 && sAV1MaxHeight < 1080) {
                 sAV1MaxHeight = 2160;
             }
@@ -1987,9 +1913,7 @@ public final class Helpers {
         return height <= sAV1MaxHeight;
     }
 
-    /**
-     * <a href="https://developer.android.com/reference/android/media/MediaCodec">More info</a>
-     */
+     
     private static int getCodecMaxHeight(String mimeType) {
         if (VERSION.SDK_INT < 21) {
             return -1;
@@ -2014,17 +1938,13 @@ public final class Helpers {
                 }
             }
         } catch (RuntimeException e) {
-            // cannot get MediaCodecList
+             
         }
 
         return -1;
     }
 
-    /**
-     * <a href="https://github.com/google/ExoPlayer/issues/4757">More info</a>
-     * @param videoCodecName name from CodecInfo
-     * @return is accelerated
-     */
+     
     public static boolean isHardwareAccelerated(String videoCodecName) {
         if (videoCodecName == null) {
             return false;
@@ -2039,9 +1959,7 @@ public final class Helpers {
         return true;
     }
 
-    /**
-     * Binary values check utility
-     */
+     
     public static boolean check(int origin, int... values) {
         int combined = 0;
 
@@ -2057,18 +1975,16 @@ public final class Helpers {
             return title;
         }
 
-        return title.substring(0, maxLength) + "\u2026"; // ...
+        return title.substring(0, maxLength) + "\u2026";  
     }
 
-    /**
-     * Trim with respect of &nbsp; charater
-     */
+     
     public static String trim(String text) {
         if (text == null) {
             return null;
         }
 
-        return text.replace("\u00a0", " ").trim(); // &nbsp;
+        return text.replace("\u00a0", " ").trim();  
     }
 
     public static int getRandomIndex(int size) {
@@ -2096,9 +2012,7 @@ public final class Helpers {
         return stringArray;
     }
 
-    /**
-     * Implementing Fisher–Yates shuffle
-     */
+     
     public static <T> T[] shuffleArray(T[] arr) {
         if (arr == null || arr.length == 0) {
             return arr;
@@ -2106,7 +2020,7 @@ public final class Helpers {
 
         for (int i = arr.length - 1; i > 0; i--) {
             int index = getRandom().nextInt(i + 1);
-            // Simple swap
+             
             T item = arr[index];
             arr[index] = arr[i];
             arr[i] = item;
@@ -2152,13 +2066,11 @@ public final class Helpers {
         return builder.toString();
     }
 
-    /**
-     * https://developer.amazon.com/docs/fire-tv/implement-voiceview-accessibility-features-fire-os.html
-     */
+     
     public static void describedBy(View view, Integer... ids) {
         if (Build.VERSION.SDK_INT >= 19) {
-            // You can set extras on a button which is described by some
-            // static text elsewhere on the screen as follows.
+             
+             
             view.setAccessibilityDelegate(new View.AccessibilityDelegate() {
                 public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {
                     super.onInitializeAccessibilityNodeInfo(host, info);
@@ -2169,9 +2081,7 @@ public final class Helpers {
         }
     }
 
-    /**
-     * Trying to split while keeping the words not divided.
-     */
+     
     public static List<String> splitStringBySize(String str, int size) {
         List<String> split = new ArrayList<>();
 
@@ -2229,10 +2139,7 @@ public final class Helpers {
         return nextState;
     }
 
-    /**
-     * NOTE: proper item order not guaranteed!!!<br/>
-     * Limit the maximum size of a Map by removing oldest entries when limit reached
-     */
+     
     public static <K, V> Map<K, V> createLRUMap(final int maxEntries) {
         return new LinkedHashMap<K, V>(maxEntries + 1, 0.75f, true) {
             @Override
@@ -2242,9 +2149,7 @@ public final class Helpers {
         };
     }
 
-    /**
-     * Trim playlist if one exceeds max size
-     */
+     
     public static <T> List<T> createLRUList(final int maxEntries) {
         return new ArrayList<T>() {
             @Override
@@ -2262,9 +2167,7 @@ public final class Helpers {
         };
     }
 
-    /**
-     * Trim playlist if one exceeds max size
-     */
+     
     public static <T> List<T> createSafeLRUList(final int maxEntries) {
         return new CopyOnWriteArrayList<T>() {
             @Override
@@ -2299,7 +2202,7 @@ public final class Helpers {
             return false;
         }
 
-        // One char not enough. Rtl strings may contain couple ltr chars.
+         
         int len = Math.min(text.length(), 3);
         for (int i = 0; i < len; i++) {
             char c = text.charAt(i);
@@ -2313,17 +2216,17 @@ public final class Helpers {
     }
 
     public static int invertColor(int color) {
-        // Extract RGB components from the color
+         
         int red = Color.red(color);
         int green = Color.green(color);
         int blue = Color.blue(color);
 
-        // Invert the colors by subtracting from 255
+         
         int invertedRed = 255 - red;
         int invertedGreen = 255 - green;
         int invertedBlue = 255 - blue;
 
-        // Combine the inverted colors back into a single color
+         
         return Color.rgb(invertedRed, invertedGreen, invertedBlue);
     }
 

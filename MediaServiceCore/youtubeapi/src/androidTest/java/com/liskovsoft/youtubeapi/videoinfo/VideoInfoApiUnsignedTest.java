@@ -10,9 +10,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-/**
- * NOTE: testing with Duktape (native libs)!!!
- */
+ 
 public class VideoInfoApiUnsignedTest extends BaseVideoInfoApiTest {
     @Before
     public void setUp() throws Exception {

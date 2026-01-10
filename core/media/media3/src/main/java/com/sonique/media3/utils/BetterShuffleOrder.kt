@@ -1,20 +1,4 @@
-/*
- * Copyright (c) 2017 Auxio Project
- * BetterShuffleOrder.kt is part of Auxio.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+ 
 
 package com.sonique.media3.utils
 
@@ -23,13 +7,7 @@ import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.source.ShuffleOrder
 
-/**
- * A ShuffleOrder that fixes the poorly defined default implementation of cloneAndInsert. Whereas
- * the default implementation will randomly spread out added media items, this implementation will
- * insert them in the order they are added contiguously.
- *
- * @author media3 team, Alexander Capehart (OxygenCobalt)
- */
+ 
 @OptIn(UnstableApi::class)
 class BetterShuffleOrder(
     private val shuffled: IntArray,
@@ -60,14 +38,14 @@ class BetterShuffleOrder(
 
     override fun getFirstIndex(): Int = if (shuffled.isNotEmpty()) shuffled[0] else C.INDEX_UNSET
 
-    @Suppress("KotlinConstantConditions") // Bugged for this function
+    @Suppress("KotlinConstantConditions")  
     override fun cloneAndInsert(insertionIndex: Int, insertionCount: Int): ShuffleOrder {
         if (shuffled.isEmpty()) {
             return BetterShuffleOrder(insertionCount, -1)
         }
 
-        // TODO: Fix this scuffed hacky logic
-        // TODO: Play next ordering needs to persist in unshuffle
+         
+         
 
         val newShuffled = IntArray(shuffled.size + insertionCount)
         val pivot: Int =

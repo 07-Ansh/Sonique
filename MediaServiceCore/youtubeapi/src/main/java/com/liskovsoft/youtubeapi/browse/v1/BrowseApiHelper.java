@@ -19,10 +19,10 @@ public class BrowseApiHelper {
     private static final String CONTINUATION = "\"continuation\":\"%s\"";
     private static final String CHANNEL = "\"browseId\":\"%s\"";
     private static final String CHANNEL_FULL = "\"browseId\":\"%s\",\"params\":\"%s\"";
-    //private static final String HOME = "\"browseId\":\"FEtopics\"";
-    //private static final String GAMING = "\"browseId\":\"FEtopics\",\"params\":\"-gIGZ2FtaW5n\"";
-    //private static final String NEWS = "\"browseId\":\"FEtopics\",\"params\":\"-gINaGFwcGVuaW5nX25vdw%3D%3D\"";
-    //private static final String MUSIC = "\"browseId\":\"FEtopics\",\"params\":\"-gIFbXVzaWM%3D\"";
+     
+     
+     
+     
 
     public static String getHomeQuery() {
         return PostDataHelper.createQueryTV(HOME);
@@ -65,11 +65,7 @@ public class BrowseApiHelper {
         return PostDataHelper.createQueryTV(channelTemplate);
     }
 
-    /**
-     * Get data param for the next search/grid etc
-     * @param nextPageKey {@link GridTab#getNextPageKey()}
-     * @return data param
-     */
+     
     public static String getContinuationQuery(String nextPageKey) {
         String continuation = String.format(CONTINUATION, nextPageKey);
         return PostDataHelper.createQueryTV(continuation);
@@ -80,8 +76,8 @@ public class BrowseApiHelper {
     }
 
     public static boolean isGridChannel(String channelId) {
-        //return Helpers.equalsAny(channelId, LIKED_MUSIC_BROWSE_ID, SUBSCRIBED_MUSIC_BROWSE_ID, PLAYED_MUSIC_BROWSE_ID);
-        // NOTE: user channel starts with 'UC'
+         
+         
         return channelId != null && channelId.startsWith("FE");
     }
 }

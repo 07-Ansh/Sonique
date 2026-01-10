@@ -24,12 +24,10 @@ fun typo(): Typography {
 
     val typo =
         Typography(
-            /***
-             * This typo().is use for the title of the Playlist, Artist, Song, Album, etc. in Home, Mood, Genre, Playlist, etc.
-             */
+             
             titleSmall =
                 TextStyle(
-                    fontSize = 15.sp, // Apple subheads
+                    fontSize = 15.sp,  
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
                     color = Color.White,
@@ -104,7 +102,7 @@ fun typo(): Typography {
                     fontFamily = fontFamily,
                     color = musica_grey_text,
                 ),
-            // ...
+             
         )
     return typo
 }

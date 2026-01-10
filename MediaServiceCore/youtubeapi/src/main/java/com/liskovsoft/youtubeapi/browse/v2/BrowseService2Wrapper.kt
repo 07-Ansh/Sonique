@@ -22,20 +22,20 @@ internal object BrowseService2Wrapper: BrowseService2() {
     }
 
     override fun getSubscribedChannels(): MediaGroup? {
-        // Backup channels ones
-        // Add each channel on subscribe
+         
+         
         return getCachedChannels(super.getSubscribedChannels())
     }
 
     override fun getSubscribedChannelsByName(): MediaGroup? {
-        // Backup channels ones
-        // Add each channel on subscribe
+         
+         
         return getCachedChannels(super.getSubscribedChannelsByName())
     }
 
     override fun getSubscribedChannelsByNewContent(): MediaGroup? {
-        // Backup channels ones
-        // Add each channel on subscribe
+         
+         
         return getCachedChannels(super.getSubscribedChannelsByNewContent())
     }
 
@@ -58,8 +58,8 @@ internal object BrowseService2Wrapper: BrowseService2() {
             }
         }
 
-        // NOTE: Can't backup. ReloadPageKey cannot be used without an account.
-        // The channels contain reloadPageKey instead of channelId field.
+         
+         
 
         return subscribedChannels
     }
@@ -72,25 +72,25 @@ internal object BrowseService2Wrapper: BrowseService2() {
         val playlistGroups = PlaylistGroupServiceImpl.getPlaylistGroups()
         if (playlistGroups.isNotEmpty()) {
             val result: MutableList<MediaItem> = mutableListOf()
-            // Pin playlists
-            myPlaylists?.mediaItems?.getOrNull(0)?.let { result.add(it) } // WatchLater
-            myPlaylists?.mediaItems?.firstOrNull { it.channelId?.startsWith(BrowseApiHelper.LIKED_CHANNEL_ID) ?: false }?.let { result.add(it) } // Liked
+             
+            myPlaylists?.mediaItems?.getOrNull(0)?.let { result.add(it) }  
+            myPlaylists?.mediaItems?.firstOrNull { it.channelId?.startsWith(BrowseApiHelper.LIKED_CHANNEL_ID) ?: false }?.let { result.add(it) }  
 
             var firstIdx: Int = -1
             var firstIdxShift: Int = -1
 
             playlistGroups.forEach { group ->
                 firstIdxShift++
-                // Replace local pl with matched remote one
+                 
                 if (myPlaylists?.mediaItems?.isNotEmpty() == true) {
                     myPlaylists.mediaItems?.firstOrNull {
-                        // Can't match only by playlistId because we have only reloadPageKey
+                         
                         it.title == group.title || it.playlistId == group.id
                     }?.let {
                         if (!result.contains(it)) {
                             result.add(it)
 
-                            if (firstIdx == -1) { // Save idx of the first unpinned playlist (see above)
+                            if (firstIdx == -1) {  
                                 firstIdx = myPlaylists.mediaItems?.indexOf(it) ?: -1
                             }
                         }
@@ -98,21 +98,21 @@ internal object BrowseService2Wrapper: BrowseService2() {
                     }
                 }
 
-                // Add remained local playlists
+                 
                 result.add(YouTubeMediaItem().apply {
                     title = group.title
                     cardImageUrl = group.items?.firstOrNull()?.iconUrl ?: group.iconUrl
                     playlistId = group.id
                     channelId = group.id
-                    //reloadPageKey = group.id
+                     
                     badgeText = group.badge ?: "${group.items.size} videos"
                 })
             }
 
-            // Add remained remote playlists
+             
             myPlaylists?.mediaItems?.forEachIndexed { idx, item ->
                 if (!result.contains(item)) {
-                    // Move newer playlists before
+                     
                     if (idx < firstIdx && result.size > (idx + firstIdxShift)) {
                         result.add(idx + firstIdxShift, item)
                     } else {

@@ -17,10 +17,10 @@ class BrowseService2Test {
 
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
         RetrofitOkHttpHelper.authHeaders["Authorization"] = TestHelpers.getAuthorization()
         RetrofitOkHttpHelper.disableCompression = true
         mBrowseService2 = BrowseService2()
@@ -42,7 +42,7 @@ class BrowseService2Test {
 
         val home = sections?.first?.get(0)
 
-        val mediaItem = home?.mediaItems?.first { !YouTubeHelper.isEmpty(it) } // skip ad cards
+        val mediaItem = home?.mediaItems?.first { !YouTubeHelper.isEmpty(it) }  
 
         assertTrue("Home row contains token 1", mediaItem?.feedbackToken != null)
         assertTrue("Home row contains token 2", mediaItem?.feedbackToken2 != null)

@@ -59,23 +59,17 @@ public class VideoDetails {
         return mAuthor;
     }
 
-    /**
-     * Live content != live translation
-     */
+     
     public boolean isLiveContent() {
         return mIsLiveContent;
     }
 
-    /**
-     * Live translation
-     */
+     
     public boolean isLive() {
         return mIsLive;
     }
 
-    /**
-     * Personal videos
-     */
+     
     public boolean isOwnerViewing() {
         return mIsOwnerViewing;
     }

@@ -422,7 +422,7 @@ sealed class LibraryItemType {
     ) : LibraryItemType()
 
     data class LocalPlaylist(
-        // Create new local playlist
+         
         val onAddClick: (String) -> Unit,
     ) : LibraryItemType()
 

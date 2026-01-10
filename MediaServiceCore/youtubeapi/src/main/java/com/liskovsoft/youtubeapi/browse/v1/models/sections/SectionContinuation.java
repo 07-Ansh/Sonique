@@ -8,19 +8,17 @@ import java.util.List;
 public class SectionContinuation {
     @JsonPath({
             "$.continuationContents.horizontalListContinuation.items[*]",
-            "$.continuationContents.playlistVideoListContinuation.contents[*]" // Two columns playlist (v2)
+            "$.continuationContents.playlistVideoListContinuation.contents[*]"  
     })
     private List<ItemWrapper> mItemWrappers;
 
     @JsonPath({
             "$.continuationContents.horizontalListContinuation.continuations[0].nextContinuationData.continuation",
-            "$.continuationContents.playlistVideoListContinuation.continuations[0].nextContinuationData.continuation" // Two columns playlist (v2)
+            "$.continuationContents.playlistVideoListContinuation.continuations[0].nextContinuationData.continuation"  
     })
     private String mNextPageKey;
 
-    /**
-     * Generic wrapper if there's no continuation content
-     */
+     
     @JsonPath("$.responseContext.visitorData")
     private String mVisitorData;
 

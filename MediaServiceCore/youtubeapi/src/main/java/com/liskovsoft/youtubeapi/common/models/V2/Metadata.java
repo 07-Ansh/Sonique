@@ -25,7 +25,7 @@ public class Metadata {
     }
 
     public String getUserName() {
-        return null; // no user name, just generic lines
+        return null;  
     }
 
     public CharSequence getViewCountText() {
@@ -33,7 +33,7 @@ public class Metadata {
     }
 
     public String getPublishedTime() {
-        return null; // should be null (views and dates is combined)
+        return null;  
     }
 
     public List<String> getBadgeStyles() {

@@ -374,7 +374,7 @@ fun Lyrics.toSyncedLrcString(): String? {
         val seconds = ((startTimeMs % 60000) / 1000).toString().padStart(2, '0')
         val milliseconds = ((startTimeMs % 1000) / 10).toString().padStart(2, '0')
 
-        // Add space before the content as it was removed in the parsing function
+         
         val content = if (line.words == "♫") " " else " ${line.words}"
 
         "[$minutes:$seconds.$milliseconds]$content"

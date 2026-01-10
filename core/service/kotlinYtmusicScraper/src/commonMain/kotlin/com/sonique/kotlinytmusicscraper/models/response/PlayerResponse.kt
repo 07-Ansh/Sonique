@@ -6,9 +6,7 @@ import com.sonique.kotlinytmusicscraper.models.youtube.YouTubeInitialPage
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-/**
- * PlayerResponse with [com.zionhuang.innertube.models.YouTubeClient.ANDROID_MUSIC] client
- */
+ 
 @Serializable
 data class PlayerResponse(
     val responseContext: ResponseContext,

@@ -24,7 +24,7 @@ public class VideoMetadata {
     @JsonPath("$.shortViewCountText.runs[1].text")
     private String mShortViewCount2;
     @JsonPath({"$.viewCount.videoViewCountRenderer.viewCount.simpleText",
-            "$.viewCountText.simpleText", // YouTube Music
+            "$.viewCountText.simpleText",  
             "$.viewCount.videoViewCountRenderer.viewCount.runs[0].text",
             "$.viewCountText.runs[0].text"})
     private String mViewCount1;
@@ -46,14 +46,10 @@ public class VideoMetadata {
     private boolean mIsLive;
     @JsonPath("$.badges[0].upcomingEventBadge.label.simpleText")
     private String mUpcomingBadge;
-    /**
-     * Appeared in YouTube Music
-     */
+     
     @JsonPath("$.byline.runs[0].text")
     private String mByLine;
-    /**
-     * Appeared in YouTube Music
-     */
+     
     @JsonPath("$.albumName.simpleText")
     private String mAlbumName;
 
@@ -70,7 +66,7 @@ public class VideoMetadata {
     }
 
     public CharSequence getShortViewCount() {
-        // On live streams short view counter is absent
+         
         return mShortViewCount1 != null ? ServiceHelper.combineText(mShortViewCount1, mShortViewCount2) : getViewCount();
     }
 
@@ -114,16 +110,12 @@ public class VideoMetadata {
         return mUpcomingBadge != null;
     }
 
-    /**
-     * Appeared in YouTube Music
-     */
+     
     public String getByLine() {
         return mByLine;
     }
 
-    /**
-     * Appeared in YouTube Music
-     */
+     
     public String getAlbumName() {
         return mAlbumName;
     }

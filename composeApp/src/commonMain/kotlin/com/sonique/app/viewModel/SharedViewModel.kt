@@ -261,22 +261,22 @@ class SharedViewModel(
                     }
                 }
 
-//            val controllerStateJob =
-//                launch {
-//                    controllerState.map { it.isLiked }.distinctUntilChanged().collectLatest {
-//                        if (dataStoreManager.combineLocalAndYouTubeLiked.first() == TRUE) {
-//                            nowPlayingState.value?.mediaItem?.mediaId?.let {
-//                                getLikeStatus(it)
-//                            }
-//                        }
-//                    }
-//                }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
             checkGetVideoJob.join()
             lyricsProviderJob.join()
 
-//            controllerStateJob.join()
+ 
 
-//            controllerStateJob.join()
+ 
         }
         viewModelScope.launch {
             mediaPlayerHandler.nowPlayingState
@@ -431,7 +431,7 @@ class SharedViewModel(
             sleepTimerJob.join()
             playlistNameJob.join()
         }
-        // Reset downloading songs & playlists to not downloaded
+         
         checkAllDownloadingSongs()
         checkAllDownloadingPlaylists()
         checkAllDownloadingLocalPlaylists()
@@ -459,7 +459,7 @@ class SharedViewModel(
         duration: Int,
     ) {
         Logger.w(tag, "Start getCanvas: $videoId $duration")
-//        canvasJob?.cancel()
+ 
         viewModelScope.launch {
             if (dataStoreManager.spotifyCanvas.first() == TRUE) {
                 lyricsCanvasRepository.getCanvas(dataStoreManager, videoId, duration).cancellable().collect { response ->
@@ -476,9 +476,9 @@ class SharedViewModel(
                                         ),
                                 )
                             }
-                            // Save canvas video url
+                             
                             if (data.isVideo) lyricsCanvasRepository.updateCanvasUrl(videoId, data.canvasUrl)
-                            // Save canvas thumb url
+                             
                             data.canvasThumbUrl?.let { lyricsCanvasRepository.updateCanvasThumbUrl(videoId, it) }
                         }
 
@@ -688,20 +688,20 @@ class SharedViewModel(
 
                 PLAYLIST_CLICK -> {
                     if (index == null) {
-//                                        fetchSourceFromQueue(downloaded = downloaded ?: 0)
+ 
                         loadPlaylistOrAlbum(index = 0)
                     } else {
-//                                        fetchSourceFromQueue(index!!, downloaded = downloaded ?: 0)
+ 
                         loadPlaylistOrAlbum(index = index)
                     }
                 }
 
                 ALBUM_CLICK -> {
                     if (index == null) {
-//                                        fetchSourceFromQueue(downloaded = downloaded ?: 0)
+ 
                         loadPlaylistOrAlbum(index = 0)
                     } else {
-//                                        fetchSourceFromQueue(index!!, downloaded = downloaded ?: 0)
+ 
                         loadPlaylistOrAlbum(index = index)
                     }
                 }
@@ -791,7 +791,7 @@ class SharedViewModel(
                         }
 
                         else -> {
-                            // Skip
+                             
                         }
                     }
                 }
@@ -873,7 +873,7 @@ class SharedViewModel(
 
     private fun updateLyrics(
         videoId: String,
-        duration: Int, // 0 if translated lyrics
+        duration: Int,  
         lyrics: Lyrics?,
         isTranslatedLyrics: Boolean,
         lyricsProvider: LyricsProvider = LyricsProvider.LRCLIB,
@@ -905,7 +905,7 @@ class SharedViewModel(
                         val translatedTime = closestTranslatedLine.startTimeMs.toLongOrNull() ?: 0L
                         val timeDiff = abs(originalTime - translatedTime)
 
-                        if (timeDiff > 1000L) { // Lệch quá 1 giây
+                        if (timeDiff > 1000L) {  
                             outOfSyncCount++
                         }
                         if (closestTranslatedLine.words == originalLine.words) {
@@ -965,7 +965,7 @@ class SharedViewModel(
                                 ),
                         )
                     }
-                    // Save lyrics to database
+                     
                     viewModelScope.launch {
                         lyricsCanvasRepository.insertLyrics(
                             LyricsEntity(

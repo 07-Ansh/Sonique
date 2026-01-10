@@ -112,7 +112,7 @@ fun MusicaInput(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF1C1C1E)) // musica_dark_grey
+            .background(Color(0xFF1C1C1E))  
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -120,7 +120,7 @@ fun MusicaInput(
                 Icon(
                     imageVector = leadingIcon,
                     contentDescription = null,
-                    tint = Color(0xFFB3B3B3), // musica_grey_text
+                    tint = Color(0xFFB3B3B3),  
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(12.dp))

@@ -52,7 +52,7 @@ internal class Challenge {
             )
         } else if (rawData.getOrNull(0)?.isNotEmpty() == true) {
             TODO("Not yet implemented")
-            // challengeData = rawData[0];
+             
         }
 
         val privateDoNotAccessOrElseSafeScriptWrappedValue = challengeData?.wrappedScript?.firstNotNullOfOrNull { it }
@@ -67,9 +67,7 @@ internal class Challenge {
         )
     }
 
-    /**
-     * Descrambles the given challenge data.
-     */
+     
     private fun descramble(scrambledChallenge: String): String? {
         val buffer = Base64.decode(scrambledChallenge, Base64.DEFAULT)
 

@@ -54,9 +54,7 @@ public class YouTubeMediaItemService implements MediaItemService {
         return sInstance;
     }
 
-    /**
-     * Format info is cached because it's supposed to run in multiple methods
-     */
+     
     @Override
     public YouTubeMediaItemFormatInfo getFormatInfo(MediaItem item) {
         return getFormatInfo(item.getVideoId(), item.getClickTrackingParams());
@@ -72,8 +70,8 @@ public class YouTubeMediaItemService implements MediaItemService {
         YouTubeMediaItemFormatInfo cachedFormatInfo = getCachedFormatInfo(videoId);
 
         if (cachedFormatInfo != null) {
-            // Improve the performance by fetching the history data on the second run
-            //syncWithAuthFormatIfNeeded(cachedFormatInfo);
+             
+             
             return cachedFormatInfo;
         }
 
@@ -182,7 +180,7 @@ public class YouTubeMediaItemService implements MediaItemService {
             return;
         }
 
-        // Improve the performance by fetching the history data on the second run
+         
         syncWithAuthFormatIfNeeded(formatInfo);
 
         if (shouldBeSynced(formatInfo)) {

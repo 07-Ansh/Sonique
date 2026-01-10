@@ -17,11 +17,7 @@ internal object JSInterpret {
         }
     }
 
-    /**
-     * yt_dlp.jsinterp.JSInterpreter.extract_function_code
-     *
-     * yt-dlp\yt_dlp\jsinterp.py
-     */
+     
     fun extractFunctionCode(jsCode: String, funcName: String): Pair<List<String>, String> {
         val escapedFuncName = Pattern.quote(funcName)
         val pattern = Pattern.compile(
@@ -60,9 +56,7 @@ internal object JSInterpret {
         return response
     }
 
-    /**
-     * yt_dlp.jsinterp.JSInterpreter.extract_object
-     */
+     
     fun extractObjectCode(jsCode: String, objName: String): String {
         val escapedObjName = Pattern.quote(objName)
 
@@ -83,31 +77,27 @@ internal object JSInterpret {
         return objMatcher.group()
     }
 
-    /**
-     * yt_dlp.jsinterp.JSInterpreter._separate_at_paren
-     */
+     
     private fun separateAtParen(expr: String, delim: Char? = null): Pair<String, String> {
         val delimiter = delim ?: expr.firstOrNull()?.let { MATCHING_PARENS[it] }
         ?: throw IllegalStateException("No delimiter provided and expression is empty")
 
-        //val separated = separate(expr, delimiter, 1).toList()
+         
         val separated = separate2(expr, delimiter.toString(), 1).toList()
-        //val separated = separateOld(expr, delimiter.toString(), 1).toList()
+         
         if (separated.size < 2) {
             if (separated.size == 1) {
-                // No matched paren. Probably, we should delete the last paren.
+                 
                 return separated[0].substring(0, separated[0].length - 1).trim() to ""
             } else {
                 throw IllegalStateException("No terminating paren $delimiter in expression $expr")
             }
         }
-        //return separated[0].substring(1).trim() to separated[1].trim()
+         
         return separated[0].substring(1, separated[0].length - 1).trim() to separated[1].trim()
     }
 
-    /**
-     * yt_dlp.jsinterp.JSInterpreter._separate
-     */
+     
     private fun separate2(expr: String, delim: String = ",", maxSplit: Int? = null): Sequence<String> = sequence {
         if (expr.isEmpty()) return@sequence
 

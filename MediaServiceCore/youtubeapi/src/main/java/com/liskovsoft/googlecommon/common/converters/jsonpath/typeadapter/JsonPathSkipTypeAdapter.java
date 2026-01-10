@@ -29,7 +29,7 @@ public class JsonPathSkipTypeAdapter<T> extends JsonPathTypeAdapter<T> {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
         try {
-            reader.readLine(); // this will read the first line
+            reader.readLine();  
         } catch (IOException e) {
             e.printStackTrace();
         }

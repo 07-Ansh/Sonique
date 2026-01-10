@@ -116,7 +116,7 @@ class DragDropState internal constructor(
     internal var previousItemOffset = Animatable(0f)
         private set
 
-    // used to obtain initial offsets on drag start
+     
     private var initiallyDraggedElement by mutableStateOf<LazyListItemInfo?>(null)
 
     var currentIndexOfDraggedItem by mutableStateOf<Int?>(null)

@@ -40,7 +40,7 @@ public class RegExpTypeAdapter<T> {
 
     @SuppressWarnings("unchecked")
     public final T read(InputStream is) {
-        // Can't use Scanner(is) here. Because pattern should be matched multiple times.
+         
         String regExpContent = Helpers.toString(is);
 
         return (T) readType(getGenericType(), regExpContent);
@@ -80,11 +80,11 @@ public class RegExpTypeAdapter<T> {
                             if (matcher.groupCount() >= 1) {
                                 regExpVal = matcher.group(1);
                             } else {
-                                regExpVal = matcher.group(0); // all match
+                                regExpVal = matcher.group(0);  
                             }
                         }
 
-                        // Match found
+                         
                         if (regExpVal != null) {
                             break;
                         }
@@ -94,16 +94,16 @@ public class RegExpTypeAdapter<T> {
                 }
 
                 if (regExpVal == null && !ReflectionHelper.isNullable(field)) {
-                    unset = true; // at least one required field is unset
+                    unset = true;  
                     continue;
                 }
 
                 field.set(obj, regExpVal);
 
-                done = true; // at least one field is set
+                done = true;  
             }
         } catch (Exception e) {
-            unset = true; // at least one field is unset
+            unset = true;  
             e.printStackTrace();
         }
 

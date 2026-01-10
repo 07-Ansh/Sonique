@@ -33,7 +33,7 @@ public class VideoInfo {
     @JsonPath("$.streamingData.adaptiveFormats[*]")
     private List<AdaptiveVideoFormat> mAdaptiveFormats;
 
-    //@JsonPath("$.playabilityStatus.paygatedQualitiesMetadata.restrictedAdaptiveFormats[*]")
+     
     private List<AdaptiveVideoFormat> mRestrictedFormats;
 
     @JsonPath("$.captions.playerCaptionsTracklistRenderer.captionTracks[*]")
@@ -93,12 +93,12 @@ public class VideoInfo {
     private TextItem mPaidContentText;
 
     @JsonPath("$.streamingData.serverAbrStreamingUrl")
-    private String mServerAbrStreamingUrl; // SABR format url
+    private String mServerAbrStreamingUrl;  
 
     @JsonPath("$.playerConfig.mediaCommonConfig.mediaUstreamerRequestConfig.videoPlaybackUstreamerConfig")
-    private String mVideoPlaybackUstreamerConfig; // SABR config
+    private String mVideoPlaybackUstreamerConfig;  
 
-    // Values used in tracking actions
+     
     private String mEventId;
     private String mVisitorMonitoringData;
     private String mOfParam;
@@ -203,30 +203,22 @@ public class VideoInfo {
         return isUnknownRestricted() || isVisibilityRestricted() || isAgeRestricted() || isAdaptiveFormatsBroken();
     }
 
-    /**
-     * Video cannot be embedded
-     */
+     
     public boolean isEmbedRestricted() {
         return !mIsPlayableInEmbed;
     }
 
-    /**
-     * Reason of unavailability unknown or we received a temporal ban
-     */
+     
     public boolean isUnknownRestricted() {
         return ServiceHelper.atLeastOneEquals(mPlayabilityStatus, STATUS_UNPLAYABLE);
     }
 
-    /**
-     * Removed or hidden by the user
-     */
+     
     public boolean isVisibilityRestricted() {
         return ServiceHelper.atLeastOneEquals(mPlayabilityStatus, STATUS_ERROR);
     }
 
-    /**
-     * Age restricted video
-     */
+     
     public boolean isAgeRestricted() {
         return ServiceHelper.atLeastOneEquals(mPlayabilityStatus, STATUS_LOGIN_REQUIRED, STATUS_AGE_CHECK_REQUIRED, STATUS_CONTENT_CHECK_REQUIRED);
     }
@@ -235,19 +227,19 @@ public class VideoInfo {
         return !isLive() && getHlsManifestUrl() == null && isAdaptiveFullHD();
     }
 
-    //public boolean hasExtendedHlsFormats() {
-    //    if (!isLive() && getHlsManifestUrl() != null && isAdaptiveFullHD()) {
-    //        long uploadTimeMs = DateHelper.toUnixTimeMs(getUploadDate());
-    //        // Extended formats may not work during 3 days after publication
-    //        return uploadTimeMs > 0 && System.currentTimeMillis() - uploadTimeMs > 4*24*60*60*1_000;
-    //    }
-    //
-    //    return false;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     public boolean hasExtendedHlsFormats() {
-        // Need upload date check?
-        // Extended formats may not work up to 3 days after publication.
+         
+         
         return !isLive() && getHlsManifestUrl() != null && isAdaptiveFullHD();
     }
 
@@ -355,9 +347,7 @@ public class VideoInfo {
         return mVideoPlaybackUstreamerConfig;
     }
 
-    /**
-     * Sync live data
-     */
+     
     public void sync(DashInfo dashInfo) {
         if (dashInfo == null) {
             return;
@@ -422,11 +412,9 @@ public class VideoInfo {
         return getAdaptiveFormats() != null && !getAdaptiveFormats().isEmpty() && "1080p".equals(getAdaptiveFormats().get(0).getQualityLabel());
     }
 
-    /**
-     * TODO: remove when SABR parser will be fixed
-     */
+     
     private boolean isAdaptiveFormatsBroken() {
-        // TODO: remove when SABR parser will be fixed
+         
         if (mAdaptiveFormats == null || mAdaptiveFormats.isEmpty()) {
             return false;
         }

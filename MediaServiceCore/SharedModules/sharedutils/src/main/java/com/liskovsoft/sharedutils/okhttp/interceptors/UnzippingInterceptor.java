@@ -26,23 +26,23 @@ public class UnzippingInterceptor implements Interceptor {
 
         try {
             response = chain.proceed(chain.request());
-        } catch (NullPointerException e) { // proxy error?
+        } catch (NullPointerException e) {  
             response = createEmptyResponse(chain);
         }
 
         return unzip(response);
     }
 
-    // copied from okhttp3.internal.http.HttpEngine (because is private)
+     
     private Response unzip(final Response response) throws IOException {
         if (response == null || response.body() == null) {
             return response;
         }
 
-        //check if we have gzip response
+         
         String contentEncoding = response.headers().get("Content-Encoding");
 
-        //this is used to decompress gzipped responses
+         
         if (contentEncoding != null && contentEncoding.equals("gzip")) {
             long contentLength = -1;
             GzipSource responseBody = new GzipSource(response.body().source());

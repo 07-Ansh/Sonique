@@ -264,7 +264,7 @@ fun NowPlayingScreenContent(
     val localDensity = LocalDensity.current
     val uriHandler = LocalUriHandler.current
 
-    // ViewModel State
+     
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
@@ -274,7 +274,7 @@ fun NowPlayingScreenContent(
     val isLoggedIn by sharedViewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     val shouldShowVideo by sharedViewModel.getVideo.collectAsStateWithLifecycle()
-    // State
+     
     val isInPipMode = rememberIsInPipMode()
 
     val mainScrollState = rememberScrollState()
@@ -303,7 +303,7 @@ fun NowPlayingScreenContent(
         mutableStateOf(false)
     }
 
-    // Palette state
+     
     val paletteState = rememberPaletteState()
 
     val startColor =
@@ -347,7 +347,7 @@ fun NowPlayingScreenContent(
     LaunchedEffect(spotShadowColor) {
         Logger.d(TAG, "spotShadowColor: $spotShadowColor")
     }
-    // Height
+     
     var topAppBarHeightDp by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -398,7 +398,7 @@ fun NowPlayingScreenContent(
                 }
         }
     }
-    // Show ControlLayout Or Show Artist Badge
+     
     var showHideControlLayout by rememberSaveable {
         mutableStateOf(true)
     }
@@ -460,7 +460,7 @@ fun NowPlayingScreenContent(
             }
     }
 
-    // Fullscreen overlay
+     
     var showHideFullscreenOverlay by rememberSaveable {
         mutableStateOf(false)
     }
@@ -481,7 +481,7 @@ fun NowPlayingScreenContent(
             onNavigateToOtherScreen = {
                 onDismiss()
             },
-            song = null, // Auto set now playing
+            song = null,  
             setSleepTimerEnable = true,
 
         )
@@ -532,7 +532,7 @@ fun NowPlayingScreenContent(
                         change.consume()
                         if (!isSwipeHandled) {
                             when {
-                                // Swipe left (negative dragAmount)
+                                 
                                 dragAmount < -90 -> {
                                     if (controllerState.isNextAvailable) {
                                         sharedViewModel.onUIEvent(UIEvent.Next)
@@ -540,7 +540,7 @@ fun NowPlayingScreenContent(
                                     }
                                 }
 
-                                // Swipe right (positive dragAmount)
+                                 
                                 dragAmount > 90 -> {
                                     if (controllerState.isPreviousAvailable) {
                                         sharedViewModel.onUIEvent(UIEvent.Previous)
@@ -550,10 +550,10 @@ fun NowPlayingScreenContent(
                             }
                         }
                     }
-                }.background(md_theme_dark_background), // Dark grey background
+                }.background(md_theme_dark_background),  
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
-                // Canvas Layout
+                 
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier =
@@ -564,7 +564,7 @@ fun NowPlayingScreenContent(
                                 if (!showHideMiddleLayout) 1f else 0f,
                             ),
                 ) {
-                    // Canvas Layout
+                     
                     Crossfade(targetState = screenDataState.canvasData?.isVideo) { isVideo ->
                         if (isVideo == true) {
                             screenDataState.canvasData?.url?.let {
@@ -714,7 +714,7 @@ fun NowPlayingScreenContent(
                                         ).fillMaxWidth(),
                             )
 
-                            // Middle Layout
+                             
                             Box(
                                 modifier =
                                     Modifier
@@ -732,7 +732,7 @@ fun NowPlayingScreenContent(
                                             if (showHideMiddleLayout) 1f else 0f,
                                         ).aspectRatio(1f),
                             ) {
-                                // IS SONG => Show Artwork
+                                 
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier =
@@ -782,7 +782,7 @@ fun NowPlayingScreenContent(
                                                     if (!screenDataState.isVideo || !shouldShowVideo) 1f else 0f,
                                                 ),
                                     )
-                                    // Gradient Overlay
+                                     
                                     Box(
                                         modifier = Modifier
                                             .matchParentSize()
@@ -795,11 +795,11 @@ fun NowPlayingScreenContent(
                                             )
                                             .clip(RoundedCornerShape(24.dp))
                                     )
-                                    // Lyrics Overlay
+                                     
 
                                 }
 
-                                // IS VIDEO => Show Video
+                                 
                                 androidx.compose.animation.AnimatedVisibility(
                                     visible = screenDataState.isVideo && shouldShowVideo,
                                     modifier = Modifier.align(Alignment.Center),
@@ -818,7 +818,7 @@ fun NowPlayingScreenContent(
                                                     md_theme_dark_background,
                                                 ),
                                     ) {
-                                        // Player
+                                         
                                         Box(Modifier.fillMaxSize()) {
                                             MediaPlayerViewWithSubtitle(
                                                 playerName = MAIN_PLAYER,
@@ -970,7 +970,7 @@ fun NowPlayingScreenContent(
                                         ).fillMaxWidth(),
                             )
 
-                            // Info Layout
+                             
                             Box {
                                 infoColumn@Column(
                                     Modifier
@@ -1107,7 +1107,7 @@ fun NowPlayingScreenContent(
                                         }
                                     }
                                     if (getPlatform() == Platform.Android) {
-                                        // Real Slider
+                                         
                                         Box(
                                             Modifier
                                                 .padding(
@@ -1232,7 +1232,7 @@ fun NowPlayingScreenContent(
                                                 )
                                             }
                                         }
-                                        // Time Layout
+                                         
                                         Row(
                                             Modifier
                                                 .fillMaxWidth()
@@ -1258,7 +1258,7 @@ fun NowPlayingScreenContent(
                                                     .fillMaxWidth()
                                                     .height(5.dp),
                                         )
-                                        // Control Button Layout
+                                         
                                         PlayerControlLayout(
                                             controllerState,
                                         ) {
@@ -1267,9 +1267,9 @@ fun NowPlayingScreenContent(
                                     } else {
                                         Spacer(Modifier.height(16.dp))
                                     }
-                                    // List Bottom Buttons
-                                    // 24.dp
-                                    // Up Next Section
+                                     
+                                     
+                                     
                                     val nextSong = remember(queueData, nowPlayingState) {
                                         val list = queueData?.data?.listTracks ?: emptyList()
                                         val nowPlayingMediaId = nowPlayingState?.mediaItem?.mediaId
@@ -1302,7 +1302,7 @@ fun NowPlayingScreenContent(
                                                     color = Color.White
                                                 )
                                             }
-                                            // Next Song Card
+                                             
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 ElevatedCard(
                                                     shape = RoundedCornerShape(8.dp),
@@ -1401,7 +1401,7 @@ fun NowPlayingScreenContent(
                                 }
                             }
                         }
-                        // Touch Area
+                         
                         this@Column.AnimatedVisibility(
                             visible = screenDataState.canvasData != null,
                         ) {
@@ -1429,7 +1429,7 @@ fun NowPlayingScreenContent(
                     }
                     Spacer(modifier = Modifier.height(21.dp))
                     Column(Modifier.padding(horizontal = 20.dp)) {
-                        // Lyrics Layout
+                         
                         AnimatedVisibility(
                             visible = screenDataState.lyricsData != null,
                             modifier = Modifier.padding(top = 10.dp),
@@ -1470,7 +1470,7 @@ fun NowPlayingScreenContent(
                                             }
                                         }
                                     }
-                                    // Lyrics Layout
+                                     
                                     Spacer(modifier = Modifier.height(18.dp))
                                     Box(
                                         modifier =

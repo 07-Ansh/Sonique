@@ -17,8 +17,8 @@ class YouTubeRemoteControlService implements RemoteControlService {
         mLoungeService = LoungeService.instance();
 
         GlobalPreferences.setOnInit(() -> {
-            //mAccountManager.init();
-            //this.updateAuthorizationHeader();
+             
+             
         });
     }
 

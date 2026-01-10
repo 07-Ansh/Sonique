@@ -9,22 +9,22 @@ import java.util.List;
 
 public class SearchSection {
     @JsonPath({
-            "$.shelfRenderer.headerRenderer.shelfHeaderRenderer.avatarLockup.avatarLockupRenderer.title", // V4
-            "$.shelfRenderer.headerRenderer.shelfHeaderRenderer.title", // V3
+            "$.shelfRenderer.headerRenderer.shelfHeaderRenderer.avatarLockup.avatarLockupRenderer.title",  
+            "$.shelfRenderer.headerRenderer.shelfHeaderRenderer.title",  
             "$.itemSectionRenderer.header.itemSectionHeaderRenderer.title",
             "$.itemSectionRenderer.contents[0].shelfRenderer.headerRenderer.shelfHeaderRenderer.title"
     })
     private TextItem mTitle;
 
     @JsonPath({
-            "$.shelfRenderer.content.horizontalListRenderer.items[*]", // V3
+            "$.shelfRenderer.content.horizontalListRenderer.items[*]",  
             "$.itemSectionRenderer.contents[0].shelfRenderer.content.horizontalListRenderer.items[*]",
             "$.itemSectionRenderer.contents[*]"
     })
     private List<ItemWrapper> mItemWrappers;
 
     @JsonPath({
-            "$.shelfRenderer.content.horizontalListRenderer.continuations[0].nextContinuationData.continuation", // V3
+            "$.shelfRenderer.content.horizontalListRenderer.continuations[0].nextContinuationData.continuation",  
             "$.itemSectionRenderer.continuations[0].nextContinuationData.continuation"
     })
     private String mNextPageKey;

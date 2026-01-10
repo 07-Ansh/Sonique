@@ -1,18 +1,4 @@
-/*
- * Copyright (C) 2015 Square, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+ 
 package edu.mit.mobile.android.appupdater.downloadmanager;
 
 import android.content.Context;
@@ -44,21 +30,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.Random;
 
-/**
- * Progress listener example:
- * <pre>{@code
- * final ProgressListener progressListener = new ProgressListener() {
- *     @Override
- *     public void update(long bytesRead, long contentLength, boolean done) {
- *         System.out.println(bytesRead);
- *         System.out.println(contentLength);
- *         System.out.println(done);
- *         System.out.format("%d%% done\n", (100 * bytesRead) / contentLength);
- *     }
- * };
- * MyRequest.setProgressListener(progressListener);
- * }</pre>
- */
+ 
 public final class MyDownloadManager {
     private static final String TAG = MyDownloadManager.class.getSimpleName();
     private static final int NUM_TRIES = 10;
@@ -89,7 +61,7 @@ public final class MyDownloadManager {
         }
 
         try {
-            // NOTE: actual downloading is going here (while reading a stream)
+             
             mResponseStream = new ByteArrayInputStream(response.body().bytes());
         } catch (IOException ex) {
             throw new IllegalStateException(ex);
@@ -112,11 +84,11 @@ public final class MyDownloadManager {
                 Response response = mClient.newCall(request).execute();
                 if (!response.isSuccessful()) throw new IllegalStateException("Unexpected code " + response);
 
-                // NOTE: actual downloading is going here (while reading a stream)
+                 
                 mResponseStream = new ByteArrayInputStream(response.body().bytes());
-                break; // no exception is thrown - job is done
+                break;  
             } catch (SocketTimeoutException | UnknownHostException ex) {
-                if (tries == 1) // swallow num times
+                if (tries == 1)  
                     throw new IllegalStateException(ex);
             } catch (IOException | RuntimeException ex) {
                 throw new IllegalStateException(ex);
@@ -134,10 +106,10 @@ public final class MyDownloadManager {
             }
         };
 
-        //Builder builder = new OkHttpClient.Builder()
-        //        .addNetworkInterceptor(intercept);
-        //
-        //OkHttpCommons.setupBuilder(builder);
+         
+         
+         
+         
 
         Builder builder = OkHttpManager.instance().getClient().newBuilder()
                 .addNetworkInterceptor(intercept);
@@ -215,11 +187,7 @@ public final class MyDownloadManager {
         return mFileUri;
     }
 
-    /**
-     * Length in bytes of the file that obtained via {@link #getUriForDownloadedFile(long)}
-     * @param requestId unique request id
-     * @return length of the file in bytes
-     */
+     
     public int getSizeForDownloadedFile(long requestId) {
         return mTotalLen;
     }
@@ -276,7 +244,7 @@ public final class MyDownloadManager {
                         return bytesRead;
                     }
 
-                    // read() returns the number of bytes read, or -1 if this source is exhausted.
+                     
                     totalBytesRead += bytesRead != -1 ? bytesRead : 0;
                     progressListener.update(totalBytesRead, responseBody.contentLength(), bytesRead == -1);
                     return bytesRead;

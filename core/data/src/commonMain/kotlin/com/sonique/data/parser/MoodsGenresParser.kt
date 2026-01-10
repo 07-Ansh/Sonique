@@ -47,9 +47,9 @@ internal fun parseMoodsMomentObject(data: BrowseResponse?): MoodsMomentObject? {
                     if (!contents.isNullOrEmpty()) {
                         for (content in contents) {
                             if (content.musicResponsiveListItemRenderer != null) {
-                                // Song
+                                 
                             } else if (content.musicTwoRowItemRenderer != null) {
-                                // Playlist
+                                 
                                 val thumbnails =
                                     content.musicTwoRowItemRenderer
                                         ?.thumbnailRenderer
@@ -101,7 +101,7 @@ internal fun parseMoodsMomentObject(data: BrowseResponse?): MoodsMomentObject? {
                     if (!contents.isNullOrEmpty()) {
                         for (content in contents) {
                             if (content.musicTwoRowItemRenderer != null) {
-                                // Playlist
+                                 
                                 val thumbnails =
                                     content.musicTwoRowItemRenderer
                                         ?.thumbnailRenderer
@@ -185,7 +185,7 @@ internal fun parseGenreObject(data: BrowseResponse?): GenreObject? {
                     if (!contents.isNullOrEmpty()) {
                         for (content in contents) {
                             if (content.musicResponsiveListItemRenderer != null) {
-                                // Song
+                                 
                                 val songName =
                                     content.musicResponsiveListItemRenderer
                                         ?.flexColumns
@@ -233,7 +233,7 @@ internal fun parseGenreObject(data: BrowseResponse?): GenreObject? {
                                     ),
                                 )
                             } else if (content.musicTwoRowItemRenderer != null) {
-                                // Playlist
+                                 
                                 val thumbnails =
                                     content.musicTwoRowItemRenderer
                                         ?.thumbnailRenderer
@@ -288,7 +288,7 @@ internal fun parseGenreObject(data: BrowseResponse?): GenreObject? {
                     if (!contents.isNullOrEmpty()) {
                         for (content in contents) {
                             if (content.musicTwoRowItemRenderer != null) {
-                                // Playlist
+                                 
                                 val thumbnails =
                                     content.musicTwoRowItemRenderer
                                         ?.thumbnailRenderer

@@ -36,7 +36,7 @@ class ArtistViewModel(
     private val artistRepository: ArtistRepository,
     private val songRepository: SongRepository,
 ) : BaseViewModel() {
-    // It is dynamic and can be changed by the user, so separate it from the ArtistScreenData
+     
     private var _canvasUrl: MutableStateFlow<Pair<String, SongEntity>?> = MutableStateFlow(null)
     var canvasUrl: StateFlow<Pair<String, SongEntity>?> = _canvasUrl
 

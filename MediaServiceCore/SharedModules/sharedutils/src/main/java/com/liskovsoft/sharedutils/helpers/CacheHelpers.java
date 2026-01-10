@@ -52,10 +52,7 @@ public class CacheHelpers {
         return null;
     }
 
-    /**
-     * Could cause too much troubles
-     * @param cache obj
-     */
+     
     private static void close(DiskLruCache cache) {
         try {
             cache.close();

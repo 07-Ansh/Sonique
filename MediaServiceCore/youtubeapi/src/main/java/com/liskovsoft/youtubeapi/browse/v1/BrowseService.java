@@ -22,10 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * For auth users only!<br/>
- * Wraps result from the {@link AuthApi} and {@link BrowseApi}
- */
+ 
 public class BrowseService {
     private static final String TAG = BrowseService.class.getSimpleName();
     private final BrowseApi mBrowseManagerSigned;
@@ -69,7 +66,7 @@ public class BrowseService {
 
         List<GridTab> result = getPart(gridTabs, 0);
 
-        // all channels should be unique
+         
         for (GridTab tab : getPart(gridTabs, 1)) {
             if (!result.contains(tab)) {
                 result.add(tab);
@@ -94,7 +91,7 @@ public class BrowseService {
 
     private List<GridTab> getSubscribedChannelsSection() {
         List<GridTab> gridTabs = getGridTabs(BrowseApiHelper.getSubscriptionsQuery());
-        // Exclude All Subscriptions tab (first one)
+         
         return gridTabs != null ? gridTabs.subList(1, gridTabs.size()) : null;
     }
 
@@ -103,8 +100,8 @@ public class BrowseService {
     }
 
     public GridTab getHistory() {
-        // Web client version (needs new parser, see history_25.01.2023.json)
-        //return getGridTab(BrowseManagerParams.getHistoryQuery());
+         
+         
 
         return getGridTab(BrowseApiHelper.getMyLibraryQuery());
     }
@@ -113,14 +110,14 @@ public class BrowseService {
         List<GridTab> playlists = getGridTabs(BrowseApiHelper.getMyLibraryQuery());
 
         if (playlists != null) {
-            GridTab myVideos = playlists.get(1); // save "My videos" for later use
-            //GridTab watchLater = playlists.get(2); // save "Watch later" for later use
-            playlists.remove(3); // remove "Purchases"
-            //playlists.remove(2); // remove "Watch later"
-            playlists.remove(1); // remove "My videos"
-            playlists.remove(0); // remove "History"
-            playlists.add(myVideos); // add "My videos" to the end
-            //playlists.add(watchLater); // add "Watch later" to the end
+            GridTab myVideos = playlists.get(1);  
+             
+            playlists.remove(3);  
+             
+            playlists.remove(1);  
+            playlists.remove(0);  
+            playlists.add(myVideos);  
+             
         }
 
         return playlists;
@@ -137,9 +134,9 @@ public class BrowseService {
     public SectionTab getNews() {
         SectionTab newsTab = getSectionTab(BrowseApiHelper.getNewsQuery());
 
-        //if (newsTab == null) {
-        //    newsTab = getSectionTab(BrowseManagerParams.getNewsQueryUA());
-        //}
+         
+         
+         
 
         return newsTab;
     }
@@ -156,16 +153,12 @@ public class BrowseService {
         return getSectionList(BrowseApiHelper.getChannelQuery(channelId, params));
     }
 
-    /**
-     * Special type of channel that could be found inside Music section (see Liked row More button)
-     */
+     
     public GridTab getGridChannel(String channelId) {
         return getGridTab(BrowseApiHelper.getChannelQuery(channelId));
     }
 
-    /**
-     * Make synchronized to fix race conditions between launcher channels and section items
-     */
+     
     synchronized private List<GridTab> getGridTabs(String query) {
         List<GridTab> result = null;
 
@@ -199,7 +192,7 @@ public class BrowseService {
             }
         }
 
-        return gridTabs.get(0); // fallback to first item (don't know whether it's used somewhere)
+        return gridTabs.get(0);  
     }
 
     private List<GridTab> getGridTabs(int fromIndex, String query) {
@@ -318,7 +311,7 @@ public class BrowseService {
         SectionTab result = null;
 
         if (tabs.getTabs() != null) {
-            // find first not empty tab
+             
             for (SectionTab tab : tabs.getTabs()) {
                 if (tab.getSections() != null) {
                     result = tab;
@@ -332,9 +325,7 @@ public class BrowseService {
         return result;
     }
 
-    /**
-     * Channels are split by different criteria e.g. (popular and alphanumeric order)
-     */
+     
     private List<GridTab> getPart(List<GridTab> gridTabs, int partIndex) {
         List<GridTab> azGridTabs = null;
 

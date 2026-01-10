@@ -32,11 +32,11 @@ class DriveApiTest {
 
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
 
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
 
         mService = RetrofitHelper.create(DriveApi::class.java)
 
@@ -67,8 +67,8 @@ class DriveApiTest {
 
         assertMetadata(folderMetadata)
 
-        //cleanup(folderMetadata)
-        cleanup(rootFolderMetadata) // just need to deleted root
+         
+        cleanup(rootFolderMetadata)  
     }
 
     @Test
@@ -106,7 +106,7 @@ class DriveApiTest {
 
     @Test
     fun testGetList() {
-        // mimeType='text/plain' and parents in '13vgchf9SwZ3Szudfl8df5lpbZ59wzluK'
+         
         val smartTubeBackupDirId = "13vgchf9SwZ3Szudfl8df5lpbZ59wzluK"
         val listResult = RetrofitHelper.get(mService.getList("mimeType='application/vnd.google-apps.folder' and parents in '$smartTubeBackupDirId'"))
 
@@ -115,7 +115,7 @@ class DriveApiTest {
 
     private fun createSampleFolder() =
         createRootFolder(TEST_FOLDER_NAME)
-        //RetrofitHelper.get(mService.createFolder(FileMetadata(name = TEST_FOLDER_NAME, mimeType = DriveApiHelper.GOOGLE_FOLDER_MIME_TYPE)))
+         
 
     private fun createRootFolder(folderName: String) =
         RetrofitHelper.get(mService.createFolder(FileMetadata(name = folderName, mimeType = DriveApiHelper.GOOGLE_FOLDER_MIME_TYPE)))

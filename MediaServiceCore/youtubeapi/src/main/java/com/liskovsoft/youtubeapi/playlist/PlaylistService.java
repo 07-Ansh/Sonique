@@ -28,14 +28,14 @@ public class PlaylistService {
         Call<ActionResult> wrapper =
                 mPlaylistManager.editPlaylist(PlaylistApiHelper.getAddToPlaylistQuery(playlistId, videoId));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
     public void removeFromPlaylist(String playlistId, String videoId) {
         Call<ActionResult> wrapper =
                 mPlaylistManager.editPlaylist(PlaylistApiHelper.getRemoveFromPlaylistsQuery(playlistId, videoId));
 
-        RetrofitHelper.get(wrapper); // ignore result
+        RetrofitHelper.get(wrapper);  
     }
 
     public void renamePlaylist(String playlistId, String newName) {
@@ -60,12 +60,12 @@ public class PlaylistService {
     }
 
     public void removePlaylist(String playlistId) {
-        // Try to remove foreign playlist first
+         
         Call<ActionResult> removeWrapper =
                 mPlaylistManager.removeForeignPlaylist(PlaylistApiHelper.getSaveRemoveForeignPlaylistQuery(playlistId));
         RetrofitHelper.getWithErrors(removeWrapper);
 
-        // Then, delete user playlist
+         
         Call<ActionResult> deleteWrapper =
                 mPlaylistManager.removePlaylist(PlaylistApiHelper.getRemovePlaylistQuery(playlistId));
         RetrofitHelper.getWithErrors(deleteWrapper);
@@ -75,6 +75,6 @@ public class PlaylistService {
         Call<ActionResult> wrapper =
                 mPlaylistManager.createPlaylist(PlaylistApiHelper.getCreatePlaylistQuery(playlistName, videoId));
 
-        RetrofitHelper.getWithErrors(wrapper); // ignore result
+        RetrofitHelper.getWithErrors(wrapper);  
     }
 }

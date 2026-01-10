@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class YouTubeMPDParser implements MPDParser {
-    // We don't use namespaces
+     
     private static final String ns = null;
     private static final String TAG_MPD = "MPD";
     private static final String TAG_MEDIA_ITEM = "Representation";
@@ -71,7 +71,7 @@ public class YouTubeMPDParser implements MPDParser {
                 continue;
             }
             String name = mParser.getName();
-            // Starts by looking for the entry tag
+             
             if (name.equals(TAG_MEDIA_GROUP)) {
                 mediaItems.addAll(readMediaGroup(mParser));
             }
@@ -96,13 +96,7 @@ public class YouTubeMPDParser implements MPDParser {
         }
     }
 
-    /**
-     * AdaptationSet tag is parsed here
-     * @param parser xmlParser
-     * @return found items (could be audio, video etc)
-     * @throws IOException don't know happens
-     * @throws XmlPullParserException bad xml
-     */
+     
     private List<MediaFormat> readMediaGroup(XmlPullParser parser) throws IOException, XmlPullParserException {
         parser.require(XmlPullParser.START_TAG, ns, TAG_MEDIA_GROUP);
         List<MediaFormat> mediaItems = new ArrayList<>();
@@ -112,7 +106,7 @@ public class YouTubeMPDParser implements MPDParser {
                 continue;
             }
             String name = parser.getName();
-            if (name.equals(TAG_SEGMENT_LIST)) { // global segment list
+            if (name.equals(TAG_SEGMENT_LIST)) {  
                 mediaItems.add(readSpecialMediaItem(parser, mimeType));
             } else if (name.equals(TAG_MEDIA_ITEM)) {
                 mediaItems.add(readMediaItem(parser, mimeType));
@@ -123,12 +117,7 @@ public class YouTubeMPDParser implements MPDParser {
         return mediaItems;
     }
 
-    /**
-     * Special case where item consists from segments only
-     * @param parser parser
-     * @param mimeType mime
-     * @return item
-     */
+     
     private MediaFormat readSpecialMediaItem(XmlPullParser parser, String mimeType) throws IOException, XmlPullParserException {
         parser.require(XmlPullParser.START_TAG, ns, TAG_SEGMENT_LIST);
         YouTubeMediaFormat item = new YouTubeMediaFormat();
@@ -185,19 +174,19 @@ public class YouTubeMPDParser implements MPDParser {
         parser.require(XmlPullParser.START_TAG, ns, TAG_MEDIA_ITEM);
         YouTubeMediaFormat item = new YouTubeMediaFormat();
 
-        // common tags
+         
         item.setITag(parser.getAttributeValue(ns, "id"));
         item.setMimeType(String.format("%s;+codecs=\"%s\"", mimeType, parser.getAttributeValue(ns, "codecs")));
         item.setBitrate(parser.getAttributeValue(ns, "bandwidth"));
 
         String frameRate = parser.getAttributeValue(ns, "frameRate");
-        if (frameRate != null) { // video tags
+        if (frameRate != null) {  
             item.setFps(frameRate);
             String width = parser.getAttributeValue(ns, "width");
             String height = parser.getAttributeValue(ns, "height");
             item.setWidth(Helpers.parseInt(width));
             item.setHeight(Helpers.parseInt(height));
-        } else { // audio tags
+        } else {  
             item.setAudioSamplingRate(parser.getAttributeValue(ns, "audioSamplingRate"));
         }
 
@@ -274,9 +263,9 @@ public class YouTubeMPDParser implements MPDParser {
         parser.require(XmlPullParser.START_TAG, ns, TAG_INITIALIZATION);
         String range = parser.getAttributeValue(ns, "range");
         String sourceURL = parser.getAttributeValue(ns, "sourceURL");
-        if (range == null) { // 4k@60fps
-            // sourceURL="range/0-712"
-            // extremal situation: sourceURL="sq/0" (don't parse at all)
+        if (range == null) {  
+             
+             
             range = sourceURL.replaceAll("range\\/", "");
             range = sourceURL.equals(range) ? null : range;
         }

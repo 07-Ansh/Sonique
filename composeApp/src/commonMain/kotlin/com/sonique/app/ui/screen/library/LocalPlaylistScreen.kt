@@ -348,7 +348,7 @@ fun LocalPlaylistScreen(
             }
     }
 
-    // Loading dialog
+     
     val showLoadingDialog by viewModel.showLoadingDialog.collectAsStateWithLifecycle()
     if (showLoadingDialog.first) {
         LoadingDialog(
@@ -366,7 +366,7 @@ fun LocalPlaylistScreen(
             }
         }
     var overscrollJob by remember { mutableStateOf<Job?>(null) }
-//    Box {
+ 
     LazyColumn(
         modifier =
             Modifier
@@ -427,10 +427,10 @@ fun LocalPlaylistScreen(
                     modifier =
                         Modifier
                             .fillMaxWidth(),
-//                                .haze(
-//                                    hazeState,
-//                                    style = HazeMaterials.regular(),
-//                                ),
+ 
+ 
+ 
+ 
                 ) {
                     Box(
                         modifier =
@@ -462,7 +462,7 @@ fun LocalPlaylistScreen(
                 Column(
                     Modifier
                         .background(Color.Transparent),
-//                            .hazeChild(hazeState, style = HazeMaterials.regular()),
+ 
                 ) {
                     Row(
                         modifier =
@@ -677,7 +677,7 @@ fun LocalPlaylistScreen(
                                                             )
 
                                                         onDrawBehind {
-                                                            // Destination
+                                                             
                                                             with(aiPainter) {
                                                                 translate(
                                                                     left = (size.width - width / 1.5f) / 2,
@@ -689,7 +689,7 @@ fun LocalPlaylistScreen(
                                                                 }
                                                             }
 
-                                                            // Source
+                                                             
                                                             drawRect(
                                                                 brush = brush,
                                                                 blendMode = BlendMode.SrcIn,

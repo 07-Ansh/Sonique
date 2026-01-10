@@ -47,11 +47,11 @@ fun generateNetscapeCookies(
     val cookieLines =
         cookies
             .map { (name, value) ->
-                // Netscape format: domain, domainFlag, path, secure, expiration, name, value
+                 
                 buildString {
                     append(domain)
                     append("\t")
-                    append("TRUE") // domain flag - TRUE means domain includes subdomains
+                    append("TRUE")  
                     append("\t")
                     append(path)
                     append("\t")

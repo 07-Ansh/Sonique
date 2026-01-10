@@ -55,7 +55,7 @@ fun AppTheme(
         colorScheme = colors,
         content = {
             CompositionLocalProvider(
-                LocalContentColor provides colors.onSurfaceVariant, // replace this with needed color from your pallete
+                LocalContentColor provides colors.onSurfaceVariant,  
                 content,
             )
         },

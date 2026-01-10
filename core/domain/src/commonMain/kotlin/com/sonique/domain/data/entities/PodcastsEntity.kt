@@ -14,7 +14,7 @@ import kotlinx.datetime.LocalDateTime
 @Entity(tableName = "podcast_table")
 data class PodcastsEntity(
     @PrimaryKey
-    val podcastId: String, // Generating a unique identifier for podcast
+    val podcastId: String,  
     val title: String,
     val authorId: String,
     val authorName: String,
@@ -23,8 +23,8 @@ data class PodcastsEntity(
     val thumbnail: String?,
     val isFavorite: Boolean = false,
     val inLibrary: LocalDateTime = now(),
-    val favoriteTime: LocalDateTime? = null, // Nullable to allow for non-favorite podcasts
-    val listEpisodes: List<String>, // List of episode video IDs
+    val favoriteTime: LocalDateTime? = null,  
+    val listEpisodes: List<String>,  
 ) : RecentlyType,
     PlaylistType {
     override fun objectType(): RecentlyType.Type = RecentlyType.Type.PLAYLIST
@@ -42,12 +42,12 @@ data class PodcastsEntity(
             onDelete = ForeignKey.CASCADE,
         ),
     ],
-    indices = [Index("podcastId")], // Add this line to create an index
+    indices = [Index("podcastId")],  
 )
 data class EpisodeEntity(
     @PrimaryKey
     val videoId: String,
-    val podcastId: String, // Foreign key to link to parent podcast
+    val podcastId: String,  
     val title: String,
     val authorName: String,
     val authorId: String,

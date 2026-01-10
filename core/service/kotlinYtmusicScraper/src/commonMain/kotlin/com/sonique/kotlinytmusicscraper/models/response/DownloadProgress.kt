@@ -1,9 +1,9 @@
 package com.sonique.kotlinytmusicscraper.models.response
 
 data class DownloadProgress(
-    val audioDownloadProgress: Float = 0f, // 0.0 - 1.0
-    val videoDownloadProgress: Float = 0f, // 0.0 - 1.0
-    val downloadSpeed: Int = 0, // kb/s
+    val audioDownloadProgress: Float = 0f,  
+    val videoDownloadProgress: Float = 0f,  
+    val downloadSpeed: Int = 0,  
     val errorMessage: String = "",
     val isMerging: Boolean = false,
     val isError: Boolean = false,

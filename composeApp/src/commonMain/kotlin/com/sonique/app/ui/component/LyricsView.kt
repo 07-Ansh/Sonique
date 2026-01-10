@@ -154,12 +154,12 @@ fun LyricsView(
                 val sentence = lines[i]
                 val startTimeMs = sentence.startTimeMs.toLong()
 
-                // estimate the end time of the current sentence based on the start time of the next sentence
+                 
                 val endTimeMs =
                     if (i < lines.size - 1) {
                         lines[i + 1].startTimeMs.toLong()
                     } else {
-                        // if this is the last sentence, set the end time to be some default value (e.g., 1 minute after the start time)
+                         
                         startTimeMs + 60000
                     }
                 if (current.current in startTimeMs..endTimeMs) {
@@ -225,9 +225,9 @@ fun LyricsView(
                     .drawWithContent {
                         drawContent()
 
-                        // Only show scroll shadows if enabled
+                         
                         if (showScrollShadows) {
-                            // Top shadow
+                             
                             if (showTopShadow) {
                                 drawRect(
                                     brush =
@@ -247,7 +247,7 @@ fun LyricsView(
                                 )
                             }
 
-                            // Bottom shadow
+                             
                             if (showBottomShadow) {
                                 drawRect(
                                     brush =
@@ -271,7 +271,7 @@ fun LyricsView(
         ) {
             items(lyricsData.lyrics.lines?.size ?: 0) { index ->
                 val line = lyricsData.lyrics.lines?.getOrNull(index)
-                // Tìm translated lyrics phù hợp dựa vào thời gian
+                 
                 val translatedWords =
                     if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
                         line?.startTimeMs?.let { findClosestTranslatedLine(it) }
@@ -287,7 +287,7 @@ fun LyricsView(
                 line?.words?.let { words ->
                     Logger.d(TAG, "SyncType: ${lyricsData.lyrics.syncType}, Line $index content preview: ${words.take(50)}")
                     when {
-                        // Rich sync: parse and use RichSyncLyricsLineItem
+                         
                         lyricsData.lyrics.syncType == "RICH_SYNCED" -> {
                             val parsedLine =
                                 remember(words, line.startTimeMs, line.endTimeMs) {
@@ -311,7 +311,7 @@ fun LyricsView(
                                             },
                                 )
                             } else {
-                                // Fallback to regular line item if parsing fails
+                                 
                                 LyricsLineItem(
                                     originalWords = words,
                                     translatedWords = translatedWords,
@@ -328,7 +328,7 @@ fun LyricsView(
                             }
                         }
 
-                        // Line sync or unsynced: use existing LyricsLineItem
+                         
                         else -> {
                             LyricsLineItem(
                                 originalWords = words,
@@ -450,12 +450,12 @@ fun RichSyncLyricsLineItem(
     isCurrent: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    // Performance optimization: derive current word index based on timeline
+     
     val currentWordIndex by remember(currentTimeMs, parsedLine.words) {
         derivedStateOf {
             if (!isCurrent) return@derivedStateOf -1
 
-            // Find the last word whose start time is <= current time
+             
             parsedLine.words.indexOfLast { it.startTimeMs <= currentTimeMs }
         }
     }
@@ -465,7 +465,7 @@ fun RichSyncLyricsLineItem(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Original lyrics with rich sync highlighting - using FlowRow for word wrapping
+         
         FlowRow(
             modifier =
                 Modifier.then(
@@ -488,7 +488,7 @@ fun RichSyncLyricsLineItem(
             }
         }
 
-        // Translated lyrics (line-level, no word sync)
+         
         if (translatedWords != null) {
             Text(
                 modifier =
@@ -523,14 +523,14 @@ private fun AnimatedWord(
     isPast: Boolean,
     isCurrent: Boolean,
 ) {
-    // Smooth color transition with animation
+     
     val color by animateColorAsState(
         targetValue =
             when {
-                !isCurrent -> Color.LightGray.copy(alpha = 0.35f) // Non-current line
-                isPast -> Color.White.copy(alpha = 0.7f) // Past words
-                isActive -> Color.White // Current word - full brightness
-                else -> Color.LightGray.copy(alpha = 0.5f) // Future words
+                !isCurrent -> Color.LightGray.copy(alpha = 0.35f)  
+                isPast -> Color.White.copy(alpha = 0.7f)  
+                isActive -> Color.White  
+                else -> Color.LightGray.copy(alpha = 0.5f)  
             },
         animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
         label = "wordColor",
@@ -568,15 +568,15 @@ fun FullscreenLyricsSheet(
         mutableFloatStateOf(0f)
     }
 
-    // Auto-hide controls state - Only hide control buttons, not title/progress
+     
     var showControlButtons by rememberSaveable {
         mutableStateOf(true)
     }
 
-    // Reset auto-hide timer when controls are shown
+     
     LaunchedEffect(key1 = showControlButtons) {
         if (showControlButtons) {
-            delay(4000) // Hide after 4 seconds
+            delay(4000)  
             showControlButtons = false
         }
     }
@@ -618,7 +618,7 @@ fun FullscreenLyricsSheet(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
                 ) {
-                    // Show controls on tap
+                     
                     showControlButtons = true
                 },
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
@@ -650,7 +650,7 @@ fun FullscreenLyricsSheet(
                                     },
                             ),
                 ) {
-                    // Top App Bar - Always visible
+                     
                     TopAppBar(
                         windowInsets = WindowInsets(0, 0, 0, 0),
                         colors =
@@ -710,7 +710,7 @@ fun FullscreenLyricsSheet(
                         },
                     )
 
-                    // Lyrics Content - Expands when controls are hidden
+                     
                     Box(
                         modifier =
                             Modifier
@@ -751,9 +751,9 @@ fun FullscreenLyricsSheet(
                         }
                     }
 
-                    // Progress Bar and Time - Always visible, positioned based on control buttons visibility
+                     
                     Column {
-                        // Real Slider
+                         
                         Box(
                             Modifier
                                 .padding(
@@ -869,7 +869,7 @@ fun FullscreenLyricsSheet(
                         }
                         LazyColumn {
                             item {
-                                // Time Layout
+                                 
                                 Row(
                                     Modifier
                                         .fillMaxWidth()
@@ -898,8 +898,8 @@ fun FullscreenLyricsSheet(
                             }
 
                             item {
-                                // Control Buttons - Animated visibility
-                                // Control Button Layout
+                                 
+                                 
                                 AnimatedVisibility(
                                     visible = showControlButtons,
                                     enter =
@@ -926,8 +926,8 @@ fun FullscreenLyricsSheet(
                                             tween(300),
                                         ),
                                 ) {
-                                    // List Bottom Buttons
-                                    // 24.dp
+                                     
+                                     
                                     Box(
                                         modifier =
                                             Modifier
@@ -946,7 +946,7 @@ fun FullscreenLyricsSheet(
                                                     ),
                                             onClick = {
                                                 showInfoBottomSheet = true
-                                                showControlButtons = true // Reset timer on interaction
+                                                showControlButtons = true  
                                             },
                                         ) {
                                             Icon(imageVector = Icons.Outlined.Info, tint = Color.White, contentDescription = "")
@@ -965,7 +965,7 @@ fun FullscreenLyricsSheet(
                                                         ),
                                                 onClick = {
                                                     showQueueBottomSheet = true
-                                                    showControlButtons = true // Reset timer on interaction
+                                                    showControlButtons = true  
                                                 },
                                             ) {
                                                 Icon(
@@ -982,7 +982,7 @@ fun FullscreenLyricsSheet(
                         }
                     }
 
-                    // When control buttons are hidden, add spacer to maintain proper spacing
+                     
                     if (!showControlButtons) {
                         Spacer(modifier = Modifier.height(20.dp))
                     }

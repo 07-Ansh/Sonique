@@ -155,7 +155,7 @@ internal class MediaServiceHandlerImpl(
     private val _sleepTimerState = MutableStateFlow<SleepTimerState>(SleepTimerState(false, 0))
     override val sleepTimerState: StateFlow<SleepTimerState> = _sleepTimerState.asStateFlow()
 
-    // SponsorBlock skip segments
+     
     private val _skipSegments: MutableStateFlow<List<SponsorSkipSegments>?> = MutableStateFlow<List<SponsorSkipSegments>?>(null)
     override val skipSegments: StateFlow<List<SponsorSkipSegments>?> = _skipSegments.asStateFlow()
 
@@ -165,7 +165,7 @@ internal class MediaServiceHandlerImpl(
     private val _currentSongIndex: MutableStateFlow<Int> = MutableStateFlow(player.currentMediaItemIndex)
     override val currentSongIndex: StateFlow<Int> = _currentSongIndex.asStateFlow()
 
-    // List of Specific variables
+     
 
     private var loudnessEnhancer: LoudnessEnhancer? = null
     private var secondLoudnessEnhancer: LoudnessEnhancer? = null
@@ -217,7 +217,7 @@ internal class MediaServiceHandlerImpl(
             null
         }
 
-    //
+     
     init {
         player.addListener(this)
         progressJob = Job()
@@ -631,7 +631,7 @@ internal class MediaServiceHandlerImpl(
             }
     }
 
-    // Region: Override functions
+     
     override fun startProgressUpdate() {
         progressJob =
             coroutineScope.launch {
@@ -893,15 +893,15 @@ internal class MediaServiceHandlerImpl(
         from: Int,
         to: Int,
     ) {
-//        if (from < to) {
-//            for (i in from until to) {
-//                moveItemDown(i)
-//            }
-//        } else {
-//            for (i in from downTo to + 1) {
-//                moveItemUp(i)
-//            }
-//        }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
         moveMediaItem(from, to)
     }
 
@@ -939,7 +939,7 @@ internal class MediaServiceHandlerImpl(
                     listPosition.shuffle()
                     _queueData.update {
                         it.copy(
-                            // After shuffle prefix is offset and list position
+                             
                             data =
                                 it.data.copy(
                                     continuation = "SHUFFLE0_${fromListIntToString(listPosition)}",
@@ -954,9 +954,9 @@ internal class MediaServiceHandlerImpl(
 
     override fun loadMore() {
         if (queueData.value.queueState == QueueData.StateSource.STATE_INITIALIZING) return
-        // Separate local and remote data
-        // Local Add Prefix to PlaylistID to differentiate between local and remote
-        // Local: LC-PlaylistID
+         
+         
+         
         val playlistId = _queueData.value.data.playlistId ?: return
         Logger.w("Check loadMore", playlistId.toString())
         val continuation = _queueData.value.data.continuation
@@ -1459,7 +1459,7 @@ internal class MediaServiceHandlerImpl(
         val tempQueue: ArrayList<Track> = arrayListOf()
         tempQueue.addAll(queueData.value.data.listTracks)
         val chunkedList = tempQueue.chunked(100)
-        // Reset queue
+         
         _queueData.update {
             it.copy(
                 data =
@@ -2005,14 +2005,14 @@ internal class MediaServiceHandlerImpl(
         Logger.w("ServiceHandler", "Starting release process")
         try {
 
-            // Save state first
+             
             mayBeSaveRecentSong(true)
             mayBeSavePlaybackState()
 
-            // Stop and release player
+             
             player.removeListener(this)
 
-            // Release audio effects
+             
             try {
                 loudnessEnhancer?.enabled = false
                 loudnessEnhancer?.release()
@@ -2025,10 +2025,10 @@ internal class MediaServiceHandlerImpl(
                 Logger.e("ServiceHandler", "Error releasing audio effects ${e.message}")
             }
 
-            // Send close equalizer intent
+             
             sendCloseEqualizerIntent()
 
-            // Cancel all jobs
+             
             progressJob?.cancel()
             progressJob = null
             bufferedJob?.cancel()
@@ -2054,7 +2054,7 @@ internal class MediaServiceHandlerImpl(
             getDataOfNowPlayingTrackStateJob?.cancel()
             getDataOfNowPlayingTrackStateJob = null
 
-            // Cancel coroutine scope
+             
             coroutineScope.cancel()
 
             Logger.w("ServiceHandler", "Handler released successfully. Scope active: ${coroutineScope.isActive}")

@@ -105,7 +105,7 @@ class LibraryViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-// ...
+ 
 
     fun cancelActiveDownloads() {
         val tasks = downloadHandler.downloadTask.value
@@ -155,10 +155,10 @@ class LibraryViewModel(
                     }
                 temp.removeIf { it is SongEntity && it.inLibrary == Config.REMOVED_SONG_DATE_TIME }
                 
-                // Remove existing pinned items to avoid duplicates
+                 
                 temp.removeIf { it is PlaylistEntity && (it.id == "LM" || it.id == LOCAL_PLAYLIST_ID_LIKED) }
                 
-                // Pin Sonique Liked Songs
+                 
                 temp.add(
                     PlaylistEntity(
                         id = LOCAL_PLAYLIST_ID_LIKED,
@@ -170,7 +170,7 @@ class LibraryViewModel(
                 )
 
                 if (dataStoreManager.loggedIn.first() == DataStoreManager.TRUE) {
-                    // Pin YouTube Liked Music (added after so it appears before Sonique after reverse)
+                     
                     temp.add(
                         PlaylistEntity(
                             title = getString(Res.string.youtube_liked_music),
@@ -250,7 +250,7 @@ class LibraryViewModel(
                                         1
                                     }
                                 }
-                                timeP0.compareTo(timeP1) // Sort in descending order by inLibrary time
+                                timeP0.compareTo(timeP1)  
                             },
                         )
                     _favoritePlaylist.value = LocalResource.Success(sortedList)
@@ -281,7 +281,7 @@ class LibraryViewModel(
         _yourLocalPlaylist.value = LocalResource.Loading()
         viewModelScope.launch {
             localPlaylistRepository.getAllLocalPlaylists().collect { values ->
-//                    _listLocalPlaylist.postValue(values)
+ 
                 _yourLocalPlaylist.value = LocalResource.Success(values.reversed())
             }
         }
@@ -328,7 +328,7 @@ class LibraryViewModel(
         viewModelScope.launch {
             songRepository.setInLibrary(videoId, Config.REMOVED_SONG_DATE_TIME)
             songRepository.resetTotalPlayTime(videoId)
-            delay(500) // Wait for the database to update
+            delay(500)  
             getRecentlyAdded()
         }
     }

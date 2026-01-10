@@ -14,16 +14,12 @@ class Spotify {
     private val spotifyClient = SpotifyClient()
     private val spotifyAuth = SpotifyAuth(spotifyClient)
 
-    /**
-     * Remove proxy for client
-     */
+     
     fun removeProxy() {
         spotifyClient.proxy = null
     }
 
-    /**
-     * Set the proxy for client
-     */
+     
     fun setProxy(
         isHttp: Boolean,
         host: String,
@@ -44,18 +40,13 @@ class Spotify {
         }
     }
 
-    /**
-     * Get personal token using the standard method
-     */
+     
     suspend fun getPersonalToken(spdc: String) =
         runCatching {
             spotifyClient.getSpotifyLyricsToken(spdc).body<PersonalTokenResponse>()
         }
 
-    /**
-     * Get personal token using the more reliable TOTP-based method
-     * This should be used when the standard method fails
-     */
+     
     suspend fun getPersonalTokenWithTotp(spdc: String) = spotifyAuth.refreshToken(spdc)
 
     suspend fun getClientToken() =

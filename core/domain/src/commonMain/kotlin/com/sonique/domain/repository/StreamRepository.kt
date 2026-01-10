@@ -21,7 +21,7 @@ interface StreamRepository {
         videoId: String,
         isDownloading: Boolean,
         isVideo: Boolean,
-        muxed: Boolean = false, // m3u8 or mp4 (both contain audio and video)
+        muxed: Boolean = false,  
     ): Flow<String?>
 
     fun initPlayback(

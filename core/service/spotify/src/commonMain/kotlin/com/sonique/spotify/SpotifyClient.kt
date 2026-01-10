@@ -110,9 +110,7 @@ class SpotifyClient {
             }
         }
 
-    /**
-     * Thanks to @Thereallo1026 and @misiektoja for providing the latest TOTP secret
-     */
+     
     suspend fun getSpotifyLastestTotpSecret() =
         spotifyClient.get("https://raw.githubusercontent.com/xyloflake/spot-secrets-go/refs/heads/main/secrets/secretDict.json") {
             userAgent(USER_AGENT)
@@ -206,8 +204,8 @@ class SpotifyClient {
             "{\"persistedQuery\":{\"version\":1,\"sha256Hash\":\"${sha}\"}}",
         )
     }
-    // {"searchTerm":"trình+hieuthuhai","offset":0,"limit":20,"numberOfTopResults":20,"includeAudiobooks":true,"includePreReleases":false}
-    // {"persistedQuery":{"version":1,"sha256Hash":"e4ed1f91a2cc5415befedb85acf8671dc1a4bf3ca1a5b945a6386101a22e28a6"}}
+     
+     
 
     suspend fun getSpotifyCanvas(
         trackId: String,

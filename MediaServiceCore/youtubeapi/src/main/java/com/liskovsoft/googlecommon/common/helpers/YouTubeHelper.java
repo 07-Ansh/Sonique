@@ -22,21 +22,16 @@ import java.util.List;
 public final class YouTubeHelper {
     public static final String TEXT_DELIM = "•";
     public static final String TEXT_DELIM_ALT = "·";
-    /**
-     * NOTE: Optimal thumbnail index is 3. Lower values cause black borders around images on Chromecast and Sony.
-     */
+     
     public static final int OPTIMAL_RES_THUMBNAIL_INDEX = 3;
-    //private static final int SHORTS_LEN_MS = 61_000;
+     
     private static final int SHORTS_LEN_MS = 90_000;
     private static final int SHORTS_LEN_MAX_MS = 3 * 60_000;
     private static final String CHANNEL_KEY = "channel";
     private static final String CHANNEL_ALT_KEY = "c";
     private static final String HYPHEN_SIGN = "\u2010";
 
-    /**
-     * Find optimal thumbnail for tv screen<br/>
-     * For Kotlin counterpart see: {@link com.liskovsoft.youtubeapi.common.models.gen.CommonHelperKt#getOptimalResThumbnailUrl(ThumbnailItem)}
-     */
+     
     public static String findOptimalResThumbnailUrl(List<Thumbnail> thumbnails) {
         if (thumbnails == null) {
             return null;
@@ -51,9 +46,7 @@ public final class YouTubeHelper {
         return thumbnails.get(size > OPTIMAL_RES_THUMBNAIL_INDEX ? OPTIMAL_RES_THUMBNAIL_INDEX : size - 1).getUrl();
     }
 
-    /**
-     * For Kotlin counterpart see: {@link com.liskovsoft.youtubeapi.common.models.gen.CommonHelperKt#getHighResThumbnailUrl(ThumbnailItem)}
-     */
+     
     public static String findHighResThumbnailUrl(List<Thumbnail> thumbnails) {
         if (thumbnails == null) {
             return null;
@@ -68,9 +61,7 @@ public final class YouTubeHelper {
         return thumbnails.get(size - 1).getUrl();
     }
 
-    /**
-     * Additional video info such as user, published etc.
-     */
+     
     public static @Nullable CharSequence createInfo(Object... items) {
         return ServiceHelper.createInfo(items);
     }
@@ -93,7 +84,7 @@ public final class YouTubeHelper {
         }
 
         if (mediaGroup.getType() == MediaGroup.TYPE_SUBSCRIPTIONS) {
-            // LIVE & UPCOMING videos always on top
+             
             Collections.sort(mediaGroup.getMediaItems(), (o1, o2) ->
                     o1.isLive() == o2.isLive() && o1.isUpcoming() == o2.isUpcoming() ? 0 :
                             o1.isLive() || (o1.isUpcoming() && !o2.isLive()) ? -1 : 1
@@ -114,10 +105,10 @@ public final class YouTubeHelper {
             boolean isHideMixesEnabled = data.isContentHidden(MediaServiceData.CONTENT_MIXES);
 
             if (isHideShortsEnabled || isHideUpcomingEnabled || isHideStreamsEnabled || isHideMixesEnabled) {
-                // NOTE: The group could be empty after filtering! Fix for that.
+                 
 
-                // Remove Shorts and/or Upcoming
-                // NOTE: Predicate replacement function for devices with Android 6.0 and below.
+                 
+                 
                 Helpers.removeIf(mediaGroup.getMediaItems(), mediaItem -> {
                     if (mediaItem == null) {
                         return false;
@@ -178,9 +169,7 @@ public final class YouTubeHelper {
                 (mediaItem.getPlaylistId() != null || mediaItem.getChannelId() != null || mediaItem.hasUploads());
     }
 
-    /**
-     * Avatar blocking fix
-     */
+     
     public static String avatarBlockFix(String url) {
         if (url != null) {
             url = url.replaceFirst("^https://yt3.ggpht.com", "https://yt4.ggpht.com");
@@ -189,9 +178,7 @@ public final class YouTubeHelper {
         return url;
     }
 
-    /**
-     * Exclude an items like Refresh button etc
-     */
+     
     public static boolean isEmpty(MediaItem item) {
         if (item == null) {
             return true;
@@ -208,50 +195,46 @@ public final class YouTubeHelper {
         return Helpers.hashCodeAny(item.getVideoId(), item.getPlaylistId(), item.getReloadPageKey(), item.getParams(), item.getChannelId());
     }
 
-    /**
-     * Data: https://www.youtube.com/channel/UCtDjOV5nk982w35AIdVDuNw
-     */
+     
     public static String extractChannelId(Uri url) {
         if (url == null) {
             return null;
         }
 
-        // https://youtube.com/channel/BLABLA/video
-        // Don't Uri directly or you might get UnsupportedOperationException on some urls.
+         
+         
         UrlQueryString parser = UrlQueryStringFactory.parse(url);
 
-        // https://youtube.com/channel/UCIy_mMwdwbC6GkRSm6gqo6Q
+         
         String channelId = parser.get(CHANNEL_KEY);
 
         if (channelId == null) {
-            // https://www.youtube.com/c/IngaMezerya
+             
             channelId = parser.get(CHANNEL_ALT_KEY);
 
             if (channelId != null) {
-                channelId = "@" + channelId; // add the prefix to quickly distinguish later
+                channelId = "@" + channelId;  
             }
         }
 
         if (channelId == null) {
-            // https://www.youtube.com/@IngaMezerya
+             
             String lastPathSegment = url.getLastPathSegment();
 
             if (Helpers.startsWith(lastPathSegment, "@")) {
-                channelId = lastPathSegment; // already contains the prefix
+                channelId = lastPathSegment;  
             }
         }
 
-        // GrayJay channel: lbry://@elissaclips#f396490429364e98d5070588aabfd039d0fc93b5
+         
         if (Helpers.equals(url.getScheme(), "lbry")) {
-            channelId = url.getAuthority(); // @elissaclips
+            channelId = url.getAuthority();  
         }
 
         return channelId;
     }
 
-    /**
-     * Fix truncated name after '-' sign (exo formats)
-     */
+     
     public static String exoNameFix(String lang) {
         if (lang == null) {
             return null;
@@ -261,31 +244,18 @@ public final class YouTubeHelper {
     }
 
     public static boolean isGridChannel(String channelId) {
-        //return Helpers.equalsAny(channelId, LIKED_MUSIC_BROWSE_ID, SUBSCRIBED_MUSIC_BROWSE_ID, PLAYED_MUSIC_BROWSE_ID);
-        // NOTE: user channel starts with 'UC'
+         
+         
         return channelId != null && channelId.startsWith("FE");
     }
 
-    /**
-     * Try to generate a {@code t} parameter, sent by mobile clients as a query of the player
-     * request.
-     *
-     * <p>
-     * Some researches needs to be done to know how this parameter, unique at each request, is
-     * generated.
-     * </p>
-     *
-     * @return a 12 characters string to try to reproduce the {@code} parameter
-     */
+     
     @NonNull
     public static String generateTParameter() {
         return RandomStringFromAlphabetGenerator.generate(12);
     }
 
-    /**
-     * NOTE: Unique per video info instance<br/>
-     * A nonce is a unique value chosen by an entity in a protocol, and it is used to protect that entity against attacks which fall under the very large umbrella of "replay".
-     */
+     
     @NonNull
     public static String generateCPNParameter() {
         return RandomStringFromAlphabetGenerator.generate(16);

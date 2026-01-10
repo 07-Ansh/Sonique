@@ -32,9 +32,7 @@ import org.robolectric.shadows.ShadowLog
 
 @RunWith(RobolectricTestRunner::class)
 class BrowseApiSignedTest {
-    /**
-     * Authorization should be updated each hour
-     */
+     
     private lateinit var mBrowseService: BrowseApi
     private lateinit var mHomeMockService: BrowseApi
     private lateinit var mHomeMockService2: BrowseApi
@@ -42,10 +40,10 @@ class BrowseApiSignedTest {
 
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
         mBrowseService = RetrofitHelper.create(BrowseApi::class.java)
         mHomeMockService = MockUtils.mockWithGson(HomeApiMock::class.java)
         mHomeMockService2 = MockUtils.mockWithGson(HomeApiMock2::class.java)

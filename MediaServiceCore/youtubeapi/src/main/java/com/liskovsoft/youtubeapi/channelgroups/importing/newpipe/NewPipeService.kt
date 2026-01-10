@@ -40,10 +40,10 @@ internal object NewPipeService: GroupImportService {
 
         val items: MutableList<Item> = mutableListOf()
 
-        // channel url: https://www.youtube.com/channel/UCbWcXB0PoqOsAvAdfzWMf0w
+         
         response.subscriptions?.forEach { items.add(ItemImpl(channelId = YouTubeHelper.extractChannelId(Uri.parse(it.url)), title = it.name)) }
 
-        // Get channels thumbs and titles
+         
         val metadata = YouTubeDataServiceInt.getChannelMetadata(*items.mapNotNull { it.channelId }.toTypedArray())
         val newItems = metadata?.map { ItemImpl(it.channelId, it.title, it.cardImageUrl) }
 

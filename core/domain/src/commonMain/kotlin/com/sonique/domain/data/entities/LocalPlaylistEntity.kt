@@ -22,8 +22,8 @@ data class LocalPlaylistEntity(
     @ColumnInfo(name = "youtube_sync_state", defaultValue = "0")
     val syncState: Int = YouTubeSyncState.NotSynced,
     val tracks: List<String>? = null,
-    // Only synced with YouTube playlist
-    // val listSetVideoId: List<String>? = null,
+     
+     
 ) : PlaylistType,
     HomeContentType {
     override fun playlistType(): PlaylistType.Type = PlaylistType.Type.LOCAL

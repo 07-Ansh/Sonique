@@ -79,7 +79,7 @@ internal class SimpleMediaSessionCallback(
         val sessionCommands =
             MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS
                 .buildUpon()
-                // Add custom commands
+                 
                 .add(SessionCommand(MEDIA_CUSTOM_COMMAND.LIKE, Bundle()))
                 .add(SessionCommand(MEDIA_CUSTOM_COMMAND.REPEAT, Bundle()))
                 .add(SessionCommand(MEDIA_CUSTOM_COMMAND.RADIO, Bundle()))
@@ -413,7 +413,7 @@ internal class SimpleMediaSessionCallback(
         startPositionMs: Long,
     ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> =
         scope.future {
-            // Play from Android Auto
+             
             val defaultResult =
                 MediaSession.MediaItemsWithStartPosition(emptyList(), startIndex, startPositionMs)
             val path =

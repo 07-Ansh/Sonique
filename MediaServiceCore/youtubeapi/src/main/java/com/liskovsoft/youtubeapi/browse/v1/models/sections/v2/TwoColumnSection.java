@@ -12,9 +12,7 @@ public class TwoColumnSection extends Section {
     @JsonPath("$.leftColumn.entityMetadataRenderer.title")
     private TextItem mTitle;
 
-    /**
-     * New type of playlist. Example: type in search page: "Сто лучших клипов 90-х"
-     */
+     
     @JsonPath("$.rightColumn.playlistVideoListRenderer.contents[*]")
     private List<ItemWrapper> mItemWrappers;
 

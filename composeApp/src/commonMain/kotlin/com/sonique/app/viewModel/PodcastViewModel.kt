@@ -24,7 +24,7 @@ import kotlinx.coroutines.launch
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.share_url
 
-// UI state cho podcast
+ 
 sealed class PodcastUIState {
     object Loading : PodcastUIState()
 
@@ -83,12 +83,12 @@ class PodcastViewModel(
         _isFavorite.value = false
         _uiState.value = PodcastUIState.Loading
         viewModelScope.launch {
-            // Kiểm tra xem có PodcastEntity trong database không
+             
             podcastRepository.getPodcast(id).collectLatest { entity ->
                 _podcastEntity.value = entity
                 _isFavorite.value = entity?.isFavorite == true
 
-                // Tải dữ liệu từ API
+                 
                 podcastRepository.getPodcastData(id).collectLatest { resource ->
                     when (resource) {
                         is Resource.Success -> {
@@ -101,7 +101,7 @@ class PodcastViewModel(
 
                                 val podcastEntity = podcastRepository.getPodcast(id).firstOrNull()
                                 if (podcastEntity == null) {
-                                    // Lưu podcast vào database
+                                     
                                     savePodcastToDatabase(id, podcastBrowse)
                                 } else {
                                     _podcastEntity.value = podcastEntity
@@ -112,9 +112,9 @@ class PodcastViewModel(
                         }
 
                         is Resource.Error -> {
-                            // Nếu đã có dữ liệu trong database, sử dụng dữ liệu đó
+                             
                             if (_podcastEntity.value != null) {
-                                // Lấy episodes từ database
+                                 
                                 podcastRepository.getPodcastWithEpisodes(id).first()?.let { podcastWithEpisodes ->
                                     val episodes =
                                         podcastWithEpisodes.episodes.map { episode ->
@@ -170,7 +170,7 @@ class PodcastViewModel(
         podcastBrowse: PodcastBrowse,
     ) {
         viewModelScope.launch {
-            // Lưu podcast
+             
             val podcastEntity =
                 PodcastsEntity(
                     podcastId = id,
@@ -190,7 +190,7 @@ class PodcastViewModel(
                 _podcastEntity.value = podcastEntity
             }
 
-            // Lưu episodes
+             
             val episodes =
                 podcastBrowse.listEpisode.map { episode ->
                     EpisodeEntity(
@@ -207,7 +207,7 @@ class PodcastViewModel(
                 }
 
             podcastRepository.insertEpisodes(episodes).firstOrNull()?.let {
-                // Episodes đã được lưu
+                 
             }
             _podcastEntity.value = podcastRepository.getPodcast(id).firstOrNull()
         }
@@ -247,7 +247,7 @@ class PodcastViewModel(
                 }
 
             podcastRepository.insertEpisodes(episodes).collectLatest {
-                // Episodes đã được cập nhật
+                 
             }
         }
     }
@@ -255,7 +255,7 @@ class PodcastViewModel(
     fun updatePodcastInLibraryNow(id: String) {
         viewModelScope.launch {
             podcastRepository.updatePodcastInLibraryNow(id).collectLatest {
-                // Podcast đã được cập nhật trong thư viện
+                 
                 log("Podcast $id updated in library at ${System.currentTimeMillis()}")
             }
         }

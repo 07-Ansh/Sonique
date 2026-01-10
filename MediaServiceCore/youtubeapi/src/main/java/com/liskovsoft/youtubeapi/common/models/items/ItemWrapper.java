@@ -8,8 +8,8 @@ public class ItemWrapper {
     private TileItem mTileItem;
 
     @JsonPath({"$.gridVideoRenderer",
-               "$.pivotVideoRenderer", // suggested item
-               "$.compactVideoRenderer"}) // history/search result item
+               "$.pivotVideoRenderer",  
+               "$.compactVideoRenderer"})  
     private VideoItem mVideoItem;
 
     @JsonPath("$.tvMusicVideoRenderer")

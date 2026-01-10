@@ -7,7 +7,7 @@ import com.liskovsoft.youtubeapi.common.helpers.PostDataHelper
 internal object BrowseApiHelper {
     const val WATCH_LATER_CHANNEL_ID = "VLWL"
     const val LIKED_CHANNEL_ID = "VLLL"
-    const val FAVORITES_CHANNEL_ID = "VLFL" // NOTE: it's only the beginning part
+    const val FAVORITES_CHANNEL_ID = "VLFL"  
     const val WATCH_LATER_PLAYLIST = "WL"
     const val LIKED_PLAYLIST = "LL"
 
@@ -186,11 +186,7 @@ internal object BrowseApiHelper {
         return PostDataHelper.createQuery(client.browseTemplate, MOVIES)
     }
 
-    /**
-     * Get data param for the next search/grid etc
-     * @param nextPageKey [GridTab.getNextPageKey]
-     * @return data param
-     */
+     
     fun getContinuationQuery(client: AppClient, nextPageKey: String): String {
         val continuation = String.format(CONTINUATION, nextPageKey)
         return PostDataHelper.createQuery(client.browseTemplate, continuation)

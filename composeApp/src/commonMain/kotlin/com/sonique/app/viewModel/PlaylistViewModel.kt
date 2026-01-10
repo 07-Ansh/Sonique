@@ -300,7 +300,7 @@ class PlaylistViewModel(
                         }
                     }
             } else {
-                // This is an online playlist
+                 
                 playlistRepository
                     .getPlaylistData(id, getString(Res.string.view_count))
                     .collect { res ->

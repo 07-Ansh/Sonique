@@ -15,10 +15,7 @@ public class SectionTabList {
     @JsonPath("$.responseContext.visitorData")
     private String mVisitorData;
 
-    /**
-     * Depending on query there may be multiple tabs ("zylonLeftNav":false)<br/>
-     * or there may be only one tab ("zylonLeftNav":true)
-     */
+     
     public List<SectionTab> getTabs() {
         if (mTabs == null && mSingleTab != null) {
             mTabs = new ArrayList<>();

@@ -17,8 +17,8 @@ public class Header {
     @JsonPath("$.thumbnailOverlays[*].thumbnailOverlayTimeStatusRenderer.style")
     private List<String> mBadgeStyle;
     @JsonPath({
-            "$.onFocusThumbnail.thumbnails[0].url", // v2
-            "$.movingThumbnail.thumbnails[0].url" // v1
+            "$.onFocusThumbnail.thumbnails[0].url",  
+            "$.movingThumbnail.thumbnails[0].url"  
     })
     private String mMovingThumbnailUrl;
     @JsonPath("$.title")
@@ -40,9 +40,7 @@ public class Header {
         return mBadgeStyle != null ? mBadgeStyle.get(0) : null;
     }
 
-    /**
-     * Animated thumbnail preview in webp format
-     */
+     
     public String getMovingThumbnailUrl() {
         return mMovingThumbnailUrl;
     }

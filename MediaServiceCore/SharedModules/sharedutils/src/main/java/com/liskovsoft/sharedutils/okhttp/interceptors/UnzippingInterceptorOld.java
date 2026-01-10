@@ -17,16 +17,16 @@ public class UnzippingInterceptorOld implements Interceptor {
         return unzip(response);
     }
 
-    // copied from okhttp3.internal.http.HttpEngine (because is private)
+     
     private Response unzip(final Response response) {
         if (response.body() == null) {
             return response;
         }
 
-        //check if we have gzip response
+         
         String contentEncoding = response.headers().get("Content-Encoding");
 
-        //this is used to decompress gzipped responses
+         
         if (contentEncoding != null && contentEncoding.equals("gzip")) {
             long contentLength = response.body().contentLength();
             GzipSource responseBody = new GzipSource(response.body().source());

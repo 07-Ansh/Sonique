@@ -10,11 +10,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
 
-/**
- * Typical list item
- * Used in [MusicCarouselShelfRenderer], [MusicShelfRenderer]
- * Appears in quick picks, search results, table items, etc.
- */
+ 
 @Serializable
 data class MusicResponsiveListItemRenderer(
     val badges: List<Badges>?,

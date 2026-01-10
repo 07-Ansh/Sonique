@@ -17,18 +17,18 @@ import com.liskovsoft.youtubeapi.next.v2.gen.getShelves
 internal open class BrowseService2 {
     private val mBrowseApi = RetrofitHelper.create(BrowseApi::class.java)
 
-    //fun getHome(): List<MediaGroup?>? {
-    //    val home = getBrowseRows(BrowseApiHelper.getHomeQueryWeb(), MediaGroup.TYPE_HOME)
-    //    return if (home?.size ?: 0 < 5) listOfNotNull(home, getRecommended()).flatten() else home
-    //}
+     
+     
+     
+     
 
     fun getHome(): Pair<List<MediaGroup?>?, String?>? {
-        //val rows = getBrowseRows(BrowseApiHelper.getHomeQueryWeb(), MediaGroup.TYPE_HOME)
-        //
-        //if (rows?.all { it?.isEmpty == true } != false) // in anonymous mode WEB home page is empty
-        //    return getBrowseRowsTV(BrowseApiHelper.getHomeQueryTV(), MediaGroup.TYPE_HOME)
-        //
-        //return Pair(rows, null)
+         
+         
+         
+         
+         
+         
 
         return getBrowseRowsTV(BrowseApiHelper::getHomeQuery, MediaGroup.TYPE_HOME)
     }
@@ -88,7 +88,7 @@ internal open class BrowseService2 {
         val browseResult = mBrowseApi.getBrowseResultTV(BrowseApiHelper.getSubscriptionsQuery(options.clientTV))
 
         return RetrofitHelper.get(browseResult)?.let {
-            // Prepare to move LIVE items to the top. Multiple results should be combined first.
+             
             val (overrideItems, overrideKey) = continueIfNeededTV(it.getItems(), it.getContinuationToken(), options)
 
             BrowseMediaGroupTV(it, options, overrideItems = overrideItems, overrideKey = overrideKey)
@@ -219,13 +219,13 @@ internal open class BrowseService2 {
         return RetrofitHelper.get(result)?.let {
             if (it.getItems()?.firstOrNull { it?.getPlaylistId().equals(BrowseApiHelper.WATCH_LATER_PLAYLIST) } != null) {
                 BrowseMediaGroupTV(it, options)
-            } else { // No Watch Later (moved to the dedicated subsection)
+            } else {  
                 val library = mBrowseApi.getBrowseResultTV(BrowseApiHelper.getMyLibraryQuery(options.clientTV))
 
                 val outer = it
 
                 RetrofitHelper.get(library)?.let {
-                    val watchLater = it.getItems()?.getOrNull(1) // Watch Later subsection
+                    val watchLater = it.getItems()?.getOrNull(1)  
                     BrowseMediaGroupTV(outer, options, watchLater?.let { outer.getItems()?.toMutableList()?.apply { add(0, it) } })
                 }
             }
@@ -354,21 +354,21 @@ internal open class BrowseService2 {
 
         var shortTab: MediaGroup? = null
 
-        homeResult?.let { it.getTabs()?.drop(1)?.forEach { // skip first tab - Home (repeats Videos)
-            if (it?.title?.contains("Shorts") == true) { // move Shorts tab lower
+        homeResult?.let { it.getTabs()?.drop(1)?.forEach {  
+            if (it?.title?.contains("Shorts") == true) {  
                 shortTab = TabMediaGroup(it, channelOptions)
                 return@forEach
             }
             val title = it?.getTitle()
-            if (title != null && result.firstOrNull { it.title == title } == null) // only unique rows
+            if (title != null && result.firstOrNull { it.title == title } == null)  
                 result.add(TabMediaGroup(it, channelOptions)) } }
 
-        shortTab?.let { result.add(it) } // move Shorts tab lower
+        shortTab?.let { result.add(it) }  
 
         homeResult?.let { it.getNestedShelves()?.forEach {
             val title = it?.getTitle()
-            if (it != null && result.firstOrNull { it.title == title } == null) // only unique rows
-                result.add(ItemSectionMediaGroup(it, if (title == null) uploadOptions else channelOptions)) } } // playlists don't have a title
+            if (it != null && result.firstOrNull { it.title == title } == null)  
+                result.add(ItemSectionMediaGroup(it, if (title == null) uploadOptions else channelOptions)) } }  
 
         if (result.isEmpty()) {
             val playlist = mBrowseApi.getBrowseResult(BrowseApiHelper.getChannelQuery(AppClient.WEB, channelId))
@@ -377,11 +377,11 @@ internal open class BrowseService2 {
             }
         }
 
-        //if (result.isEmpty()) {
-        //    getChannelResult(AppClient.WEB_REMIX, channelId)?.let {
-        //        if (it.getTitle() != null) result.add(BrowseMediaGroup(it, MediaGroupOptions.createOptions(MediaGroup.TYPE_CHANNEL_UPLOADS)))
-        //    }
-        //}
+         
+         
+         
+         
+         
 
         return result.ifEmpty { null }
     }
@@ -394,9 +394,7 @@ internal open class BrowseService2 {
         return getBrowseRowsTV({ BrowseApiHelper.getChannelQuery(it, channelId, params) }, MediaGroup.TYPE_CHANNEL, MediaGroup.TYPE_CHANNEL_UPLOADS)
     }
 
-    /**
-     * A special type of a channel that could be found inside Music section (see Liked row More button)
-     */
+     
     fun getGridChannel(channelId: String, params: String? = null): MediaGroup? {
         return getBrowseGridTV({ BrowseApiHelper.getChannelQuery(it, channelId, params) }, MediaGroup.TYPE_CHANNEL_UPLOADS)
     }
@@ -457,9 +455,7 @@ internal open class BrowseService2 {
         return RetrofitHelper.get(browseResult, auth)?.let { BrowseMediaGroup(it, options).apply { title = group.title } }
     }
 
-    /**
-     * NOTE: Can continue Chip or Group
-     */
+     
     private fun continueGroupWeb(group: MediaGroup?, auth: Boolean = false): List<MediaGroup?>? {
         if (group?.nextPageKey == null) {
             return null
@@ -489,7 +485,7 @@ internal open class BrowseService2 {
             mBrowseApi.getContinuationResultTV(BrowseApiHelper.getContinuationQuery(options.clientTV, group.nextPageKey))
 
         return RetrofitHelper.get(continuationResult)?.let {
-            // Prepare to move LIVE items to the top. Multiple results should be combined first.
+             
             val (overrideItems, overrideKey) = if (continueIfNeeded) continueIfNeededTV(it.getItems(), it.getContinuationToken(), options) else Pair(null, null)
 
             WatchNexContinuationMediaGroup(it, options, overrideItems = overrideItems, overrideKey = overrideKey).apply { title = group.title }
@@ -503,10 +499,10 @@ internal open class BrowseService2 {
         return RetrofitHelper.get(browseResult, auth)?.let {
             val result = mutableListOf<MediaGroup?>()
 
-            // First chip is always empty and corresponds to current result.
-            // Also title used as id in continuation. No good.
-            // NOTE: First tab on home page has no title.
-            result.add(BrowseMediaGroup(it, MediaGroupOptions.create(sectionType))) // always renders first tab
+             
+             
+             
+            result.add(BrowseMediaGroup(it, MediaGroupOptions.create(sectionType)))  
             it.getTabs()?.drop(1)?.forEach { if (it?.getTitle() != null) result.add(TabMediaGroup(it, options)) }
             it.getSections()?.forEach { if (it?.getTitle() != null) addOrMerge(result, RichSectionMediaGroup(it, options)) }
             it.getChips()?.forEach { if (it?.getTitle() != null) result.add(ChipMediaGroup(it, options)) }
@@ -524,7 +520,7 @@ internal open class BrowseService2 {
             val result = mutableListOf<MediaGroup?>()
             it.getShelves()?.forEach { if (it != null) addOrMerge(result, ShelfSectionMediaGroup(it, rowsOptions)) }
 
-            if (result.isEmpty()) // playlist
+            if (result.isEmpty())  
                 addOrMerge(result, BrowseMediaGroupTV(it, gridOptions))
 
             Pair(result, it.getContinuationToken())
@@ -536,7 +532,7 @@ internal open class BrowseService2 {
         val browseResult = mBrowseApi.getBrowseResultTV(query(options.clientTV))
 
         return RetrofitHelper.get(browseResult)?.let {
-            // Prepare to move LIVE items to the top. Multiple results should be combined first.
+             
             var continuation: Pair<List<ItemWrapper?>?, String?>? = null
             if (shouldContinue) {
                 continuation = continueIfNeededTV(it.getItems(), it.getContinuationToken(), options)
@@ -547,7 +543,7 @@ internal open class BrowseService2 {
     }
 
     private fun addOrMerge(result: MutableList<MediaGroup?>, group: MediaGroup) {
-        // Always add, merging will be done later
+         
         result.add(group)
     }
 
@@ -579,7 +575,7 @@ internal open class BrowseService2 {
         var combinedItems: List<ItemWrapper?>? = items
         var combinedKey: String? = continuationKey
         for (i in 0 until 10) {
-            // NOTE: bigger max value help moving live videos to the top (e.g. sorting)
+             
             if (combinedKey == null || (combinedItems?.size ?: 0) > 60)
                 break
 

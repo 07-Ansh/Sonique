@@ -33,7 +33,7 @@ object NotificationHandler {
         context: Context,
         noti: NotificationModel,
     ) {
-        //  No back-stack when launched
+         
         val action = Intent(context, MainActivity::class.java)
         action.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         action.data = "com.sonique.com.sonique.app://notification".toUri()
@@ -62,7 +62,7 @@ object NotificationHandler {
                                     ?.thumbnails
                                     ?.lastOrNull()
                                     ?.url,
-                        ).allowHardware(false) // Disable hardware bitmaps.
+                        ).allowHardware(false)  
                         .build()
 
                 return@runBlocking when (val result = loader.execute(request)) {
@@ -86,9 +86,9 @@ object NotificationHandler {
                     },
                 ).setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setLargeIcon(bitmap)
-                .setContentIntent(pendingIntent) // For launching the MainActivity
-                .setAutoCancel(true) // Remove notification when tapped
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // Show on lock screen
+                .setContentIntent(pendingIntent)  
+                .setAutoCancel(true)  
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)  
         with(NotificationManagerCompat.from(context)) {
             if (ActivityCompat.checkSelfPermission(
                     context,
@@ -101,9 +101,7 @@ object NotificationHandler {
         }
     }
 
-    /**
-     * Required on Android O+
-     */
+     
     fun createNotificationChannel(context: Context) {
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -116,7 +114,7 @@ object NotificationHandler {
                 NotificationChannel(CHANNEL_ID, name, importance).apply {
                     description = descriptionText
                 }
-            // Register the channel with the system
+             
 
             notificationManager.createNotificationChannel(channel)
         }

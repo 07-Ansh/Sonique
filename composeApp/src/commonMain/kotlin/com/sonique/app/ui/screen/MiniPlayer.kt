@@ -169,7 +169,7 @@ fun MiniPlayer(
         label = "",
     )
 
-    // Palette state
+     
     val paletteState = rememberPaletteState()
     val background =
         remember {
@@ -354,10 +354,10 @@ fun MiniPlayer(
                                 modifier = Modifier.weight(1F).fillMaxHeight(),
                                 contentAlignment = Alignment.CenterStart,
                                 transitionSpec = {
-                                    // Compare the incoming number with the previous number.
+                                     
                                     if (targetState != initialState) {
-                                        // If the target number is larger, it slides up and fades in
-                                        // while the initial (smaller) number slides up and fades out.
+                                         
+                                         
                                         (
                                             slideInHorizontally { width ->
                                                 width
@@ -366,8 +366,8 @@ fun MiniPlayer(
                                             slideOutHorizontally { width -> +width } + fadeOut(),
                                         )
                                     } else {
-                                        // If the target number is smaller, it slides down and fades in
-                                        // while the initial number slides down and fades out.
+                                         
+                                         
                                         (
                                             slideInHorizontally { width ->
                                                 +width
@@ -376,8 +376,8 @@ fun MiniPlayer(
                                             slideOutHorizontally { width -> width } + fadeOut(),
                                         )
                                     }.using(
-                                        // Disable clipping since the faded slide-in/out should
-                                        // be displayed out of bounds.
+                                         
+                                         
                                         SizeTransform(clip = false),
                                     )
                                 },
@@ -514,7 +514,7 @@ fun MiniPlayer(
                     .padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Part 1
+                 
                 Box(modifier = Modifier.weight(1f).padding(vertical = 16.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -588,7 +588,7 @@ fun MiniPlayer(
                         }
                     }
                 }
-                // Part 2
+                 
                 Box(modifier = Modifier.weight(1f)) {
                     Column(Modifier.width(380.dp).padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(
@@ -615,7 +615,7 @@ fun MiniPlayer(
                                 overflow = TextOverflow.Ellipsis,
                                 modifier = Modifier.width(50.dp),
                             )
-                            // Real Slider
+                             
                             Box(
                                 modifier =
                                     Modifier

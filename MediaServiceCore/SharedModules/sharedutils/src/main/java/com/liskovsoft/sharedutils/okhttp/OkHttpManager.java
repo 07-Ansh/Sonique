@@ -25,7 +25,7 @@ public class OkHttpManager {
     }
 
     public static OkHttpManager instance() {
-        return instance(true); // profiler is enabled by default
+        return instance(true);  
     }
 
     public static OkHttpManager instance(boolean enableProfiler) {
@@ -65,9 +65,7 @@ public class OkHttpManager {
         return doHeadRequest(url, getClient());
     }
 
-    /**
-     * NOTE: default method is GET
-     */
+     
     public Response doRequest(String url, OkHttpClient client) {
         Request okHttpRequest = new Request.Builder()
                 .url(url)
@@ -76,9 +74,7 @@ public class OkHttpManager {
         return doRequest(client, okHttpRequest);
     }
 
-    /**
-     * NOTE: default method is GET
-     */
+     
     public Response doRequest(String url, OkHttpClient client, Map<String, String> headers) {
         if (headers == null) {
             headers = new HashMap<>();
@@ -138,7 +134,7 @@ public class OkHttpManager {
         try {
             return client.newCall(okHttpRequest).execute();
         } catch (IOException ex) {
-            Log.e(TAG, ex.getMessage()); // network error
+            Log.e(TAG, ex.getMessage());  
             throw new IllegalStateException("Interrupted OkHttp request to " + okHttpRequest.url(), ex);
         }
     }

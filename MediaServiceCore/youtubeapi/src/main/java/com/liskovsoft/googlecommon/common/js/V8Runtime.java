@@ -14,10 +14,10 @@ public final class V8Runtime {
     private static V8Runtime sInstance;
     private V8 mRuntime;
 
-    //static {
-    //    // Fix? J2V8 native library not loaded (j2v8-android-arm_32/j2v8-android-arm_32)
-    //    System.loadLibrary("j2v8");
-    //}
+     
+     
+     
+     
 
     private V8Runtime() {
     }
@@ -31,10 +31,10 @@ public final class V8Runtime {
     }
 
     public static void unhold() {
-        // NOTE: using 'release' produces 'Invalid V8 thread access: the locker has been released!'
-        //if (sInstance != null) {
-        //    sInstance.mRuntime.release();
-        //}
+         
+         
+         
+         
 
         sInstance = null;
     }
@@ -73,9 +73,7 @@ public final class V8Runtime {
         return evaluateSafe(sources);
     }
 
-    /**
-     * Not a thread safe. Possible 'Invalid V8 thread access' errors.
-     */
+     
     private String evaluateUnsafe(final String source) throws V8ScriptExecutionException {
         String result = null;
 
@@ -83,20 +81,18 @@ public final class V8Runtime {
             if (mRuntime == null) {
                 mRuntime = V8.createV8Runtime();
             }
-            mRuntime.getLocker().acquire(); // Possible 'Invalid V8 thread access' errors
+            mRuntime.getLocker().acquire();  
             result = mRuntime.executeStringScript(source);
         } finally {
             if (mRuntime != null) {
-                mRuntime.getLocker().release(); // Possible 'Invalid V8 thread access' errors
+                mRuntime.getLocker().release();  
             }
         }
 
         return result;
     }
 
-    /**
-     * Thread safe solution but performance a bit slow.
-     */
+     
     private String evaluateSafe(final String source) throws V8ScriptExecutionException {
         V8 runtime = null;
         String result;
@@ -113,9 +109,7 @@ public final class V8Runtime {
         return result;
     }
 
-    /**
-     * Thread safe solution but performance a bit slow.
-     */
+     
     private String evaluateSafe(final List<String> sources) throws V8ScriptExecutionException {
         V8 runtime = null;
         String result = null;
@@ -126,7 +120,7 @@ public final class V8Runtime {
                 try {
                     result = runtime.executeStringScript(source);
                 } catch (V8ResultUndefined e) {
-                    // NOP
+                     
                 }
             }
         } finally {

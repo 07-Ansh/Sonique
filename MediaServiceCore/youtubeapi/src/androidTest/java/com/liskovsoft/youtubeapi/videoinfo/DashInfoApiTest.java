@@ -27,13 +27,13 @@ public class DashInfoApiTest extends BaseVideoInfoApiTest {
     private static final String LAST_SEG_TIME_MS = "X-Walltime-Ms";
     private DashInfoApi mDashService;
     private FileApi mFileService;
-    // Make response smaller
+     
     private final String SMALL_RANGE = "&range=0-200";
 
     @Before
     public void setUp() throws Exception {
-        // Fix temp video url ban
-        //Thread.sleep(3_000);
+         
+         
 
         initBase();
 
@@ -43,16 +43,16 @@ public class DashInfoApiTest extends BaseVideoInfoApiTest {
         RetrofitOkHttpHelper.getAuthHeaders().clear();
     }
 
-    //@Test
-    //public void testDashInfoNotEmpty() throws IOException {
-    //    VideoInfo videoInfo = getVideoInfo(TestHelpersV2.VIDEO_ID_LIVE);
-    //
-    //    VideoInfoService videoInfoService = VideoInfoService.instance();
-    //    DashInfo dashInfo = videoInfoService.getDashInfo(videoInfo);
-    //    assertTrue("Has start time", dashInfo.getStartTimeMs() != -1);
-    //    assertTrue("Has start segment", dashInfo.getStartSegmentNum() != -1);
-    //    assertTrue("Has segment duration", dashInfo.getSegmentDurationUs() > 0);
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     @Test
     public void testDashInfoUrlNotEmpty() throws IOException {

@@ -19,9 +19,7 @@ public class MediaFormatComparator implements Comparator<MediaFormat> {
         mOrderType = orderType;
     }
 
-    /**
-     * NOTE: Descendant sorting (better on top). High quality playback on external player.
-     */
+     
     @Override
     public int compare(MediaFormat leftItem, MediaFormat rightItem) {
         if (leftItem.getGlobalSegmentList() != null ||

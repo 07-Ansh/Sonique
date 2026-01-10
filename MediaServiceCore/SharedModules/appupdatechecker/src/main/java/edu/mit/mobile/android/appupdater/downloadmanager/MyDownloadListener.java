@@ -46,20 +46,20 @@ public class MyDownloadListener {
         Uri uri = Uri.parse(uriStr);
         DownloadManager.Request r = new DownloadManager.Request(uri);
 
-        // This put the download in the same Download dir the browser uses
+         
         if (fileName == null)
             fileName = getFileName(uri);
         r.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName);
 
-        // When downloading music and videos they will be listed in the player
-        // (Seems to be available since Honeycomb only)
+         
+         
         r.allowScanningByMediaScanner();
 
-        // Notify user when download is completed
-        // (Seems to be available since Honeycomb only)
+         
+         
         r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
 
-        // Start download
+         
         DownloadManager dm = (DownloadManager) mContext.getSystemService(Context.DOWNLOAD_SERVICE);
         dm.enqueue(r);
 

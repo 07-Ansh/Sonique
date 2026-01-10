@@ -6,7 +6,7 @@ import io.reactivex.Observable;
 public interface RemoteControlService {
     String getPairingCode();
 
-    // RxJava interfaces
+     
     Observable<String> getPairingCodeObserve();
     Observable<Command> getCommandObserve();
     Observable<Void> postStartPlayingObserve(String videoId, long positionMs, long durationMs, boolean isPlaying);

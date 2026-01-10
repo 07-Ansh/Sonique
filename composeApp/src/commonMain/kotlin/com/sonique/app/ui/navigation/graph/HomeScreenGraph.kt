@@ -50,13 +50,13 @@ fun NavGraphBuilder.homeScreenGraph(
     composable<SettingsDestination>(
         enterTransition = {
             slideInVertically(
-                initialOffsetY = { it }, // Start from bottom (full height offset)
+                initialOffsetY = { it },  
                 animationSpec = tween(300)
             )
         },
         exitTransition = {
             slideOutVertically(
-                targetOffsetY = { it }, // Exit to bottom (full height offset)
+                targetOffsetY = { it },  
                 animationSpec = tween(300)
             )
         }

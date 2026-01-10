@@ -12,11 +12,7 @@ import edu.mit.mobile.android.appupdater.addons.UpdateApp;
 
 import java.util.List;
 
-/**
- * A handy pop-up dialog box which lists the changelog and asks if you want to update.
- *
- * @author steve
- */
+ 
 public class OnUpdateDialog implements OnAppUpdateListener {
     private final Context mContext;
     private final CharSequence mAppName;
@@ -80,14 +76,14 @@ public class OnUpdateDialog implements OnAppUpdateListener {
             switch (msg.what) {
                 case MSG_SHOW_DIALOG:
                     try {
-                        // TODO fix this so it'll pop up appropriately
+                         
                         if (!mCancelDialog) {
                             mDialog.show();
                             setupFocus();
                         }
                     } catch (final Exception e) {
                         e.printStackTrace();
-                        // XXX ignore for the moment
+                         
                     }
 
                     break;

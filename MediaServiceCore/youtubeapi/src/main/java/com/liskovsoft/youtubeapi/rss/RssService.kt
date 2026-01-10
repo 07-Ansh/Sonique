@@ -18,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 internal object RssService {
     private const val RSS_URL: String = "https://www.youtube.com/feeds/videos.xml?channel_id="
-    private const val MAX_ITEMS = 100 // NOTE: Limit the result. Unlimited has veeery long loading and often crashing.
+    private const val MAX_ITEMS = 100  
 
     @JvmStatic
     @JvmOverloads
@@ -45,7 +45,7 @@ internal object RssService {
     private fun fetchFeeds(channelIds: List<String>): MutableList<MediaItem> = runBlocking {
         val items = CopyOnWriteArrayList<MediaItem>()
 
-        coroutineScope { // wait for all child coroutines complete
+        coroutineScope {  
             for (channelId in channelIds) {
                 launch {
                     fetchFeed(channelId)?.let { items.addAll(it) }
@@ -78,9 +78,7 @@ internal object RssService {
         }
     }
 
-    /**
-     * Add missing props and remove shorts etc
-     */
+     
     private fun syncWithChannel(channelId: String, result: List<MediaItem>) {
         val group = getBrowseService2().getChannelAsGrid(channelId)
         val originItems = group?.mediaItems ?: return

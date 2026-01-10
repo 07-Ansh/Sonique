@@ -14,9 +14,7 @@ import retrofit2.Call;
 
 import java.util.List;
 
-/**
- * Wraps result from the {@link SearchApi}
- */
+ 
 public class SearchService {
     private static final String TAG = SearchService.class.getSimpleName();
     private final SearchApi mSearchApi;
@@ -41,10 +39,7 @@ public class SearchService {
         return searchResult;
     }
 
-    /**
-     * Method uses results from the {@link #getSearch(String)} call
-     * @return video items
-     */
+     
     public SearchResultContinuation continueSearch(String nextSearchPageKey) {
         if (nextSearchPageKey == null) {
             Log.e(TAG, "Can't get next search page. Next search key is empty.");
@@ -67,8 +62,8 @@ public class SearchService {
 
         LocaleManager localeManager = LocaleManager.instance();
         country = localeManager.getCountry();
-        // fix empty popular searches (country and language should match or use only country)
-        //language = localeManager.getLanguage();
+         
+         
 
         return getSearchTags(searchText, null, country, language);
     }
@@ -95,7 +90,7 @@ public class SearchService {
     }
 
     public void clearSearchHistory() {
-        // NOP
+         
     }
 
     @NonNull

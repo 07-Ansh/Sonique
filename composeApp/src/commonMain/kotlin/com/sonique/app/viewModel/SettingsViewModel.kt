@@ -166,14 +166,14 @@ class SettingsViewModel(
     private var _basicAlertData: MutableStateFlow<SettingBasicAlertState?> = MutableStateFlow(null)
     val basicAlertData: StateFlow<SettingBasicAlertState?> = _basicAlertData
 
-    // Fraction of storage
+     
     private var _fraction: MutableStateFlow<SettingsStorageSectionFraction> =
         MutableStateFlow(
             SettingsStorageSectionFraction(),
         )
     val fraction: StateFlow<SettingsStorageSectionFraction> = _fraction
 
-    // Biến để lưu trữ và hiển thị trạng thái killServiceOnExit
+     
     private var _killServiceOnExit: MutableStateFlow<String?> = MutableStateFlow(null)
     val killServiceOnExit: StateFlow<String?> = _killServiceOnExit
 
@@ -1117,7 +1117,7 @@ class SettingsViewModel(
         }
     }
 
-    // Lấy giá trị của killServiceOnExit từ DataStore
+     
     fun getKillServiceOnExit() {
         viewModelScope.launch {
             dataStoreManager.killServiceOnExit.collect { killServiceOnExit ->
@@ -1126,7 +1126,7 @@ class SettingsViewModel(
         }
     }
 
-    // Lưu giá trị killServiceOnExit vào DataStore
+     
     fun setKillServiceOnExit(kill: Boolean) {
         viewModelScope.launch {
             dataStoreManager.setKillServiceOnExit(kill)
@@ -1206,12 +1206,12 @@ data class SettingAlertState(
     data class TextFieldData(
         val label: String,
         val value: String = "",
-        // User typing string -> (true or false, If false, show error message)
+         
         val verifyCodeBlock: ((String) -> Pair<Boolean, String?>)? = null,
     )
 
     data class SelectData(
-        // Selected / Data
+         
         val listSelect: List<Pair<Boolean, String>>,
     ) {
         fun getSelected(): String = listSelect.firstOrNull { it.first }?.second ?: ""

@@ -5,7 +5,7 @@ import com.liskovsoft.googlecommon.common.models.items.Thumbnail;
 
 import java.util.List;
 
-// root element: pivotPlaylistRenderer (e.g. Album)
+ 
 public class PlaylistItem {
     @JsonPath({"$.thumbnail.thumbnails[*]",
                "$.thumbnailRenderer.playlistCustomThumbnailRenderer.thumbnail.thumbnails[*]",

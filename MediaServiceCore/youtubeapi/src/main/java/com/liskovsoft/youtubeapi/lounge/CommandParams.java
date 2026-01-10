@@ -26,7 +26,7 @@ public class CommandParams {
     private static final String FIELD_PLAYLIST_ID = "req0_listId";
     private static final String FIELD_POSITION = "req0_currentTime";
     private static final String FIELD_DURATION = "req0_duration";
-    private static final String FIELD_VOLUME = "req0_volume"; // 0-100
+    private static final String FIELD_VOLUME = "req0_volume";  
     private static final String FIELD_MUTED = "req0_muted";
     private static final String FIELD_CPN = "req0_cpn";
     private static final String FIELD_CTT = "req0_ctt";
@@ -51,9 +51,9 @@ public class CommandParams {
         result.put(FIELD_COMMAND_NAME, COMMAND_NOW_PLAYING);
         result.put(FIELD_STATE, String.valueOf(STATE_IDLE));
         result.put(FIELD_VIDEO_ID, videoId);
-        result.put(FIELD_CTT, ctt); // from previous request
-        result.put(FIELD_PLAYLIST_ID, playlistId); // from previous request
-        result.put(FIELD_INDEX, playlistIndex); // from previous request
+        result.put(FIELD_CTT, ctt);  
+        result.put(FIELD_PLAYLIST_ID, playlistId);  
+        result.put(FIELD_INDEX, playlistIndex);  
 
         return result;
     }

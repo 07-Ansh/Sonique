@@ -17,10 +17,7 @@ public interface SignInService {
     void removeAccount(Account account);
     String printDebugInfo();
 
-    // RxJava interfaces
-    /**
-     * Trying to login using 2-factor authentication
-     * @return user code, user should apply this code on service web page (e.g. <a href="https://yt.be/activate">https://yt.be/activate</a>)
-     */
+     
+     
     Observable<String> signInObserve();
 }

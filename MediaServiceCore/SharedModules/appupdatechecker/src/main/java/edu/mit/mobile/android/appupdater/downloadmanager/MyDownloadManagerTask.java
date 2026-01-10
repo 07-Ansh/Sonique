@@ -17,40 +17,21 @@ public class MyDownloadManagerTask extends AsyncTask<Void, Integer, Integer> {
     private static final String TAG = MyDownloadManagerTask.class.getSimpleName();
     private static final String DEFAULT_DOWNLOAD_FILE_NAME = "tmp.apk";
 
-    /**
-     * Interface used to download the Crosswalk runtime
-     */
+     
     public static abstract class DownloadListener {
-        /**
-         * Run on the UI thread to notify download is started
-         */
+         
         public void onDownloadStarted() {}
 
-        /**
-         * Run on the UI thread to notify the download progress
-         * @param percentage Shows the download progress in percentage
-         */
+         
         public void onDownloadUpdated(int percentage) {}
 
-        /**
-         * Run on the UI thread to notify download is cancelled
-         */
+         
         public void onDownloadCancelled() {}
 
-        /**
-         * Run on the UI thread to notify download is completed successfully
-         * @param uri The Uri where the downloaded file is stored
-         */
+         
         public void onDownloadCompleted(Uri uri) {}
 
-        /**
-         * Run on the UI thread to notify download failed
-         *
-         * @param status The download status defined in android.app.DownloadManager.
-         *               The value maybe STATUS_FAILED or STATUS_PAUSED
-         * @param error The download error defined in android.app.DownloadManager.
-         *              This parameter only makes sense when the status is STATUS_FAILED
-         */
+         
         public void onDownloadFailed(int status, int error) {}
     }
 

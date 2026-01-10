@@ -16,14 +16,7 @@ public class RoundedBackgroundSpan extends ReplacementSpan {
         this(backgroundColor, 10, 10, 10, 10);
     }
 
-    /**
-     * Add rounded background for text in TextView.
-     * @param backgroundColor background color
-     * @param paddingLeft     padding left(including background)
-     * @param paddingRight    padding right(including background)
-     * @param marginLeft      margin left(not including background)
-     * @param marginRight     margin right(not including background)
-     */
+     
     public RoundedBackgroundSpan(int backgroundColor,
                                  int paddingLeft,
                                  int paddingRight,

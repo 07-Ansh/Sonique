@@ -72,16 +72,10 @@ public abstract class GenericSelectorDialog implements OnClickListener {
             }
         }
 
-        /**
-         * Your data
-         * @return pairs that consist of item text and tag
-         */
+         
         List<DialogItem> getItems();
 
-        /**
-         * Get dialog main title
-         * @return dialog title
-         */
+         
         String getTitle();
 
         void onDismiss();

@@ -10,9 +10,7 @@ import android.util.DisplayMetrics;
 
 import java.util.Locale;
 
-/**
- * <a href="https://stackoverflow.com/questions/4985805/set-locale-programmatically">More info</a>
- */
+ 
 public class LocaleContextWrapper extends ContextWrapper {
     public LocaleContextWrapper(Context base) {
         super(base);
@@ -36,7 +34,7 @@ public class LocaleContextWrapper extends ContextWrapper {
         Configuration configuration = res.getConfiguration();
 
         if (customMetrics != null) {
-            configuration.densityDpi = (int) (customMetrics.density * 160); // 160 is the baseline DPI
+            configuration.densityDpi = (int) (customMetrics.density * 160);  
         }
 
         if (VERSION.SDK_INT >= 24) {
@@ -76,7 +74,7 @@ public class LocaleContextWrapper extends ContextWrapper {
         Configuration configuration = res.getConfiguration();
 
         if (customMetrics != null) {
-            configuration.densityDpi = (int) (customMetrics.density * 160); // 160 is the baseline DPI
+            configuration.densityDpi = (int) (customMetrics.density * 160);  
         }
 
         configuration.locale = newLocale;

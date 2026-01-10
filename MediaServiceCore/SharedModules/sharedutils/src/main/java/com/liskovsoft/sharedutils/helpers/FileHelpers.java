@@ -35,17 +35,17 @@ public class FileHelpers {
         return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
     }
 
-    //public static File getCacheDir(Context context) {
-    //    // Android 6.0 fix (providers not supported)
-    //    File cacheDir = getExternalCacheDir(context);
-    //
-    //    if (cacheDir == null) {
-    //        // Android 7.0 and above (supports install from internal dirs)
-    //        cacheDir = getInternalCacheDir(context);
-    //    }
-    //
-    //    return cacheDir;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     public static File getCacheDir(Context context) {
         File cacheDir = getInternalCacheDir(context);
@@ -73,7 +73,7 @@ public class FileHelpers {
         File cacheDir = context.getExternalCacheDir();
 
         if (cacheDir == null || !cacheDir.canWrite()) {
-            // No storage, try to use internal one
+             
             cacheDir = getExternalStorageDirectory("cache");
         }
 
@@ -88,7 +88,7 @@ public class FileHelpers {
         File filesDir = context.getExternalFilesDir(null);
 
         if (filesDir == null || !filesDir.canWrite()) {
-            // No storage, try to use internal one
+             
             filesDir = getExternalStorageDirectory("files");
         }
 
@@ -115,27 +115,24 @@ public class FileHelpers {
         return storagePath;
     }
 
-    /**
-     * Note: we cannot use an application context here
-     * @param context only Activity context is supported
-     */
+     
     public static void checkCachePermissions(Context context) {
         File cacheDir = null;
 
         try {
-            // Android 6.0 fix (providers not supported)
+             
             cacheDir = context.getExternalCacheDir();
-        } catch (ArrayIndexOutOfBoundsException e) { // Fix for Hisilicon (HiDPTAndroid Hi3751V553, Android 7)
+        } catch (ArrayIndexOutOfBoundsException e) {  
             e.printStackTrace();
         }
 
-        if (cacheDir == null || !cacheDir.canWrite()) { // no storage, try to use internal one
+        if (cacheDir == null || !cacheDir.canWrite()) {  
             cacheDir = Environment.getExternalStorageDirectory();
 
             if (cacheDir == null || !cacheDir.canWrite()) {
                 if (VERSION.SDK_INT <= 23) {
-                    // On Android 6.0 we can't use file providers so we need to ask a permissions
-                    PermissionHelpers.verifyStoragePermissions(context); // should be an Activity context
+                     
+                    PermissionHelpers.verifyStoragePermissions(context);  
                 }
             }
         }
@@ -145,16 +142,12 @@ public class FileHelpers {
         return new File(Environment.getExternalStorageDirectory(), String.format("data/%s", context.getPackageName()));
     }
 
-    /**
-     * NOTE: App should have permission to access device storage
-     */
+     
     public static boolean isEmpty(File dir) {
         return dir == null || listFileTree(dir).size() == 0;
     }
 
-    /**
-     * NOTE: App should have permission to access device storage
-     */
+     
     public static Collection<File> listFileTree(File dir) {
         Set<File> fileTree = new HashSet<>();
 
@@ -173,9 +166,7 @@ public class FileHelpers {
         return fileTree;
     }
 
-    /**
-     * Deletes cache of the com.sonique.app
-     */
+     
     public static void deleteCache(Context context) {
         deleteContent(getInternalCacheDir(context));
         deleteContent(getExternalCacheDir(context));
@@ -197,13 +188,11 @@ public class FileHelpers {
         return deleteRecursive(sourceLocation, deleteRoot, 0);
     }
 
-    /**
-     * Use level to prevent StackOverflowError
-     */
+     
     private static boolean deleteRecursive(File sourceLocation, boolean deleteRoot, int level) {
         if (sourceLocation != null && sourceLocation.isDirectory()) {
             String[] children = sourceLocation.list();
-            if (children != null && level < 10) { // Android 4.4 fix, prevent stack overflow
+            if (children != null && level < 10) {  
                 for (String child : children) {
                     boolean success = deleteRecursive(new File(sourceLocation, child), true, level + 1);
                     if (!success) {
@@ -303,9 +292,9 @@ public class FileHelpers {
 
         try {
             if (destination.getParentFile() != null) {
-                destination.getParentFile().mkdirs(); // create dirs tree
+                destination.getParentFile().mkdirs();  
             }
-            destination.createNewFile(); // create empty file
+            destination.createNewFile();  
 
             fos = new FileOutputStream(destination);
 
@@ -350,92 +339,92 @@ public class FileHelpers {
         return null;
     }
 
-    ///**
-    // * Converts with respect to charset encoding.<br/>
-    // * More optimized than alt method below?<br/>
-    // * https://stackoverflow.com/questions/309424/how-do-i-read-convert-an-inputstream-into-a-string-in-java
-    // */
-    //public static String toString(InputStream content) {
-    //    if (content == null) {
-    //        return null;
-    //    }
-    //
-    //    String result = null;
-    //
-    //    try {
-    //        result = IOUtils.toString(content, "UTF-8");
-    //        content.close();
-    //    } catch (IOException e) {
-    //        e.printStackTrace();
-    //        Log.d(TAG, e.getMessage());
-    //    }
-    //
-    //    return result;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
-    ///**
-    // * Converts with respect to charset encoding.<br/>
-    // * Use alt methods carefully.<br/>
-    // * https://stackoverflow.com/questions/309424/how-do-i-read-convert-an-inputstream-into-a-string-in-java
-    // */
-    //public static String toStringAlt(InputStream content) {
-    //    if (content == null) {
-    //        return null;
-    //    }
-    //
-    //    String result = null;
-    //    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-    //        BufferedInputStream bis = new BufferedInputStream(content);
-    //        byte[] buffer = new byte[1024];
-    //        int length;
-    //        while ((length = bis.read(buffer)) != -1) {
-    //            outputStream.write(buffer, 0, length);
-    //        }
-    //        // StandardCharsets.UTF_8.name() > JDK 7
-    //        result = outputStream.toString("UTF-8");
-    //        bis.close();
-    //    } catch (IOException e) {
-    //        e.printStackTrace();
-    //        Log.d(TAG, e.getMessage());
-    //    }
-    //
-    //    return result;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
-    //public static String toStringEfficient(InputStream content) {
-    //    if (content == null) {
-    //        return null;
-    //    }
-    //
-    //    StringBuilder sb = new StringBuilder();
-    //
-    //    try (BufferedReader in
-    //            = new BufferedReader(new InputStreamReader(content, "UTF-8"))) {
-    //        char[] buffer = new char[1024];
-    //
-    //        while (in.read(buffer) != -1) {
-    //            sb.append(buffer);
-    //        }
-    //    } catch (IOException e) {
-    //        e.printStackTrace();
-    //        Log.d(TAG, e.getMessage());
-    //    }
-    //
-    //    return sb.toString();
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
-    //public static String toStringOld(InputStream content) {
-    //    if (content == null) {
-    //        return null;
-    //    }
-    //
-    //    Scanner s = new Scanner(content, "UTF-8").useDelimiter("\\A");
-    //    String result = s.hasNext() ? s.next() : "";
-    //
-    //    s.close();
-    //
-    //    return result;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     public static InputStream toStream(String content) {
         if (content == null) {
@@ -455,16 +444,16 @@ public class FileHelpers {
         }
     }
 
-    // NOTE: Android 7.0 fix
+     
     @Nullable
     public static Uri getFileUri(Context context, String filePath) {
-        // If your targetSdkVersion is 24 (Android 7.0) or higher, we have to use FileProvider class
-        // https://stackoverflow.com/questions/38200282/android-os-fileuriexposedexception-file-storage-emulated-0-test-txt-exposed
+         
+         
         if (VERSION.SDK_INT >= 24) {
             try {
                 return FileProvider.getUriForFile(context, context.getApplicationContext().getPackageName() + ".update_provider", new File(filePath));
             } catch (IllegalArgumentException e) {
-                // Failed to find configured root that contains /storage/emulated/0/Android/data/com.liskovsoft.smarttubetv.beta/cache/update.apk
+                 
                 return null;
             }
         } else {
@@ -474,8 +463,8 @@ public class FileHelpers {
 
     @SuppressLint("SetWorldReadable")
     private static File setReadable(File file) {
-        // Fix for Android 4 if install from the internal storage
-        // E.g. file:///data/data/<your.com.sonique.app>/cache/update.apk
+         
+         
         file.setReadable(true, false);
         return file;
     }
@@ -504,17 +493,13 @@ public class FileHelpers {
         return new SequenceInputStream(first, second);
     }
 
-    /**
-     * Can read and write the media
-     */
+     
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
         return Environment.MEDIA_MOUNTED.equals(state);
     }
 
-    /**
-     * Can at least read the media
-     */
+     
     public static boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
         return isExternalStorageWritable() || Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
@@ -557,9 +542,7 @@ public class FileHelpers {
         }
     }
 
-    /**
-     * Test that file is created within specified time period
-     */
+     
     public static boolean isFreshFile(String path, int freshTimeMS) {
         if (path == null) {
             return false;
@@ -573,7 +556,7 @@ public class FileHelpers {
 
         int fileSizeKB = Integer.parseInt(String.valueOf(file.length() / 1024));
 
-        if (fileSizeKB < 1_000) { // 1MB
+        if (fileSizeKB < 1_000) {  
             return false;
         }
 
@@ -594,9 +577,7 @@ public class FileHelpers {
         return result;
     }
 
-    /**
-     * Gets size in bytes!
-     */
+     
     public static long getDirSize(File dir) {
         if (dir == null) {
             return 0;

@@ -136,7 +136,7 @@ class SoniqueLyrics {
         setBody(
             VoteBody(
                 id = id,
-                vote = if (upvote) 1 else 0, // 1 for upvote, 0 for downvote
+                vote = if (upvote) 1 else 0,  
             ),
         )
     }
@@ -153,7 +153,7 @@ class SoniqueLyrics {
         setBody(
             VoteBody(
                 id = id,
-                vote = if (upvote) 1 else 0, // 1 for upvote, 0 for downvote
+                vote = if (upvote) 1 else 0,  
             ),
         )
     }

@@ -49,11 +49,11 @@ public class ReflectionHelper {
 
         List<Field> result = new ArrayList<>(Arrays.asList(fields));
 
-        while (type.getSuperclass() != null) { // null if superclass is object
+        while (type.getSuperclass() != null) {  
             type = type.getSuperclass();
             result.addAll(Arrays.asList(type.getDeclaredFields()));
-            // ??? Speedup json parsing by putting on top important fields.
-            //Collections.sort(result, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+             
+             
         }
 
         return result;
@@ -72,7 +72,7 @@ public class ReflectionHelper {
     }
 
     public static void dumpDebugInfo(Class<?> type, InputStream content) {
-        // Thread probably has been interrupted. Do skip.
+         
         if (content == null || !GlobalPreferences.isInitialized()) {
             return;
         }
@@ -97,11 +97,11 @@ public class ReflectionHelper {
         File destination = new File(filesDir, fileName);
         FileHelpers.streamToFile(content, destination);
 
-        // NOTE: Send file from crashlytics is useless. All strings are truncated!
-        //FirebaseCrashlytics crashlytics = FirebaseCrashlytics.getInstance();
-        //crashlytics.log(fileName + ": " + Helpers.toString(content));
-        //crashlytics.recordException(new Exception(fileName));
-        //crashlytics.sendUnsentReports();
+         
+         
+         
+         
+         
     }
 
     public static boolean isNullable(Field field) {

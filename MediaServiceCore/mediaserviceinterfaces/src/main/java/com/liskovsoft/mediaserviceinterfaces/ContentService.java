@@ -12,9 +12,7 @@ public interface ContentService {
     List<String> getSearchTags(String searchText);
     MediaGroup getSubscriptions();
     MediaGroup getRssFeed(String... channelIds);
-    /**
-     * NOTE: recommended is a part of Home
-     */
+     
     MediaGroup getRecommended();
     MediaGroup getHistory();
     List<MediaGroup> getHome();
@@ -24,24 +22,20 @@ public interface ContentService {
     MediaGroup getSubscribedChannelsByLastViewed();
     MediaGroup getGroup(MediaItem mediaItem);
     MediaGroup getChannelSearch(String channelId, String query);
-    /**
-     * NOTE: returns unnamed group
-     */
+     
     MediaGroup getGroup(String reloadPageKey);
     MediaGroup continueGroup(MediaGroup mediaGroup);
     void enableHistory(boolean enable);
     void clearHistory();
     void clearSearchHistory();
 
-    // RxJava interfaces
+     
     Observable<List<MediaGroup>> getSearchObserve(String searchText);
     Observable<List<MediaGroup>> getSearchObserve(String searchText, int options);
     Observable<List<String>> getSearchTagsObserve(String searchText);
     Observable<MediaGroup> getSubscriptionsObserve();
     Observable<MediaGroup> getRssFeedObserve(String... channelIds);
-    /**
-     * NOTE: recommended is a part of Home
-     */
+     
     Observable<MediaGroup> getRecommendedObserve();
     Observable<MediaGroup> getHistoryObserve();
     Observable<List<MediaGroup>> getHomeObserve();
@@ -66,9 +60,7 @@ public interface ContentService {
     Observable<MediaGroup> getSubscribedChannelsByNameObserve();
     Observable<MediaGroup> getSubscribedChannelsByLastViewedObserve();
     Observable<MediaGroup> getGroupObserve(MediaItem mediaItem);
-    /**
-     * NOTE: returns unnamed group
-     */
+     
     Observable<MediaGroup> getGroupObserve(String reloadPageKey);
     Observable<MediaGroup> continueGroupObserve(MediaGroup mediaGroup);
 }

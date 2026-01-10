@@ -20,7 +20,7 @@ public interface MediaItemService {
     int PLAYLIST_ORDER_PUBLISHED_DATE_NEWER_FIRST = 4;
     int PLAYLIST_ORDER_PUBLISHED_DATE_OLDER_FIRST = 5;
 
-    // Blocking interfaces
+     
     MediaItemFormatInfo getFormatInfo(MediaItem item);
     MediaItemFormatInfo getFormatInfo(String videoId);
     MediaItemFormatInfo getFormatInfo(String videoId, String clickTrackingParams);
@@ -29,7 +29,7 @@ public interface MediaItemService {
     MediaItemMetadata getMetadata(MediaItem item);
     MediaItemMetadata getMetadata(String videoId);
     MediaItemMetadata getMetadata(String videoId, String playlistId, int playlistIndex, String playlistParams);
-    //MediaGroup continueGroup(MediaGroup mediaGroup);
+     
     void updateHistoryPosition(MediaItem item, float positionSec);
     void updateHistoryPosition(String videoId, float positionSec);
     void setLike(MediaItem item);
@@ -49,7 +49,7 @@ public interface MediaItemService {
     List<SponsorSegment> getSponsorSegments(String videoId);
     List<SponsorSegment> getSponsorSegments(String videoId, Set<String> categories);
 
-    // RxJava interfaces
+     
     Observable<MediaItemFormatInfo> getFormatInfoObserve(MediaItem item);
     Observable<MediaItemFormatInfo> getFormatInfoObserve(String videoId);
     Observable<MediaItemFormatInfo> getFormatInfoObserve(String videoId, String clickTrackingParams);
@@ -58,7 +58,7 @@ public interface MediaItemService {
     Observable<MediaItemMetadata> getMetadataObserve(MediaItem item);
     Observable<MediaItemMetadata> getMetadataObserve(String videoId);
     Observable<MediaItemMetadata> getMetadataObserve(String videoId, String playlistId, int playlistIndex, String playlistParams);
-    //Observable<MediaGroup> continueGroupObserve(MediaGroup mediaGroup);
+     
     Observable<Void> updateHistoryPositionObserve(MediaItem item, float positionSec);
     Observable<Void> updateHistoryPositionObserve(String videoId, float positionSec);
     Observable<Void> subscribeObserve(MediaItem item);

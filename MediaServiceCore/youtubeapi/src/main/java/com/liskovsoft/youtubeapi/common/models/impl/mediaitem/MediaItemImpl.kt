@@ -15,7 +15,7 @@ internal class WrapperMediaItem(private val itemWrapper: ItemWrapper): BaseMedia
         YouTubeHelper.createInfo(if (isLiveItem && !Helpers.allNulls(userName, viewCountText, publishedTime, upcomingEventText)) null else
             subTitle, userName, viewCountText, publishedTime, upcomingEventText)
     }
-    override val subTitle by lazy { itemWrapper.getSubTitle() } // quality tag (e.g. 4K, LIVE) or full second title
+    override val subTitle by lazy { itemWrapper.getSubTitle() }  
     override val userName by lazy { itemWrapper.getUserName() }
     override val publishedTime by lazy { itemWrapper.getPublishedTime() }
     override val viewCountText by lazy { itemWrapper.getViewCountText() }
@@ -38,7 +38,7 @@ internal class WrapperMediaItem(private val itemWrapper: ItemWrapper): BaseMedia
     override val percentWatchedItem by lazy { itemWrapper.getPercentWatched() }
     override val startTimeSecondsItem by lazy { itemWrapper.getStartTimeSeconds() }
     override val searchQueryItem by lazy { itemWrapper.getQuery() }
-    //override val playlistParamsItem by lazy { itemWrapper.getParams() }
+     
     val descriptionText by lazy { itemWrapper.getDescriptionText() }
 }
 
@@ -74,8 +74,8 @@ internal class GuideMediaItem(private val guideItem: GuideItem): BaseMediaItem()
 internal class TabMediaItem(private val tabItem: TabRenderer, private val groupType: Int): BaseMediaItem() {
     override val titleItem by lazy { tabItem.getTitle() }
     override val reloadPageKeyItem by lazy { tabItem.getReloadToken() }
-    //override val channelIdItem by lazy { tabItem.getBrowseId() }
-    //override val playlistParamsItem by lazy { tabItem.getBrowseParams() }
+     
+     
     override val cardThumbImageUrl by lazy { tabItem.getThumbnails()?.getOptimalResThumbnailUrl() }
     override val backgroundThumbImageUrl by lazy { tabItem.getThumbnails()?.getHighResThumbnailUrl() }
     override val hasNewContentItem by lazy { tabItem.hasNewContent() }

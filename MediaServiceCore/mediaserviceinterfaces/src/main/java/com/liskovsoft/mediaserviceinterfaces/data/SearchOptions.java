@@ -25,6 +25,6 @@ public interface SearchOptions {
     int SORT_BY_VIEW_COUNT = 0b100000000000000000;
     int SORT_BY_RATING = 0b1000000000000000000;
     
-    //int FEATURES_4K = 0b100000;
-    //int SORT_BY_UPLOAD_DATE = 0b1000000;
+     
+     
 }

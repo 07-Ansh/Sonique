@@ -30,9 +30,7 @@ public class YouTubeAccountManager {
     private boolean mStorageSynced;
     private final YouTubeSignInService mSignInService;
     private final WeakHashSet<OnAccountChange> mListeners = new WeakHashSet<>();
-    /**
-     * Fix ConcurrentModificationException when using {@link #getSelectedAccount()}
-     */
+     
     private final List<Account> mAccounts = new CopyOnWriteArrayList<Account>() {
         @Override
         public boolean add(Account account) {
@@ -51,12 +49,12 @@ public class YouTubeAccountManager {
             if (index != -1) {
                 Account matched = get(index);
 
-                // Don't remove these lines or you won't be able to enter to the account.
+                 
                 while (contains(account)) {
                     remove(account);
                 }
 
-                // Do merge after the remove not before!!!
+                 
                 ((YouTubeAccount) account).merge(matched);
             }
         }
@@ -92,7 +90,7 @@ public class YouTubeAccountManager {
 
                 emitter.onComplete();
             } catch (InterruptedException e) {
-                // NOP
+                 
             }
         });
     }
@@ -102,27 +100,25 @@ public class YouTubeAccountManager {
         return mAccounts;
     }
 
-    /**
-     * Set selected account token
-     */
+     
     private void persistRefreshToken(String refreshToken) {
         if (refreshToken == null) {
             Log.e(TAG, "Refresh token is null");
             return;
         }
 
-        // Create initial account (with only refresh key)
+         
         YouTubeAccount tempAccount = YouTubeAccount.fromToken(refreshToken);
         addAccount(tempAccount);
 
-        // Use initial account to create auth header and fetch the accounts below
+         
         mSignInService.invalidateCache();
         mSignInService.checkAuth();
 
-        // Remove initial account (with only refresh key)
-        mAccounts.remove(tempAccount); // multi thread fix
+         
+        mAccounts.remove(tempAccount);  
 
-        List<AccountInt> accountsInt = getAuthService().getAccounts(); // runs under auth header from above
+        List<AccountInt> accountsInt = getAuthService().getAccounts();  
 
         if (accountsInt != null) {
             for (AccountInt accountInt : accountsInt) {
@@ -134,7 +130,7 @@ public class YouTubeAccountManager {
 
         fixSelectedAccount();
 
-        // Apply merged tokens
+         
         mSignInService.checkAuth();
 
         persistAccounts();
@@ -200,12 +196,12 @@ public class YouTubeAccountManager {
             }
         }
 
-        //notifyListeners();
+         
     }
 
     private void setAccountManagerData(String data) {
-        // We don't have context, so can't create instance here.
-        // Let's hope someone already created one for us.
+         
+         
         if (GlobalPreferences.sInstance == null) {
             Log.e(TAG, "GlobalPreferences is null!");
             return;
@@ -215,8 +211,8 @@ public class YouTubeAccountManager {
     }
 
     private String getAccountManagerData() {
-        // We don't have context, so can't create instance here.
-        // Let's hope someone already created one for us.
+         
+         
         if (GlobalPreferences.sInstance == null) {
             Log.e(TAG, "GlobalPreferences is null!");
             return null;
@@ -239,10 +235,7 @@ public class YouTubeAccountManager {
         }
     }
 
-    /**
-     * Fix situations when there is no selected account<br/>
-     * Mark first one as selected.
-     */
+     
     private void fixSelectedAccount() {
         if (mAccounts.isEmpty()) {
             return;
@@ -255,15 +248,13 @@ public class YouTubeAccountManager {
 
     private void onAccountChanged() {
         mSignInService.invalidateCache();
-        AppService.instance().invalidateCache(); // regenerate visitor data
-        VideoInfoService.instance().resetInfoType(); // reset to the default format
+        AppService.instance().invalidateCache();  
+        VideoInfoService.instance().resetInfoType();  
 
         notifyListeners();
     }
 
-    /**
-     * Sync avatars, names and emails
-     */
+     
     public void syncStorage() {
         if (mStorageSynced)
             return;
@@ -291,7 +282,7 @@ public class YouTubeAccountManager {
     private void notifyListeners() {
         Account account = getSelectedAccount();
 
-        // Fix sign in bug
+         
         mListeners.forEach(listener -> {
             if (listener instanceof MediaServicePrefs) {
                 listener.onAccountChanged(account);

@@ -18,14 +18,14 @@ public class ActionsServiceWrapper extends ActionsService {
     public void subscribe(String channelId, String params) {
         super.subscribe(channelId, params);
 
-        ChannelGroupServiceImpl.subscribe(true, channelId, null, null); // save locally
+        ChannelGroupServiceImpl.subscribe(true, channelId, null, null);  
     }
 
     @Override
     public void unsubscribe(String channelId) {
         super.unsubscribe(channelId);
 
-        ChannelGroupServiceImpl.subscribe(false, channelId, null, null); // save locally
+        ChannelGroupServiceImpl.subscribe(false, channelId, null, null);  
     }
 
     @Override

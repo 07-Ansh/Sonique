@@ -6,7 +6,7 @@ import com.liskovsoft.googlecommon.common.locale.LocaleManager
 
 internal enum class PostDataType { Player, Browse }
 
-// Use protobuf to bypass geo blocking
+ 
 private const val GEO_PARAMS: String = "CgIQBg%3D%3D"
 
 internal class QueryBuilder(private val client: AppClient) {
@@ -63,10 +63,10 @@ internal class QueryBuilder(private val client: AppClient) {
 
         if (playerDataCheck()) {
             if (cpn == null)
-                cpn = appService.clientPlaybackNonce // get it somewhere else?
+                cpn = appService.clientPlaybackNonce  
 
             if (signatureTimestamp == null)
-                signatureTimestamp = Helpers.parseInt(appService.signatureTimestamp) // get it somewhere else?
+                signatureTimestamp = Helpers.parseInt(appService.signatureTimestamp)  
         }
 
         val json = """
@@ -84,7 +84,7 @@ internal class QueryBuilder(private val client: AppClient) {
              }
         """
 
-        // Remove all indentations
+         
         val result = buildString {
             json.lineSequence().forEach { append(it.trim()) }
         }
@@ -141,7 +141,7 @@ internal class QueryBuilder(private val client: AppClient) {
         return if (client.isEmbedded)
             """
                 "thirdParty": {
-                    "embedUrl": "https://www.youtube.com/embed/${requireNotNull(videoId)}"
+                    "embedUrl": "https: 
                 },
             """
            else ""

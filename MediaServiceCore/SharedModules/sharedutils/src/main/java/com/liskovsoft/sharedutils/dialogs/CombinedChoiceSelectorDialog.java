@@ -48,7 +48,7 @@ public class CombinedChoiceSelectorDialog extends GenericSelectorDialog {
                 break;
         }
 
-        if (item.getChecked() != textView.isChecked()) { // prevent user for click on same item twice
+        if (item.getChecked() != textView.isChecked()) {  
             item.setChecked(textView.isChecked());
 
             updateViews(getRoot());

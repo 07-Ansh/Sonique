@@ -87,13 +87,13 @@ fun LoginScreen(
         }
     }
 
-    // Hide bottom navigation when entering this screen
+     
     LaunchedEffect(Unit) {
         hideBottomNavigation()
         createWebViewCookieManager().removeAllCookies()
     }
 
-    // Show bottom navigation when leaving this screen
+     
     DisposableEffect(Unit) {
         onDispose {
             showBottomNavigation()
@@ -108,7 +108,7 @@ fun LoginScreen(
                         innerPadding.calculateTopPadding() + 64.dp,
                     ),
             )
-            // WebView for YouTube Music login
+             
             PlatformWebView(
                 state,
                 Config.LOG_IN_URL,
@@ -159,7 +159,7 @@ fun LoginScreen(
             }
         }
 
-        // Top App Bar with haze effect
+         
         TopAppBar(
             modifier =
                 Modifier

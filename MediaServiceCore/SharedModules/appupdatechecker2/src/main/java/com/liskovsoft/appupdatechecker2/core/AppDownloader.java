@@ -11,13 +11,7 @@ import com.liskovsoft.sharedutils.helpers.FileHelpers;
 
 import java.io.File;
 
-/**
- * Usage:
- * <pre>
- *   downloader = new AppDownloader(ctx, listener);
- *   downloader.download(new String[]{"http://serverurl/appfile.apk"});
- * </pre>
- */
+ 
 public class AppDownloader {
     private static final String TAG = AppDownloader.class.getSimpleName();
     private static final String CURRENT_APK = "update.apk";
@@ -33,9 +27,7 @@ public class AppDownloader {
         mMinApkSizeBytes = minApkSizeBytes;
     }
 
-    /**
-     * Uses first available url in the list.
-     */
+     
     public void download(Uri[] downloadUris) {
         if (!mInProgress) {
             if (mDownloadTask == null) {
@@ -99,17 +91,17 @@ public class AppDownloader {
                     Uri destination = manager.getUriForDownloadedFile(id);
 
                     if (destination != null) {
-                        // It could be a web page instead of apk
+                         
                         if (size > mMinApkSizeBytes) {
                             path = destination.getPath();
-                        } else { // do cleanup
+                        } else {  
                             FileHelpers.delete(destination.getPath());
                         }
                     }
-                } catch (IllegalStateException ex) { // 403 or something else
+                } catch (IllegalStateException ex) {  
                     Log.d(TAG, ex.toString());
                 }
-            } catch (IllegalStateException ex) { // CANNOT OBTAIN WRITE PERMISSIONS
+            } catch (IllegalStateException ex) {  
                 Log.e(TAG, ex.getMessage(), ex);
             }
             return path;

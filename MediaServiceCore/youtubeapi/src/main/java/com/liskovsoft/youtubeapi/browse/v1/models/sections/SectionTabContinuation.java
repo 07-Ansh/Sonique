@@ -5,9 +5,7 @@ import com.liskovsoft.googlecommon.common.converters.jsonpath.JsonPath;
 import java.util.List;
 
 public class SectionTabContinuation {
-    /**
-     * Sections == Rows in web com.sonique.app version
-     */
+     
     @JsonPath("$.continuationContents.sectionListContinuation.contents[*].shelfRenderer")
     private List<Section> mSections;
 

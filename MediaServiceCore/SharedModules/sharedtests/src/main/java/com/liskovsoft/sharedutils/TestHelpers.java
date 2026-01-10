@@ -61,20 +61,7 @@ public class TestHelpers {
         return result;
     }
 
-    /**
-     * Unescapes a string that contains standard Java escape sequences.
-     * <ul>
-     * <li><strong>&#92;b &#92;f &#92;n &#92;r &#92;t &#92;" &#92;'</strong> :
-     * BS, FF, NL, CR, TAB, double and single quote.</li>
-     * <li><strong>&#92;X &#92;XX &#92;XXX</strong> : Octal character
-     * specification (0 - 377, 0x00 - 0xFF).</li>
-     * <li><strong>&#92;uXXXX</strong> : Hexadecimal based Unicode character.</li>
-     * </ul>
-     *
-     * @param st
-     *            A string optionally containing standard java escape sequences.
-     * @return The translated string.
-     */
+     
     public static String unescapeJavaString(String st) {
 
         StringBuilder sb = new StringBuilder(st.length());
@@ -84,7 +71,7 @@ public class TestHelpers {
             if (ch == '\\') {
                 char nextChar = (i == st.length() - 1) ? '\\' : st
                         .charAt(i + 1);
-                // Octal escape?
+                 
                 if (nextChar >= '0' && nextChar <= '7') {
                     String code = "" + nextChar;
                     i++;
@@ -126,7 +113,7 @@ public class TestHelpers {
                     case '\'':
                         ch = '\'';
                         break;
-                    // Hex Unicode: u????
+                     
                     case 'u':
                         if (i >= st.length() - 5) {
                             ch = 'u';

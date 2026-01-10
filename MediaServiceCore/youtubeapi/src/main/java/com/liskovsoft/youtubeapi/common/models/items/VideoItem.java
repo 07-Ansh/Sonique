@@ -7,9 +7,7 @@ import com.liskovsoft.googlecommon.common.models.items.Thumbnail;
 
 import java.util.List;
 
-/**
- * Root element: gridVideoRenderer/pivotVideoRenderer
- */
+ 
 public class VideoItem {
     private static final String BADGE_STYLE_LIVE = "LIVE";
     private static final String BADGE_STYLE_UPCOMING = "UPCOMING";
@@ -57,7 +55,7 @@ public class VideoItem {
     private TextItem mBadgeText;
     @JsonPath("$.badges[0].metadataBadgeRenderer.label")
     private String mDescBadgeText;
-    // Sometimes live video contains percent watched as first item
+     
     @JsonPath({"$.thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.style",
                "$.thumbnailOverlays[1].thumbnailOverlayTimeStatusRenderer.style"})
     private String mBadgeStyle;
@@ -162,30 +160,22 @@ public class VideoItem {
         return mBadgeText != null ? Helpers.toString(mBadgeText.getText()) : null;
     }
 
-    /**
-     * Mostly it's a 4K label
-     */
+     
     public String getDescBadgeText() {
         return mDescBadgeText;
     }
 
-    /**
-     * Example: Premieres 10/8/20, 1:00 AM
-     */
+     
     public CharSequence getUpcomingEventText() {
         return mUpcomingEventText != null ? mUpcomingEventText.getText() : null;
     }
 
-    /**
-     * Event start time in unix format: 1602108000
-     */
+     
     public String getUpcomingEventStartTime() {
         return mUpcomingEventStartTime;
     }
 
-    /**
-     * Animated thumbnail preview in webp format
-     */
+     
     public String getRichThumbnailUrl() {
         return mRichThumbnailUrl;
     }

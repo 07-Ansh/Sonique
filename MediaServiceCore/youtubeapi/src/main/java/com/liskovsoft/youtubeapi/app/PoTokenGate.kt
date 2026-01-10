@@ -6,18 +6,10 @@ import com.liskovsoft.youtubeapi.app.potokennp2.misc.PoTokenResult
 import com.liskovsoft.youtubeapi.common.helpers.AppClient
 
 private enum class PoTokenType {
-    /**
-     * A poToken generated from videoId.
-     *
-     * Used in player requests.
-      */
+     
     CONTENT,
 
-    /**
-     * A generic poToken.
-     *
-     * Used in SABR requests.
-     */
+     
     SESSION
 }
 
@@ -47,8 +39,8 @@ object PoTokenGate {
     
     private fun updatePoToken() {
         if (PoTokenProviderImpl.isWebPotSupported) {
-            //mNpPoToken = null // only refresh
-            mWebPoToken = PoTokenProviderImpl.getWebClientPoToken("") // refresh and preload
+             
+            mWebPoToken = PoTokenProviderImpl.getWebClientPoToken("")  
         } else {
             PoTokenCloudService.updatePoToken()
         }

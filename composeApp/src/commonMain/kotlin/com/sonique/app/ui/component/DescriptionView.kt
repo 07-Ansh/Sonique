@@ -70,12 +70,12 @@ fun DescriptionView(
     val combinedRegex = Regex("${timeRegex.pattern}|${urlRegex.pattern}")
     val matchedWords = combinedRegex.findAll(text)
     matchedWords.forEachIndexed { index, matchResult ->
-        // Add text before the match
+         
         if (matchResult.range.first > currentIndex) {
             annotatedString.append(text.substring(currentIndex, matchResult.range.first))
         }
 
-        // Add the matched text with the given style
+         
         annotatedString.withStyle(style) {
             if (timeRegex.matches(matchResult.value)) {
                 pushStringAnnotation("CLICKABLE_USER_TIME", matchResult.value)
@@ -91,7 +91,7 @@ fun DescriptionView(
             annotatedString.append(text.substring(matchResult.range.last + 1, text.length))
         }
 
-        // Update the current index to the end of the match
+         
         currentIndex = matchResult.range.last + 1
     }
     if (matchedWords.count() == 0) {

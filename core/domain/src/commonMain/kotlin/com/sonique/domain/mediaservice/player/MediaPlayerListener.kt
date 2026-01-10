@@ -4,9 +4,7 @@ import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericTracks
 import com.sonique.domain.data.player.PlayerError
 
-/**
- * Listener interface for media player events
- */
+ 
 interface MediaPlayerListener {
     fun onPlaybackStateChanged(playbackState: Int) {}
 

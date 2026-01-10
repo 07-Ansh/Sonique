@@ -23,7 +23,7 @@ internal object PocketTubeService: GroupImportService {
     }
 
     private fun parseGroups(pocketTubeContent: String): List<ItemGroup>? {
-        // Find group names
+         
         val groupNames: List<String> = try {
             JsonPath.read(pocketTubeContent, "$.ysc_collection.*~")
         } catch (e: PathNotFoundException) {
@@ -33,12 +33,12 @@ internal object PocketTubeService: GroupImportService {
         val result = mutableListOf<ItemGroup>()
 
         for (groupName in groupNames) {
-            // Get groups content
+             
             val channelIds: List<String> = JsonPath.read(pocketTubeContent, "$['$groupName']")
 
             val items: MutableList<Item> = mutableListOf()
 
-            // channel id: UCsjTlfV61bBwzLLmenR5zmg
+             
             channelIds.forEach { items.add(ItemImpl(channelId = it)) }
 
             result.add(ItemGroupImpl(title = groupName, items = items))

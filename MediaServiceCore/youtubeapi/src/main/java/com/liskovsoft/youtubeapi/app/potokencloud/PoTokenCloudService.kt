@@ -76,32 +76,32 @@ internal object PoTokenCloudService {
         MediaServiceData.instance().poToken = null
     }
 
-    //private suspend fun getPoTokenResponsePart(): PoTokenResponse? {
-    //    var poToken: PoTokenResponse? = null
-    //
-    //    for (i in 0 until RETRY_TIMES) {
-    //        val part1 = RetrofitHelper.get(api.getPoTokenPart1("$baseUrl/part1"))
-    //
-    //        if (part1?.requestKey == null || part1.botguardResponse == null)
-    //            continue
-    //
-    //        val part2 = PoTokenService.generateIntegrityToken(part1.requestKey, part1.botguardResponse)
-    //
-    //        if (part2?.integrityTokenData == null)
-    //            continue
-    //
-    //        poToken = RetrofitHelper.get(api.getPoTokenPart2("$baseUrl/part2", Gson().toJson(part2)))
-    //
-    //        if (poToken?.poToken != null)
-    //            break
-    //
-    //        baseUrl = Helpers.getNextValue(baseUrl, PO_TOKEN_CLOUD_BASE_URLS)
-    //
-    //        if (i < (RETRY_TIMES - 1))
-    //            delay(RETRY_DELAY_MS)
-    //    }
-    //
-    //    return poToken
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 }
 

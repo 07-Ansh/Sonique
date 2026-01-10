@@ -120,7 +120,7 @@ fun PlayerControlLayout(
                         .clip(
                             CircleShape,
                         )
-                        .background(Color(0xFFE0E0E0)) // Light Grey to White as requested
+                        .background(Color(0xFFE0E0E0))  
                         .clickable {
                             onUIEvent(UIEvent.PlayPause)
                         },

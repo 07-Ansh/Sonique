@@ -91,7 +91,7 @@ internal data class SuggestionsGroup(val shelf: ShelfRenderer): MediaGroup {
                     if (itemWrapper != null) {
                         val mediaItem = WrapperMediaItem(itemWrapper)
 
-                        // In case can't find a position of item inside browse playlist query. So using position inside group instead.
+                         
                         if (mediaItem.playlistIndex == -1 && mediaItem.playlistId != null) {
                             mediaItem.playlistIndex = i
                         }
@@ -102,7 +102,7 @@ internal data class SuggestionsGroup(val shelf: ShelfRenderer): MediaGroup {
                 }
             }
 
-            // Fix duplicated items after previous group reuse
+             
             newGroup.mediaItems = if (mediaItems.isNotEmpty()) mediaItems else null
             val nextKey = continuation.getContinuationToken()
             newGroup.nextPageKey = nextKey

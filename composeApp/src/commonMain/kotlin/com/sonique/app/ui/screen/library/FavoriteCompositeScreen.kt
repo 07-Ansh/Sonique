@@ -163,7 +163,7 @@ fun FavoriteCompositeScreen(
                     }
                 }
 
-                // Liked Songs Section
+                 
                 if (filteredSongs.isNotEmpty()) {
                     item {
                         Text(
@@ -183,7 +183,7 @@ fun FavoriteCompositeScreen(
                             isPlaying = song.videoId == nowPlayingVideoId,
                             modifier = Modifier.fillMaxWidth(),
                             onMoreClickListener = {
-                                // Handle more options
+                                 
                             },
                             onClickListener = { videoId ->
                                 dynamicPlaylistViewModel.playSong(videoId, type = LibraryDynamicPlaylistType.Favorite)
@@ -201,7 +201,7 @@ fun FavoriteCompositeScreen(
                     }
                 }
 
-                // Liked Playlists Section
+                 
                 if (filteredPlaylists.isNotEmpty()) {
                     item {
                         Text(

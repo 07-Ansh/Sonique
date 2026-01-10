@@ -76,7 +76,7 @@ public class AssetPropertyParser2 implements ConfigParser {
 
         for (String name : names) {
             if (name.startsWith(key) &&
-                !name.equals(key)) { // only partial match for arrays
+                !name.equals(key)) {  
                 valArr.add(mProperties.getProperty(name));
             }
         }

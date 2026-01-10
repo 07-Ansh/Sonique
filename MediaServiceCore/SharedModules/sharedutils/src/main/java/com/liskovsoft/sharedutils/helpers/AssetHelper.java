@@ -16,9 +16,7 @@ public class AssetHelper {
         return Helpers.appendStream(textStream, newLineStream);
     }
 
-    /**
-     * Merge string assets. Silently add new line after each asset.
-     */
+     
     public static InputStream getAssetMerged(Context ctx, List<String> paths) {
         return getAssetMerged(ctx, paths, true);
     }
@@ -81,13 +79,13 @@ public class AssetHelper {
         try {
             list = ctx.getAssets().list(dir);
             if (list != null && list.length > 0) {
-                // This is a folder
+                 
                 for (String file : list) {
-                    List<String> nestedList = getAssetFiles(ctx, dir + "/" + file, endsWith); // folder???
-                    if (!nestedList.isEmpty()) { // folder???
+                    List<String> nestedList = getAssetFiles(ctx, dir + "/" + file, endsWith);  
+                    if (!nestedList.isEmpty()) {  
                         result.addAll(nestedList);
                     } else {
-                        // This is a file
+                         
                         if (endsWith == null || file.endsWith(endsWith)) {
                             result.add(dir + "/" + file);
                         }
@@ -107,10 +105,10 @@ public class AssetHelper {
         try {
             list = ctx.getAssets().list(root);
             if (list != null && list.length > 0) {
-                // This is a folder
+                 
                 for (String file : list) {
                     String[] nestedList = ctx.getAssets().list(root + "/" + file);
-                    if (nestedList != null && nestedList.length > 0) { // folder???
+                    if (nestedList != null && nestedList.length > 0) {  
                         result.add(root + "/" + file);
                     }
                 }

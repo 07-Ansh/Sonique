@@ -15,14 +15,14 @@ public class RateLimitInterceptor implements Interceptor {
 
         Response response = chain.proceed(chain.request());
 
-        // 429 is how the api indicates a rate limit error
+         
         if (!response.isSuccessful() && response.code() == 429) {
             Log.e(TAG, "To much requests. Waiting..." + response.message());
 
             try {
                 Thread.sleep(1_000);
             } catch (InterruptedException ignored) {
-                // NOP
+                 
             }
         }
 

@@ -26,36 +26,7 @@ import java.util.TreeMap;
 
 import edu.mit.mobile.android.utils.StreamUtils;
 
-/**
- * A fairly simple non-Market app update checker. Give it a URL pointing to a JSON file
- * and it will compare its version (from the manifest file) to the versions listed in the JSON.
- * If there are newer version(s), it will provide the changelog between the installed version
- * and the latest version. The updater checks against the versionCode, but displays the versionName.
- *
- * While you can create your own OnAppUpdateListener to listen for new updates, OnUpdateDialog is
- * a handy implementation that displays a Dialog with a bulleted list and a button to do the upgrade.
- *
- * The JSON format looks like this:
- * <pre>
- * {
- * "package": {
- * "downloadUrl": "http://locast.mit.edu/connects/lcc.apk"
- * },
- *
- * "1.4.3": {
- * "versionCode": 6,
- * "changelog": ["New automatic update checker", "Improved template interactions"]
- * "changelog_ru": ["Новая система проверки оьновлений", "Улучшенное взаимодействие шаблонов"]
- * },
- * "1.4.2": {
- * "versionCode": 5,
- * "changelog": ["fixed crash when saving cast"]
- * }
- * }
- * </pre>
- *
- * @author <a href="mailto:spomeroy@mit.edu">Steve Pomeroy</a>
- */
+ 
 public class AppVersionChecker {
     private final static String TAG = AppVersionChecker.class.getSimpleName();
     private int mCurrentAppVersion;
@@ -78,11 +49,7 @@ public class AppVersionChecker {
         }
     }
 
-    /**
-     * Checks for updates regardless of when the last check happened or if checking for updates is enabled.<br/>
-     * URL pointing to a JSON file with the update list <br/>
-     * @param versionListUrls url array, tests url by access, first worked is used
-     */
+     
     public void checkForUpdates(Uri[] versionListUrls) {
         Log.d(TAG, "Checking for updates...");
 
@@ -105,14 +72,14 @@ public class AppVersionChecker {
         }
     }
 
-    // why oh why is the JSON API so poorly integrated into java?
+     
     @SuppressWarnings("unchecked")
     private void triggerFromJson(JSONObject jo) throws JSONException {
 
         final ArrayList<String> changelog = new ArrayList<String>();
 
-        // keep a sorted map of versionCode to the version information objects.
-        // Most recent is at the top.
+         
+         
         final TreeMap<Integer, JSONObject> versionMap = new TreeMap<Integer, JSONObject>(new Comparator<Integer>() {
             public int compare(Integer object1, Integer object2) {
                 return object2.compareTo(object1);
@@ -163,7 +130,7 @@ public class AppVersionChecker {
             return;
         }
 
-        // construct the changelog. Newest entries are at the top.
+         
         for (final Entry<Integer, JSONObject> version : versionMap.headMap(mCurrentAppVersion).entrySet()) {
             final JSONObject versionInfo = version.getValue();
 
@@ -208,9 +175,7 @@ public class AppVersionChecker {
         }
     }
 
-    /**
-     * Send off an intent to start the download of the app.
-     */
+     
     public void startUpgrade() {
         try {
             final Uri downloadUri = Uri.parse(mVersionInfo.getString("downloadUrl"));
@@ -260,8 +225,8 @@ public class AppVersionChecker {
                 InputStream content = manager.getStreamForDownloadedFile(reqId);
                 jo = new JSONObject(StreamUtils.inputStreamToString(content));
             } catch (final Exception ex) {
-                // IllegalStateException | IllegalArgumentException | JSONException | SocketTimeoutException |
-                // SocketException | StreamResetException | SSLException | ProtocolException
+                 
+                 
                 Log.e(TAG, ex.getMessage(), ex);
                 mLastException = ex;
             } finally {

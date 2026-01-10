@@ -32,10 +32,10 @@ class WatchNextApiTest {
     private lateinit var mWatchNextService: WatchNextService
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
 
         GlobalPreferences.instance(InstrumentationRegistry.getInstrumentation().context)
 
@@ -154,7 +154,7 @@ class WatchNextApiTest {
     private fun testBaseFields(metadata: MediaItemMetadata?) {
         assertNotNull("Contains title", metadata?.title)
         assertNotNull("Contains desc", metadata?.secondTitle)
-        //assertNotNull("Contains desc alt", metadata?.secondTitleAlt)
+         
         assertNotNull("Contains desc full", metadata?.description)
         assertNotNull("Contains video id", metadata?.videoId)
         assertNotNull("Contains view count", metadata?.viewCount)
@@ -185,7 +185,7 @@ class WatchNextApiTest {
     }
 
     private fun testThatMockedWatchNextSuggestionsNotEmpty(api: WatchNextApi) {
-        // Testing groups inside a Chip
+         
 
         mWatchNextService.setWatchNextApi(api)
 

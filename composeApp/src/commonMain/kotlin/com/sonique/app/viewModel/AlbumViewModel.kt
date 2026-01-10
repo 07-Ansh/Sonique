@@ -249,7 +249,7 @@ class AlbumViewModel(
 
     fun downloadFullAlbum() {
         viewModelScope.launch {
-            // Insert all song to database
+             
             uiState.value.listTrack.forEach { track ->
                 songRepository.insertSong(track.toSongEntity()).singleOrNull()?.let {
                     log("Insert Song $it")

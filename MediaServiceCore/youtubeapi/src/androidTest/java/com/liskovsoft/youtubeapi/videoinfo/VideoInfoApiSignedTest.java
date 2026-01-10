@@ -12,9 +12,7 @@ import com.liskovsoft.youtubeapi.videoinfo.models.VideoInfo;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * NOTE: testing with Duktape (native libs)!!!
- */
+ 
 public class VideoInfoApiSignedTest extends BaseVideoInfoApiTest {
     @Before
     public void setUp() {

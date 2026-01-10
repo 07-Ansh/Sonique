@@ -109,64 +109,64 @@ internal fun parseMixedContent(
                     for (result1 in contentList) {
                         val musicTwoRowItemRenderer = result1.musicTwoRowItemRenderer
                         if (musicTwoRowItemRenderer != null) {
-                            //                        if (pageType == null) {
-//                            if (result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.playlistId != null && result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.videoId == null){
-//                                val content = parseWatchPlaylist(result1.musicTwoRowItemRenderer!!)
-//                                listContent.add(content)
-//                            }
-//                            else if (result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.playlistId == null && result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.videoId != null){
-//                                val content = parseSong(result1.musicTwoRowItemRenderer!!)
-//                                listContent.add(content)
-//                            }
-//                        }
-//                        else if (pageType == "MUSIC_PAGE_TYPE_ALBUM"){
-//                            val content = parseAlbum(result1.musicTwoRowItemRenderer!!)
-//                            listContent.add(content)
-//                        }
-//                        else if (pageType == "MUSIC_PAGE_TYPE_ARTIST"){
-//                            val content = parseRelatedArtists(result1.musicTwoRowItemRenderer!!)
-//                            listContent.add(content)
-//                        }
-//                        else if (pageType == "MUSIC_PAGE_TYPE_PLAYLIST") {
-//                            if (result1.musicTwoRowItemRenderer!!.navigationEndpoint.browseEndpoint?.browseId?.startsWith("MPRE") == true) {
-//                                val content = parseAlbum(result1.musicTwoRowItemRenderer!!)
-//                                listContent.add(content)
-//                            }
-//                            else {
-//                                val content = parsePlaylist(result1.musicTwoRowItemRenderer!!)
-//                                listContent.add(content)
-//                            }
-//                        }
-//                        when (result1.musicTwoRowItemRenderer!!.title.runs?.get(0)?.navigationEndpoint?.browseEndpoint?.browseEndpointContextSupportedConfigs?.browseEndpointContextMusicConfig?.pageType) {
-//                            "MUSIC_PAGE_TYPE_ALBUM" -> {
-//                                val content = parseAlbum(result1.musicTwoRowItemRenderer!!)
-//                                listContent.add(content)
-//                            }
-//                            "MUSIC_PAGE_TYPE_ARTIST" -> {
-//                                val content = parseRelatedArtists(result1.musicTwoRowItemRenderer!!)
-//                                listContent.add(content)
-//                            }
-//                            "MUSIC_PAGE_TYPE_PLAYLIST" -> {
-//                                if (result1.musicTwoRowItemRenderer!!.navigationEndpoint.browseEndpoint?.browseId?.startsWith("MPRE") == true) {
-//                                    val content = parseAlbum(result1.musicTwoRowItemRenderer!!)
-//                                    listContent.add(content)
-//                                }
-//                                else {
-//                                    val content = parsePlaylist(result1.musicTwoRowItemRenderer!!)
-//                                    listContent.add(content)
-//                                }
-//                            }
-//                            null -> {
-//                                if (result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.playlistId != null && result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.videoId == null){
-//                                    val content = parseWatchPlaylist(result1.musicTwoRowItemRenderer!!)
-//                                    listContent.add(content)
-//                                }
-//                                else if (result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.playlistId == null && result1.musicTwoRowItemRenderer!!.navigationEndpoint.watchEndpoint?.videoId != null){
-//                                    val content = parseSong(result1.musicTwoRowItemRenderer!!, context)
-//                                    listContent.add(content)
-//                                }
-//                            }
-//                        }
+                             
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
                             if (musicTwoRowItemRenderer.isSong) {
                                 val ytItem =
                                     RelatedPage.fromMusicTwoRowItemRenderer(musicTwoRowItemRenderer, songString) as SongItem?

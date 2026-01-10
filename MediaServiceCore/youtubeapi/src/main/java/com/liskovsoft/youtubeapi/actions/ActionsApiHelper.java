@@ -4,9 +4,7 @@ import com.liskovsoft.youtubeapi.common.helpers.PostDataHelper;
 
 public class ActionsApiHelper {
     private static final String VIDEO_ID_TEMPLATE = "\"target\":{\"videoId\":\"%s\"}";
-    /**
-     * params is needed for mobile notifications
-     */
+     
     private static final String CHANNEL_ID_TEMPLATE = "\"channelIds\":[\"%s\"],\"params\":\"%s\"";
 
     public static String getLikeActionQuery(String videoId) {

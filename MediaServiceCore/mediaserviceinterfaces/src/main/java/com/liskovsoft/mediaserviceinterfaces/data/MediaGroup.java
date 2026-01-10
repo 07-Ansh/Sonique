@@ -32,7 +32,7 @@ public interface MediaGroup {
     @Nullable
     List<MediaItem> getMediaItems();
     String getTitle();
-    // Below settings for Channel section group
+     
     String getChannelId();
     String getParams();
     String getReloadPageKey();

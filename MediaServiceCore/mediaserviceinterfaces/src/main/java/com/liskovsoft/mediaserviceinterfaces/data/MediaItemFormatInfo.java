@@ -11,7 +11,7 @@ public interface MediaItemFormatInfo {
     List<MediaSubtitle> getSubtitles();
     String getHlsManifestUrl();
     String getDashManifestUrl();
-    // video metadata
+     
     String getLengthSeconds();
     String getTitle();
     String getAuthor();
@@ -37,24 +37,14 @@ public interface MediaItemFormatInfo {
     boolean isUnknownError();
     String getPlayabilityStatus();
     boolean isStreamSeekable();
-    /**
-     * Stream start time in UTC (!!!).<br/>
-     * E.g.: <b>2021-10-06T13:36:25+00:00</b>
-     */
+     
     String getStartTimestamp();
     String getUploadDate();
-    /**
-     * Stream start time in UNIX format.<br/>
-     */
+     
     long getStartTimeMs();
-    /**
-     * Number of the stream first segment
-     */
+     
     int getStartSegmentNum();
-    /**
-     * Precise segment duration.<br/>
-     * Used inside live streams
-     */
+     
     int getSegmentDurationUs();
     String getPaidContentText();
     String getVideoPlaybackUstreamerConfig();

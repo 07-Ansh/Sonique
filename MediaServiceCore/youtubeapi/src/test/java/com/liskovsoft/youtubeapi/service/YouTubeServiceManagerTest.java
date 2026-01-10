@@ -23,17 +23,15 @@ public class YouTubeServiceManagerTest {
 
     @Before
     public void setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS");
 
         mService = YouTubeServiceManager.instance();
         RetrofitOkHttpHelper.getAuthHeaders().put("Authorization", TestHelpers.getAuthorization());
     }
 
-    /**
-     * <a href="https://www.ibm.com/developerworks/ru/library/j-5things5/index.html">More info about concurrent utils...</a>
-     */
+     
     @Test
     public void testThatSearchNotEmpty() {
         List<MediaGroup> mediaGroup = mService.getContentService().getSearch("hello world");

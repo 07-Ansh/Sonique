@@ -36,9 +36,7 @@ public class LocaleManager {
         return mLang;
     }
 
-    /**
-     * Used in tests only
-     */
+     
     public void setLanguage(String lang) {
         mLang = lang;
     }
@@ -47,9 +45,7 @@ public class LocaleManager {
         return mCountry;
     }
 
-    /**
-     * Used in tests only
-     */
+     
     public void setCountry(String country) {
         mCountry = country;
     }
@@ -62,8 +58,8 @@ public class LocaleManager {
         Locale locale = getLocale();
 
         if (VERSION.SDK_INT >= 21) {
-            // Use BCP-47 code for language code to get content with correct language.
-            // For example, BCP-47 has zn-CN for simplified Chinese and zh-TW for traditional Chinese.
+             
+             
             mLang = locale.toLanguageTag();
         } else {
             mLang = locale.getLanguage();
@@ -81,14 +77,14 @@ public class LocaleManager {
     private Locale getLocale() {
         Locale locale;
 
-        // Proper locale
+         
         if (GlobalPreferences.isInitialized()) {
             locale = LocaleUpdater.getSavedLocale(GlobalPreferences.sInstance.getContext());
 
             if (locale == null) {
                 locale = LocaleUtility.getCurrentLocale(GlobalPreferences.sInstance.getContext());
             }
-        } else { // Fallback locale
+        } else {  
             locale = Locale.getDefault();
         }
 

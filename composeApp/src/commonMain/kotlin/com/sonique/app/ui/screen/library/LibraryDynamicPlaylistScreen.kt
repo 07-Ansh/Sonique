@@ -303,7 +303,7 @@ sealed class LibraryDynamicPlaylistType {
             Downloaded -> Res.string.downloaded
         }
 
-    // For serialization and navigation
+     
     fun toStringParams(): String =
         when (this) {
             Favorite -> "favorite"

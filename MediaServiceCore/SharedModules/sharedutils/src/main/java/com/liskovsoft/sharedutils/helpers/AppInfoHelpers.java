@@ -37,8 +37,8 @@ public class AppInfoHelpers {
         PackageInfo packageInfo = getPackageInfo(context);
         if (packageInfo != null) {
             return packageInfo.versionCode;
-            // modern version
-            //return (int) PackageInfoCompat.getLongVersionCode(packageInfo);
+             
+             
         }
 
         return -1;
@@ -105,7 +105,7 @@ public class AppInfoHelpers {
                 if (info.metaData != null && info.metaData.containsKey("AppLabel")) {
                     label = info.metaData.getString("AppLabel");
                 } else {
-                    label = Helpers.getSimpleClassName(info.name); // label not found, return simple class name
+                    label = Helpers.getSimpleClassName(info.name);  
                 }
             }
         }

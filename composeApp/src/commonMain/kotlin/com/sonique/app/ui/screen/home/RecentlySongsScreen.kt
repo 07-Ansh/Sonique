@@ -176,7 +176,7 @@ fun RecentlySongsScreen(
                 }
             }
 
-            // Loading state
+             
             recentlyItems.apply {
                 when {
                     loadState.refresh is LoadState.Loading || loadState.append is LoadState.Loading -> {
@@ -209,7 +209,7 @@ fun RecentlySongsScreen(
             }
         }
 
-        // Top App Bar with haze effect
+         
         TopAppBar(
             modifier =
                 Modifier

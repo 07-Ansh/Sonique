@@ -83,8 +83,8 @@ internal abstract class JsRuntimeChalBaseJCP: JsChallengeProvider() {
     private fun constructStdin(player: String, preprocessed: Boolean, requests: List<JsChallengeRequest>): String {
         val jsonRequests = requests.map { request ->
             mapOf(
-                // TODO: i despise nsig name
-                //"type" to if (request.type.value == "n") "nsig" else request.type.value,
+                 
+                 
                 "type" to request.type.value,
                 "challenges" to request.input.challenges
             )
@@ -118,7 +118,7 @@ internal abstract class JsRuntimeChalBaseJCP: JsChallengeProvider() {
         """
     }
 
-    // region: challenge solver script
+     
 
     private val libScript: Script by lazy {
         getScript(ScriptType.LIB)
@@ -173,6 +173,6 @@ internal abstract class JsRuntimeChalBaseJCP: JsChallengeProvider() {
         return Script(scriptType, ScriptVariant.MINIFIED, ScriptSource.WEB, scriptVersion, code)
     }
 
-    // endregion: challenge solver script
+     
 }
 

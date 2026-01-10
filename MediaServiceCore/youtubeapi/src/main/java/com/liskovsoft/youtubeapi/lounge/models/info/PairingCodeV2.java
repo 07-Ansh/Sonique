@@ -13,7 +13,7 @@ public class PairingCodeV2 {
             return null;
         }
 
-        // Format pairing code to XXX-XXX-XXX-XXX
+         
         if (mPairingCodeAlt == null) {
             mPairingCodeAlt = ServiceHelper.insertSeparator(mPairingCode, " ", 3);
         }

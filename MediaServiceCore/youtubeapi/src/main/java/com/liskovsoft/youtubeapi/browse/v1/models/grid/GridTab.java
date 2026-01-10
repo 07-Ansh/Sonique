@@ -23,40 +23,30 @@ public class GridTab {
     @JsonPath("$.endpoint.browseEndpoint.browseId")
     private String mBrowseId;
 
-    /**
-     * Not used
-     */
+     
     @JsonPath("$.endpoint.browseEndpoint.params")
     private String mParams;
 
     @JsonPath({"$.content.tvSurfaceContentRenderer.content.gridRenderer.items[*]",
-               "$.contents[0].itemSectionRenderer.contents[*]" // web history section format (with ability to remove any item)
+               "$.contents[0].itemSectionRenderer.contents[*]"  
     })
     private List<ItemWrapper> mItemWrappers;
 
-    /**
-     * Used in continue Tabs
-     */
+     
     @JsonPath({"$.content.tvSurfaceContentRenderer.content.gridRenderer.continuations[0].nextContinuationData.continuation",
-               "$.continuations[0].nextContinuationData.continuation" // web history section format (with ability to remove any item)
+               "$.continuations[0].nextContinuationData.continuation"  
     })
     private String mNextPageKey;
 
-    /**
-     * Used in query User Library: Playlist, Watch Later, My videos
-     */
+     
     @JsonPath("$.content.tvSurfaceContentRenderer.continuation.reloadContinuationData.continuation")
     private String mReloadPageKey;
 
-    /**
-     * Marks tab after that should come Playlists
-     */
+     
     @JsonPath("$.unselectable")
     private boolean mUnselectable;
 
-    /**
-     * Channel mark that there is new content available
-     */
+     
     @JsonPath("$.presentationStyle.style")
     private String mPresentationStyle;
 

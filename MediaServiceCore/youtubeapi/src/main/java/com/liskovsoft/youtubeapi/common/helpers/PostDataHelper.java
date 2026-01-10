@@ -12,9 +12,7 @@ public class PostDataHelper {
         return createQuery(AppClient.TV.getBrowseTemplate(), data);
     }
 
-    /**
-     * Contains live chat key
-     */
+     
     public static String createQueryTVLegacy(String data) {
         return createQuery(AppClient.TV_LEGACY.getBrowseTemplate(), data);
     }

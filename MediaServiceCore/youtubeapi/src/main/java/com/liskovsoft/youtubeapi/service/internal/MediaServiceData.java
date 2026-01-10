@@ -90,8 +90,8 @@ public class MediaServiceData {
     private MediaServiceData() {
         if (Helpers.isJUnitTest()) {
             Log.d(TAG, "JUnit test is running. Skipping data restore...");
-            mEnabledFormats = FORMATS_ALL; // Debug
-            mVideoInfoType = -1; // Required for testing
+            mEnabledFormats = FORMATS_ALL;  
+            mVideoInfoType = -1;  
             return;
         }
 
@@ -123,9 +123,7 @@ public class MediaServiceData {
         persistData();
     }
 
-    /**
-     * Unique per com.sonique.app instance
-     */
+     
     public String getDeviceId() {
         if (mDeviceId == null) {
             mDeviceId = UUID.randomUUID().toString();
@@ -196,7 +194,7 @@ public class MediaServiceData {
 
         persistData();
 
-        YouTubeMediaItemService.instance().invalidateCache(); // Remove current cached video
+        YouTubeMediaItemService.instance().invalidateCache();  
     }
 
     public boolean isContentHidden(int content) {
@@ -273,7 +271,7 @@ public class MediaServiceData {
         mIsMoreSubtitlesUnlocked = unlock;
         persistData();
 
-        YouTubeMediaItemService.instance().invalidateCache(); // Remove current cached video
+        YouTubeMediaItemService.instance().invalidateCache();  
     }
 
     public boolean isPotSupported() {
@@ -297,16 +295,16 @@ public class MediaServiceData {
 
         String appVersion = AppInfoHelpers.getAppVersionName(mGlobalPrefs.getContext());
 
-        // null for ScreenItem
+         
         mScreenId = Helpers.parseStr(split, 1);
         mDeviceId = Helpers.parseStr(split, 2);
-        //String lastPlayerUrl = AppConstants.playerUrls.get(0); // fallback url for nfunc extractor
+         
         mOldAppVersion = Helpers.parseStr(split, 3);
         mVideoInfoType = Helpers.parseInt(split, 4, -1);
-        //mSkipAuth = Helpers.parseBoolean(split, 5);
-        // entries here moved to the cache
+         
+         
         mEnabledFormats = Helpers.parseInt(split, 11, FORMATS_DASH | FORMATS_URL);
-        // null
+         
         mPoToken = Helpers.parseItem(split, 14, PoTokenResponse::fromString);
         mAppInfo = Helpers.parseItem(split, 15, AppInfoCached::fromString);
         mPlayerData = Helpers.parseItem(split, 16, PlayerDataCached::fromString);
@@ -314,7 +312,7 @@ public class MediaServiceData {
         mHiddenContent = Helpers.parseInt(split, 18,
                 CONTENT_SHORTS_SUBSCRIPTIONS | CONTENT_SHORTS_HISTORY | CONTENT_SHORTS_TRENDING | CONTENT_UPCOMING_CHANNEL | CONTENT_UPCOMING_HOME | CONTENT_UPCOMING_SUBSCRIPTIONS);
         mIsMoreSubtitlesUnlocked = Helpers.parseBoolean(split, 19);
-        //mIsPremiumFixEnabled = Helpers.parseBoolean(split, 20);
+         
         mVisitorCookie = Helpers.parseStr(split, 21);
         mIsLegacyUIEnabled = Helpers.parseBoolean(split, 23);
         mFailedAppInfo = Helpers.parseItem(split, 24, AppInfoCached::fromString);
@@ -335,7 +333,7 @@ public class MediaServiceData {
 
         mNSigData = Helpers.parseItem(split, 8, NSigData::fromString);
         mSigData = Helpers.parseItem(split, 9, NSigData::fromString);
-        //mPlayerExtractorVersion = Helpers.parseStr(split, 10);
+         
         mPlayerExtractorCache = Helpers.parseItem(split, 11, PlayerExtractorCache::fromString);
     }
 
@@ -371,7 +369,7 @@ public class MediaServiceData {
     private void persistData() {
         RxHelper.disposeActions(mPersistAction);
 
-        // Improve memory usage by merging multiple persist requests
+         
         mPersistAction = RxHelper.runAsync(() -> { persistDataInt(); persistCachedDataInt(); }, 5_000);
     }
 

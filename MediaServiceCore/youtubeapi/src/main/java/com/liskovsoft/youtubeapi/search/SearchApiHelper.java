@@ -19,11 +19,7 @@ public class SearchApiHelper {
         return PostDataHelper.createQueryTV(search);
     }
 
-    /**
-     * Get data param for the next search
-     * @param nextPageKey {@link SearchResult#getNextPageKey()}
-     * @return data param
-     */
+     
     public static String getContinuationQuery(String nextPageKey) {
         String continuation = String.format(CONTINUATION_SEARCH, nextPageKey);
         return PostDataHelper.createQueryTV(continuation);

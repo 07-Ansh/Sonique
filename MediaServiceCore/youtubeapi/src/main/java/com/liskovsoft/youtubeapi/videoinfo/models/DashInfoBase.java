@@ -16,26 +16,26 @@ public abstract class DashInfoBase implements DashInfo {
     @Override
     public int getSegmentDurationUs() {
         if (mSegmentDurationUs == -1) {
-            //mSegmentDurationMs = (int) (getStreamDurationMs() / getLastSegmentNum());
+             
             mSegmentDurationUs = (int)(getStreamDurationMs() / ((float) getLastSegmentNum()) * 1_000);
         }
 
         return mSegmentDurationUs;
     }
 
-    //@Override
-    //public long getStartTimeMs() {
-    //    if (mStartTimeMs == -1) {
-    //        int segmentCount = getLastSegmentNum() - getStartSegmentNum();
-    //        mStartTimeMs = getLastSegmentTimeMs() - ((long) segmentCount * getSegmentDurationUs() / 1_000);
-    //    }
-    //
-    //    return mStartTimeMs;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     @Override
     public long getStartTimeMs() {
-        // stream ahead of time fix (in case system time incorrect)
+         
         return System.currentTimeMillis() - Math.min(getStreamDurationMs(), MAX_DURATION_MS);
     }
 

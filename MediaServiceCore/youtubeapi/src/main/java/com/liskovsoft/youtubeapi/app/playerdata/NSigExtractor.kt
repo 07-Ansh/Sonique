@@ -178,11 +178,7 @@ internal object NSigExtractor {
         return null
     }
 
-    /**
-     * yt_dlp.extractor.youtube.YoutubeIE._extract_n_function_name
-     *
-     * yt-dlp\yt_dlp\extractor\youtube.py
-     */
+     
     private fun extractNFunctionName2(jsCode: String): String? {
         val nFuncMatcher = mNFuncPattern2.matcher(jsCode)
 

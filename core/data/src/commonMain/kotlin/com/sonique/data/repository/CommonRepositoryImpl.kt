@@ -151,7 +151,7 @@ internal class CommonRepositoryImpl(
         }
     }
 
-    // Database
+     
     override fun closeDatabase() {
         database.close()
     }
@@ -160,13 +160,13 @@ internal class CommonRepositoryImpl(
 
     override suspend fun databaseDaoCheckpoint() = localDataSource.checkpoint()
 
-    // Recently data
+     
     override fun getAllRecentData(): Flow<List<RecentlyType>> =
         flow {
             emit(localDataSource.getAllRecentData())
         }.flowOn(Dispatchers.IO)
 
-    // Notifications
+     
     override suspend fun insertNotification(notificationEntity: NotificationEntity) =
         withContext(Dispatchers.IO) {
             localDataSource.insertNotification(notificationEntity)
@@ -198,9 +198,7 @@ internal class CommonRepositoryImpl(
         }
     }
 
-    /**
-     * Original from YTDLnis com.sonique.app
-     */
+     
     override suspend fun getCookiesFromInternalDatabase(
         url: String,
         packageName: String

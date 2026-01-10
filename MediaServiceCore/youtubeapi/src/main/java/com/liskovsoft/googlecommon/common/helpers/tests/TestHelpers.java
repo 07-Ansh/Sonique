@@ -8,8 +8,8 @@ import com.liskovsoft.youtubeapi.auth.V2.AuthService;
 import okhttp3.Response;
 
 public class TestHelpers extends TestHelpersBase {
-    private static String mAuthorization; // type: Bearer
-    private static String mOAuth2Authorization; // type: Bearer
+    private static String mAuthorization;  
+    private static String mOAuth2Authorization;  
 
     public static String getPageIdToken() {
         return "102307470137119736718";
@@ -56,7 +56,7 @@ public class TestHelpers extends TestHelpersBase {
     }
 
     public static boolean urlExists(String url) {
-        // disable profiler because it could cause out of memory error
+         
         Response response = OkHttpManager.instance(false).doHeadRequest(url);
         return response != null && response.isSuccessful();
     }

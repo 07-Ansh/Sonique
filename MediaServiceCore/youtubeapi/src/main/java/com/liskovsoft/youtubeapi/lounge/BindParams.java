@@ -1,7 +1,7 @@
 package com.liskovsoft.youtubeapi.lounge;
 
 public class BindParams {
-    //public static final String DEVICE_ID = "2a026ce9-4429-4c5e-8ef5-0101eddf5671"; // Should be random UUID
+     
     public static final String ZX = "xxxxxxxxxxxx";
     public static final String RID = "1337";
     public static final String AID = "42";

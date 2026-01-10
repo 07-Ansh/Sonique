@@ -11,9 +11,7 @@ public class SectionTab {
     @JsonPath("$.endpoint.browseEndpoint.browseId")
     private String browseId;
 
-    /**
-     * Sections == Rows in web com.sonique.app version
-     */
+     
     @JsonPath("$.content.tvSurfaceContentRenderer.content.sectionListRenderer.contents[*].shelfRenderer")
     private List<Section> mSections;
 

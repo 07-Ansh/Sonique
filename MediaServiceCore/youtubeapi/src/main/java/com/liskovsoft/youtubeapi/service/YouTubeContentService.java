@@ -95,7 +95,7 @@ class YouTubeContentService implements ContentService {
 
         MediaGroup subscriptions = getBrowseService2().getSubscriptions();
 
-        // TEMP fix. Subs not fully populated.
+         
         if (subscriptions != null && subscriptions.getMediaItems() != null && subscriptions.getMediaItems().size() <= 5) {
             MediaGroup continuation = continueGroup(subscriptions);
             if (continuation == null || continuation.getMediaItems() == null || continuation.getMediaItems().isEmpty()) {
@@ -141,8 +141,8 @@ class YouTubeContentService implements ContentService {
     public MediaGroup getSubscribedChannelsByNewContent() {
         checkSigned();
 
-        //List<GridTab> subscribedChannels = getBrowseService().getSubscribedChannelsUpdate();
-        //return YouTubeMediaGroup.fromTabs(subscribedChannels, MediaGroup.TYPE_CHANNEL_UPLOADS);
+         
+         
 
         return getBrowseService2().getSubscribedChannelsByNewContent();
     }
@@ -249,7 +249,7 @@ class YouTubeContentService implements ContentService {
         }
 
         for (MediaGroup group : groups) {
-            // Load chips
+             
             if (group != null && group.isEmpty()) {
                 List<MediaGroup> sections = getBrowseService2().continueEmptyGroup(group);
 
@@ -376,7 +376,7 @@ class YouTubeContentService implements ContentService {
 
             String canonicalId = UtilsService.canonicalChannelId(channelId);
 
-            // Special type of channel that could be found inside Music section (see Liked row More button)
+             
             if (YouTubeHelper.isGridChannel(canonicalId)) {
                 MediaGroup gridChannel = getBrowseService2().getGridChannel(canonicalId, params);
 
@@ -463,12 +463,12 @@ class YouTubeContentService implements ContentService {
 
         List<MediaGroup> collector = new ArrayList<>();
 
-        for (MediaGroup group : groups) { // Preserve positions
+        for (MediaGroup group : groups) {  
             if (group == null) {
                 continue;
             }
 
-            if (group.isEmpty()) { // Contains Chips (nested sections)?
+            if (group.isEmpty()) {  
                 if (!collector.isEmpty()) {
                     emitter.onNext(collector);
                     collector = new ArrayList<>();
@@ -515,7 +515,7 @@ class YouTubeContentService implements ContentService {
         }
 
         if (result.isEmpty()) {
-            // All contents has been filtered (e.g. shorts)
+             
             return continueGroupChecked(result);
         }
 
@@ -531,7 +531,7 @@ class YouTubeContentService implements ContentService {
 
         if (Helpers.equals(mediaGroup.getMediaItems(), result.getMediaItems()) &&
                 Helpers.equals(mediaGroup.getNextPageKey(), result.getNextPageKey())) {
-            // Result group is duplicate of the original. Seems that we've reached the end before. Skipping...
+             
             return null;
         }
 
@@ -554,7 +554,7 @@ class YouTubeContentService implements ContentService {
         if (mediaGroup instanceof BaseMediaGroup) {
             MediaGroup group = null;
 
-            // Fix channels with multiple empty groups (e.g. https://www.youtube.com/@RuhiCenetMedya/videos)
+             
             for (int i = 0; i < 3; i++) {
                 group = getBrowseService2().continueGroup(group == null ? mediaGroup : group);
 

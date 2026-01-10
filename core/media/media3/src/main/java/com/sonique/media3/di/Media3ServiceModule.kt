@@ -83,27 +83,25 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.net.Proxy
 
-/**
- * Required repository first initialization
- */
+ 
 @UnstableApi
 private val mediaServiceModule =
     module {
-        // Service
-        // CoroutineScope for service
+         
+         
         single<CoroutineScope>(
             createdAtStart = true,
             qualifier = named(SERVICE_SCOPE),
         ) {
             CoroutineScope(Dispatchers.Main + SupervisorJob())
         }
-        // Cache
+         
         single<DatabaseProvider>(
             createdAtStart = true,
         ) {
             provideDatabaseProvider(androidContext())
         }
-        // Player Cache
+         
         single<SimpleCache>(qualifier = named(PLAYER_CACHE), createdAtStart = true) {
             provideSimpleCache(
                 context = androidContext(),
@@ -112,7 +110,7 @@ private val mediaServiceModule =
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
-        // Download Cache
+         
         single<SimpleCache>(qualifier = named(DOWNLOAD_CACHE), createdAtStart = true) {
             provideSimpleCache(
                 context = androidContext(),
@@ -121,7 +119,7 @@ private val mediaServiceModule =
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
-        // Spotify Canvas Cache
+         
         single<SimpleCache>(qualifier = named(CANVAS_CACHE), createdAtStart = true) {
             provideSimpleCache(
                 context = androidContext(),
@@ -130,7 +128,7 @@ private val mediaServiceModule =
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
-        // DownloadUtils
+         
         single<DownloadHandler>(createdAtStart = true) {
             DownloadUtils(
                 context = androidContext(),
@@ -143,7 +141,7 @@ private val mediaServiceModule =
             )
         }
 
-        // AudioAttributes
+         
         single<AudioAttributes>(createdAtStart = true) {
             provideAudioAttributes()
         }
@@ -163,7 +161,7 @@ private val mediaServiceModule =
             provideRendererFactory(androidContext())
         }
 
-        // ExoPlayer
+         
         single<ExoPlayer>(createdAtStart = true, qualifier = named(MAIN_PLAYER)) {
             ExoPlayer
                 .Builder(androidContext())
@@ -184,7 +182,7 @@ private val mediaServiceModule =
                 }
         }
 
-        // CoilBitmapLoader
+         
         single<CoilBitmapLoader>(createdAtStart = true) {
             provideCoilBitmapLoader(androidContext(), get(named(SERVICE_SCOPE)))
         }
@@ -193,7 +191,7 @@ private val mediaServiceModule =
             ExoPlayerAdapter(get(named(MAIN_PLAYER)))
         }
 
-        // MediaSession Callback for main player
+         
         single<MediaLibrarySession.Callback>(createdAtStart = true) {
             SimpleMediaSessionCallback(
                 androidApplication(),
@@ -464,9 +462,9 @@ private fun provideLoadControl(): LoadControl =
         .setBufferDurationsMs(
             DEFAULT_MIN_BUFFER_MS * 4,
             DEFAULT_MAX_BUFFER_MS * 4,
-            // bufferForPlaybackMs=
+             
             0,
-            // bufferForPlaybackAfterRebufferMs=
+             
             0,
         ).build()
 

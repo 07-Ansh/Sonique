@@ -402,9 +402,7 @@ fun MusicShelfRenderer.Content.toSongItem(): SongItem? {
     )
 }
 
-/**
- * Check if the browse response has reload params, if true, this has the suggestion tracks
- */
+ 
 fun BrowseResponse.hasReloadParams(): Boolean =
     this.continuationContents
         ?.sectionListContinuation

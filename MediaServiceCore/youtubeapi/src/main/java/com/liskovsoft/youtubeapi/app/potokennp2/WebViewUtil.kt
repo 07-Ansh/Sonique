@@ -9,14 +9,14 @@ import com.liskovsoft.sharedutils.mylogger.Log
 private const val TAG = "WebViewUtil"
 
 internal fun isThermalServiceAvailable(context: Context): Boolean {
-    // Only Android 10 has the issue
+     
     if (Build.VERSION.SDK_INT != 29)
         return true
 
     val powerService = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return false
 
     val listener = PowerManager.OnThermalStatusChangedListener {
-        // NOP
+         
     }
 
     return try {
@@ -30,14 +30,14 @@ internal fun isThermalServiceAvailable(context: Context): Boolean {
 }
 
 internal fun hasThermalServiceBug(context: Context): Boolean {
-    // Only Android 10 has the issue
+     
     if (Build.VERSION.SDK_INT != 29)
         return false
 
     val powerService = context.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return false
 
     val listener = PowerManager.OnThermalStatusChangedListener {
-        // NOP
+         
     }
 
     return try {
@@ -50,13 +50,9 @@ internal fun hasThermalServiceBug(context: Context): Boolean {
     }
 }
 
-/**
- * NOTE: You will need to declare the android.permission.USB permission in your AndroidManifest.xml
- *
- * Trying to fix: NullPointerException: 'int android.hardware.usb.UsbDevice.getInterfaceCount()' on a null object reference
- */
+ 
 internal fun hasUsbServiceBug(context: Context): Boolean {
-    // Only Android 12 and up has the issue
+     
     if (Build.VERSION.SDK_INT != 31)
         return false
 
@@ -77,8 +73,8 @@ internal fun hasUsbServiceBug(context: Context): Boolean {
             val interfaceCount = device.interfaceCount
             Log.d(TAG, "Device: " + device.deviceName + ", Interface Count: " + interfaceCount)
 
-            // You could add more checks here, e.g., for specific interfaces
-            // or other properties that might be null.
+             
+             
         } catch (e: Exception) {
             return true
         }

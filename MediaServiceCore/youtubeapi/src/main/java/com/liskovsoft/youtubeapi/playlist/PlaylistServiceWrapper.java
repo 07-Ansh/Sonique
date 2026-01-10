@@ -37,7 +37,7 @@ public class PlaylistServiceWrapper extends PlaylistService {
         try {
             super.createPlaylist(playlistName, videoId);
         } catch (IllegalStateException e) {
-            // NOP
+             
         }
         
         createCachedPlaylist(playlistName, videoId);
@@ -77,7 +77,7 @@ public class PlaylistServiceWrapper extends PlaylistService {
             List<PlaylistInfo> result = new ArrayList<>();
 
             if (playlistsInfos != null && !playlistsInfos.isEmpty()) {
-                result.add(playlistsInfos.get(0)); // WatchLater
+                result.add(playlistsInfos.get(0));  
             }
 
             int firstIdx = -1;
@@ -85,14 +85,14 @@ public class PlaylistServiceWrapper extends PlaylistService {
 
             for (ItemGroup itemGroup : playlistGroups) {
                 firstIdxShift++;
-                // Replace local pl with remote one
+                 
                 if (playlistsInfos != null && !playlistsInfos.isEmpty()) {
-                    PlaylistInfo item = findFirst(playlistsInfos, itemGroup.getTitle()); // More robust to find by id?
+                    PlaylistInfo item = findFirst(playlistsInfos, itemGroup.getTitle());  
                     if (item != null) {
                         if (!result.contains(item)) {
                             result.add(item);
 
-                            if (firstIdx == -1) { // Save for later
+                            if (firstIdx == -1) {  
                                 firstIdx = playlistsInfos.indexOf(item);
                             }
                         }
@@ -100,17 +100,17 @@ public class PlaylistServiceWrapper extends PlaylistService {
                     }
                 }
 
-                // Add remained local playlists
+                 
                 result.add(YouTubePlaylistInfo.from(itemGroup, itemGroup.contains(videoId)));
             }
 
-            // Add remained remote playlists
+             
             if (playlistsInfos != null && !playlistsInfos.isEmpty()) {
                 int idx = -1;
                 for (PlaylistInfo info : playlistsInfos) {
                     idx++;
                     if (!result.contains(info)) {
-                        // Move newer playlists before
+                         
                         if (idx < firstIdx && result.size() > (idx + firstIdxShift)) {
                             result.add(idx + firstIdxShift, info);
                         } else {
@@ -151,15 +151,15 @@ public class PlaylistServiceWrapper extends PlaylistService {
 
         if (cachedVideo != null && Helpers.equals(cachedVideo.getVideoId(), videoId)) {
             playlistGroup.add(ItemImpl.fromMediaItem(cachedVideo));
-            PlaylistGroupServiceImpl.addPlaylistGroup(playlistGroup); // move to the top
-        } else { // Google api quota exceeded
+            PlaylistGroupServiceImpl.addPlaylistGroup(playlistGroup);  
+        } else {  
             MediaItemMetadata ytMetadata = getWatchNextService().getMetadata(videoId);
             String title = ytMetadata != null ? ytMetadata.getTitle() : null;
             CharSequence subtitle = ytMetadata != null ? ytMetadata.getSecondTitle() : null;
             String badgeText = ytMetadata != null ? ytMetadata.getBadgeText() : null;
             String channelId = ytMetadata != null ? ytMetadata.getChannelId() : null;
             playlistGroup.add(new ItemImpl(channelId, title, null, videoId, subtitle, badgeText, -1));
-            PlaylistGroupServiceImpl.addPlaylistGroup(playlistGroup); // move to the top
+            PlaylistGroupServiceImpl.addPlaylistGroup(playlistGroup);  
         }
     }
 
@@ -227,7 +227,7 @@ public class PlaylistServiceWrapper extends PlaylistService {
         }
     }
 
-    // More robust to find by id?
+     
     private PlaylistInfo findFirst(List<PlaylistInfo> playlistsInfos, String title) {
         return Helpers.findFirst(playlistsInfos, item -> Helpers.equals(item.getTitle(), title));
     }

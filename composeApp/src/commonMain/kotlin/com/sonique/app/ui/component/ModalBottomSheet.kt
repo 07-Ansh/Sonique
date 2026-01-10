@@ -853,11 +853,11 @@ fun QueueBottomSheet(
             }
         }
 
-    // Convert the state into a cold flow and collect
+     
     LaunchedEffect(shouldLoadMore) {
         snapshotFlow { shouldLoadMore.value }
             .collect {
-                // if should load more, then invoke loadMore
+                 
                 if (it && loadMoreState == QueueData.StateSource.STATE_INITIALIZED) musicServiceHandler.loadMore()
             }
     }
@@ -1299,8 +1299,8 @@ fun NowPlayingBottomSheet(
     viewModel: NowPlayingBottomSheetViewModel = koinViewModel(),
     setSleepTimerEnable: Boolean = false,
 
-    onNavigateToOtherScreen: () -> Unit = {}, // Fix the now playing screen not disappearing when navigating to other screen
-    // Delete is specific to playlist
+    onNavigateToOtherScreen: () -> Unit = {},  
+     
     onDelete: (() -> Unit)? = null,
     onLibraryDelete: (() -> Unit)? = null,
     dataStoreManager: DataStoreManager = koinInject<DataStoreManager>(),
@@ -1715,7 +1715,7 @@ fun NowPlayingBottomSheet(
                     }
                     Crossfade(targetState = setSleepTimerEnable) {
                         if (it) {
-                            // Sleep timer is enabled, so this screen is player screen
+                             
                             ActionButton(
                                 icon = painterResource(Res.drawable.round_speed_24),
                                 text = Res.string.playback_speed_pitch,

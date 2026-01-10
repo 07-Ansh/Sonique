@@ -25,7 +25,7 @@ internal class DownloadUtils(
 
     private var _downloads = MutableStateFlow<Map<String, Pair<DownloadHandler.Download?, DownloadHandler.Download?>>>(emptyMap())
 
-    // Audio / Video
+     
     override val downloads: StateFlow<Map<String, Pair<DownloadHandler.Download?, DownloadHandler.Download?>>>
         get() = _downloads
     private val _downloadTask = MutableStateFlow<Map<String, Int>>(emptyMap())

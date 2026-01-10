@@ -78,7 +78,7 @@ class LocaleUpdaterHelper {
         return false;
     }
 
-    // short lang code. ex: "ru"
+     
     public static void forceLocale(Context context, String langCode) {
         if (langCode == null || langCode.isEmpty()) {
             return;

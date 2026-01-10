@@ -204,14 +204,14 @@ internal class SimpleMediaService :
         Logger.w("Service", "Starting release process")
         runBlocking {
             try {
-                // Release MediaSession and Player
+                 
                 mediaSession?.run {
                     this.player.pause()
                     this.player.playWhenReady = false
                     this.player.release()
                     this.release()
                 }
-                // Release handler first (contains coroutines and jobs)
+                 
                 simpleMediaServiceHandler.release()
                 mediaSession = null
                 Logger.w("Service", "Simple Media Service Released")
@@ -245,7 +245,7 @@ internal class SimpleMediaService :
         }
     }
 
-    // Can't inject by Koin because it depend on service
+     
     @UnstableApi
     private fun provideMediaLibrarySession(
         service: MediaLibraryService,

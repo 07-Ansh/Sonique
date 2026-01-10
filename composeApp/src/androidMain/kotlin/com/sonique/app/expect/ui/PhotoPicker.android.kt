@@ -26,7 +26,7 @@ actual fun photoPickerResult(onResultUri: (String?) -> Unit): PhotoPickerLaunche
                     val takeFlags: Int =
                         Intent.FLAG_GRANT_READ_URI_PERMISSION or
                             Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                    // Check for the freshest data.
+                     
                     context.grantUriPermission(
                         context.packageName,
                         data,

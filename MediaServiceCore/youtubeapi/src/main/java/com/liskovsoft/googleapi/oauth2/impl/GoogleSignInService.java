@@ -49,7 +49,7 @@ public class GoogleSignInService implements SignInService {
 
     @Override
     public void signOut() {
-        // TODO: not implemented
+         
     }
 
     @Override
@@ -62,7 +62,7 @@ public class GoogleSignInService implements SignInService {
 
     @Override
     public boolean isSigned() {
-        // Condition created for the case when a device in offline mode.
+         
         return mAccountManager.getSelectedAccount() != null;
     }
 

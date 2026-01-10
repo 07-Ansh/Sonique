@@ -5,10 +5,10 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.text.style.LineBackgroundSpan;
 
-// https://gist.github.com/tokudu/601320d9edb978bcbc31
+ 
 public class PaddingBackgroundColorSpan implements LineBackgroundSpan {
     private int mBackgroundColor;
-    private int mPadding; // in pixels
+    private int mPadding;  
     private Rect mBgRect;
 
     public PaddingBackgroundColorSpan(int backgroundColor) {
@@ -19,7 +19,7 @@ public class PaddingBackgroundColorSpan implements LineBackgroundSpan {
         super();
         mBackgroundColor = backgroundColor;
         mPadding = padding;
-        // Precreate rect for performance
+         
         mBgRect = new Rect();
     }
 
@@ -27,8 +27,8 @@ public class PaddingBackgroundColorSpan implements LineBackgroundSpan {
     public void drawBackground(Canvas c, Paint p, int left, int right, int top, int baseline, int bottom, CharSequence text, int start, int end, int lnum) {
         final int textWidth = Math.round(p.measureText(text, start, end));
         final int paintColor = p.getColor();
-        final int leftCalc = (right - left - textWidth) / 2; // assume that the text is centered
-        // Draw the background
+        final int leftCalc = (right - left - textWidth) / 2;  
+         
         mBgRect.set(leftCalc - mPadding * 2,
                 top - (lnum == 0 ? mPadding / 2 : - (mPadding / 2)),
                 leftCalc + textWidth + mPadding * 2,

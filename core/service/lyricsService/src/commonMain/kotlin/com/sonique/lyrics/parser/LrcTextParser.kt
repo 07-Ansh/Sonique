@@ -34,7 +34,7 @@ fun parseSyncedLyrics(data: String): Lyrics {
 }
 
 fun parseRichSyncLyrics(data: String): Lyrics {
-    // Unescape JSON string if needed (remove quotes and replace \n with actual newlines)
+     
     val unescapedData =
         data
             .trim()
@@ -45,9 +45,9 @@ fun parseRichSyncLyrics(data: String): Lyrics {
             .replace("\\r", "\r")
             .replace("\\t", "\t")
 
-    // Handle different line separators (Unix \n, Windows \r\n, Mac \r)
+     
     val lines = unescapedData.lines()
-    // Skip offset line if present (starts with [offset:)
+     
     val lyricsLines =
         lines.filter { line ->
             line.isNotBlank() && !line.trim().startsWith("[offset:")
@@ -58,7 +58,7 @@ fun parseRichSyncLyrics(data: String): Lyrics {
         println("[parseRichSyncLyrics] First line sample: ${lyricsLines.first()}")
     }
 
-    // Regex to match [MM:SS.mm] format (flexible with 1-2 digits)
+     
     val regex = Regex("\\[(\\d{1,2}):(\\d{2})\\.(\\d{2,3})\\](.+)")
     val linesLyrics = ArrayList<Lyrics.LyricsX.Line>()
 
@@ -69,13 +69,13 @@ fun parseRichSyncLyrics(data: String): Lyrics {
             val seconds = matchResult.groupValues[2].toLongOrNull() ?: 0L
             val centiseconds = matchResult.groupValues[3].toLongOrNull() ?: 0L
 
-            // Convert to milliseconds
-            // If centiseconds has 3 digits (milliseconds), use directly
-            // If 2 digits (centiseconds), multiply by 10
+             
+             
+             
             val millisPart = if (matchResult.groupValues[3].length == 3) centiseconds else centiseconds * 10
             val timeInMillis = minutes * 60_000L + seconds * 1000L + millisPart
 
-            // Keep the rich sync content as-is (with <MM:SS.mm> word format)
+             
             val content = matchResult.groupValues[4].trimStart()
 
             if (content.isNotBlank()) {
@@ -89,7 +89,7 @@ fun parseRichSyncLyrics(data: String): Lyrics {
                 )
             }
         } else {
-            if (index < 3) { // Only log first 3 failed matches to avoid spam
+            if (index < 3) {  
                 println("[parseRichSyncLyrics] Line $index failed to match: '${line.take(100)}'")
             }
         }

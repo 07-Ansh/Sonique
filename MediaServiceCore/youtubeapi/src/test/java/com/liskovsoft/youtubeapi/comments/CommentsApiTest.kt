@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowLog
 
-private const val videoId = "unfpnIF0OMo" // THE DOR BROTHERS
+private const val videoId = "unfpnIF0OMo"  
 
 @RunWith(RobolectricTestRunner::class)
 class CommentsApiTest {
@@ -25,10 +25,10 @@ class CommentsApiTest {
 
     @Before
     fun setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS")
-        ShadowLog.stream = System.out // catch Log class output
+        ShadowLog.stream = System.out  
         mCommentsApi = RetrofitHelper.create(CommentsApi::class.java)
         mWatchNextApi = RetrofitHelper.create(WatchNextApi::class.java)
 

@@ -138,18 +138,12 @@ public class GoogleAccount implements Account {
         mIsSelected = selected;
     }
 
-    /**
-     * Every YouTube account has a channel<br/>
-     * This method could be served as a simple testing<br/>
-     * whether the account is belongs to YouTube
-     */
+     
     public boolean hasChannel() {
         return mHasChannel;
     }
 
-    /**
-     * This token token used along with the access token to support restricted videos
-     */
+     
     public String getPageIdToken() {
         return mPageIdToken;
     }

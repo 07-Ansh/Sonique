@@ -34,10 +34,10 @@ internal class PoTokenCloudApiTest {
         testPoTokenResponse(getPoToken())
     }
 
-    //@Test
-    //fun testPoTokenOnVideoUrlAlt() {
-    //    testPoTokenResponse(getPoTokenAlt())
-    //}
+     
+     
+     
+     
 
     @Ignore("server is down")
     @Test
@@ -76,23 +76,23 @@ internal class PoTokenCloudApiTest {
         return@runBlocking poToken
     }
 
-    //private fun getPoTokenAlt(): PoTokenResponse? = runBlocking {
-    //    var poToken: PoTokenResponse? = null
-    //
-    //    val times = 1
-    //    for (i in 0.. times) {
-    //        poToken = PoTokenService.getChallenge()?.program?.let { RetrofitHelper.get(api.getPoTokenAlt(it)) }
-    //        if (poToken?.poToken != null)
-    //            break
-    //
-    //        if (i < times)
-    //            delay(50_000)
-    //    }
-    //
-    //    assertNotNull("PoToken is not empty", poToken?.poToken)
-    //
-    //    return@runBlocking poToken
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     private fun getPoTokenPart(): PoTokenResponse? = runBlocking {
         var poToken: PoTokenResponse? = null

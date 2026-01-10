@@ -7,14 +7,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
-/**
- * Enables TLS v1.2 when creating SSLSockets.
- * <p/>
- * For some reason, android supports TLS v1.2 from API 16, but enables it by
- * default only from API 20.
- * @link https://developer.android.com/reference/javax/net/ssl/SSLSocket.html
- * @see SSLSocketFactory
- */
+ 
 public class Tls12SocketFactory extends SSLSocketFactory {
     private static final String[] TLS_V12_ONLY = {"TLSv1.2"};
     private static final String[] TLS_SUPPORT_VERSION = {"TLSv1","TLSv1.1", "TLSv1.2"};

@@ -160,10 +160,7 @@ internal fun parsePlaylistData(
                 Logger.d("PlaylistParser", "title: $title")
                 val secondSubtitle = header.secondSubtitle?.runs
                 if (!secondSubtitle.isNullOrEmpty()) {
-                    /**
-                     * Fuck Kotlin
-                     * Ref: https://stackoverflow.com/q/48379981/20605098
-                     */
+                     
                     trackCount =
                         try {
                             if (secondSubtitle.size >= 5) {

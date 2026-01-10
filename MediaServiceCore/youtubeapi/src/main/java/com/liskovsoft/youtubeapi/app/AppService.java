@@ -31,9 +31,7 @@ public class AppService {
         return sInstance;
     }
 
-    /**
-     * Extracts signature used in music videos
-     */
+     
     public String extractSig(String sParam) {
         if (sParam == null) {
             return null;
@@ -42,9 +40,7 @@ public class AppService {
         return extractSig(Collections.singletonList(sParam)).get(0);
     }
 
-    /**
-     * Extracts signature used in music videos
-     */
+     
     public List<String> extractSig(List<String> sParams) {
         if (mAppServiceInt.getPlayerDataExtractor() == null) {
             return null;
@@ -61,10 +57,7 @@ public class AppService {
         return mAppServiceInt.getPlayerDataExtractor().extractNSig(nParam);
     }
 
-    /**
-     * nParams - throttle params<br/>
-     * sParams - signature used in music videos
-     */
+     
     public Pair<List<String>, List<String>> bulkSigExtract(List<String> nParams, List<String> sParams) {
         if (Helpers.allNulls(nParams, sParams) || mAppServiceInt.getPlayerDataExtractor() == null) {
             return null;
@@ -104,10 +97,7 @@ public class AppService {
         mClientPlaybackNonce = null;
     }
 
-    /**
-     * NOTE: Unique per video info instance<br/>
-     * A nonce is a unique value chosen by an entity in a protocol, and it is used to protect that entity against attacks which fall under the very large umbrella of "replay".
-     */
+     
     public synchronized String getClientPlaybackNonce() {
         if (mClientPlaybackNonce != null) {
             return mClientPlaybackNonce;
@@ -122,23 +112,17 @@ public class AppService {
         return mClientPlaybackNonce;
     }
 
-    /**
-     * Constant used in {@link AuthApi}
-     */
+     
     public String getClientId() {
         return mAppServiceInt.getClientId();
     }
 
-    /**
-     * Constant used in {@link AuthApi}
-     */
+     
     public String getClientSecret() {
         return mAppServiceInt.getClientSecret();
     }
 
-    /**
-     * Used in get_video_info
-     */
+     
     public String getSignatureTimestamp() {
         if (mAppServiceInt.getPlayerDataExtractor() == null) {
             return null;
@@ -147,9 +131,7 @@ public class AppService {
         return mAppServiceInt.getPlayerDataExtractor().getSignatureTimestamp();
     }
 
-    /**
-     * Used with get_video_info, anonymous search and suggestions
-     */
+     
     public String getVisitorData() {
         return mAppServiceInt.getVisitorData();
     }
@@ -162,10 +144,7 @@ public class AppService {
         mAppServiceInt.refreshCacheIfNeeded();
     }
 
-    /**
-     * Visitor data is bound to specific js files versions.<br/>
-     * After reset user will get the latest js file versions.
-     */
+     
     public void invalidateVisitorData() {
         mAppServiceInt.invalidateVisitorData();
     }

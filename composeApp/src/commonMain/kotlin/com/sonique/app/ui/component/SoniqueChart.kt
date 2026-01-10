@@ -36,14 +36,14 @@ fun SoniqueChartButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            // Sparkles icon
+             
             Text(
                 text = "✨",
                 fontSize = 13.sp,
                 modifier = Modifier.padding(end = 8.dp)
             )
 
-            // Text
+             
             Text(
                 text = "Introducing Sonique Chart",
                 fontSize = 13.sp,

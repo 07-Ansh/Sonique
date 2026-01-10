@@ -131,9 +131,9 @@ fun LibraryScreen(
     var showAddSheet by remember { mutableStateOf(false) }
     var isScrollingUp by remember { mutableStateOf(true) }
 
-    // Update isScrollingUp when onScrolling callback is invoked
+     
     LaunchedEffect(Unit) {
-        // This will be updated by the onScrolling callback
+         
     }
 
     LaunchedEffect(nowPlaying) {
@@ -180,7 +180,7 @@ fun LibraryScreen(
         }
     }
 
-    // Wrapper callback that updates both local TopAppBar state and parent navigation state
+     
     val handleScrolling: (Boolean) -> Unit = { scrollingUp ->
         isScrollingUp = scrollingUp
         onScrolling(scrollingUp)
@@ -241,7 +241,7 @@ fun LibraryScreen(
                                         .fillMaxWidth()
                                         .padding(horizontal = 20.dp, vertical = 8.dp),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFF242424) // Dark gray/black
+                                        containerColor = Color(0xFF242424)  
                                     ),
                                     onClick = {
                                         viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)

@@ -36,7 +36,7 @@ public class WatchNextManagerTestBase {
         checkFields(watchNextResult.getVideoMetadata());
         checkSignedFields(watchNextResult.getVideoOwner());
         checkFields(watchNextResult.getNextVideo(), true);
-        // Skip first playlist row 'cause not all fields present here
+         
         checkSuggestedSection(watchNextResult.getSuggestedSections().get(1));
         checkPlaylist(watchNextResult.getPlaylist());
     }

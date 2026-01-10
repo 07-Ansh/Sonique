@@ -44,9 +44,9 @@ public class YouTubeMediaItemFormatInfo implements MediaItemFormatInfo {
     private List<MediaSubtitle> mSubtitles;
     private String mDashManifestUrl;
     private String mHlsManifestUrl;
-    private String mEventId; // used in tracking
-    private String mVisitorMonitoringData; // used in tracking
-    private String mOfParam; // used in tracking
+    private String mEventId;  
+    private String mVisitorMonitoringData;  
+    private String mOfParam;  
     private String mStoryboardSpec;
     private boolean mIsUnplayable;
     private String mPlayabilityStatus;
@@ -116,11 +116,11 @@ public class YouTubeMediaItemFormatInfo implements MediaItemFormatInfo {
 
         formatInfo.mDashManifestUrl = videoInfo.getDashManifestUrl();
         formatInfo.mHlsManifestUrl = videoInfo.getHlsManifestUrl();
-        // BEGIN Tracking params
+         
         formatInfo.mEventId = videoInfo.getEventId();
         formatInfo.mVisitorMonitoringData = videoInfo.getVisitorMonitoringData();
         formatInfo.mOfParam = videoInfo.getOfParam();
-        // END Tracking params
+         
         formatInfo.mStoryboardSpec = videoInfo.getStoryboardSpec();
         formatInfo.mIsUnplayable = videoInfo.isUnplayable();
         formatInfo.mIsAuth = videoInfo.isAuth();
@@ -260,45 +260,45 @@ public class YouTubeMediaItemFormatInfo implements MediaItemFormatInfo {
 
     @Override
     public float getVolumeLevel() {
-        float result = 1.0f; // the live loudness
+        float result = 1.0f;  
 
-        //if (mLoudnessDb != 0) {
-        //    // Original tv web: Math.min(1, 10 ** (-loudnessDb / 20))
-        //    // -5db...5db (0.7...1.4) Base formula: normalLevel*10^(-db/20)
-        //    float normalLevel = (float) Math.pow(10.0f, -mLoudnessDb / 50.0f);
-        //    result = Math.min(normalLevel, 2.5f);
-        //    result *= 0.6f; // minimize distortions
-        //}
+         
+         
+         
+         
+         
+         
+         
 
-        //if (mLoudnessDb != 0) {
-        //    // Original tv web: Math.min(1, 10 ** (-loudnessDb / 20))
-        //    // -5db...5db (0.7...1.4) Base formula: normalLevel*10^(-db/20)
-        //    float normalLevel = (float) Math.pow(10.0f, -mLoudnessDb / 20.0f);
-        //    //float multiplier = 0.2f;
-        //    float multiplier = 0.3f;
-        //    result = Math.min(normalLevel, 1.5f / multiplier); // 1.5 max volume
-        //    result *= multiplier; // minimize distortions
-        //}
+         
+         
+         
+         
+         
+         
+         
+         
+         
 
-        //if (mLoudnessDb != 0) {
-        //    // Original tv web: Math.min(1, 10 ** (-loudnessDb / 20))
-        //    // -5db...5db (0.7...1.4) Base formula: normalLevel*10^(-db/20)
-        //    float normalLevel = (float) Math.pow(10.0f, -mLoudnessDb / 15.0f);
-        //    result = Math.min(normalLevel, 4f);
-        //    result *= 0.3f; // minimize distortions
-        //}
+         
+         
+         
+         
+         
+         
+         
 
         if (mLoudnessDb != 0) {
-            // Original tv web: Math.min(1, 10 ** (-loudnessDb / 20))
-            // -5db...5db (0.7...1.4) Base formula: normalLevel*10^(-db/20)
-            // Low test - R.E.M. and high test - Lindemann
+             
+             
+             
             float normalLevel = (float) Math.pow(10.0f, mLoudnessDb / 20.0f);
-            if (normalLevel > 1.95) { // don't normalize?
-                // System of a Down - Lonely Day
-                //normalLevel = 1.0f;
+            if (normalLevel > 1.95) {  
+                 
+                 
                 normalLevel = 1.5f;
             }
-            // Calculate the result as subtract of the video volume and the max volume
+             
             result = 2.0f - normalLevel;
         }
 
@@ -338,7 +338,7 @@ public class YouTubeMediaItemFormatInfo implements MediaItemFormatInfo {
 
         YouTubeStoryParser storyParser = YouTubeStoryParser.from(mStoryboardSpec);
         storyParser.setSegmentDurationUs(getSegmentDurationUs());
-        // TODO: need to calculate real segment shift for 60 hrs streams (e.g. euronews live)
+         
         storyParser.setStartSegmentNum(getStartSegmentNum());
         Storyboard storyboard = storyParser.extractStory();
 
@@ -443,22 +443,17 @@ public class YouTubeMediaItemFormatInfo implements MediaItemFormatInfo {
         mClickTrackingParams = clickTrackingParams;
     }
 
-    /**
-     * Format is used between multiple functions. Do a little cache.
-     */
+     
     public boolean isCacheActual() {
-        // NOTE: Musical live streams are ciphered too!
+         
 
-        // Check com.sonique.app cipher first. It's not robust check (cipher may be updated not by us).
-        // So, also check internal cache state.
-        // Future translations (no media) should be polled constantly.
+         
+         
+         
         return containsMedia() && AppService.instance().isPlayerCacheActual() && !PoTokenGate.isWebPotExpired();
     }
 
-    /**
-     * Sync history data<br/>
-     * Intended to merge signed and unsigned infos (no-playback fix)
-     */
+     
     public void sync(YouTubeMediaItemFormatInfo formatInfo) {
         mIsSynced = true;
 
@@ -466,68 +461,55 @@ public class YouTubeMediaItemFormatInfo implements MediaItemFormatInfo {
             return;
         }
 
-        // Intended to merge signed and unsigned infos (no-playback fix)
+         
         mEventId = formatInfo.getEventId();
         mVisitorMonitoringData = formatInfo.getVisitorMonitoringData();
         mOfParam = formatInfo.getOfParam();
         mIsAuth = formatInfo.isAuth();
     }
 
-    /**
-     * MPD file is not valid without duration
-     */
+     
     private void ensureLengthIsSet() {
         if (mLengthSeconds != null) {
             return;
         }
 
-        // try to get duration from video url
+         
         mLengthSeconds = extractDurationFromTrack();
     }
 
-    /**
-     * Extracts time from video url (if present).
-     * Url examples:
-     * <br/>
-     * "http://example.com?dur=544.99&key=val&key2=val2"
-     * <br/>
-     * "http://example.com/dur/544.99/key/val/key2/val2"
-     *
-     * @return duration as string
-     */
+     
     private String extractDurationFromTrack() {
         if (mAdaptiveFormats == null && mUrlFormats == null) {
             return null;
         }
 
         String url = null;
-        // mMP4Videos
+         
         List<MediaFormat> videos = mAdaptiveFormats != null ? mAdaptiveFormats : mUrlFormats;
         for (MediaFormat item : videos) {
             url = item.getUrl();
-            break; // get first item
+            break;  
         }
         String result = Helpers.runMultiMatcher(url, durationPattern1, durationPattern2);
 
         if (result == null) {
-            //throw new IllegalStateException("Videos in the list doesn't have a duration. Content: " + mMP4Videos);
+             
             Log.e(TAG, "Videos in the list doesn't have a duration. Content: " + videos);
         }
 
         return result;
     }
 
-    /**
-     * Apply the fix right after creation of a MediaFormat
-     */
+     
     private void fixOTF(YouTubeMediaFormat mediaItem) {
         if (mediaItem.isOtf()) {
             if (mediaItem.getUrl() != null) {
-                // exo: fix 404 code
+                 
                 mediaItem.setUrl(mediaItem.getUrl() + "&sq=7");
-                //mediaItem.setInit("0-740");
-                //mediaItem.setIndex("741-2296");
-                //mediaItem.setClen("105557711");
+                 
+                 
+                 
             }
         }
     }

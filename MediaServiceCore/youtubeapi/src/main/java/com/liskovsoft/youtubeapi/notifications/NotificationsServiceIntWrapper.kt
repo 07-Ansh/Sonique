@@ -6,9 +6,9 @@ import com.liskovsoft.youtubeapi.common.models.gen.NotificationStateItem
 import com.liskovsoft.youtubeapi.common.models.impl.NotificationStateImpl
 import com.liskovsoft.youtubeapi.rss.RssService
 
-private const val ALL = 0 // Enable notifications
-private const val PERSONALIZED = 1 // Disable notifications
-private const val NONE = 2 // Disable notifications
+private const val ALL = 0  
+private const val PERSONALIZED = 1  
+private const val NONE = 2  
 
 internal object NotificationsServiceIntWrapper: NotificationsServiceInt() {
     override fun getItems(): MediaGroup? {
@@ -30,7 +30,7 @@ internal object NotificationsServiceIntWrapper: NotificationsServiceInt() {
         try {
             super.modifyNotification(notificationState)
         } catch (e: IllegalStateException) {
-            // Notification cannot be modified
+             
         }
     }
 }
@@ -46,7 +46,7 @@ internal class NotificationStateImplWrapper(
         return if (NotificationStorage.contains(channelId))
              if (index == ALL) true else false
         else if (super.isSelected() && index == ALL) {
-            // Set to none if selected globally (global notifications doesn't work)
+             
             allStates.getOrNull(NONE)?.setSelected()
             false
         }

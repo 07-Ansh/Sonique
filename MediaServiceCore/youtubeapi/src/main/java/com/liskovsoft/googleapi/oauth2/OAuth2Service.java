@@ -26,32 +26,19 @@ public class OAuth2Service {
         return sInstance;
     }
 
-    /**
-     * Returns user code that user should apply on the page<br/>
-     * <a href=https://youtube.com/activate>https://youtube.com/activate</a>
-     * @return response with user code and device code
-     */
+     
     public UserCode getUserCode() {
         Call<UserCode> wrapper = mOAuth2Api.getUserCode(OAuth2ApiHelper.CLIENT_ID, OAuth2ApiHelper.DRIVE_SCOPE);
         return RetrofitHelper.get(wrapper);
     }
 
-    /**
-     * Note, before calling this method user should apply the 'user code' on the page<br/>
-     * <a href=https://youtube.com/activate>https://youtube.com/activate</a>
-     * @param deviceCode the code contained inside the response of the method {@link #getUserCode()}
-     * @return refresh token that should be stored inside the com.sonique.app registry for future use
-     */
+     
     private AccessToken getAccessToken(String deviceCode) {
         Call<AccessToken> wrapper = mOAuth2Api.getAccessToken(OAuth2ApiHelper.CLIENT_ID, OAuth2ApiHelper.CLIENT_SECRET, deviceCode, OAuth2ApiHelper.GRANT_TYPE);
         return RetrofitHelper.get(wrapper);
     }
 
-    /**
-     * Returns temporal access token that should be refreshed after some period of time
-     * @param refreshToken token obtained from previous method
-     * @return temporal access token
-     */
+     
     public AccessToken updateAccessToken(String refreshToken) {
         Call<AccessToken> wrapper = mOAuth2Api.updateAccessToken(OAuth2ApiHelper.CLIENT_ID, OAuth2ApiHelper.CLIENT_SECRET, OAuth2ApiHelper.GRANT_TYPE_REFRESH, refreshToken);
         return RetrofitHelper.getWithErrors(wrapper);
@@ -75,8 +62,8 @@ public class OAuth2Service {
         } else {
             String msg = String.format("Error. Refresh token is empty!\nDebug data: device code: %s, client id: %s, client secret: %s\nError msg: %s",
                     deviceCode,
-                    null, // mAppService.getClientId()
-                    null, // mAppService.getClientSecret()
+                    null,  
+                    null,  
                     tokenResult != null ? tokenResult.getError() : "");
 
             Log.e(TAG, msg);
@@ -84,11 +71,11 @@ public class OAuth2Service {
         }
     }
 
-    //public List<AccountInt> getAccounts() {
-    //    Call<AccountsList> wrapper = mOAuth2Api.getAccountsList(OAuth2ApiHelper.getAccountsListQuery());
-    //
-    //    AccountsList accountsList = RetrofitHelper.get(wrapper);
-    //
-    //    return accountsList != null ? accountsList.getAccounts() : null;
-    //}
+     
+     
+     
+     
+     
+     
+     
 }

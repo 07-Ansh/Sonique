@@ -15,11 +15,11 @@ internal object LiveChatServiceInt {
     private val mApi = RetrofitHelper.create(LiveChatApi::class.java)
 
     fun openLiveChat(chatKey: String, onChatItem: OnChatItem) {
-        // It's common to stream to be interrupted multiple times
+         
         while (true) {
             try {
                 openLiveChatInt(chatKey, onChatItem)
-                Thread.sleep(5_000) // fix too frequent request
+                Thread.sleep(5_000)  
             } catch (e: SocketTimeoutException) {
                 Log.e(TAG, "Connection hanged. Reconnecting...")
             } catch (e: InterruptedIOException) {
@@ -34,7 +34,7 @@ internal object LiveChatServiceInt {
                 break
             } catch (e: Exception) {
                 Log.e(TAG, e.message)
-                // Continue to listen whichever is happening.
+                 
             }
         }
     }

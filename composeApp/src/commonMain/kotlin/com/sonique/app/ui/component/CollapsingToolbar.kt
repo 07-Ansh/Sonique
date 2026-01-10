@@ -222,7 +222,7 @@ private fun Header(
         modifier =
             modifier
                 .graphicsLayer {
-                    translationY = -scroll.value.toFloat() / 2f // Parallax effect
+                    translationY = -scroll.value.toFloat() / 2f  
                     alpha = (-1f / headerHeightPx) * scroll.value + 1
                 }.background(
                     backgroundColor.rgbFactor(0.5f),
@@ -265,7 +265,7 @@ private fun Header(
                                         alpha = 0.8f,
                                     ),
                                 ),
-                            startY = headerHeightPx * 3 / 4, // Gradient applied to wrap the title only
+                            startY = headerHeightPx * 3 / 4,  
                         ),
                 ),
         )

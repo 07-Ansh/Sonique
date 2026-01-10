@@ -56,9 +56,7 @@ public class SharedPreferencesBase {
         }
     }
 
-    /**
-     * Delete prefs which size exceeds a limit to prevent unconditional behavior
-     */
+     
     private void limitMaxSize(Context context, String prefName) {
         File sharedPrefs = new File(context.getApplicationInfo().dataDir, "shared_prefs" + "/" + prefName + ".xml");
 

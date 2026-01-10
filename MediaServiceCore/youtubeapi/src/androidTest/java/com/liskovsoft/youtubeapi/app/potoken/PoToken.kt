@@ -20,10 +20,7 @@ internal class PoToken {
 
     private data class BotGuardResult(val integrityTokenData: Data?, val postProcessFunction: String?)
 
-    /**
-     * Generates a Proof of Origin Token.
-     * @param args - The arguments for generating the token.
-     */
+     
     fun generate(args: Arguments): Result? {
         val bgResult = invokeBotGuard(args.privateScript, args.program, args.globalName, args.bgConfig) ?: return null
 
@@ -44,23 +41,15 @@ internal class PoToken {
         return Result(poToken, bgResult.integrityTokenData)
     }
 
-    /**
-     * Creates a placeholder PoToken. This can be used while `sps` (StreamProtectionStatus) is 2, but will not work once it changes to 3.
-     * @param identifier - Visitor ID or Data Sync ID.
-     */
+     
     fun generatePlaceholder(identifier: String, clientState: Int? = null): String? {
         return null
     }
 
-    /**
-     * Invokes the Botguard VM.
-     * @param program - The bytecode to run.
-     * @param globalName - The name of the VM in the global scope.
-     * @param bgConfig - The Botguard configuration.
-     */
+     
     private fun invokeBotGuard(privateScript: String?, program: String?, globalName: String?, bgConfig: BotGuardConfig): BotGuardResult? {
         val script = listOf(
-            //DOM_WRAPPER.trimIndent(),
+             
 
             TestHelpers.readResource("potoken/jsdom_browserify.js"),
             "var mydom = new jsdom.JSDOM(); window = mydom.window; document = mydom.window.document; " +
@@ -68,10 +57,10 @@ internal class PoToken {
                     "removeEventListener = function(type, listener, options) {document.removeEventListener(type, listener, options);};" +
                     "dispatchEvent = function(event) {document.dispatchEvent(event);};",
 
-            //"var setTimeout = () => {}; var clearInterval = () => {}; var setInterval = () => {}; var clearTimeout = () => {};",
-            //TestHelpers.readResource("potoken/domino_browserify.js"),
-            //"var window1 = domino.createWindow('<h1>Hello world</h1>', 'http://example.com'); var window = window1.window; var document = window1.document; var addEventListener = window.addEventListener;",
-            //"var window1 = domino.createWindow('<h1>Hello world</h1>', 'http://example.com'); Object.assign(this, window1);",
+             
+             
+             
+             
 
             privateScript,
             """
@@ -103,7 +92,7 @@ internal class PoToken {
         )
 
         val result = V8Runtime.instance().evaluate(script) ?: return null
-        //val result = V8Runtime.instance().evaluate(script.joinToString(""))
+         
 
         val (postProcessFunction, payload) = result.split(RESULT_DELIM)
 

@@ -75,7 +75,7 @@ fun LibraryTilingBox(
                         }
 
                         LibraryTilingState.Followed -> {
-                           // Assuming we treat Followed as Artists or similar
+                            
                             navController.navigate(
                                 LibraryDynamicPlaylistDestination(
                                     type = LibraryDynamicPlaylistType.Followed.toStringParams(),
@@ -173,14 +173,14 @@ data class LibraryTilingState(
             LibraryTilingState(
                 title = Res.string.your_youtube_playlists,
                 containerColor = Color(0xFF2C2C2C),
-                icon = Icons.Default.Downloading, // Icon unused in UI refactor
+                icon = Icons.Default.Downloading,  
                 iconColor = musica_accent,
             )
         val MixForYou =
             LibraryTilingState(
                 title = Res.string.mix_for_you,
                 containerColor = Color(0xFF2C2C2C),
-                icon = Icons.Default.Downloading, // Icon unused
+                icon = Icons.Default.Downloading,  
                 iconColor = musica_accent,
             )
     }

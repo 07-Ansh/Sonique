@@ -128,7 +128,7 @@ public class YouTubeMediaItemMetadata implements MediaItemMetadata {
 
             for (SuggestedSection section : suggestedSections) {
                 if (section.getChips() != null) {
-                    // Contains multiple nested sections
+                     
                     for (Chip chip : section.getChips()) {
                         mediaItemMetadata.mSuggestions.add(YouTubeMediaGroup.from(chip));
                     }
@@ -140,7 +140,7 @@ public class YouTubeMediaItemMetadata implements MediaItemMetadata {
 
         ButtonStates buttonStates = watchNextResult.getButtonStates();
 
-        // Alt path to get like/subscribe status (when no such info in metadata section, e.g. YouTube Music items)
+         
         if (buttonStates != null) {
             if (buttonStates.isSubscribeToggled() != null) {
                 mediaItemMetadata.mIsSubscribed = buttonStates.isSubscribeToggled();

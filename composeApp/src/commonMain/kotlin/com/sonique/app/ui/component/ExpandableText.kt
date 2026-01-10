@@ -42,19 +42,19 @@ fun ExpandableText(
     textAlign: TextAlign? = null,
     fontSize: TextUnit,
 ) {
-    // State variables to track the expanded state, clickable state, and last character index.
+     
     var isExpanded by remember { mutableStateOf(false) }
     var clickable by remember { mutableStateOf(false) }
     var lastCharIndex by remember { mutableIntStateOf(0) }
 
-    // Box composable containing the Text composable.
+     
     Box(
         modifier =
             Modifier
                 .clickable { isExpanded = !isExpanded }
                 .then(modifier),
     ) {
-        // Text composable with buildAnnotatedString to handle "Show More" and "Show Less" buttons.
+         
         Text(
             modifier =
                 textModifier
@@ -64,11 +64,11 @@ fun ExpandableText(
                 buildAnnotatedString {
                     if (clickable) {
                         if (isExpanded) {
-                            // Display the full text and "Show Less" button when expanded.
+                             
                             append(text)
                             withStyle(style = showLessStyle) { append(showLessText) }
                         } else {
-                            // Display truncated text and "Show More" button when collapsed.
+                             
                             val adjustText =
                                 text
                                     .substring(startIndex = 0, endIndex = lastCharIndex)
@@ -78,14 +78,14 @@ fun ExpandableText(
                             withStyle(style = showMoreStyle) { append(showMoreText) }
                         }
                     } else {
-                        // Display the full text when not clickable.
+                         
                         append(text)
                     }
                 },
-            // Set max lines based on the expanded state.
+             
             maxLines = if (isExpanded) Int.MAX_VALUE else collapsedMaxLine,
             fontStyle = fontStyle,
-            // Callback to determine visual overflow and enable click ability.
+             
             onTextLayout = { textLayoutResult ->
                 if (!isExpanded && textLayoutResult.hasVisualOverflow) {
                     clickable = true

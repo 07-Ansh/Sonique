@@ -42,9 +42,7 @@ public class Log {
         w(tag, msg + " " + ex.getMessage());
     }
 
-    /**
-     * In case of file, flushes all data to disk
-     */
+     
     public static void flush() {
         sLogger.flush();
     }

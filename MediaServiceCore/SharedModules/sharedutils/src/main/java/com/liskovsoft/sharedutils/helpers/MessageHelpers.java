@@ -31,7 +31,7 @@ public class MessageHelpers {
     }
 
     public static void showMessageThrottled(final Context ctx, final String msg) {
-        // throttle msg calls
+         
         if (System.currentTimeMillis() - sExitMsgTimeMS < LONG_MSG_TIMEOUT_MS) {
             return;
         }
@@ -52,7 +52,7 @@ public class MessageHelpers {
             return;
         }
 
-        final Context context = ctx.getApplicationContext(); // memory leak fix
+        final Context context = ctx.getApplicationContext();  
 
         Runnable toast = () -> {
             try {
@@ -62,7 +62,7 @@ public class MessageHelpers {
                 currentToast.show();
 
                 setupCleanup();
-            } catch (Exception ex) { // NPE fix
+            } catch (Exception ex) {  
                 ex.printStackTrace();
             }
         };
@@ -74,37 +74,21 @@ public class MessageHelpers {
         }
     }
 
-    /**
-     * Shows toast message.<br/>
-     * Uses resource id as message.
-     * @param ctx context
-     * @param resId resource id
-     */
+     
     public static void showMessage(Context ctx, int resId) {
         if (ctx != null) {
             showMessage(ctx, ctx.getResources().getString(resId));
         }
     }
 
-    /**
-     * Shows formatted toast message.<br/>
-     * Uses resource id as message.
-     * @param ctx context
-     * @param resId resource id
-     * @param formatArgs format arguments
-     */
+     
     public static void showMessage(Context ctx, int resId, Object... formatArgs) {
         if (ctx != null) {
             showMessage(ctx, ctx.getResources().getString(resId, formatArgs));
         }
     }
 
-    /**
-     * Shows long toast message.<br/>
-     * Uses resource id as message.
-     * @param ctx context
-     * @param resId resource id
-     */
+     
     public static void showLongMessage(Context ctx, int resId) {
         if (ctx != null) {
             showLongMessage(ctx, ctx.getResources().getString(resId));
@@ -112,7 +96,7 @@ public class MessageHelpers {
     }
 
     public static void showLongMessage(Context ctx, String msg) {
-        // Fix infinite msg displaying
+         
         for (Toast toast : sToasts) {
             toast.cancel();
         }
@@ -124,7 +108,7 @@ public class MessageHelpers {
     }
 
     public static void showLongMessage(Context ctx, String template, Object... params) {
-        // Fix infinite msg displaying
+         
         for (Toast toast : sToasts) {
             toast.cancel();
         }
@@ -153,7 +137,7 @@ public class MessageHelpers {
 
     private static void fixTextSize(Toast toast, Context context) {
         if (sTextSize == 0) {
-            // Maintain text size between com.sonique.app rebooting
+             
             sTextSize = context.getResources().getDimension(R.dimen.dialog_text_size);
         }
 
@@ -165,8 +149,8 @@ public class MessageHelpers {
         CharSequence originText = extractText(newToast);
 
         Helpers.removeIf(sToasts, toast -> {
-            // Smart cancel only toasts that have different message
-            // So remains possibility to long message to be displayed
+             
+             
             boolean doRemove = !isLong || !extractText(toast).equals(originText);
             if (doRemove) {
                 toast.cancel();

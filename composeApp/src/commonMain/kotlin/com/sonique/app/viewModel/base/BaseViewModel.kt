@@ -27,20 +27,13 @@ abstract class BaseViewModel :
     protected val mediaPlayerHandler: MediaPlayerHandler by inject<MediaPlayerHandler>()
     private val _nowPlayingVideoId: MutableStateFlow<String> = MutableStateFlow("")
 
-    /**
-     * Get now playing video id
-     * If empty, no video is playing
-     */
+     
     val nowPlayingVideoId: StateFlow<String> get() = _nowPlayingVideoId
 
-    /**
-     * Tag for logging
-     */
+     
     protected val tag: String = javaClass.simpleName
 
-    /**
-     * Log with viewModel tag
-     */
+     
     protected fun log(
         message: String,
         logType: LogLevel = LogLevel.WARN,
@@ -53,9 +46,7 @@ abstract class BaseViewModel :
         }
     }
 
-    /**
-     * Cancel all jobs
-     */
+     
     override fun onCleared() {
         super.onCleared()
         viewModelScope.cancel()
@@ -79,7 +70,7 @@ abstract class BaseViewModel :
         org.jetbrains.compose.resources
             .getString(resId)
 
-    // Loading dialog
+     
     private val _showLoadingDialog: MutableStateFlow<Pair<Boolean, String>> = MutableStateFlow(false to "")
     val showLoadingDialog: StateFlow<Pair<Boolean, String>> get() = _showLoadingDialog
 
@@ -107,9 +98,7 @@ abstract class BaseViewModel :
         }
     }
 
-    /**
-     * Communicate with SimpleMediaServiceHandler to load media item
-     */
+     
     fun setQueueData(queueData: QueueData.Data) {
         mediaPlayerHandler.reset()
         mediaPlayerHandler.setQueueData(queueData)

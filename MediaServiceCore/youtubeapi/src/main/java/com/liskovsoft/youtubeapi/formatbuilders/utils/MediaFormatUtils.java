@@ -63,7 +63,7 @@ public class MediaFormatUtils {
     }
 
     public static String extractCodecs(MediaFormat format) {
-        // input example: video/mp4;+codecs="avc1.640033"
+         
         Matcher matcher = CODECS_PATTERN.matcher(format.getMimeType());
         matcher.find();
         return matcher.group(1);

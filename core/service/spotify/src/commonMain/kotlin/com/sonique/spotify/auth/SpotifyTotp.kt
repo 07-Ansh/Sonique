@@ -3,18 +3,13 @@ package com.sonique.spotify.auth
 import io.ktor.utils.io.core.*
 import kotlin.io.encoding.Base64
 
-/**
- * Implementation of Time-based One-Time Password for Spotify authentication
- * Logic from https://github.com/misiektoja/spotify_monitor/blob/main/debug/spotify_monitor_totp_test.py
- */
+ 
 object SpotifyTotp {
     private const val BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
     val TOTP_SECRET_V22 = 22 to listOf(99,101,119,123,69,120,91,123,97,74,53,48,76,102,55,69,110,54)
 
-    /**
-     * Generate a TOTP value for the given timestamp
-     */
+     
     fun at(timestamp: Long, totpSecret: Pair<Int, List<Int>>?): String = generate(timestamp, totpSecret)
 
     private fun generate(timestamp: Long, totpSecret: Pair<Int, List<Int>>?): String {
@@ -27,16 +22,16 @@ object SpotifyTotp {
         val secretCipherBytes = totpSecret.second
         println("TOTP cipher: $secretCipherBytes")
 
-        // Transform bytes: e ^ ((t % 33) + 9) for each byte
+         
         val transformed = secretCipherBytes.mapIndexed { index, byte ->
             byte xor ((index % 33) + 9)
         }
 
-        // Join numbers as string and convert to hex
+         
         val joined = transformed.joinToString("")
         val hexStr = joined.toByteArray().toHexString()
 
-        // Convert to base32 secret (without padding)
+         
         val secret = base64ToBase32(Base64.encode(hexStr.hexToByteArray()))
             .trimEnd('=')
 
@@ -70,7 +65,7 @@ object SpotifyTotp {
             result.append(BASE32_ALPHABET[(value shl (5 - bits)) and 0x1F])
         }
 
-        // Add padding
+         
         while (result.length % 8 != 0) {
             result.append('=')
         }

@@ -37,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
 @RunWith(RobolectricTestRunner.class)
 public class BindManagerTest {
     private static final String SCREEN_NAME = "TubeNext";
-    private static final String DEVICE_ID = "2a026ce9-4429-4c5e-8ef5-0101eddf5671"; // Should be random UUID
+    private static final String DEVICE_ID = "2a026ce9-4429-4c5e-8ef5-0101eddf5671";  
     private BindManager mBindManager;
     private InfoManager mInfoManager;
     private CommandManager mCommandManager;
@@ -45,11 +45,11 @@ public class BindManagerTest {
 
     @Before
     public void setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS");
 
-        ShadowLog.stream = System.out; // catch Log class output
+        ShadowLog.stream = System.out;  
 
         mBindManager = RetrofitHelper.create(BindManager.class);
         mInfoManager = RetrofitHelper.create(InfoManager.class);
@@ -64,7 +64,7 @@ public class BindManagerTest {
                 screen.getScreenId(), SCREEN_NAME, BindParams.ACCESS_TYPE, BindParams.APP);
         PairingCode pairingCode = RetrofitHelper.get(pairingCodeWrapper);
 
-        // Pairing code XXX-XXX-XXX-XXX
+         
         assertNotNull("Pairing code not empty", pairingCode.getPairingCode());
     }
 
@@ -112,7 +112,7 @@ public class BindManagerTest {
         Request request = new Builder().url(url).build();
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        // Read infinitely
+         
         builder.readTimeout(0, TimeUnit.MILLISECONDS);
 
         OkHttpClient client = builder.build();

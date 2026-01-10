@@ -18,7 +18,7 @@ import com.liskovsoft.youtubeapi.common.models.V2.TileItem;
 import com.liskovsoft.googlecommon.common.helpers.YouTubeHelper;
 
 public class YouTubeMediaItem implements MediaItem {
-    //private static int sId;
+     
     private int mId;
     private String mTitle;
     private CharSequence mSecondTitle;
@@ -61,7 +61,7 @@ public class YouTubeMediaItem implements MediaItem {
     public static YouTubeMediaItem from(ItemWrapper item, int position) {
         YouTubeMediaItem mediaItem = from(item);
 
-        // In case can't find a position of item inside browse playlist query. So using position inside group instead.
+         
         if (mediaItem != null && mediaItem.mPlaylistIndex == -1 && mediaItem.mPlaylistId != null) {
             mediaItem.mPlaylistIndex = position;
         }
@@ -107,7 +107,7 @@ public class YouTubeMediaItem implements MediaItem {
 
         video.mTitle = item.getTitle();
         video.mSecondTitle = YouTubeHelper.createInfo(
-                item.getDescBadgeText(), // Mostly it's a 4K label
+                item.getDescBadgeText(),  
                 item.getUserName(),
                 item.getPublishedTime(),
                 item.getViewCountText(),
@@ -120,7 +120,7 @@ public class YouTubeMediaItem implements MediaItem {
         video.mParams = item.getPlaylistParams();
         video.mPlaylistIndex = item.getPlaylistIndex();
         video.mChannelId = item.getChannelId();
-        // TODO: time conversion doesn't take into account locale's specific delimiters
+         
         video.mLengthText = item.getBadgeText();
         video.mBadgeText = item.getBadgeText();
         video.mPercentWatched = item.getPercentWatched();
@@ -145,7 +145,7 @@ public class YouTubeMediaItem implements MediaItem {
         video.mMediaItemType = MediaItem.TYPE_VIDEO;
         video.mTitle = item.getTitle();
         video.mSecondTitle = YouTubeHelper.createInfo(
-                item.getDescBadgeText(), // Mostly it's a 4K label
+                item.getDescBadgeText(),  
                 item.getUserName(),
                 item.getPublishedDate(),
                 item.getShortViewCountText() != null ? item.getShortViewCountText() : item.getViewCountText(),
@@ -157,7 +157,7 @@ public class YouTubeMediaItem implements MediaItem {
         video.mPlaylistId = item.getPlaylistId();
         video.mPlaylistIndex = item.getPlaylistIndex();
         video.mChannelId = item.getChannelId();
-        // TODO: time conversion doesn't take into account locale specific delimiters
+         
         video.mLengthText = item.getLengthText() != null ? item.getLengthText() : item.getBadgeText();
         video.mBadgeText = item.getBadgeText() != null ? item.getBadgeText() : item.getLengthText();
         video.mPercentWatched = item.getPercentWatched();
@@ -189,7 +189,7 @@ public class YouTubeMediaItem implements MediaItem {
         video.mPlaylistId = item.getPlaylistId();
         video.mPlaylistIndex = item.getPlaylistIndex();
         video.mChannelId = item.getChannelId();
-        // TODO: time conversion doesn't take into account locale specific delimiters
+         
         video.mLengthText = item.getLengthText();
         video.mBadgeText = item.getLengthText();
         video.mPercentWatched = item.getPercentWatched();
@@ -249,7 +249,7 @@ public class YouTubeMediaItem implements MediaItem {
     }
 
     private static void addCommonProps(YouTubeMediaItem video) {
-        //video.mId = createId(video);
+         
         video.mContentType = "video/mp4";
         video.mWidth = 1280;
         video.mHeight = 720;
@@ -279,9 +279,7 @@ public class YouTubeMediaItem implements MediaItem {
         return video;
     }
 
-    /**
-     * Special item derived from tab (e.g. user Library sections)
-     */
+     
     public static YouTubeMediaItem from(GridTab tab, int type) {
         YouTubeMediaItem item = new YouTubeMediaItem();
         
@@ -296,19 +294,19 @@ public class YouTubeMediaItem implements MediaItem {
         return item;
     }
 
-    //private static int createId(YouTubeMediaItem item) {
-    //    int id;
-    //
-    //    if (item.mVideoId != null) {
-    //        id = item.mVideoId.hashCode();
-    //    } else if (item.mChannelId != null) {
-    //        id = item.mChannelId.hashCode();
-    //    } else {
-    //        id = sId++;
-    //    }
-    //
-    //    return id;
-    //}
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
+     
 
     @Override
     public int getId() {
@@ -581,7 +579,7 @@ public class YouTubeMediaItem implements MediaItem {
 
         String[] split = spec.split("&mi;");
 
-        // 'mMediaItemType' backward compatibility
+         
         if (split.length == 7) {
             split = Helpers.appendArray(split, new String[]{"-1"});
         }
@@ -629,7 +627,7 @@ public class YouTubeMediaItem implements MediaItem {
 
     @Override
     public int hashCode() {
-        //return Helpers.hashCode(mVideoId, mPlaylistId, mChannelId, mReloadPageKey);
+         
         int hashCodeAny = YouTubeHelper.hashCodeAny(this);
         return hashCodeAny != -1 ? hashCodeAny : super.hashCode();
     }

@@ -41,7 +41,7 @@ fun ExpandableSettingCategory(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = !expanded }
-                .padding(vertical = 12.dp, horizontal = 4.dp), // Matched existing padding feel
+                .padding(vertical = 12.dp, horizontal = 4.dp),  
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {

@@ -72,12 +72,12 @@ public class BrowseApiTestBase {
         assertNotNull("Id not null", videoId);
         assertTrue("Time not null or live: " + videoId, videoItem.getPublishedDate() != null || videoItem.isLive());
         assertTrue("Length not null or live: " + videoId, videoItem.getLengthText() != null || videoItem.isLive());
-        //assertNotNull("Channel not null: " + videoId, videoItem.getChannelId());
+         
         assertNotNull("User not null: " + videoId, videoItem.getUserName());
         assertNotNull("Thumbs not null: " + videoId, videoItem.getThumbnails());
 
-        // Absent in Subscribe section
-        //assertNotNull("Views not null: " + videoId, videoItem.getViewCountText());
+         
+         
     }
 
     protected void testFields(MusicItem musicItem) {
@@ -90,7 +90,7 @@ public class BrowseApiTestBase {
         assertNotNull("User not null: " + videoId, musicItem.getUserName());
         assertNotNull("Thumbs not null: " + videoId, musicItem.getThumbnails());
 
-        // Absent in Recommended section
-        //assertNotNull("Channel not null: " + videoId, musicItem.getChannelId());
+         
+         
     }
 }

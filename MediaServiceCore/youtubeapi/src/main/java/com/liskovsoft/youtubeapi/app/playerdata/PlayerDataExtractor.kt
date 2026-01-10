@@ -19,18 +19,18 @@ internal class PlayerDataExtractor(val playerUrl: String) {
     private var cpnCode: String? = null
     private var signatureTimestamp: String? = null
     private val fixedPlayerUrl by lazy {
-        // Those are implements global helper functions. No fix. Fallback to regular.
-        // See https://github.com/yt-dlp/yt-dlp/issues/12398
-        // tv url: https://www.youtube.com/s/player/69b31e11/tv-player-es6-tce.vflset/tv-player-es6-tce.js
-        // web url: https://www.youtube.com/s/player/e12fbea4/player_ias_tce.vflset/en_US/base.js
+         
+         
+         
+         
         playerUrl
-            //.replace("_tce", "") // global helper functions, web url
-            //.replace("/player_ias.vflset/en_US/base.js", "/tv-player-ias.vflset/tv-player-ias.js") // does not validates cpn
-            .replace("-es6", "-ias") // es6 no supported
+             
+             
+            .replace("-es6", "-ias")  
     }
 
     init {
-        // Get the code from the cache
+         
         restoreAllData()
         checkSigData()
         checkCpnData()
@@ -69,8 +69,8 @@ internal class PlayerDataExtractor(val playerUrl: String) {
     }
 
     fun validate(): Boolean {
-        // TODO: fix cpn code
-        // return mNFuncCode && mSigFuncCode && mCPNCode != null && mSignatureTimestamp != null
+         
+         
         return nFuncCode && sFuncCode && signatureTimestamp != null
     }
 
@@ -155,7 +155,7 @@ internal class PlayerDataExtractor(val playerUrl: String) {
 
     private fun checkSigData() {
         if (nFuncCode && sFuncCode) {
-            V8ChallengeProvider.warmup() // enable hot start
+            V8ChallengeProvider.warmup()  
             return
         }
 

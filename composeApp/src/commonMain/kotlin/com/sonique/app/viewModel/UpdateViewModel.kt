@@ -39,7 +39,7 @@ class UpdateViewModel(
     }
 
     private fun isUpdateAvailable(local: String, remote: String): Boolean {
-        // Remove 'v' prefix if present
+         
         val localClean = local.removePrefix("v")
         val remoteClean = remote.removePrefix("v")
 

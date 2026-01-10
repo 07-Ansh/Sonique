@@ -19,16 +19,16 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 public class SponsorBlockApiTest {
-    private static final String VIDEO_ID = "0e3GPea1Tyg"; // Mr. Beast
+    private static final String VIDEO_ID = "0e3GPea1Tyg";  
     private SponsorBlockApi mService;
 
     @Before
     public void setUp() {
-        // fix issue: No password supplied for PKCS#12 KeyStore
-        // https://github.com/robolectric/robolectric/issues/5115
+         
+         
         System.setProperty("javax.net.ssl.trustStoreType", "JKS");
 
-        ShadowLog.stream = System.out; // catch Log class output
+        ShadowLog.stream = System.out;  
 
         mService = RetrofitHelper.create(SponsorBlockApi.class);
     }

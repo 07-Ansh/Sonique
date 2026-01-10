@@ -97,7 +97,7 @@ internal data class MediaItemMetadataImpl(val watchNextResult: WatchNextResult,
     private val videoDescription by lazy {
         descriptionPanel?.getDescriptionText() ?:
         videoMetadata?.description?.getText() ?:
-        // Scroll to the end till we find description tile
+         
         suggestionList?.lastOrNull()?.shelf?.getItemWrappers()?.firstOrNull()?.getDescriptionText()
     }
     private val videoSecondTitle by lazy {
@@ -111,23 +111,23 @@ internal data class MediaItemMetadataImpl(val watchNextResult: WatchNextResult,
         (videoOwner?.getThumbnails() ?: channelOwner?.getThumbnails() ?: collaboratorPanel?.getThumbnails())?.getOptimalResThumbnailUrl()
     }
     private val suggestionList by lazy {
-        // NOTE: the result also contains unnamed sections (new suggestions type)
+         
         val list = suggestedSections
             ?.filter { it.getItemWrappers() != null }
             ?.mapIndexed { idx, it -> SuggestionsGroup(it).apply {
-                // Replace "Up Next" with real playlist name
+                 
                 if (idx == 0 && playlistInfo?.title != null) {
                     title = playlistInfo?.title
                 }
-                // Unnamed sections have space in names " ". Remove spaces to improve further parsing
+                 
                 title = title?.trim()
             }}
         if (list?.isNotEmpty() == true)
             list
         else
-            // In rare cases first chip item contains all shelfs
+             
             suggestedSections?.firstOrNull()?.getChipItems()?.firstOrNull()?.run {
-                val chipTitle = getTitle() // shelfs inside a chip aren't have a titles
+                val chipTitle = getTitle()  
                 getShelfItems()?.map { it?.let { SuggestionsGroup(it).apply { title = title ?: chipTitle } } }
             }
     }
@@ -138,11 +138,11 @@ internal data class MediaItemMetadataImpl(val watchNextResult: WatchNextResult,
         videoMetadata?.getViewCountText() ?: videoMetadata?.getLongViewCountText()
     }
 
-    private val publishedTime by lazy {  // absolute date (e.g 1 september 2019)
+    private val publishedTime by lazy {   
         videoMetadata?.getPublishedTime() ?: descriptionPanel?.getPublishDate()
     }
 
-    private val publishedDateText by lazy { // relative date (e.g. 1 hour ago)
+    private val publishedDateText by lazy {  
         videoMetadata?.getDateText() ?: videoDetails?.getPublishedTimeText()
     }
 
@@ -192,7 +192,7 @@ internal data class MediaItemMetadataImpl(val watchNextResult: WatchNextResult,
     }
 
     private val dislikeCountItem by lazy {
-        // Fake count based on 'returnyoutubedislike' plugin algorithm
+         
         videoMetadata?.getLikeCountInt()?.let { if (it > 0) ServiceHelper.prettyCount(it * 0.032) else null }
     }
 

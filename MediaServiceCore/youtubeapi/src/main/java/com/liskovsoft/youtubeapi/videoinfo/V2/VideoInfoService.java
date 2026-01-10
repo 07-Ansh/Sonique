@@ -28,25 +28,25 @@ public class VideoInfoService extends VideoInfoServiceBase {
     private static final String TAG = VideoInfoService.class.getSimpleName();
     private static VideoInfoService sInstance;
     private final VideoInfoApi mVideoInfoApi;
-    // VIDEO_INFO_TV can bypass "Sign in to confirm you're not a bot" (rare case)
-    // VIDEO_INFO_WEB_EMBED - the best one, with no occasional 403 errors
-    // VIDEO_INFO_IOS can work without NSig.
-    // VIDEO_INFO_TV and VIDEO_INFO_TV_EMBED are the only ones working in North America
-    // VIDEO_INFO_MWEB - can bypass SABR-only responses
+     
+     
+     
+     
+     
     private final static AppClient[] VIDEO_INFO_TYPE_LIST = {
-            AppClient.WEB_EMBED, // Restricted (18+) videos
-            //AppClient.ANDROID_SDK_LESS, // doesn't require pot (hangs on cronet!)
-            AppClient.ANDROID_REEL, // doesn't require pot and cipher
+            AppClient.WEB_EMBED,  
+             
+            AppClient.ANDROID_REEL,  
             AppClient.IOS,
-            AppClient.TV, // Supports auth. Fixes "please sign in" bug!
+            AppClient.TV,  
             AppClient.TV_LEGACY,
             AppClient.TV_DOWNGRADED,
-            AppClient.TV_EMBED, // single audio language
+            AppClient.TV_EMBED,  
             AppClient.TV_SIMPLY,
-            AppClient.GEO, // Fix video clip blocked in current location
-            AppClient.MWEB, // single audio language
+            AppClient.GEO,  
+            AppClient.MWEB,  
             AppClient.WEB_SAFARI,
-            AppClient.WEB, // Fix video clip blocked in current location
+            AppClient.WEB,  
     };
     @Nullable
     private AppClient mVideoInfoType = null;
@@ -75,7 +75,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
 
         initInfoTypeIfNeeded();
 
-        AppService.instance().resetClientPlaybackNonce(); // unique value per each video info
+        AppService.instance().resetClientPlaybackNonce();  
 
         mAuthBlock = true;
 
@@ -104,7 +104,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
 
         mAuthBlock = true;
 
-        // Only the tv client supports auth features
+         
         return getVideoInfo(AppClient.TV, videoId, clickTrackingParams);
     }
 
@@ -146,17 +146,17 @@ public class VideoInfoService extends VideoInfoServiceBase {
     public void switchNextFormat() {
         initInfoTypeIfNeeded();
 
-        // Try to reset pot cache for the last video
+         
         if (!mIsUnplayable && PoTokenGate.resetCache(getClient())) {
             return;
         }
-        // The Premium is likely broken
+         
         if (getData().isFormatEnabled(MediaServiceData.FORMATS_EXTENDED_HLS)) {
-            // Skip additional formats fetching that could produce an error
+             
             getData().setFormatEnabled(MediaServiceData.FORMATS_EXTENDED_HLS, false);
             return;
         }
-        // And last, try to switch the client
+         
         nextVideoInfoType();
         persistVideoInfoType();
     }
@@ -265,7 +265,7 @@ public class VideoInfoService extends VideoInfoServiceBase {
             }
         }
 
-        // TV and others has a limited number of auto generated subtitles
+         
         if (needMoreSubtitles(result)) {
             Log.d(TAG, "Enable full list of auto generated subtitles...");
 

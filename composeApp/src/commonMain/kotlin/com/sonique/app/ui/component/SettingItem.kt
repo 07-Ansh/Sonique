@@ -29,7 +29,7 @@ fun SettingItem(
     isEnable: Boolean = true,
     onClick: (() -> Unit)? = null,
     switch: Pair<Boolean, ((Boolean) -> Unit)>? = null,
-    onDisable: (() -> Unit)? = null, // Callback when the item is disabled, switch off settings
+    onDisable: (() -> Unit)? = null,  
     otherView: @Composable (() -> Unit)? = null,
 ) {
     LaunchedEffect(Unit) {

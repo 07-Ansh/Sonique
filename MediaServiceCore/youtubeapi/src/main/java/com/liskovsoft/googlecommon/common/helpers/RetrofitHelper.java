@@ -41,7 +41,7 @@ import retrofit2.Retrofit;
 
 public class RetrofitHelper {
     private static final String TAG = RetrofitHelper.class.getSimpleName();
-    // Ignored when specified url is absolute
+     
     private static final String DEFAULT_BASE_URL = "https://www.youtube.com";
 
     private static <T> T withGson(Class<T> clazz) {
@@ -52,9 +52,7 @@ public class RetrofitHelper {
         return buildRetrofit(JsonPathConverterFactory.create()).create(clazz);
     }
 
-    /**
-     * Skips first line of the response
-     */
+     
     private static <T> T withJsonPathSkip(Class<T> clazz) {
         return buildRetrofit(JsonPathSkipConverterFactory.create()).create(clazz);
     }
@@ -67,13 +65,13 @@ public class RetrofitHelper {
         return buildRetrofit(RegExpConverterFactory.create()).create(clazz);
     }
 
-    //public static <T> T get(Call<T> wrapper) {
-    //    Response<T> response = getResponse(wrapper);
-    //
-    //    //handleResponseErrors(response);
-    //
-    //    return response != null ? response.body() : null;
-    //}
+     
+     
+     
+     
+     
+     
+     
 
     public static <T> T get(Call<T> wrapper) {
         return get(wrapper, true);
@@ -99,8 +97,8 @@ public class RetrofitHelper {
         Response<T> response = getResponse(wrapper);
 
         if (withErrors) {
-            // NOTE: Be careful. Best suited for transaction like methods (e.g. authentication).
-            // Don't use it with BrowseService (invalid response) and others.
+             
+             
             handleResponseErrors(response);
         }
 
@@ -117,14 +115,14 @@ public class RetrofitHelper {
         try {
             return wrapper.execute();
         } catch (ConnectException e) {
-            // ConnectException - server is down or address is banned (returnyoutubedislikeapi.com)
+             
             e.printStackTrace();
         } catch (IOException e) {
-            // SocketException - no internet
-            // InterruptedIOException - Thread interrupted. Thread died!!
-            // UnknownHostException: Unable to resolve host (DNS error) Thread died?
+             
+             
+             
             e.printStackTrace();
-            throw new IllegalStateException(e); // notify caller about network condition
+            throw new IllegalStateException(e);  
         }
 
         return null;
@@ -158,9 +156,7 @@ public class RetrofitHelper {
         return retrofitBuilder;
     }
 
-    /**
-     * Get cookie pair as a string: cookieName=cookieValue
-     */
+     
     public static <T> String getCookie(Response<T> response, String cookieName) {
         if (response == null) {
             return null;
@@ -177,9 +173,7 @@ public class RetrofitHelper {
         return null;
     }
 
-    /**
-     * Get cookie pairs as a colon delimited string: cookieName=cookieValue; cookieName=cookieValue
-     */
+     
     public static <T> String getCookies(Response<T> response) {
         if (response == null) {
             return null;
@@ -221,7 +215,7 @@ public class RetrofitHelper {
             return;
         }
 
-        // 428 - sign in error. The normal behavior when the com.sonique.app constantly pulling for the user code.
+         
         if (response.code() == 400 || response.code() == 403 || response.code() == 428) {
             Gson gson = new GsonBuilder().create();
             try (ResponseBody body = response.errorBody()) {
@@ -241,7 +235,7 @@ public class RetrofitHelper {
                 Log.e(TAG, errorMsg);
                 throw new IllegalStateException(errorMsg);
             } catch (IOException e) {
-                // handle failure to read error
+                 
             }
         }
     }

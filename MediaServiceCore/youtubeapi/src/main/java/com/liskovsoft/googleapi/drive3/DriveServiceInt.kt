@@ -75,7 +75,7 @@ internal object DriveServiceInt {
 
         val folderId = findFileId(path) ?: return null
 
-        // List folder contents
+         
         val folderContentsQuery = "mimeType='$mimeType' and parents in '$folderId'"
 
         return RetrofitHelper.get(mDriveApi.getList(folderContentsQuery))?.files?.mapNotNull { it?.name }
@@ -84,7 +84,7 @@ internal object DriveServiceInt {
     private fun createOrUpdateFolder(folderName: String, folderId: String?, parentFolderId: String?): FileMetadata? {
         return if (folderId == null) {
             createFolder(folderName, parentFolderId)
-        } else null // already exists
+        } else null  
     }
 
     private fun createFolder(folderName: String, parentFolderId: String?): FileMetadata? {

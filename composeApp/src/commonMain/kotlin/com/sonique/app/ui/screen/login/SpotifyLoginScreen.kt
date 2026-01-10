@@ -78,19 +78,19 @@ fun SpotifyLoginScreen(
         mutableStateOf(false)
     }
 
-    // Hide bottom navigation when entering this screen
+     
     LaunchedEffect(Unit) {
         hideBottomNavigation()
     }
 
-    // Show bottom navigation when leaving this screen
+     
     DisposableEffect(Unit) {
         onDispose {
             showBottomNavigation()
         }
     }
 
-    // Handle login success
+     
     LaunchedEffect(spotifyStatus) {
         if (spotifyStatus) {
             settingsViewModel.setSpotifyLogIn(true)
@@ -109,7 +109,7 @@ fun SpotifyLoginScreen(
                         innerPadding.calculateTopPadding() + 64.dp,
                     ),
             )
-            // WebView for Spotify login
+             
             PlatformWebView(
                 state,
                 Config.SPOTIFY_LOG_IN_URL,
@@ -189,7 +189,7 @@ fun SpotifyLoginScreen(
             }
         }
 
-        // Top App Bar with haze effect
+         
         TopAppBar(
             modifier =
                 Modifier

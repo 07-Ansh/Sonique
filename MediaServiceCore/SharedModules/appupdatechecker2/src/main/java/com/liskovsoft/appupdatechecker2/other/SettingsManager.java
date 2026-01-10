@@ -25,12 +25,12 @@ public class SettingsManager {
 
         mPrefs = context.getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
 
-        // defaults are kept in the preference file for ease of tweaking
-        //android.preference.PreferenceManager.setDefaultValues(context, SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE, R.xml.upd_prefs, true);
+         
+         
     }
 
     public long getLastCheckedMs() {
-        // Do not store as var cause object not persistent in memory!
+         
         return mPrefs.getLong(PREF_LAST_CHECKED_MS, 0);
     }
 

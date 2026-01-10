@@ -31,7 +31,7 @@ internal object PlaylistGroupServiceImpl : MediaServicePrefs.ProfileChangeListen
         if (group == null)
             return
 
-        // Move to the top
+         
         (group as ItemGroupImpl).onChange = { persistData() }
         mPlaylists.remove(group)
         mPlaylists.add(0, group)

@@ -25,7 +25,7 @@ final public class GlobalPreferences extends SharedPreferencesBase {
     private static final String PREFER_IPV_4_DNS = "prefer_ipv4_dns";
     private static final String CONTENT_BLOCK_ALT_SERVER = "content_block_alt_server";
     private static final String IS_24_HOUR_LOCALE_ENABLED = "is_24_hour_locale_enabled";
-    private static final List<Runnable> sCallbacks = new CopyOnWriteArrayList<>(); // fix ConcurrentModificationException
+    private static final List<Runnable> sCallbacks = new CopyOnWriteArrayList<>();  
 
     private GlobalPreferences(Context context) {
         super(context, SHARED_PREFERENCES_NAME);
@@ -36,10 +36,10 @@ final public class GlobalPreferences extends SharedPreferencesBase {
             sInstance = new GlobalPreferences(context.getApplicationContext());
 
             for (Runnable callback : sCallbacks) {
-                new Thread(callback).start(); // fix network on main thread exception
+                new Thread(callback).start();  
             }
 
-            // make callbacks garbage collected
+             
             sCallbacks.clear();
         }
 
@@ -47,11 +47,11 @@ final public class GlobalPreferences extends SharedPreferencesBase {
     }
 
     public static void setOnInit(Runnable callback) {
-        // Fix lost account after reboot bug
+         
         if (sInstance == null) {
             sCallbacks.add(callback);
         } else {
-            new Thread(callback).start(); // fix network on main thread exception
+            new Thread(callback).start();  
         }
     }
 

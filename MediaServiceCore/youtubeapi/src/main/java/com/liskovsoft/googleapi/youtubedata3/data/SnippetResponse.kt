@@ -14,10 +14,10 @@ internal data class SnippetWrapper(
         val title: String?,
         val description: String?,
         val channelId: String?,
-        val customUrl: String?, // canonical channelId
+        val customUrl: String?,  
         val channelTitle: String?,
         val publishedAt: String?,
-        val categoryId: String?, // type of the content?
+        val categoryId: String?,  
         val thumbnails: ThumbnailsHolder?,
         val localized: Localized?
     ) {
@@ -41,8 +41,8 @@ internal data class SnippetWrapper(
         )
     }
     data class ContentDetails(
-        val duration: String?, // PT2H4M4S
-        val itemCount: Int? // for playlists
+        val duration: String?,  
+        val itemCount: Int?  
     )
 }
 

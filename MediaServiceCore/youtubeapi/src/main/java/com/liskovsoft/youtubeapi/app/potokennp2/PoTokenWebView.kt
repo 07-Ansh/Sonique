@@ -28,38 +28,38 @@ internal class PoTokenWebView private constructor(
     private var expirationMs: Long = -1
     var initError: Throwable? = null
 
-    //region Initialization
+     
     init {
         val webViewSettings = webView.settings
-        //noinspection SetJavaScriptEnabled we want to use JavaScript!
+         
         webViewSettings.javaScriptEnabled = true
-        // MOD: fix AbstractMethodError (Android 8/9)
-        //if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE)) {
-        //    WebSettingsCompat.setSafeBrowsingEnabled(webViewSettings, false)
-        //}
+         
+         
+         
+         
         setSafeBrowsingEnabled(webViewSettings, false)
 
         webViewSettings.userAgentString = USER_AGENT
-        webViewSettings.blockNetworkLoads = true // the WebView does not need internet access
+        webViewSettings.blockNetworkLoads = true  
 
-        // so that we can run async functions and get back the result
+         
         webView.addJavascriptInterface(this, JS_INTERFACE)
 
         webView.webChromeClient = object : WebChromeClient() {
             override fun onConsoleMessage(m: ConsoleMessage): Boolean {
                 if (m.message().contains("Uncaught")) {
-                    // There should not be any uncaught errors while executing the code, because
-                    // everything that can fail is guarded by try-catch. Therefore, this likely
-                    // indicates that there was a syntax error in the code, i.e. the WebView only
-                    // supports a really old version of JS.
+                     
+                     
+                     
+                     
 
                     val fmt = "\"${m.message()}\", source: ${m.sourceId()} (${m.lineNumber()})"
                     Log.e(TAG, "This WebView implementation is broken: $fmt")
 
-                    // TODO: not needed anymore?
-                    //isBroken = true
+                     
+                     
 
-                    // Next line cause crashes
+                     
                     onInitializationErrorCloseAndCancel(BadWebViewException(fmt))
                 }
                 return super.onConsoleMessage(m)
@@ -71,18 +71,14 @@ internal class PoTokenWebView private constructor(
         if (WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE)) {
             try {
                 WebSettingsCompat.setSafeBrowsingEnabled(settings, enabled)
-            } catch (e: AbstractMethodError) { // Sometimes happens on Android 8/9
+            } catch (e: AbstractMethodError) {  
                 e.printStackTrace()
-                //getAdapter(settings).setSafeBrowsingEnabled(enabled); // try alt approach from WebSettingsCompat
+                 
             }
         }
     }
 
-    /**
-     * Must be called right after instantiating [PoTokenWebView] to perform the actual
-     * initialization. This will asynchronously go through all the steps needed to load BotGuard,
-     * run it, and obtain an `integrityToken`.
-     */
+     
     private fun loadHtmlAndObtainBotguard(context: Context) {
         Log.d(TAG, "loadHtmlAndObtainBotguard() called")
 
@@ -93,7 +89,7 @@ internal class PoTokenWebView private constructor(
             "https://www.youtube.com",
             html.replaceFirst(
                 "</script>",
-                // calls downloadAndRunBotguard() when the page has finished loading
+                 
                 "\n$JS_INTERFACE.downloadAndRunBotguard()</script>"
             ),
             "text/html",
@@ -102,10 +98,7 @@ internal class PoTokenWebView private constructor(
         )
     }
 
-    /**
-     * Called during initialization by the JavaScript snippet appended to the HTML page content in
-     * [loadHtmlAndObtainBotguard] after the WebView content has been loaded.
-     */
+     
     @JavascriptInterface
     fun downloadAndRunBotguard() {
         Log.d(TAG, "downloadAndRunBotguard() called")
@@ -135,10 +128,7 @@ internal class PoTokenWebView private constructor(
         }
     }
 
-    /**
-     * Called during initialization by the JavaScript snippets from either
-     * [downloadAndRunBotguard] or [onRunBotguardResult].
-     */
+     
     @JavascriptInterface
     fun onJsInitializationError(error: String) {
         val msg = "onJsInitializationError: $error"
@@ -146,10 +136,7 @@ internal class PoTokenWebView private constructor(
         onInitializationErrorCloseAndCancel(buildExceptionForJsError(msg))
     }
 
-    /**
-     * Called during initialization by the JavaScript snippet from [downloadAndRunBotguard] after
-     * obtaining the BotGuard execution output [botguardResponse].
-     */
+     
     @JavascriptInterface
     fun onRunBotguardResult(botguardResponse: String) {
         Log.d(TAG, "botguardResponse: $botguardResponse")
@@ -162,9 +149,9 @@ internal class PoTokenWebView private constructor(
         Log.d(TAG, "GenerateIT response: $responseBody")
         val (integrityToken, expirationTimeInSeconds) = parseIntegrityTokenData(responseBody)
 
-        // MOD: backport Instant.now().plusSeconds
-        // leave 10 minutes of margin just to be sure
-        //expirationInstant = Instant.now().plusSeconds(expirationTimeInSeconds - 600)
+         
+         
+         
         expirationMs = System.currentTimeMillis() + ((expirationTimeInSeconds - 600) * 1_000)
 
         runOnMainThread {
@@ -176,9 +163,9 @@ internal class PoTokenWebView private constructor(
             }
         }
     }
-    //endregion
+     
 
-    //region Obtaining poTokens
+     
     override fun generatePoToken(identifier: String): String {
         Log.d(TAG, "generatePoToken() called with identifier $identifier")
         val latch = CountDownLatch(1)
@@ -215,10 +202,7 @@ internal class PoTokenWebView private constructor(
         return pot
     }
 
-    /**
-     * Called by the JavaScript snippet from [generatePoToken] when an error occurs in calling the
-     * JavaScript `obtainPoToken()` function.
-     */
+     
     @JavascriptInterface
     fun onObtainPoTokenError(identifier: String, error: String) {
         val msg = "onObtainPoTokenError: identifier=$identifier error=$error"
@@ -226,10 +210,7 @@ internal class PoTokenWebView private constructor(
         onInitializationErrorCloseAndCancel(buildExceptionForJsError(msg))
     }
 
-    /**
-     * Called by the JavaScript snippet from [generatePoToken] with the original identifier and the
-     * result of the JavaScript `obtainPoToken()` function.
-     */
+     
     @JavascriptInterface
     fun onObtainPoTokenResult(identifier: String, poTokenU8: String) {
         Log.d(TAG, "Generated poToken (before decoding): identifier=$identifier poTokenU8=$poTokenU8")
@@ -240,30 +221,22 @@ internal class PoTokenWebView private constructor(
     }
 
     override fun isExpired(): Boolean {
-        // MOD: java.time backport
-        //return Instant.now().isAfter(expirationInstant)
+         
+         
         return System.currentTimeMillis() > expirationMs
     }
 
-    //endregion
+     
 
-    //region Handling multiple emitters
-    /**
-     * Adds the ([identifier], [emitter]) pair to the [poTokenEmitters] list. This makes it so that
-     * multiple poToken requests can be generated invparallel, and the results will be notified to
-     * the right emitters.
-     */
+     
+     
     private fun addPoTokenEmitter(identifier: String, emitter: (String) -> Unit) {
         synchronized(poTokenEmitters) {
             poTokenEmitters.add(Pair(identifier, emitter))
         }
     }
 
-    /**
-     * Extracts and removes from the [poTokenEmitters] list a [SingleEmitter] based on its
-     * [identifier]. The emitter is supposed to be used immediately after to either signal a success
-     * or an error.
-     */
+     
     private fun popPoTokenEmitter(identifier: String): ((String) -> Unit)? {
         return synchronized(poTokenEmitters) {
             poTokenEmitters.indexOfFirst { it.first == identifier }.takeIf { it >= 0 }?.let {
@@ -272,10 +245,7 @@ internal class PoTokenWebView private constructor(
         }
     }
 
-    /**
-     * Clears [poTokenEmitters] and returns its previous contents. The emitters are supposed to be
-     * used immediately after to either signal a success or an error.
-     */
+     
     private fun popAllPoTokenEmitters(): List<Pair<String, (String) -> Unit>> {
         return synchronized(poTokenEmitters) {
             val result = poTokenEmitters.toList()
@@ -283,17 +253,10 @@ internal class PoTokenWebView private constructor(
             result
         }
     }
-    //endregion
+     
 
-    //region Utils
-    /**
-     * Makes a POST request to [url] with the given [data] by setting the correct headers. Calls
-     * [onInitializationErrorCloseAndCancel] in case of any network errors and also if the response
-     * does not have HTTP code 200, therefore this is supposed to be used only during
-     * initialization. Calls [handleResponseBody] with the response body if the response is
-     * successful. The request is performed in the background and a disposable is added to
-     * [disposables].
-     */
+     
+     
     private fun makeBotguardServiceRequest(
         url: String,
         data: String
@@ -301,7 +264,7 @@ internal class PoTokenWebView private constructor(
         val response = OkHttpManager.instance().doPostRequest(
             url,
             mapOf(
-                // replace the downloader user agent
+                 
                 "User-Agent" to USER_AGENT,
                 "Accept" to "application/json",
                 "Content-Type" to "application/json+protobuf",
@@ -325,42 +288,37 @@ internal class PoTokenWebView private constructor(
         return response.body?.string()
     }
 
-    /**
-     * Handles any error happening during initialization, releasing resources and sending the error
-     * to [generatorEmitter].
-     */
+     
     private fun onInitializationErrorCloseAndCancel(error: Throwable) {
         initError = error
         popAllPoTokenEmitters()
         runOnMainThread {
             close()
-            // throw error
+             
             onInitDone()
         }
     }
 
-    /**
-     * Releases all [webView] and [disposables] resources.
-     */
+     
     @MainThread
     override fun close() {
         webView.clearHistory()
-        // clears RAM cache and disk cache (globally for all WebViews)
+         
         webView.clearCache(true)
 
-        // ensures that the WebView isn't doing anything when destroying it
+         
         webView.loadUrl("about:blank")
 
         webView.onPause()
         webView.removeAllViews()
         webView.destroy()
     }
-    //endregion
+     
 
     companion object : PoTokenGenerator.Factory {
         private val TAG = PoTokenWebView::class.simpleName
-        // Public API key used by BotGuard, which has been got by looking at BotGuard requests
-        private const val GOOGLE_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw" // NOSONAR
+         
+        private const val GOOGLE_API_KEY = "AIzaSyDyT5W0Jh49F30Pqqtyfdf7pDLFKLJoAnw"  
         private const val REQUEST_KEY = "O43z0dpjhgX20SCx4KAo"
         private const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.3"
@@ -399,10 +357,7 @@ internal class PoTokenWebView private constructor(
             return potWv
         }
 
-        /**
-         * Runs [runnable] on the main thread using `Handler(Looper.getMainLooper()).post()`, and
-         * if the `post` fails emits an error on [emitterIfPostFails].
-         */
+         
         private fun runOnMainThread(
             runnable: Runnable
         ) {

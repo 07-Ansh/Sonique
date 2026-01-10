@@ -2,9 +2,7 @@ package com.liskovsoft.googlecommon.common.models.auth;
 
 import com.liskovsoft.googlecommon.common.converters.jsonpath.JsonPath;
 
-/**
- * https://developers.google.com/identity/protocols/oauth2/limited-input-device#access-granted
- */
+ 
 public class AccessToken extends ErrorResponse {
     @JsonPath("$.access_token")
     private String mAccessToken;

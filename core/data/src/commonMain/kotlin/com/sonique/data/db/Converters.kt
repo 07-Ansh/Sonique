@@ -14,7 +14,7 @@ import kotlin.time.Instant
 
 @ProvidedTypeConverter
 class Converters {
-    // Json serialization for Room
+     
     val json =
         Json {
             ignoreUnknownKeys = true

@@ -96,30 +96,28 @@ public class YouTubeOtfSegmentParser {
         return result;
     }
 
-    /**
-     * RegEx test: https://www.freeformatter.com/java-regex-tester.html#ad-output
-     */
+     
     private List<OtfSegment> splitToSegments(String rawString) {
-        // Segment-Durations-Ms: 5120(r=192),5700,
+         
 
         ArrayList<OtfSegment> list = new ArrayList<>();
 
         if (rawString != null) {
             String[] split = rawString.split(",");
-            // Sample to match: '5120(r=192)' or '5120'
+             
             for (String item : split) {
                 Matcher segmentPatternMatcher = DIGIT_PATTERN.matcher(item);
 
                 int findNum = 0;
                 OtfSegment segment = new OtfSegment();
 
-                // example pattern: 5120(r=192)
+                 
                 while (segmentPatternMatcher.find()) {
                     findNum++;
-                    if (findNum == 1) { // 5120
+                    if (findNum == 1) {  
                         segment.setDuration(segmentPatternMatcher.group(0));
-                        list.add(segment); // at least duration should be present
-                    } else if (findNum == 2) { // 192
+                        list.add(segment);  
+                    } else if (findNum == 2) {  
                         segment.setRepeatCount(segmentPatternMatcher.group(0));
                     } else {
                         break;

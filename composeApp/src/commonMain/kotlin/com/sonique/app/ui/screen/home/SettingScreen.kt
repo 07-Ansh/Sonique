@@ -262,7 +262,7 @@ fun SettingScreen(
 
     var width by rememberSaveable { mutableIntStateOf(0) }
 
-    // Backup and restore
+     
     val formatter =
         LocalDateTime.Format {
             byUnicodePattern("yyyyMMddHHmmss")
@@ -294,7 +294,7 @@ fun SettingScreen(
             }
         }
 
-    // Open equalizer
+     
     val resultLauncher = openEqResult(viewModel.getAudioSessionId())
 
 
@@ -371,7 +371,7 @@ fun SettingScreen(
                 .padding(horizontal = 16.dp),
     ) {
         item {
-            // Profile & Stats Section (Redesign)
+             
             ProfileHeader(
                 name = usedAccount?.name ?: "Guest", 
                 avatarUrl = usedAccount?.thumbnailUrl,
@@ -380,10 +380,10 @@ fun SettingScreen(
 
             Spacer(Modifier.height(32.dp))
         }
-            // Settings Header
+             
 
 
-        // Settings Group
+         
         item(key = "settings_group") {
             ExpandableSettingCategory(
                 title = "Google",
@@ -583,14 +583,14 @@ fun SettingScreen(
                                                     title = getString(Res.string.proxy_port),
                                                     message = getString(Res.string.proxy_port_message),
                                                     textField =
-                                                    // Pre-calculate the string message outside the lambda if needed,
-                                                    // or use the pre-calculated one.
-                                                    // In this case we need to launch a coroutine to get the string,
-                                                    // but we are already in a launch block (from onClick).
-                                                    // However, verifyCodeBlock is a lambda stored in data class.
-                                                    // It is invoked later.
-                                                    // So we must capture the string value now.
-                                                    // We can do this by defining the string before creating SettingAlertState.
+                                                     
+                                                     
+                                                     
+                                                     
+                                                     
+                                                     
+                                                     
+                                                     
                                                 SettingAlertState.TextFieldData(
                                                     label = getString(Res.string.proxy_port),
                                                     value = proxyPort.toString(),
@@ -619,7 +619,7 @@ fun SettingScreen(
             }
         }
         
-        // Audio Group
+         
         item(key = "audio") {
              ExpandableSettingCategory(
                 title = stringResource(Res.string.audio),
@@ -703,11 +703,11 @@ fun SettingScreen(
              }
         }
 
-        // Video Group
+         
         if (getPlatform() != Platform.Desktop) {
             item(key = "video") {
                  ExpandableSettingCategory(
-                    title = "Video", // Reusing this derived title or string resource if available
+                    title = "Video",  
                     initialExpanded = false
                  ) {
                      Column {
@@ -772,7 +772,7 @@ fun SettingScreen(
                  }
             }
         }
-        // Playback Group
+         
         item(key = "playback") {
              ExpandableSettingCategory(
                 title = stringResource(Res.string.playback),
@@ -806,7 +806,7 @@ fun SettingScreen(
         }
 
 
-        // Spotify Group
+         
         item(key = "spotify") {
              ExpandableSettingCategory(
                 title = stringResource(Res.string.spotify),
@@ -855,7 +855,7 @@ fun SettingScreen(
              }
         }
 
-        // SponsorBlock Group
+         
         item(key = "sponsor_block") {
              ExpandableSettingCategory(
                 title = stringResource(Res.string.sponsorBlock),
@@ -935,7 +935,7 @@ fun SettingScreen(
              }
         }
         
-        // Storage Group (Android Only)
+         
         if (getPlatform() == Platform.Android) {
             item(key = "storage") {
                  ExpandableSettingCategory(
@@ -1148,7 +1148,7 @@ fun SettingScreen(
                                 }
                             }
                         }
-                        // Legend for Storage
+                         
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(horizontal = 24.dp, vertical = 4.dp),
@@ -1259,7 +1259,7 @@ fun SettingScreen(
             }
         }
         
-        // Backup Group
+         
         item(key = "backup") {
              ExpandableSettingCategory(
                 title = stringResource(Res.string.backup),
@@ -1293,7 +1293,7 @@ fun SettingScreen(
              }
         }
         
-        // About Us Group
+         
         item(key = "about_us") {
              ExpandableSettingCategory(
                 title = stringResource(Res.string.about_us),
@@ -1527,7 +1527,7 @@ fun SettingScreen(
     val alertData by viewModel.alertData.collectAsStateWithLifecycle()
     if (alertData != null) {
         val alertState = alertData ?: return
-        // AlertDialog
+         
         AlertDialog(
             onDismissRequest = { viewModel.setAlertData(null) },
             title = {

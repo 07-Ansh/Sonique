@@ -201,7 +201,7 @@ data class RelatedPage(
                                 ?.musicPlayButtonRenderer
                                 ?.playNavigationEndpoint
                                 ?.watchPlaylistEndpoint ?: return null,
-                        // If the playlist is radio, shuffle is not available
+                         
                         shuffleEndpoint =
                             renderer.menu
                                 ?.menuRenderer

@@ -18,7 +18,7 @@ data class NextResult(
     val lyricsEndpoint: BrowseEndpoint? = null,
     val relatedEndpoint: BrowseEndpoint? = null,
     val continuation: String?,
-    val endpoint: WatchEndpoint, // current or continuation next endpoint
+    val endpoint: WatchEndpoint,  
 )
 
 object NextPage {

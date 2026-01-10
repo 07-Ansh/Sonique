@@ -50,7 +50,7 @@ fun AppNavigationGraph(
             fadeOut()
         },
     ) {
-        // Bottom bar destinations
+         
         composable<HomeDestination> {
             HomeScreen(
                 onScrolling = onScrolling,
@@ -88,22 +88,22 @@ fun AppNavigationGraph(
                 },
             )
         }
-        // Home screen graph
+         
         homeScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
         )
-        // Library screen graph
+         
         libraryScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
         )
-        // List screen graph
+         
         listScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
         )
-        // Login screen graph
+         
         loginScreenGraph(
             innerPadding = innerPadding,
             navController = navController,

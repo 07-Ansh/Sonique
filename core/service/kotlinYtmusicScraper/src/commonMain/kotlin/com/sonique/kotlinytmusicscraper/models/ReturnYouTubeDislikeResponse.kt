@@ -12,11 +12,11 @@ data class ReturnYouTubeDislikeResponse(
     val viewCount: Int? = null,
     val deleted: Boolean? = null,
 )
-//  "id": "WPb2j3GU8Kc",
-//  "dateCreated": "2024-02-05T04:55:16.031426Z",
-//  "likes": 314,
-//  "dislikes": 2,
-//  "rating": 4.974683544303797,
-//  "viewCount": 109972,
-//  "deleted": false
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 

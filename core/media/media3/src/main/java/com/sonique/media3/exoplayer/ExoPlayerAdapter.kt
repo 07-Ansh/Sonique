@@ -22,10 +22,7 @@ import com.sonique.domain.mediaservice.player.MediaPlayerListener
 import com.sonique.logger.Logger
 import com.sonique.media3.utils.BetterShuffleOrder
 
-/**
- * ExoPlayer implementation of MediaPlayerInterface
- * Handles all Media3-specific logic and conversions
- */
+ 
 private const val TAG = "ExoPlayerAdapter"
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -36,18 +33,18 @@ class ExoPlayerAdapter(
     private val listeners = mutableListOf<MediaPlayerListener>()
     private val exoPlayerListener = ExoPlayerListenerImpl()
 
-    // Shuffle management
-    // Maps original playlist index -> shuffled position
+     
+     
     private var shuffleIndices = mutableListOf<Int>()
 
-    // Maps shuffled position -> original playlist index
+     
     private var shuffleOrder = mutableListOf<Int>()
 
     init {
         exoPlayer.addListener(exoPlayerListener)
     }
 
-    // Playback control
+     
     override fun play() = exoPlayer.play()
 
     override fun pause() = exoPlayer.pause()
@@ -71,7 +68,7 @@ class ExoPlayerAdapter(
 
     override fun prepare() = exoPlayer.prepare()
 
-    // Media item management
+     
     override fun setMediaItem(mediaItem: GenericMediaItem) {
         exoPlayer.setMediaItem(mediaItem.toMedia3MediaItem())
         if (shuffleModeEnabled) {
@@ -94,15 +91,15 @@ class ExoPlayerAdapter(
     ) {
         exoPlayer.addMediaItem(index, mediaItem.toMedia3MediaItem())
         val currentIndexBeforeInsert = currentMediaItemIndex
-        // Update shuffle order if enabled
+         
         if (shuffleModeEnabled) {
-            // Check if this is "play next" (inserting right after current playing song)
+             
             if (currentIndexBeforeInsert >= 0 && index == currentIndexBeforeInsert + 1) {
-                // This is "play next" - insert into shuffle order right after current song
+                 
                 val currentShufflePos = shuffleIndices.getOrNull(currentIndexBeforeInsert) ?: 0
                 insertIntoShuffleOrder(index, currentShufflePos)
             } else {
-                // Not "play next" - recreate entire shuffle order
+                 
                 createShuffleOrder()
             }
         }
@@ -167,7 +164,7 @@ class ExoPlayerAdapter(
             shuffledIndex
         }
 
-    // Playback state properties
+     
     override val isPlaying: Boolean get() = exoPlayer.isPlaying
     override val currentPosition: Long get() = exoPlayer.currentPosition
     override val duration: Long get() = exoPlayer.duration
@@ -179,12 +176,12 @@ class ExoPlayerAdapter(
     override val contentPosition: Long get() = exoPlayer.contentPosition
     override val playbackState: Int get() = exoPlayer.playbackState
 
-    // Navigation
+     
     override fun hasNextMediaItem(): Boolean = exoPlayer.hasNextMediaItem()
 
     override fun hasPreviousMediaItem(): Boolean = exoPlayer.hasPreviousMediaItem()
 
-    // Playback modes
+     
     override var shuffleModeEnabled: Boolean
         get() = exoPlayer.shuffleModeEnabled
         set(value) {
@@ -209,7 +206,7 @@ class ExoPlayerAdapter(
             exoPlayer.playbackParameters = value.toMedia3PlaybackParameters()
         }
 
-    // Audio settings
+     
     override val audioSessionId: Int get() = exoPlayer.audioSessionId
     override var volume: Float
         get() = exoPlayer.volume
@@ -223,7 +220,7 @@ class ExoPlayerAdapter(
             exoPlayer.skipSilenceEnabled = value
         }
 
-    // Listener management
+     
     override fun addListener(listener: MediaPlayerListener) {
         listeners.add(listener)
     }
@@ -232,7 +229,7 @@ class ExoPlayerAdapter(
         listeners.remove(listener)
     }
 
-    // Release resources
+     
     override fun release() {
         exoPlayer.removeListener(exoPlayerListener)
         listeners.clear()
@@ -251,39 +248,37 @@ class ExoPlayerAdapter(
         return list
     }
 
-    /**
-     * Notify timeline changed with current order (shuffled or not)
-     */
+     
     private fun notifyTimelineChanged(reason: String) {
         val list = getShuffledMediaItemList()
         listeners.forEach { it.onTimelineChanged(list, reason) }
     }
 
-    // Internal ExoPlayer listener that converts events to generic events
+     
     private inner class ExoPlayerListenerImpl : Player.Listener {
-//        override fun onTimelineChanged(
-//            timeline: Timeline,
-//            reason: Int,
-//        ) {
-//            super.onTimelineChanged(timeline, reason)
-//            val list = mutableListOf<GenericMediaItem>()
-//            val s = exoPlayer.shuffleModeEnabled
-//            var i = timeline.getFirstWindowIndex(s)
-//            while (i != C.INDEX_UNSET) {
-//                getMediaItemAt(i)?.let { list.add(it) }
-//                i = timeline.getNextWindowIndex(i, Player.REPEAT_MODE_OFF, s)
-//            }
-//            listeners.forEach {
-//                it.onTimelineChanged(
-//                    list,
-//                    when (reason) {
-//                        Player.TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED -> "TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED"
-//                        Player.TIMELINE_CHANGE_REASON_SOURCE_UPDATE -> "TIMELINE_CHANGE_REASON_SOURCE_UPDATE"
-//                        else -> "Unknown"
-//                    },
-//                )
-//            }
-//        }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
         override fun onPlaybackStateChanged(playbackState: Int) {
             val domainState =
@@ -398,10 +393,7 @@ class ExoPlayerAdapter(
         }
     }
 
-    /**
-     * Create shuffle order for current playlist
-     * Keeps the current track at its position and shuffles the rest
-     */
+     
     private fun createShuffleOrder() {
         if (mediaItemCount == 0) {
             shuffleIndices.clear()
@@ -409,28 +401,28 @@ class ExoPlayerAdapter(
             return
         }
 
-        // Create list of all indices
+         
         val indices = (0..<mediaItemCount).toMutableList()
 
-        // If we have a current track, keep it at current position
+         
         val currentIndex = currentMediaItemIndex
         if (currentIndex in indices) {
             indices.removeAt(currentIndex)
         }
 
-        // Shuffle the remaining indices
+         
         indices.shuffle()
 
-        // If we have a current track, insert it at the beginning
+         
         if (currentIndex in (0..<mediaItemCount)) {
             indices.add(0, currentIndex)
         }
 
-        // Store the shuffle order
+         
         shuffleOrder.clear()
         shuffleOrder.addAll(indices)
 
-        // Create reverse mapping (original index -> shuffled position)
+         
         shuffleIndices.clear()
         shuffleIndices.addAll(List(mediaItemCount) { 0 })
         shuffleOrder.forEachIndexed { shuffledPos, originalIndex ->
@@ -442,9 +434,7 @@ class ExoPlayerAdapter(
         Logger.d(TAG, "Created shuffle order: $shuffleOrder")
     }
 
-    /**
-     * Clear shuffle order
-     */
+     
     private fun clearShuffleOrder() {
         shuffleIndices.clear()
         shuffleOrder.clear()
@@ -452,13 +442,7 @@ class ExoPlayerAdapter(
         Logger.d(TAG, "Cleared shuffle order")
     }
 
-    /**
-     * Insert item into shuffle order at specific position
-     * Used for "play next" functionality when shuffle is enabled
-     *
-     * @param insertedOriginalIndex The index in the original playlist where item was inserted
-     * @param afterShufflePos The shuffle position after which to insert (typically current song's position)
-     */
+     
     private fun insertIntoShuffleOrder(
         insertedOriginalIndex: Int,
         afterShufflePos: Int,
@@ -467,19 +451,19 @@ class ExoPlayerAdapter(
             return
         }
 
-        // Step 1: Adjust all existing shuffle order indices that are >= insertedOriginalIndex
-        // (because we inserted a new item, all indices after it shift up by 1)
+         
+         
         for (i in shuffleOrder.indices) {
             if (shuffleOrder[i] >= insertedOriginalIndex) {
                 shuffleOrder[i]++
             }
         }
 
-        // Step 2: Insert the new item right after the specified shuffle position
+         
         val insertPos = (afterShufflePos + 1).coerceIn(0, shuffleOrder.size)
         shuffleOrder.add(insertPos, insertedOriginalIndex)
 
-        // Step 3: Rebuild the reverse mapping
+         
         shuffleIndices.clear()
         shuffleIndices.addAll(List(mediaItemCount) { 0 })
         shuffleOrder.forEachIndexed { shuffledPos, origIndex ->
@@ -502,7 +486,7 @@ class ExoPlayerAdapter(
         val item = shuffleOrder.removeAt(fromIndex)
         shuffleOrder.add(toIndex, item)
 
-        // Rebuild reverse mapping
+         
         shuffleIndices.clear()
         shuffleIndices.addAll(List(mediaItemCount) { 0 })
         shuffleOrder.forEachIndexed { shuffledPos, origIndex ->
@@ -518,7 +502,7 @@ class ExoPlayerAdapter(
         val shufflePos = shuffleIndices.getOrNull(originalIndex) ?: return
         shuffleOrder.removeAt(shufflePos)
 
-        // Rebuild reverse mapping
+         
         shuffleIndices.clear()
         shuffleIndices.addAll(List(mediaItemCount) { 0 })
         shuffleOrder.forEachIndexed { shuffledPos, origIndex ->
@@ -531,7 +515,7 @@ class ExoPlayerAdapter(
     }
 }
 
-// Extension functions for conversions between Media3 and Generic types
+ 
 
 @UnstableApi
 private fun GenericMediaItem.toMedia3MediaItem(): MediaItem {

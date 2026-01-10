@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "your_youtube_playlist_list")
 data class YourYouTubePlaylistList(
-    @PrimaryKey val emailPageId: String, // {email}_{pageId}
+    @PrimaryKey val emailPageId: String,  
     val listBrowseIds: List<String>,
 )
 

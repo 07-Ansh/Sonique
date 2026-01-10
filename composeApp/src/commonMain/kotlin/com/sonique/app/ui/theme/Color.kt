@@ -11,7 +11,7 @@ val musica_white = Color(0xFFFFFFFF)
 
 val md_theme_dark_primary = musica_accent
 val md_theme_dark_onPrimary = musica_black
-val md_theme_dark_primaryContainer = Color(0xFF2C4A4B) // Darker Teal
+val md_theme_dark_primaryContainer = Color(0xFF2C4A4B)  
 val md_theme_dark_onPrimaryContainer = musica_accent
 
 val md_theme_dark_secondary = musica_accent

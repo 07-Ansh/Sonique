@@ -71,7 +71,7 @@ actual fun getDatabaseBuilder(converters: Converters) : RoomDatabase.Builder<Mus
             },
             object : Migration(10, 11) {
                 override fun migrate(connection: SQLiteConnection) {
-                    val listYouTubeSyncedId = mutableListOf<Pair<String, List<String>>>() // Pair<youtubePlaylistId, listVideoId>
+                    val listYouTubeSyncedId = mutableListOf<Pair<String, List<String>>>()  
                     connection
                         .prepare(
                             "SELECT youtubePlaylistId, tracks FROM local_playlist WHERE synced_with_youtube_playlist = 1 AND youtubePlaylistId NOT NULL"

@@ -110,7 +110,7 @@ fun MediaPlayerView(
             }
         }
 
-    // Initialize ExoPlayer
+     
     val exoPlayer =
         remember {
             val cacheSink =
@@ -143,13 +143,13 @@ fun MediaPlayerView(
                 }
         }
 
-    // Create a MediaSource
+     
     val mediaSource =
         remember(url) {
             MediaItem.fromUri(url)
         }
 
-    // Set MediaSource to ExoPlayer
+     
     LaunchedEffect(mediaSource) {
         exoPlayer.setMediaItem(mediaSource)
         exoPlayer.prepare()
@@ -157,7 +157,7 @@ fun MediaPlayerView(
         exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
     }
 
-    // Manage lifecycle events
+     
     DisposableEffect(Unit) {
         onDispose {
             exoPlayer.removeListener(playerListener)
@@ -182,7 +182,7 @@ fun MediaPlayerView(
         )
 
         if (presentationState.coverSurface) {
-            // Cover the surface that is being prepared with a shutter
+             
             Box(Modifier.background(Color.Black))
         }
     }
@@ -238,12 +238,12 @@ fun MediaPlayerViewWithSubtitle(
                 val sentence = lines[i]
                 val startTimeMs = sentence.startTimeMs.toLong()
 
-                // estimate the end time of the current sentence based on the start time of the next sentence
+                 
                 val endTimeMs =
                     if (i < lines.size - 1) {
                         lines[i + 1].startTimeMs.toLong()
                     } else {
-                        // if this is the last sentence, set the end time to be some default value (e.g., 1 minute after the start time)
+                         
                         startTimeMs + 60000
                     }
                 if (timelineState.current in startTimeMs..endTimeMs) {
@@ -254,12 +254,12 @@ fun MediaPlayerViewWithSubtitle(
                 val sentence = translatedLines[i]
                 val startTimeMs = sentence.startTimeMs.toLong()
 
-                // estimate the end time of the current sentence based on the start time of the next sentence
+                 
                 val endTimeMs =
                     if (i < translatedLines.size - 1) {
                         translatedLines[i + 1].startTimeMs.toLong()
                     } else {
-                        // if this is the last sentence, set the end time to be some default value (e.g., 1 minute after the start time)
+                         
                         startTimeMs + 60000
                     }
                 if (timelineState.current in startTimeMs..endTimeMs) {
@@ -324,7 +324,7 @@ fun MediaPlayerViewWithSubtitle(
                         if (videoSize.width != 0 && videoSize.height != 0) {
                             videoSize.width.toFloat() / videoSize.height
                         } else {
-                            16f / 9 // Default ratio if video size is not available
+                            16f / 9  
                         }
                 }
 
@@ -344,7 +344,7 @@ fun MediaPlayerViewWithSubtitle(
             if (shouldPip && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val builder = PictureInPictureParams.Builder()
 
-                // Add autoEnterEnabled for versions S and up
+                 
                 builder.setAutoEnterEnabled(false)
                 activity.setPictureInPictureParams(builder.build())
             }
@@ -389,7 +389,7 @@ fun MediaPlayerViewWithSubtitle(
                         Modifier.onGloballyPositioned { layoutCoordinates ->
                             val builder = PictureInPictureParams.Builder()
 
-                            // Add autoEnterEnabled for versions S and up
+                             
                             builder.setAutoEnterEnabled(shouldEnterPipMode)
                             activity?.setPictureInPictureParams(builder.build())
                         }
@@ -432,7 +432,7 @@ fun MediaPlayerViewWithSubtitle(
                 )
 
                 if (presentationState.coverSurface) {
-                    // Cover the surface that is being prepared with a shutter
+                     
                     Box(Modifier.background(Color.Black))
                 }
             }

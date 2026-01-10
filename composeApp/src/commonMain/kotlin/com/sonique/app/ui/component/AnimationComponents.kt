@@ -33,12 +33,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 
-/**
- * A [Surface] with an infinite border animation.
- *
- * @param content The content to be displayed inside the [Surface]
- * Should using [CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified)] to remove default padding.
- */
+ 
 @Composable
 fun InfiniteBorderAnimationView(
     isAnimated: Boolean = false,

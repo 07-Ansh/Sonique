@@ -42,7 +42,7 @@ internal class CacheRepositoryImpl(
                     canvasCache.removeResource(key)
                 }
             }
-            else -> { /* no-op */ }
+            else -> {   }
         }
     }
 

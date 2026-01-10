@@ -183,12 +183,12 @@ fun MediaPlayerViewWithSubtitleJvm(
                 val sentence = lines[i]
                 val startTimeMs = sentence.startTimeMs.toLong()
 
-                // estimate the end time of the current sentence based on the start time of the next sentence
+                 
                 val endTimeMs =
                     if (i < lines.size - 1) {
                         lines[i + 1].startTimeMs.toLong()
                     } else {
-                        // if this is the last sentence, set the end time to be some default value (e.g., 1 minute after the start time)
+                         
                         startTimeMs + 60000
                     }
                 if (timelineState.current in startTimeMs..endTimeMs) {
@@ -199,12 +199,12 @@ fun MediaPlayerViewWithSubtitleJvm(
                 val sentence = translatedLines[i]
                 val startTimeMs = sentence.startTimeMs.toLong()
 
-                // estimate the end time of the current sentence based on the start time of the next sentence
+                 
                 val endTimeMs =
                     if (i < translatedLines.size - 1) {
                         translatedLines[i + 1].startTimeMs.toLong()
                     } else {
-                        // if this is the last sentence, set the end time to be some default value (e.g., 1 minute after the start time)
+                         
                         startTimeMs + 60000
                     }
                 if (timelineState.current in startTimeMs..endTimeMs) {

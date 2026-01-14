@@ -215,7 +215,7 @@ Contributions are welcome! Here's how you can help:
 ## 📄 License
 
 ```
-Copyright (C) 2024 Ansh Sharma
+Copyright (C) 2025 Ansh Sharma
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

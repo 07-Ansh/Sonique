@@ -3,6 +3,8 @@ package com.sonique.app.ui.screen.other
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
+import com.sonique.app.ui.theme.backgroundCard
+import com.sonique.app.ui.theme.overlayMedium
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -139,6 +141,7 @@ import sonique.composeapp.generated.resources.playlist
 import sonique.composeapp.generated.resources.radio
 import sonique.composeapp.generated.resources.search
 import sonique.composeapp.generated.resources.unlimited
+import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -316,7 +319,7 @@ fun PlaylistScreen(
 
                 if (showCancelDownloadDialog) {
                     androidx.compose.material3.AlertDialog(
-                        containerColor = Color(0xFF242424),
+                        containerColor = backgroundCard,
                         onDismissRequest = { showCancelDownloadDialog = false },
                         confirmButton = {
                             TextButton(onClick = {
@@ -388,7 +391,7 @@ fun PlaylistScreen(
                                                         Brush.verticalGradient(
                                                             listOf(
                                                                 Color.Transparent,
-                                                                Color(0x75000000),
+                                                                overlayMedium,
                                                                 md_theme_dark_background,
                                                             ),
                                                         ),
@@ -423,6 +426,7 @@ fun PlaylistScreen(
                                     Column(
                                         horizontalAlignment = Alignment.Start,
                                     ) {
+                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
                                         AsyncImage(
                                             model =
                                                 ImageRequest
@@ -451,6 +455,7 @@ fun PlaylistScreen(
                                                         RoundedCornerShape(8.dp),
                                                     ),
                                         )
+                                    }
                                         Box(
                                             modifier =
                                                 Modifier

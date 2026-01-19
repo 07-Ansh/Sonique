@@ -3,6 +3,7 @@ package com.sonique.app.ui.screen.library
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandHorizontally
+import com.sonique.app.ui.theme.backgroundCard
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -241,7 +242,7 @@ fun LibraryScreen(
                                         .fillMaxWidth()
                                         .padding(horizontal = 20.dp, vertical = 8.dp),
                                     colors = CardDefaults.cardColors(
-                                        containerColor = Color(0xFF242424)  
+                                        containerColor = backgroundCard  
                                     ),
                                     onClick = {
                                         viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)
@@ -417,7 +418,7 @@ fun LibraryScreen(
                         .fillMaxWidth()
                         .wrapContentHeight(),
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+                colors = CardDefaults.cardColors().copy(containerColor = backgroundCard),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,

@@ -12,7 +12,8 @@
     <string name="liked">Liked</string>
     <string name="like">Like</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string name="download">Download</string>
+    <string name="general">General</string>
+    <string name="download">Downloads</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading">Downloading</string>
     <string name="preparing">Preparing</string>
@@ -477,7 +478,7 @@
     <string name="for_you">For you</string>
     <string name="travel">Travel</string>
     <string name="liked_songs">Liked Songs</string>
-    <string name="downloaded_songs">Downloaded Songs</string>
+    <string name="downloaded_songs">Downloads</string>
     <string name="the_device_is_offline">The device is offline</string>
     <string name="explore_downloads">Explore downloads</string>
 </resources>

@@ -1,7 +1,5 @@
 # Sonique
 
-![Sonique Banner](asset/Sonique-Graphic-main.jpeg)
-
 <div align="center">
 
 **A powerful, minimal, and ad-free YouTube Music client for Android**

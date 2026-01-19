@@ -1,6 +1,6 @@
 # Sonique
 
-![Sonique Banner](asset/Sonique-Graphic-main.jpeg)
+![Sonique Banner](asset/Sonique-Graphic-main.png)
 
 <div align="center">
 

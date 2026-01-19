@@ -3,6 +3,7 @@ package com.sonique.app.ui.screen.other
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
+import com.sonique.app.ui.theme.overlayMedium
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -198,7 +199,7 @@ fun PodcastScreen(
                                                     Brush.verticalGradient(
                                                         listOf(
                                                             Color.Transparent,
-                                                            Color(0x75000000),
+                                                            overlayMedium,
                                                             md_theme_dark_background,
                                                         ),
                                                     ),

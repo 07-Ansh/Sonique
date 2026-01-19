@@ -17,9 +17,11 @@ import com.sonique.app.ui.navigation.destination.search.SearchDestination
 import com.sonique.app.ui.screen.home.HomeScreen
 import com.sonique.app.ui.screen.library.LibraryScreen
 import com.sonique.app.ui.screen.other.SearchScreen
+import com.sonique.app.ui.navigation.destination.library.DownloadsDestination
 import com.sonique.app.ui.navigation.destination.library.LikedDestination
 import com.sonique.app.ui.screen.other.PlaylistScreen
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
+import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
 import com.sonique.app.ui.screen.player.FullscreenPlayer
 
 @Composable
@@ -71,9 +73,10 @@ fun AppNavigationGraph(
                 openDownloads = destination.openDownloads,
             )
         }
-        composable<LikedDestination> {
+
+        composable<DownloadsDestination> {
             PlaylistScreen(
-                playlistId = LOCAL_PLAYLIST_ID_LIKED,
+                playlistId = LOCAL_PLAYLIST_ID_DOWNLOADED,
                 isYourYouTubePlaylist = false,
                 navController = navController,
             )
@@ -92,6 +95,8 @@ fun AppNavigationGraph(
         homeScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
+            hideNavBar = hideNavBar,
+            showNavBar = { showNavBar(true) }
         )
          
         libraryScreenGraph(

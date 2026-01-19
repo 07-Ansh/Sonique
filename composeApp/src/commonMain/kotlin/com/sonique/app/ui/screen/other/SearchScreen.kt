@@ -3,6 +3,7 @@ package com.sonique.app.ui.screen.other
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import com.sonique.app.ui.theme.backgroundPrimary
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -428,7 +429,7 @@ fun SearchScreen(
                                             .fillMaxWidth()
                                             .padding(vertical = 4.dp)
                                             .clip(RoundedCornerShape(12.dp))
-                                            .background(Color(0xFF1C1C1E))
+                                            .background(backgroundPrimary)
                                             .clickable {
                                                 searchText = historyItem
                                                 focusManager.clearFocus()

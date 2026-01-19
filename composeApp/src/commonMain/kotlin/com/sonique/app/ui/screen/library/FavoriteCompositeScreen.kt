@@ -213,9 +213,6 @@ fun FavoriteCompositeScreen(
                     }
 
                     items(filteredPlaylists) { item ->
-                        if (item !is PlaylistType) {
-                            return@items
-                        }
                         PlaylistFullWidthItems(
                             onClickListener = {
                                 when (item) {

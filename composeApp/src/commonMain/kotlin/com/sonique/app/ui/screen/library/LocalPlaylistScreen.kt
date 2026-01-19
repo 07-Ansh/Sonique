@@ -3,6 +3,8 @@ package com.sonique.app.ui.screen.library
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
+import com.sonique.app.ui.theme.overlayMedium
+import com.sonique.app.ui.theme.textHighEmphasis
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -452,7 +454,7 @@ fun LocalPlaylistScreen(
                                         Brush.verticalGradient(
                                             listOf(
                                                 Color.Transparent,
-                                                Color(0x75000000),
+                                                overlayMedium,
                                                 md_theme_dark_background,
                                             ),
                                         ),
@@ -552,7 +554,7 @@ fun LocalPlaylistScreen(
                                                 ) ?: "",
                                             ),
                                         style = typo().bodyMedium,
-                                        color = Color(0xC4FFFFFF),
+                                        color = textHighEmphasis,
                                     )
                                 }
                                 Row(

@@ -101,6 +101,7 @@ kotlin {
             implementation(libs.jetbrains.ui.tooling.preview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            implementation("androidx.core:core-splashscreen:1.0.1")
 
             // Compose
             implementation(libs.compose.material3.adaptive)
@@ -272,21 +273,25 @@ android {
         buildConfig = true
     }
     packaging {
-        jniLibs.useLegacyPackaging = true
-        jniLibs.excludes +=
-            listOf(
-                "META-INF/META-INF/DEPENDENCIES",
-                "META-INF/LICENSE",
-                "META-INF/LICENSE.txt",
-                "META-INF/license.txt",
-                "META-INF/NOTICE",
-                "META-INF/NOTICE.txt",
-                "META-INF/notice.txt",
-                "META-INF/ASL2.0",
-                "META-INF/asm-license.txt",
-                "META-INF/notice",
-                "META-INF/*.kotlin_module",
-            )
+        jniLibs {
+            useLegacyPackaging = true
+            excludes +=
+                listOf(
+                    "META-INF/META-INF/DEPENDENCIES",
+                    "META-INF/LICENSE",
+                    "META-INF/LICENSE.txt",
+                    "META-INF/license.txt",
+                    "META-INF/NOTICE",
+                    "META-INF/NOTICE.txt",
+                    "META-INF/notice.txt",
+                    "META-INF/ASL2.0",
+                    "META-INF/asm-license.txt",
+                    "META-INF/notice",
+                    "META-INF/*.kotlin_module",
+                )
+        }
+        // Prevent stripping libpython.zip.so (it's a ZIP file, not a native library)
+        doNotStrip += "**/libpython.zip.so"
         resources {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }

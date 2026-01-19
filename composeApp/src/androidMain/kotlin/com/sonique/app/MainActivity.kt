@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.eygraber.uri.toKmpUriOrNull
 import com.sonique.common.FIRST_TIME_MIGRATION
 import com.sonique.common.SELECTED_LANGUAGE
@@ -95,6 +96,9 @@ class MainActivity : AppCompatActivity() {
     @ExperimentalMaterial3Api
     @ExperimentalFoundationApi
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install splash screen with animation
+        installSplashScreen()
+        
         super.onCreate(savedInstanceState)
         loadKoinModules(
             module {

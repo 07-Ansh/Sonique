@@ -3,6 +3,7 @@ package com.sonique.app.ui.component
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.basicMarquee
+import com.sonique.app.ui.theme.textHighEmphasis
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -95,7 +96,7 @@ fun PodcastEpisodeFullWidthItem(
                     text = "${episode.createdDay ?: ""}${if (!episode.durationString.isNullOrEmpty()) " • ${episode.durationString}" else ""}",
                     style = typo().bodyMedium,
                     maxLines = 1,
-                    color = Color(0xC4FFFFFF),
+                    color = textHighEmphasis,
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -112,7 +113,7 @@ fun PodcastEpisodeFullWidthItem(
                         text = description,
                         style = typo().bodyMedium,
                         maxLines = 1,
-                        color = Color(0xC4FFFFFF),
+                        color = textHighEmphasis,
                         modifier =
                             Modifier
                                 .fillMaxWidth()

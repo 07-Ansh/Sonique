@@ -972,7 +972,7 @@ fun NowPlayingScreenContent(
 
                              
                             Box {
-                                infoColumn@Column(
+                                Column(
                                     Modifier
                                         .alpha(controlLayoutAlpha)
                                         .onGloballyPositioned {
@@ -1337,7 +1337,7 @@ fun NowPlayingScreenContent(
                                         }
                                     }
                                 }
-                                this@Column.AnimatedVisibility(
+                                androidx.compose.animation.AnimatedVisibility(
                                     visible = !showHideControlLayout,
                                     enter = fadeIn() + slideInHorizontally(),
                                     exit = fadeOut() + slideOutHorizontally(),
@@ -1402,7 +1402,7 @@ fun NowPlayingScreenContent(
                             }
                         }
                          
-                        this@Column.AnimatedVisibility(
+                        androidx.compose.animation.AnimatedVisibility(
                             visible = screenDataState.canvasData != null,
                         ) {
                             Box(

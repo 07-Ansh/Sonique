@@ -2,9 +2,11 @@ package com.sonique.app
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -95,6 +97,7 @@ fun App(
 ) {
     val windowSize = currentWindowAdaptiveInfo().windowSizeClass
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
 
     val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
@@ -149,8 +152,10 @@ fun App(
         }
     }
 
-    LaunchedEffect(nowPlayingData) {
-        isShowMiniPlayer = !(nowPlayingData?.mediaItem == null || nowPlayingData?.mediaItem == GenericMediaItem.EMPTY)
+    LaunchedEffect(nowPlayingData, navBackStackEntry) {
+        val hasMedia = !(nowPlayingData?.mediaItem == null || nowPlayingData?.mediaItem == GenericMediaItem.EMPTY)
+        val isSettings = navBackStackEntry?.destination?.route?.contains("Settings") == true
+        isShowMiniPlayer = hasMedia && !isSettings
     }
 
     LaunchedEffect(intent) {
@@ -232,7 +237,6 @@ fun App(
 
 
 
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
     LaunchedEffect(navBackStackEntry) {
         Logger.d("MainActivity", "Current destination: ${navBackStackEntry?.destination?.route}")
         if (navBackStackEntry?.destination?.route?.contains("FullscreenDestination") == true) {
@@ -285,8 +289,8 @@ fun App(
                                 Column {
                                     AnimatedVisibility(
                                         isShowMiniPlayer,
-                                        enter = fadeIn() + slideInHorizontally(),
-                                        exit = fadeOut(),
+                                        enter = fadeIn() + expandVertically(),
+                                        exit = fadeOut() + shrinkVertically(),
                                     ) {
                                         MiniPlayer(
                                             Modifier

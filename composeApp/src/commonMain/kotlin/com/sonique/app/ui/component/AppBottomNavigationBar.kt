@@ -32,7 +32,9 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Favorite
+import androidx.compose.material.icons.rounded.Download
 import com.sonique.app.ui.navigation.destination.library.LikedDestination
+import com.sonique.app.ui.navigation.destination.library.DownloadsDestination
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlin.reflect.KClass
 
@@ -48,7 +50,7 @@ fun AppBottomNavigationBar(
         listOf(
             BottomNavScreen.Home,
             BottomNavScreen.Search,
-            BottomNavScreen.Liked,
+            BottomNavScreen.Downloads,
             BottomNavScreen.Library,
         )
     var selectedIndex by rememberSaveable {
@@ -56,7 +58,7 @@ fun AppBottomNavigationBar(
             when (startDestination) {
                 is HomeDestination -> BottomNavScreen.Home.ordinal
                 is SearchDestination -> BottomNavScreen.Search.ordinal
-                is LikedDestination -> BottomNavScreen.Liked.ordinal
+                is DownloadsDestination -> BottomNavScreen.Downloads.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
                 else -> BottomNavScreen.Home.ordinal  
             },
@@ -163,7 +165,7 @@ fun AppNavigationRail(
             when (startDestination) {
                 is HomeDestination -> BottomNavScreen.Home.ordinal
                 is SearchDestination -> BottomNavScreen.Search.ordinal
-                is LikedDestination -> BottomNavScreen.Liked.ordinal
+                is DownloadsDestination -> BottomNavScreen.Downloads.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
                 else -> BottomNavScreen.Home.ordinal  
             },
@@ -246,7 +248,7 @@ enum class BottomNavScreen(
 ) {
     Home(Res.string.home, Icons.Rounded.Home, HomeDestination),
     Search(Res.string.search, Icons.Rounded.Search, SearchDestination),
-    Liked(Res.string.liked, Icons.Rounded.Favorite, LikedDestination),
+    Downloads(Res.string.download, Icons.Rounded.Download, DownloadsDestination),
     Library(Res.string.library, Icons.Rounded.LibraryMusic, LibraryDestination())
 }
 

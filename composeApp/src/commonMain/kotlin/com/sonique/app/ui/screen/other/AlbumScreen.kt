@@ -3,6 +3,9 @@ package com.sonique.app.ui.screen.other
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
+import com.sonique.app.ui.theme.backgroundCard
+import com.sonique.app.ui.theme.overlayMedium
+import com.sonique.app.ui.theme.textHighEmphasis
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -187,7 +190,7 @@ fun AlbumScreen(
             LocalPlaylistState.PlaylistLoadState.Success -> {
                 if (showCancelDownloadDialog) {
                     androidx.compose.material3.AlertDialog(
-                        containerColor = Color(0xFF242424),
+                        containerColor = backgroundCard,
                         onDismissRequest = { showCancelDownloadDialog = false },
                         confirmButton = {
                             TextButton(onClick = {
@@ -257,7 +260,7 @@ fun AlbumScreen(
                                                     Brush.verticalGradient(
                                                         listOf(
                                                             Color.Transparent,
-                                                            Color(0x75000000),
+                                                            overlayMedium,
                                                             md_theme_dark_background,
                                                         ),
                                                     ),
@@ -354,7 +357,7 @@ fun AlbumScreen(
                                                             stringResource(Res.string.album),
                                                         ),
                                                     style = typo().bodyMedium,
-                                                    color = Color(0xC4FFFFFF),
+                                                    color = textHighEmphasis,
                                                 )
                                             }
                                             Row(

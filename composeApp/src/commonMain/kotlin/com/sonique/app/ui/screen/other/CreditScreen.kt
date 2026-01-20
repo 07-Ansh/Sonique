@@ -88,4 +88,12 @@ fun CreditScreen(
 
                 // App Name & Version
                 Text(
+                    text = stringResource(Res.string.app_name),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "v${VersionManager.getVersionName()}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
 }}}}

@@ -71,4 +71,13 @@ fun CreditScreen(
                 .padding(innerPadding),
             contentPadding = PaddingValues(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
-}}
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // App Icon
+                Image(
+                    painter = painterResource(Res.drawable.app_icon),
+                    contentDescription = "App Icon",
+                    modifier = Modifier
+}}}}

@@ -47,4 +47,12 @@ fun CreditScreen(
         topBar = {
             TopAppBar(
                 title = { Text("About") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
 }}

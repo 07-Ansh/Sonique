@@ -240,8 +240,9 @@ class SettingsViewModel(
         getCanvasCache()
         getYoutubeSubtitleLanguage()
         getSponsorBlockEnabled()
-        getSponsorBlockEnabled()
         getSponsorBlockCategories()
+        getPlayVideoInsteadOfAudio()
+        getVideoQuality()
 
         viewModelScope.launch {
             calculateDataFraction(

@@ -30,3 +30,13 @@ import androidx.navigation.NavController
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.utils.VersionManager
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+import sonique.composeapp.generated.resources.*
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreditScreen(
+    paddingValues: PaddingValues, // Keep for compatibility if needed, but logic handles it
+    navController: NavController,
+) {
+}

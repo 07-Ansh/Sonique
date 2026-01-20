@@ -39,4 +39,12 @@ fun CreditScreen(
     paddingValues: PaddingValues, // Keep for compatibility if needed, but logic handles it
     navController: NavController,
 ) {
-}
+    val uriHandler = LocalUriHandler.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("About") },
+}}

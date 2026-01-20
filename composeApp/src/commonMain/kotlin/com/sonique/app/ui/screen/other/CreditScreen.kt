@@ -80,4 +80,12 @@ fun CreditScreen(
                     painter = painterResource(Res.drawable.app_icon),
                     contentDescription = "App Icon",
                     modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // App Name & Version
+                Text(
 }}}}

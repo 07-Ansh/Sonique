@@ -63,4 +63,12 @@ fun CreditScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = MaterialTheme.colorScheme.background,
-}
+        modifier = Modifier.fillMaxSize()
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+}}

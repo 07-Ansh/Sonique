@@ -170,3 +170,12 @@ fun CreditScreen(
         }
     }
 }
+
+@Composable
+fun SocialItem(
+    icon: ImageVector,
+    text: String,
+    onClick: () -> Unit
+) {
+    Surface(
+}

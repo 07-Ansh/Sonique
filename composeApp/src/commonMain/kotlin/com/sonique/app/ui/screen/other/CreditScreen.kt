@@ -112,4 +112,12 @@ fun CreditScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
+                            text = "Developed by",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Ansh Sharma", // Using hardcoded if string resource not found, or use Res.string.ansh_sharma if verified
+                            style = MaterialTheme.typography.titleMedium,
 }}}}}}

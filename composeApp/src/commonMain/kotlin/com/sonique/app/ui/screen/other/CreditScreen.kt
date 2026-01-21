@@ -178,4 +178,12 @@ fun SocialItem(
     onClick: () -> Unit
 ) {
     Surface(
-}
+        onClick = onClick,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Row(
+}}

@@ -96,4 +96,12 @@ fun CreditScreen(
                     text = "v${VersionManager.getVersionName()}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Developer Info
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
 }}}}

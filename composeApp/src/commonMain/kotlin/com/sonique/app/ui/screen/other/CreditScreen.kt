@@ -186,4 +186,12 @@ fun SocialItem(
             .padding(vertical = 4.dp)
     ) {
         Row(
-}}
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+}}}

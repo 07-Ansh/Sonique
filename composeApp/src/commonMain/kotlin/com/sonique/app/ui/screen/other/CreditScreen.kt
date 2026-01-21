@@ -162,4 +162,11 @@ fun CreditScreen(
                 Text(
                     text = "Made with ❤️",
                     style = MaterialTheme.typography.bodySmall,
-}}}}
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}

@@ -153,4 +153,13 @@ fun CreditScreen(
                         }
                     } 
                 )
+
+                // Website (if applicable) - Optional, maybe just Ko-fi or something?
+                // For now, let's Stick to GitHub and Telegram which are common.
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                Text(
+                    text = "Made with ❤️",
+                    style = MaterialTheme.typography.bodySmall,
 }}}}

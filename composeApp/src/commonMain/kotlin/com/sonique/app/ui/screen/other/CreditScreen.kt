@@ -120,4 +120,13 @@ fun CreditScreen(
                         Text(
                             text = "Ansh Sharma", // Using hardcoded if string resource not found, or use Res.string.ansh_sharma if verified
                             style = MaterialTheme.typography.titleMedium,
-}}}}}}
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Social Links
+                Text(
+}}}}

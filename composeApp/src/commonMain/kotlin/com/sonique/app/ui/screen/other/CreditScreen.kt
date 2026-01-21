@@ -129,4 +129,12 @@ fun CreditScreen(
 
                 // Social Links
                 Text(
+                    text = "Connect with us",
+                    style = MaterialTheme.typography.titleSmall,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Start
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // GitHub
 }}}}

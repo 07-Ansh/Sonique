@@ -145,4 +145,12 @@ fun CreditScreen(
                 
                 // Telegram (Support)
                 SocialItem(
+                    icon = Icons.Rounded.Support, // Using Support icon as placeholder for Telegram
+                    text = "Telegram / Support",
+                    onClick = { 
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Coming Soon")
+                        }
+                    } 
+                )
 }}}}

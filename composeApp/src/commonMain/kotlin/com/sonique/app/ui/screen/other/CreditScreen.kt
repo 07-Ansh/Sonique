@@ -137,4 +137,12 @@ fun CreditScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // GitHub
+                SocialItem(
+                    icon = Icons.Rounded.Code,
+                    text = "GitHub",
+                    onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") }
+                )
+                
+                // Telegram (Support)
+                SocialItem(
 }}}}

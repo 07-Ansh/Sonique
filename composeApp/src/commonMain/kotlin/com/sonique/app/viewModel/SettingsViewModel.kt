@@ -242,7 +242,15 @@ class SettingsViewModel(
         getSponsorBlockEnabled()
         getSponsorBlockCategories()
         getPlayVideoInsteadOfAudio()
+        getSaveRecentSongAndQueue()
+        getSavedPlaybackState()
+        getCrossfadeEnabled()
+        getCrossfadeDuration()
+        getBackupDownloaded()
         getVideoQuality()
+        getSpotifyLogIn()
+        getSpotifyLyrics()
+        getSpotifyCanvas()
 
         viewModelScope.launch {
             calculateDataFraction(

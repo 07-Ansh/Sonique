@@ -138,6 +138,11 @@ class SharedViewModel(
 
     private var canvasJob: Job? = null
 
+
+
+    private val _showGitHubPopup = MutableStateFlow(false)
+    val showGitHubPopup: StateFlow<Boolean> = _showGitHubPopup.asStateFlow()
+
     private val _intent: MutableStateFlow<GenericIntent?> = MutableStateFlow(null)
     val intent: StateFlow<GenericIntent?> = _intent
 
@@ -218,6 +223,8 @@ class SharedViewModel(
             dataStoreManager.getString("liked_guide").first().let {
                 isFirstLiked = it != STATUS_DONE
             }
+
+            checkGitHubPopup()
 
                     nowPlayingState
                         .filterNotNull()
@@ -790,12 +797,34 @@ class SharedViewModel(
                             playlistRepository.updatePlaylistDownloadState(data.id, 0)
                         }
 
-                        else -> {
-                             
-                        }
                     }
                 }
             }
+        }
+    }
+
+    private suspend fun checkGitHubPopup() {
+        val neverShow = dataStoreManager.neverShowGithubPopup.first()
+        if (neverShow) return
+
+        val currentCount = dataStoreManager.githubPopupShownCount.first()
+        val newCount = currentCount + 1
+        dataStoreManager.setGithubPopupShownCount(newCount)
+
+        // Show on 1st launch (or first time after update), then on 5th, then every 20 launches
+        if (newCount == 1 || newCount == 5 || (newCount > 5 && (newCount - 5) % 20 == 0)) {
+            _showGitHubPopup.value = true
+        }
+    }
+
+    fun dismissGitHubPopup() {
+        _showGitHubPopup.value = false
+    }
+
+    fun neverShowGitHubPopupAgain() {
+        _showGitHubPopup.value = false
+        viewModelScope.launch {
+            dataStoreManager.setNeverShowGithubPopup(true)
         }
     }
 

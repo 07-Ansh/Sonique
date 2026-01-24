@@ -159,7 +159,7 @@ fun rememberSettingsCategories(): List<SettingsCategory> {
         SettingsCategory(
             title = stringResource(Res.string.about_us),
             icon = Icons.Default.Info,
-            destination = SettingsAboutDestination
+            destination = CreditDestination
         )
     )
     

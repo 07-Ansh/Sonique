@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.sonique.common.SELECTED_LANGUAGE
 import com.sonique.common.SUPPORTED_LANGUAGE
@@ -79,7 +80,7 @@ internal class DataStoreManagerImpl(
 
     override val location: Flow<String> =
         settingsDataStore.data.map { preferences ->
-            preferences[LOCATION] ?: "VN"
+            preferences[LOCATION] ?: "IN"
         }
 
     override suspend fun setLocation(location: String) {
@@ -337,7 +338,7 @@ internal class DataStoreManagerImpl(
 
     override val sendBackToGoogle =
         settingsDataStore.data.map { preferences ->
-            preferences[SEND_BACK_TO_GOOGLE] ?: FALSE
+            preferences[SEND_BACK_TO_GOOGLE] ?: TRUE
         }
 
     override suspend fun setSendBackToGoogle(send: Boolean) {
@@ -450,7 +451,7 @@ internal class DataStoreManagerImpl(
 
     override val maxSongCacheSize =
         settingsDataStore.data.map { preferences ->
-            preferences[MAX_SONG_CACHE_SIZE] ?: -1
+            preferences[MAX_SONG_CACHE_SIZE] ?: 2048
         }
 
     override suspend fun setMaxSongCacheSize(size: Int) {
@@ -637,7 +638,7 @@ internal class DataStoreManagerImpl(
 
     override val translucentBottomBar =
         settingsDataStore.data.map { preferences ->
-            preferences[TRANSLUCENT_BOTTOM_BAR] ?: TRUE
+            preferences[TRANSLUCENT_BOTTOM_BAR] ?: FALSE
         }
 
     override suspend fun setTranslucentBottomBar(translucent: Boolean) {
@@ -803,7 +804,7 @@ internal class DataStoreManagerImpl(
 
     override val shouldShowLogInRequiredAlert =
         settingsDataStore.data.map { preferences ->
-            preferences[SHOULD_SHOW_LOG_IN_REQUIRED_ALERT] ?: TRUE
+            preferences[SHOULD_SHOW_LOG_IN_REQUIRED_ALERT] ?: FALSE
         }
 
     override suspend fun setShouldShowLogInRequiredAlert(shouldShow: Boolean) {
@@ -958,7 +959,7 @@ internal class DataStoreManagerImpl(
 
     override val killServiceOnExit: Flow<String> =
         settingsDataStore.data.map { preferences ->
-            preferences[KILL_SERVICE_ON_EXIT] ?: FALSE
+            preferences[KILL_SERVICE_ON_EXIT] ?: TRUE
         }
 
     override suspend fun setKillServiceOnExit(kill: Boolean) {
@@ -1088,7 +1089,7 @@ internal class DataStoreManagerImpl(
 
     override val explicitContentEnabled: Flow<String> =
         settingsDataStore.data.map { preferences ->
-            preferences[EXPLICIT_CONTENT_ENABLED] ?: TRUE
+            preferences[EXPLICIT_CONTENT_ENABLED] ?: FALSE
         }
 
     override suspend fun setExplicitContentEnabled(enabled: Boolean) {
@@ -1101,6 +1102,32 @@ internal class DataStoreManagerImpl(
                 settingsDataStore.edit { settings ->
                     settings[EXPLICIT_CONTENT_ENABLED] = FALSE
                 }
+            }
+        }
+    }
+
+    override val githubPopupShownCount: Flow<Int> =
+        settingsDataStore.data.map { preferences ->
+            preferences[GITHUB_POPUP_SHOWN_COUNT] ?: 0
+        }
+
+    override suspend fun setGithubPopupShownCount(count: Int) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[GITHUB_POPUP_SHOWN_COUNT] = count
+            }
+        }
+    }
+
+    override val neverShowGithubPopup: Flow<Boolean> =
+        settingsDataStore.data.map { preferences ->
+            preferences[NEVER_SHOW_GITHUB_POPUP] ?: false
+        }
+
+    override suspend fun setNeverShowGithubPopup(neverShow: Boolean) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[NEVER_SHOW_GITHUB_POPUP] = neverShow
             }
         }
     }
@@ -1178,6 +1205,9 @@ internal class DataStoreManagerImpl(
         val LIQUID_GLASS = stringPreferencesKey("liquid_glass")
 
         val EXPLICIT_CONTENT_ENABLED = stringPreferencesKey("explicit_content_enabled")
+
+        val GITHUB_POPUP_SHOWN_COUNT = intPreferencesKey("github_popup_shown_count")
+        val NEVER_SHOW_GITHUB_POPUP = booleanPreferencesKey("never_show_github_popup")
 
     }
 

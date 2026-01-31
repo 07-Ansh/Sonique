@@ -1426,9 +1426,8 @@ class GstreamerPlayerAdapter(
      
     private suspend fun extractPlayableUrl(mediaItem: GenericMediaItem): Pair<Boolean, String>? {
         Logger.w(TAG, "Extracting playable URL for ${mediaItem.mediaId}")
-        val shouldFindVideo =
-            mediaItem.isVideo() &&
-                dataStoreManager.watchVideoInsteadOfPlayingAudio.first() == DataStoreManager.TRUE
+        // Always use audio-only mode
+        val shouldFindVideo = false
         val videoId = mediaItem.mediaId
         if (File(getDownloadPath()).listFiles().takeIf { it != null }?.any {
                 it.name.contains(videoId)

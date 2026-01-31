@@ -2,7 +2,7 @@ package com.sonique.data.repository
 
 import com.sonique.common.MERGING_DATA_TYPE
 import com.sonique.common.QUALITY
-import com.sonique.common.VIDEO_QUALITY
+
 import com.sonique.data.db.LocalDataSource
 import com.sonique.data.mapping.toSponsorSkipSegments
 import com.sonique.data.mapping.toTrack
@@ -93,21 +93,6 @@ internal class StreamRepositoryImpl(
                 } else {
                     QUALITY.itags.getOrNull(QUALITY.items.indexOf(dataStoreManager.quality.first()))
                 }
-            val videoItag =
-                if (!muxed) {
-                    VIDEO_QUALITY.itags.getOrNull(
-                        VIDEO_QUALITY.items.indexOf(
-                            if (isDownloading) {
-                                dataStoreManager.videoDownloadQuality.first()
-                            } else {
-                                dataStoreManager.videoQuality.first()
-                            },
-                        ),
-                    )
-                        ?: 134
-                } else {
-                    18
-                }
              
             youTube
                 .player(videoId, shouldYtdlp = itag == 774, noLogIn = muxed)
@@ -140,21 +125,11 @@ internal class StreamRepositoryImpl(
                         response.streamingData?.adaptiveFormats?.filter { it.url.isNullOrEmpty().not() }
                             ?: emptyList(),
                     )
-                    Logger.w("Stream", "Get stream for video $isVideo")
-                    val videoFormat =
-                        formatList.find { it.itag == videoItag }
-                            ?: formatList.find { it.itag == 136 }
-                            ?: formatList.find { it.itag == 134 }
-                            ?: formatList.find { !it.isAudio && it.url.isNullOrEmpty().not() }
+
                     val audioFormat =
                         formatList.find { it.itag == itag } ?: formatList.find { it.itag == 141 }
                             ?: formatList.find { it.isAudio && it.url.isNullOrEmpty().not() }
-                    var format =
-                        if (isVideo) {
-                            videoFormat
-                        } else {
-                            audioFormat
-                        }
+                    var format = audioFormat
                     if (format == null) {
                         format = formatList.lastOrNull { it.url.isNullOrEmpty().not() }
                     }
@@ -177,7 +152,7 @@ internal class StreamRepositoryImpl(
                             .filter {
                                 val url = it.url
                                 url != null && youTube.isManifestUrl(url)
-                            }.maxByOrNull { it.width ?: 0 } ?: formatList.find { it.itag == videoItag }
+                            }.maxByOrNull { it.width ?: 0 }
                     }
                     Logger.w("Stream", "Selected hls ${response.streamingData?.hlsManifestUrl}")
                     Logger.w("Stream", "Super format: $superFormat")
@@ -186,7 +161,7 @@ internal class StreamRepositoryImpl(
                     Logger.w("Stream", "expired at ${now().plusSeconds(response.streamingData?.expiresInSeconds?.toLong() ?: 0L)}")
                     insertNewFormat(
                         NewFormatEntity(
-                            videoId = if (VIDEO_QUALITY.itags.contains(format?.itag)) "${MERGING_DATA_TYPE.VIDEO}$videoId" else videoId,
+                            videoId = videoId,
                             itag = format?.itag ?: itag ?: 141,
                             mimeType =
                                 Regex("""([^;]+);\s*codecs=["']([^"']+)["']""")
@@ -227,7 +202,7 @@ internal class StreamRepositoryImpl(
                             cpn = data.first,
                             expiredTime = now().plusSeconds(response.streamingData?.expiresInSeconds?.toLong() ?: 0L),
                             audioUrl = if (muxed) response.streamingData?.hlsManifestUrl else (superFormat?.url ?: audioFormat?.url),
-                            videoUrl = if (muxed) response.streamingData?.hlsManifestUrl else videoFormat?.url,
+                            videoUrl = null,
                         ),
                     )
                     if (data.first != null) {

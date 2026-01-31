@@ -8,8 +8,7 @@ data object SettingsGeneralDestination
 @Serializable
 data object SettingsAudioDestination
 
-@Serializable
-data object SettingsVideoDestination
+
 
 @Serializable
 data object SettingsPlaybackDestination

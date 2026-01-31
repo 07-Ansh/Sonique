@@ -93,10 +93,7 @@ class SettingsViewModel(
     val useTranslation: StateFlow<String?> = _useTranslation
     private var _playerCacheLimit: MutableStateFlow<Int?> = MutableStateFlow(null)
     val playerCacheLimit: StateFlow<Int?> = _playerCacheLimit
-    private var _playVideoInsteadOfAudio: MutableStateFlow<String?> = MutableStateFlow(null)
-    val playVideoInsteadOfAudio: StateFlow<String?> = _playVideoInsteadOfAudio
-    private var _videoQuality: MutableStateFlow<String?> = MutableStateFlow(null)
-    val videoQuality: StateFlow<String?> = _videoQuality
+
     private var _thumbCacheSize = MutableStateFlow<Long?>(null)
     val thumbCacheSize: StateFlow<Long?> = _thumbCacheSize
     private var _canvasCacheSize: MutableStateFlow<Long?> = MutableStateFlow(null)
@@ -157,8 +154,7 @@ class SettingsViewModel(
     private val _downloadQuality = MutableStateFlow<String?>(null)
     val downloadQuality: StateFlow<String?> = _downloadQuality
 
-    private val _videoDownloadQuality = MutableStateFlow<String?>(null)
-    val videoDownloadQuality: StateFlow<String?> = _videoDownloadQuality
+
 
     private var _alertData: MutableStateFlow<SettingAlertState?> = MutableStateFlow(null)
     val alertData: StateFlow<SettingAlertState?> = _alertData
@@ -226,7 +222,7 @@ class SettingsViewModel(
         getDownloadedCacheSize()
         getPlayerCacheLimit()
         getDownloadQuality()
-        getVideoDownloadQuality()
+
         getSendBackToGoogle()
         getNormalizeVolume()
         getSkipSilent()
@@ -241,13 +237,13 @@ class SettingsViewModel(
         getYoutubeSubtitleLanguage()
         getSponsorBlockEnabled()
         getSponsorBlockCategories()
-        getPlayVideoInsteadOfAudio()
+
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
         getCrossfadeEnabled()
         getCrossfadeDuration()
         getBackupDownloaded()
-        getVideoQuality()
+
         getSpotifyLogIn()
         getSpotifyLyrics()
         getSpotifyCanvas()
@@ -295,26 +291,7 @@ class SettingsViewModel(
         }
     }
 
-    private fun getVideoDownloadQuality() {
-        viewModelScope.launch {
-            dataStoreManager.videoDownloadQuality.collect { videoQuality ->
-                when (videoQuality) {
-                    VIDEO_QUALITY.items[0].toString() -> _videoDownloadQuality.emit(VIDEO_QUALITY.items[0].toString())
-                    VIDEO_QUALITY.items[1].toString() -> _videoDownloadQuality.emit(VIDEO_QUALITY.items[1].toString())
-                    VIDEO_QUALITY.items[2].toString() -> _videoDownloadQuality.emit(VIDEO_QUALITY.items[2].toString())
-                }
-            }
-        }
-    }
 
-    fun setVideoDownloadQuality(quality: String) {
-        viewModelScope.launch {
-            if (VIDEO_QUALITY.items.contains(quality)) {
-                dataStoreManager.setVideoDownloadQuality(quality)
-            }
-            getVideoDownloadQuality()
-        }
-    }
 
     private fun getKeepYouTubePlaylistOffline() {
         viewModelScope.launch {
@@ -487,17 +464,7 @@ class SettingsViewModel(
         }
     }
 
-    fun getVideoQuality() {
-        viewModelScope.launch {
-            dataStoreManager.videoQuality.collect { videoQuality ->
-                when (videoQuality) {
-                    VIDEO_QUALITY.items[0].toString() -> _videoQuality.emit(VIDEO_QUALITY.items[0].toString())
-                    VIDEO_QUALITY.items[1].toString() -> _videoQuality.emit(VIDEO_QUALITY.items[1].toString())
-                    VIDEO_QUALITY.items[2].toString() -> _videoQuality.emit(VIDEO_QUALITY.items[2].toString())
-                }
-            }
-        }
-    }
+
 
     fun getTranslationLanguage() {
         viewModelScope.launch {
@@ -579,20 +546,7 @@ class SettingsViewModel(
         }
     }
 
-    fun getPlayVideoInsteadOfAudio() {
-        viewModelScope.launch {
-            dataStoreManager.watchVideoInsteadOfPlayingAudio.collect { playVideoInsteadOfAudio ->
-                _playVideoInsteadOfAudio.emit(playVideoInsteadOfAudio)
-            }
-        }
-    }
 
-    fun setPlayVideoInsteadOfAudio(playVideoInsteadOfAudio: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setWatchVideoInsteadOfPlayingAudio(playVideoInsteadOfAudio)
-            getPlayVideoInsteadOfAudio()
-        }
-    }
 
     fun getSponsorBlockCategories() {
         viewModelScope.launch {
@@ -634,14 +588,7 @@ class SettingsViewModel(
         }
     }
 
-    fun changeVideoQuality(item: String) {
-        viewModelScope.launch {
-            if (VIDEO_QUALITY.items.contains(item)) {
-                dataStoreManager.setVideoQuality(item)
-            }
-            getVideoQuality()
-        }
-    }
+
 
     fun changeQuality(qualityItem: String?) {
         viewModelScope.launch {

@@ -198,7 +198,7 @@
     <string name="save">Save</string>
     <string name="saved">Saved</string>
     <string name="sponsor_block_intro">SponsorBlock is a crowd-sourced system for skipping annoying parts of YouTube videos.\nMore information: https://sponsor.ajay.app/</string>
-    <string name="skip_sponsor_part_of_video">Skip sponsor part of video</string>
+    <string name="skip_sponsor_part_of_video">skip sponsor part from the song</string>
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">An unexpected error occurred. Sorry for the inconvenience.</string>
     <string name="customactivityoncrash_error_activity_restart_app">Restart app</string>
     <string name="help_build_lyrics_database">Help Sonique lyrics build the lyrics database</string>

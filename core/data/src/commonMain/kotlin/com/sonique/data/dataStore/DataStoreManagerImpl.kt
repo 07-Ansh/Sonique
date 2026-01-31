@@ -117,18 +117,7 @@ internal class DataStoreManagerImpl(
         }
     }
 
-    override val videoDownloadQuality: Flow<String> =
-        settingsDataStore.data.map { preferences ->
-            preferences[VIDEO_DOWNLOAD_QUALITY] ?: "720p"
-        }
 
-    override suspend fun setVideoDownloadQuality(quality: String) {
-        withContext(Dispatchers.IO) {
-            settingsDataStore.edit { settings ->
-                settings[VIDEO_DOWNLOAD_QUALITY] = quality
-            }
-        }
-    }
 
     override val language: Flow<String> =
         settingsDataStore.data.map { preferences ->
@@ -462,24 +451,7 @@ internal class DataStoreManagerImpl(
         }
     }
 
-    override val watchVideoInsteadOfPlayingAudio =
-        settingsDataStore.data.map { preferences ->
-            preferences[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] ?: FALSE
-        }
 
-    override suspend fun setWatchVideoInsteadOfPlayingAudio(watch: Boolean) {
-        withContext(Dispatchers.IO) {
-            if (watch) {
-                settingsDataStore.edit { settings ->
-                    settings[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] = TRUE
-                }
-            } else {
-                settingsDataStore.edit { settings ->
-                    settings[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] = FALSE
-                }
-            }
-        }
-    }
 
     override val playerVolume: Flow<Float> =
         settingsDataStore.data.map { preferences ->
@@ -494,18 +466,7 @@ internal class DataStoreManagerImpl(
         }
     }
 
-    override val videoQuality =
-        settingsDataStore.data.map { preferences ->
-            preferences[VIDEO_QUALITY] ?: "720p"
-        }
 
-    override suspend fun setVideoQuality(quality: String) {
-        withContext(Dispatchers.IO) {
-            settingsDataStore.edit { settings ->
-                settings[VIDEO_QUALITY] = quality
-            }
-        }
-    }
 
     override val spdc =
         settingsDataStore.data.map { preferences ->
@@ -1164,9 +1125,7 @@ internal class DataStoreManagerImpl(
 
         val SPONSOR_BLOCK_ENABLED = stringPreferencesKey("sponsor_block_enabled")
         val MAX_SONG_CACHE_SIZE = intPreferencesKey("maxSongCacheSize")
-        val WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO =
-            stringPreferencesKey("watch_video_instead_of_playing_audio")
-        val VIDEO_QUALITY = stringPreferencesKey("video_quality")
+
         val PLAYER_VOLUME = floatPreferencesKey("player_volume")
         val SPDC = stringPreferencesKey("sp_dc")
         val SPOTIFY_LYRICS = stringPreferencesKey("spotify_lyrics")

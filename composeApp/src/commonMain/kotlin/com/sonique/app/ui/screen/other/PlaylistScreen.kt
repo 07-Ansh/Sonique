@@ -821,4 +821,43 @@ fun PlaylistScreen(
 
                         ListState.LOADING, ListState.PAGINATING -> {
                             item {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth(),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    CenterLoadingBox(
+                                        modifier = Modifier.size(80.dp),
+                                    )
+                                }
+                            }
+                            item {
+                                EndOfPage()
+                            }
+                        }
+
+                        ListState.ERROR -> {
+                            item {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .height(64.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Text(
+                                        text = stringResource(Res.string.error),
+                                        style = typo().bodyMedium,
+                                    )
+                                }
+                            }
+                            item {
+                                EndOfPage()
+                            }
+                        }
+
+                        ListState.PAGINATION_EXHAUST -> {
+                            item {
+                                EndOfPage()
 }}}}}}}}}

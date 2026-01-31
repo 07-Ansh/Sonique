@@ -586,4 +586,43 @@ fun PlaylistScreen(
                                                                                 .size(36.dp)
                                                                                 .clip(
                                                                                     CircleShape,
-}}}}}}}}}}}}}}}}}}
+                                                                                ).clickable {
+                                                                                    showCancelDownloadDialog = true
+                                                                                },
+                                                                    ) {
+                                                                        Icon(
+                                                                            painter = painterResource(Res.drawable.baseline_downloaded),
+                                                                            tint = Color(0xFF00A0CB),
+                                                                            contentDescription = "",
+                                                                            modifier =
+                                                                                Modifier
+                                                                                    .size(36.dp)
+                                                                                    .padding(2.dp),
+                                                                        )
+                                                                    }
+                                                                }
+
+                                                                DownloadState.STATE_DOWNLOADING -> {
+                                                                    Box(
+                                                                        modifier =
+                                                                            Modifier
+                                                                                .size(36.dp)
+                                                                                .clip(
+                                                                                    CircleShape,
+                                                                                ).clickable {
+                                                                                    showCancelDownloadDialog = true
+                                                                                },
+                                                                    ) {
+                                                                        Image(
+                                                                            painter =
+                                                                                rememberLottiePainter(
+                                                                                    composition = composition,
+                                                                                    iterations = Compottie.IterateForever,
+                                                                                ),
+                                                                            contentDescription = "Lottie animation",
+                                                                            modifier = Modifier.fillMaxSize(),
+                                                                        )
+                                                                    }
+                                                                }
+
+}}}}}}}}}}}}}}}}}

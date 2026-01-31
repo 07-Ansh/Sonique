@@ -742,4 +742,44 @@ fun PlaylistScreen(
                                                 SearchBarDefaults.InputField(
                                                     query = query,
                                                     onQueryChange = { query = it },
-}}}}}}}}}}}}
+                                                    onSearch = { showSearchBar = false },
+                                                    expanded = showSearchBar,
+                                                    onExpandedChange = { showSearchBar = it },
+                                                    placeholder = {
+                                                        Text(
+                                                            stringResource(Res.string.search),
+                                                            style = typo().bodyMedium,
+                                                        )
+                                                    },
+                                                )
+                                            }
+                                        },
+                                        expanded = false,
+                                        onExpandedChange = {},
+                                        windowInsets = WindowInsets(0, 0, 0, 0),
+                                    ) {
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            showSearchBar = !showSearchBar
+                                        },
+                                    ) {
+                                        Icon(Icons.Rounded.Close, null, tint = Color.White)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    items(count = filteredTrack.size, key = { index ->
+                        val item = filteredTrack.getOrNull(index)
+                        (item?.videoId ?: "") + "item_$index"
+                    }) { index ->
+                        val item = filteredTrack.getOrNull(index)
+                        if (item != null) {
+                            if (playingTrack?.videoId == item.videoId && isPlaying) {
+                                SongFullWidthItems(
+                                    isPlaying = true,
+                                    track = item,
+                                    onMoreClickListener = { onItemMoreClick(it) },
+                                    onClickListener = {
+}}}}}}}}}}

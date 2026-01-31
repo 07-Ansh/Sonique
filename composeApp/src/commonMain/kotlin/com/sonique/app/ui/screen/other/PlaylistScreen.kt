@@ -703,4 +703,43 @@ fun PlaylistScreen(
                                                             )
                                                         },
                                                     color = Color.White,
-}}}}}}}}}}}}}
+                                                    style = typo().bodyMedium,
+                                                    modifier = Modifier.padding(vertical = 8.dp),
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        stickyHeader {
+                            Box(Modifier.background(md_theme_dark_background)) {
+                                Row(
+                                    modifier =
+                                        Modifier
+                                            .wrapContentWidth()
+                                            .padding(16.dp)
+                                            .windowInsetsPadding(WindowInsets.statusBars),
+                                ) {
+                                    RippleIconButton(
+                                        resId = Res.drawable.baseline_arrow_back_ios_new_24,
+                                    ) {
+                                        navController.navigateUp()
+                                    }
+                                    SearchBar(
+                                        modifier =
+                                            Modifier
+                                                .height(50.dp)
+                                                .padding(horizontal = 12.dp)
+                                                .weight(1f),
+                                        colors =
+                                            SearchBarDefaults.colors().copy(
+                                                containerColor = Color.Transparent,
+                                            ),
+                                        inputField = {
+                                            CompositionLocalProvider(LocalTextStyle provides typo().bodySmall) {
+                                                SearchBarDefaults.InputField(
+                                                    query = query,
+                                                    onQueryChange = { query = it },
+}}}}}}}}}}}}

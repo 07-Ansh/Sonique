@@ -93,7 +93,10 @@ class SettingsViewModel(
     val useTranslation: StateFlow<String?> = _useTranslation
     private var _playerCacheLimit: MutableStateFlow<Int?> = MutableStateFlow(null)
     val playerCacheLimit: StateFlow<Int?> = _playerCacheLimit
-
+    private var _playVideoInsteadOfAudio: MutableStateFlow<String?> = MutableStateFlow(null)
+    val playVideoInsteadOfAudio: StateFlow<String?> = _playVideoInsteadOfAudio
+    private var _videoQuality: MutableStateFlow<String?> = MutableStateFlow(null)
+    val videoQuality: StateFlow<String?> = _videoQuality
     private var _thumbCacheSize = MutableStateFlow<Long?>(null)
     val thumbCacheSize: StateFlow<Long?> = _thumbCacheSize
     private var _canvasCacheSize: MutableStateFlow<Long?> = MutableStateFlow(null)
@@ -120,19 +123,6 @@ class SettingsViewModel(
 
     private var _backupDownloaded: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val backupDownloaded: StateFlow<Boolean> = _backupDownloaded
-
-    sealed class BackupRestoreState {
-        object Idle : BackupRestoreState()
-        object InProgress : BackupRestoreState()
-        object Success : BackupRestoreState()
-        data class Error(val message: String) : BackupRestoreState()
-    }
-
-    private var _backupState: MutableStateFlow<BackupRestoreState> = MutableStateFlow(BackupRestoreState.Idle)
-    val backupState: StateFlow<BackupRestoreState> = _backupState
-
-    private var _restoreState: MutableStateFlow<BackupRestoreState> = MutableStateFlow(BackupRestoreState.Idle)
-    val restoreState: StateFlow<BackupRestoreState> = _restoreState
 
 
 
@@ -167,7 +157,8 @@ class SettingsViewModel(
     private val _downloadQuality = MutableStateFlow<String?>(null)
     val downloadQuality: StateFlow<String?> = _downloadQuality
 
-
+    private val _videoDownloadQuality = MutableStateFlow<String?>(null)
+    val videoDownloadQuality: StateFlow<String?> = _videoDownloadQuality
 
     private var _alertData: MutableStateFlow<SettingAlertState?> = MutableStateFlow(null)
     val alertData: StateFlow<SettingAlertState?> = _alertData
@@ -194,9 +185,6 @@ class SettingsViewModel(
 
     private var _spotifyCanvas: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val spotifyCanvas: StateFlow<Boolean> = _spotifyCanvas
-
-    private var _ambienceMode: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val ambienceMode: StateFlow<Boolean> = _ambienceMode
 
 
 
@@ -226,8 +214,6 @@ class SettingsViewModel(
         getSpotifyLogIn()
         getSpotifyLyrics()
         getSpotifyCanvas()
-        getAmbienceMode()
-
     }
 
     fun getAudioSessionId() = mediaPlayerHandler.player.audioSessionId
@@ -240,7 +226,7 @@ class SettingsViewModel(
         getDownloadedCacheSize()
         getPlayerCacheLimit()
         getDownloadQuality()
-
+        getVideoDownloadQuality()
         getSendBackToGoogle()
         getNormalizeVolume()
         getSkipSilent()
@@ -253,14 +239,15 @@ class SettingsViewModel(
         getTranslationLanguage()
         getCanvasCache()
         getYoutubeSubtitleLanguage()
-        getAmbienceMode()
-
+        getSponsorBlockEnabled()
+        getSponsorBlockCategories()
+        getPlayVideoInsteadOfAudio()
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
         getCrossfadeEnabled()
         getCrossfadeDuration()
         getBackupDownloaded()
-
+        getVideoQuality()
         getSpotifyLogIn()
         getSpotifyLyrics()
         getSpotifyCanvas()
@@ -308,7 +295,26 @@ class SettingsViewModel(
         }
     }
 
+    private fun getVideoDownloadQuality() {
+        viewModelScope.launch {
+            dataStoreManager.videoDownloadQuality.collect { videoQuality ->
+                when (videoQuality) {
+                    VIDEO_QUALITY.items[0].toString() -> _videoDownloadQuality.emit(VIDEO_QUALITY.items[0].toString())
+                    VIDEO_QUALITY.items[1].toString() -> _videoDownloadQuality.emit(VIDEO_QUALITY.items[1].toString())
+                    VIDEO_QUALITY.items[2].toString() -> _videoDownloadQuality.emit(VIDEO_QUALITY.items[2].toString())
+                }
+            }
+        }
+    }
 
+    fun setVideoDownloadQuality(quality: String) {
+        viewModelScope.launch {
+            if (VIDEO_QUALITY.items.contains(quality)) {
+                dataStoreManager.setVideoDownloadQuality(quality)
+            }
+            getVideoDownloadQuality()
+        }
+    }
 
     private fun getKeepYouTubePlaylistOffline() {
         viewModelScope.launch {
@@ -481,7 +487,17 @@ class SettingsViewModel(
         }
     }
 
-
+    fun getVideoQuality() {
+        viewModelScope.launch {
+            dataStoreManager.videoQuality.collect { videoQuality ->
+                when (videoQuality) {
+                    VIDEO_QUALITY.items[0].toString() -> _videoQuality.emit(VIDEO_QUALITY.items[0].toString())
+                    VIDEO_QUALITY.items[1].toString() -> _videoQuality.emit(VIDEO_QUALITY.items[1].toString())
+                    VIDEO_QUALITY.items[2].toString() -> _videoQuality.emit(VIDEO_QUALITY.items[2].toString())
+                }
+            }
+        }
+    }
 
     fun getTranslationLanguage() {
         viewModelScope.launch {
@@ -563,7 +579,20 @@ class SettingsViewModel(
         }
     }
 
+    fun getPlayVideoInsteadOfAudio() {
+        viewModelScope.launch {
+            dataStoreManager.watchVideoInsteadOfPlayingAudio.collect { playVideoInsteadOfAudio ->
+                _playVideoInsteadOfAudio.emit(playVideoInsteadOfAudio)
+            }
+        }
+    }
 
+    fun setPlayVideoInsteadOfAudio(playVideoInsteadOfAudio: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setWatchVideoInsteadOfPlayingAudio(playVideoInsteadOfAudio)
+            getPlayVideoInsteadOfAudio()
+        }
+    }
 
     fun getSponsorBlockCategories() {
         viewModelScope.launch {
@@ -605,7 +634,14 @@ class SettingsViewModel(
         }
     }
 
-
+    fun changeVideoQuality(item: String) {
+        viewModelScope.launch {
+            if (VIDEO_QUALITY.items.contains(item)) {
+                dataStoreManager.setVideoQuality(item)
+            }
+            getVideoQuality()
+        }
+    }
 
     fun changeQuality(qualityItem: String?) {
         viewModelScope.launch {
@@ -675,7 +711,6 @@ class SettingsViewModel(
 
     fun backup(uri: Uri) {
         viewModelScope.launch {
-            _backupState.value = BackupRestoreState.InProgress
             runCatching {
                 makeToast(getString(Res.string.backup_in_progress))
                 withContext(Dispatchers.IO) {
@@ -683,18 +718,12 @@ class SettingsViewModel(
                 }
             }.onSuccess {
                 withContext(Dispatchers.Main) {
-                    _backupState.value = BackupRestoreState.Success
                     makeToast(getString(Res.string.backup_create_success))
-                    delay(2000) // Keep success state for 2 seconds
-                    _backupState.value = BackupRestoreState.Idle
                 }
             }.onFailure {
                 withContext(Dispatchers.Main) {
                     it.printStackTrace()
-                    _backupState.value = BackupRestoreState.Error(it.message ?: "Unknown error")
                     makeToast(getString(Res.string.backup_create_failed))
-                    delay(3000) // Keep error state for 3 seconds
-                    _backupState.value = BackupRestoreState.Idle
                 }
             }
         }
@@ -702,26 +731,16 @@ class SettingsViewModel(
 
     fun restore(uri: Uri) {
         viewModelScope.launch {
-            _restoreState.value = BackupRestoreState.InProgress
             makeToast(getString(Res.string.restore_in_progress))
             withContext(Dispatchers.IO) {
                 runCatching {
                     restoreNative(commonRepository, uri) {
                         getData()
                     }
-                }.onSuccess {
-                    withContext(Dispatchers.Main) {
-                        _restoreState.value = BackupRestoreState.Success
-                        delay(2000) // Keep success state for 2 seconds
-                        _restoreState.value = BackupRestoreState.Idle
-                    }
                 }.onFailure {
                     withContext(Dispatchers.Main) {
                         it.printStackTrace()
-                        _restoreState.value = BackupRestoreState.Error(it.message ?: "Unknown error")
                         makeToast(getString(Res.string.restore_failed))
-                        delay(3000) // Keep error state for 3 seconds
-                        _restoreState.value = BackupRestoreState.Idle
                     }
                 }
             }
@@ -1106,29 +1125,6 @@ class SettingsViewModel(
             getSpotifyCanvas()
         }
     }
-
-    fun getAmbienceMode() {
-        viewModelScope.launch {
-            dataStoreManager.ambienceMode.collect {
-                if (it == DataStoreManager.TRUE) {
-                    _ambienceMode.emit(true)
-                } else {
-                    _ambienceMode.emit(false)
-                }
-            }
-        }
-    }
-
-    fun setAmbienceMode(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setAmbienceMode(enabled)
-            getAmbienceMode()
-        }
-    }
-
-
-
-
 
      
     fun getKillServiceOnExit() {

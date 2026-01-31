@@ -27,6 +27,3 @@ data object SettingsBackupDestination
 
 @Serializable
 data object SettingsAboutDestination
-
-@Serializable
-data object SettingsUpdateDestination

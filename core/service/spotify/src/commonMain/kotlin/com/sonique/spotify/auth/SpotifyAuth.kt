@@ -79,7 +79,8 @@ class SpotifyAuth(
                 }
 
              
-            if (tokenData?.accessToken.isNullOrEmpty()) {
+            if (tokenData?.accessToken?.length != 374) {
+                 
                 response =
                     spotifyClient.getSpotifyAccessToken(
                         spdc = spDc,
@@ -93,11 +94,11 @@ class SpotifyAuth(
             }
 
              
-            if (tokenData?.accessToken.isNullOrEmpty()) {
+            if (tokenData.accessToken.isEmpty()) {
                 throw Exception("Unsuccessful token request")
             }
 
-            tokenData!!
+            tokenData
         }
 }
 

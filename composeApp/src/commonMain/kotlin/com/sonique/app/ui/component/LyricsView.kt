@@ -45,7 +45,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -118,7 +117,7 @@ fun LyricsView(
     onLineClick: (Float) -> Unit,
     modifier: Modifier = Modifier,
     showScrollShadows: Boolean = false,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    backgroundColor: Color = Color(0xFF242424),
 
 ) {
     var currentLineHeight by remember {
@@ -550,7 +549,7 @@ private fun AnimatedWord(
 @Composable
 fun FullscreenLyricsSheet(
     sharedViewModel: SharedViewModel,
-    color: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    color: Color = Color(0xFF242424),
     onDismiss: () -> Unit,
 ) {
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()

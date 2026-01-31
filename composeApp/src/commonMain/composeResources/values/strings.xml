@@ -13,7 +13,7 @@
     <string name="like">Like</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="general">General</string>
-    <string name="download">Download</string>
+    <string name="download">Downloads</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading">Downloading</string>
     <string name="preparing">Preparing</string>
@@ -198,7 +198,7 @@
     <string name="save">Save</string>
     <string name="saved">Saved</string>
     <string name="sponsor_block_intro">SponsorBlock is a crowd-sourced system for skipping annoying parts of YouTube videos.\nMore information: https://sponsor.ajay.app/</string>
-    <string name="skip_sponsor_part_of_video">skip sponsor part from the song</string>
+    <string name="skip_sponsor_part_of_video">Skip sponsor part of video</string>
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">An unexpected error occurred. Sorry for the inconvenience.</string>
     <string name="customactivityoncrash_error_activity_restart_app">Restart app</string>
     <string name="help_build_lyrics_database">Help Sonique lyrics build the lyrics database</string>
@@ -446,7 +446,7 @@
     <string name="contributor_name">Contributor name</string>
     <string name="contributor_email">Contributor email</string>
     <string name="anonymous">Anonymous</string>
-    <string name="sonique_lyrics">Sonique</string>
+    <string name="sonique_lyrics">Sonique Lyrics</string>
     <string name="backup_in_progress">Backup in progress</string>
     <string name="restore_in_progress">Restore in progress</string>
     <string name="backup_downloaded">Backup downloaded data</string>

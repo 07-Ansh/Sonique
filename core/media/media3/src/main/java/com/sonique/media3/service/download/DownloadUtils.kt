@@ -70,25 +70,8 @@ internal class DownloadUtils(
             Logger.w("Stream", mediaId)
             Logger.w("Stream", mediaId.startsWith(MERGING_DATA_TYPE.VIDEO).toString())
             val length = if (dataSpec.length >= 0) dataSpec.length else 1
-            if (playerCache.isCached(mediaId, dataSpec.position, length)) {
+            if (downloadCache.isCached(mediaId, dataSpec.position, length) || playerCache.isCached(mediaId, dataSpec.position, length)) {
                 return@Factory dataSpec
-            }
-
-            if (downloadCache.isCached(mediaId, dataSpec.position, length)) {
-                val isDownloaded =
-                    runBlocking(Dispatchers.IO) {
-                        val id =
-                            if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                                mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                            } else {
-                                mediaId
-                            }
-                        val song = songRepository.getSongById(id).firstOrNull()
-                        song?.downloadState == DownloadState.STATE_DOWNLOADED
-                    }
-                if (isDownloaded) {
-                    return@Factory dataSpec
-                }
             }
             var dataSpecReturn: DataSpec = dataSpec
             runBlocking(Dispatchers.IO) {
@@ -159,7 +142,7 @@ internal class DownloadUtils(
             dataSourceFactory,
             Executors.newFixedThreadPool(6),
         ).apply {
-            maxParallelDownloads = 3
+            maxParallelDownloads = 20
             minRetryCount = 3
             addListener(
                 MusicDownloadService.TerminalStateNotificationHelper(
@@ -183,15 +166,18 @@ internal class DownloadUtils(
         videoId: String,
         title: String,
         thumbnail: String,
-        isVideo: Boolean,
     ) {
+        var isVideo = false
         val request =
             ImageRequest
                 .Builder(context)
                 .data(thumbnail)
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build()
-        ImageLoader(context).execute(request)
+        val imageResult = ImageLoader(context).execute(request)
+        if (imageResult.image?.height != imageResult.image?.width && imageResult.image != null) {
+            isVideo = true
+        }
         val downloadRequest =
             DownloadRequest
                 .Builder(videoId, videoId.toUri())
@@ -383,7 +369,7 @@ internal class DownloadUtils(
                 override fun onDownloadRemoved(
                     downloadManager: DownloadManager,
                     download: Download,
-                    ) {
+                ) {
                     download.request.id.let { id ->
                         val songId =
                             if (id.contains(MERGING_DATA_TYPE.VIDEO)) {
@@ -410,3 +396,4 @@ internal class DownloadUtils(
         )
     }
 }
+

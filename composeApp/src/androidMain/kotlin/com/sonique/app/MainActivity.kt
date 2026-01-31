@@ -33,9 +33,6 @@ import com.sonique.media3.di.setServiceActivitySession
 import com.sonique.app.di.viewModelModule
 import com.sonique.app.utils.VersionManager
 import com.sonique.app.viewModel.SharedViewModel
-import com.sonique.app.viewModel.UIEvent
-import androidx.core.content.FileProvider
-import java.io.File
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.android.ext.android.inject
@@ -191,27 +188,6 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.getLocation()
 
-        lifecycleScope.launch {
-            viewModel.uiEvent.collect { event ->
-                when (event) {
-                    is UIEvent.DownloadUpdate -> {
-                        downloadAppUpdate(event.url, event.title)
-                    }
-                    is UIEvent.CancelDownload -> {
-                        currentDownloadId?.let { id ->
-                            val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
-                            downloadManager.remove(id)
-                            currentDownloadId = null
-                        }
-                    }
-                    is UIEvent.InstallUpdate -> {
-                        installPackage(event.path)
-                    }
-                    else -> {}
-                }
-            }
-        }
-
         setContent {
             App(viewModel)
         }
@@ -247,16 +223,8 @@ class MainActivity : AppCompatActivity() {
                 viewModel.makeToast(
                     when (type) {
                         ToastType.ExplicitContent -> getString(Res.string.explicit_content_blocked)
-                        is ToastType.PlayerError -> {
-                            if (type.error == "ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED") {
-                                "Playback failed. Try re-downloading the track."
-                            } else {
-                                getString(
-                                    Res.string.time_out_check_internet_connection_or_change_piped_instance_in_settings,
-                                    type.error
-                                )
-                            }
-                        }
+                        is ToastType.PlayerError ->
+                            getString(Res.string.time_out_check_internet_connection_or_change_piped_instance_in_settings, type.error)
                     }
                 )
             }
@@ -266,145 +234,7 @@ class MainActivity : AppCompatActivity() {
         Logger.d("Service", "Service started")
     }
 
-    private var currentDownloadId: Long? = null
 
-    private fun downloadAppUpdate(url: String, title: String) {
-        val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
-        val uri = android.net.Uri.parse(url)
-        val request = android.app.DownloadManager.Request(uri)
-            .setTitle(title)
-            .setDescription("Downloading app update...")
-            .setMimeType("application/vnd.android.package-archive")
-            .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, "SoniqueUpdate.apk")
-            .setAllowedOverMetered(true)
-            .setAllowedOverRoaming(true)
-
-        val downloadId = downloadManager.enqueue(request)
-        currentDownloadId = downloadId
-        Logger.d("Update", "Download started with ID: $downloadId")
-        
-        // Start progress polling
-        lifecycleScope.launch {
-            var downloading = true
-            while (downloading && currentDownloadId == downloadId) {
-                val query = android.app.DownloadManager.Query().setFilterById(downloadId)
-                val cursor = downloadManager.query(query)
-                if (cursor.moveToFirst()) {
-                    val bytesDownloadedIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                    val bytesTotalIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                    
-                     if (bytesDownloadedIndex != -1 && bytesTotalIndex != -1) {
-                         val downloaded = cursor.getInt(bytesDownloadedIndex)
-                         val total = cursor.getInt(bytesTotalIndex)
-                         if (total > 0) {
-                             if (downloaded == total) {
-                                 viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Verifying)
-                             } else {
-                                 val progress = downloaded.toFloat() / total.toFloat()
-                                 viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(progress))
-                             }
-                         }
-                    }
-                    
-                    val statusIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_STATUS)
-                    val status = cursor.getInt(statusIndex)
-                    if (status == android.app.DownloadManager.STATUS_SUCCESSFUL) {
-                        downloading = false
-                         downloading = false
-                         val fileUri = downloadManager.getUriForDownloadedFile(downloadId)
-                         if (fileUri != null) {
-                             viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(fileUri.toString()))
-                         }
-                    } else if (status == android.app.DownloadManager.STATUS_FAILED) {
-                        downloading = false
-                        viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
-                    }
-                } else {
-                    // Cursor empty usually means download cancelled/removed
-                    downloading = false
-                    viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
-                }
-                cursor.close()
-                kotlinx.coroutines.delay(500)
-            }
-        }
-
-        val onComplete = object : android.content.BroadcastReceiver() {
-            override fun onReceive(ctxt: android.content.Context?, intent: Intent?) {
-                if (intent?.action == android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
-                    val id = intent.getLongExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                    if (id == downloadId) {
-                        Logger.d("Update", "Download complete: $id")
-                        val query = android.app.DownloadManager.Query().setFilterById(downloadId)
-                        val cursor = downloadManager.query(query)
-                        if (cursor.moveToFirst()) {
-                            val statusIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_STATUS)
-                            if (android.app.DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(statusIndex)) {
-                                val fileUri = downloadManager.getUriForDownloadedFile(id)
-                                if (fileUri != null) {
-                                    Logger.d("Update", "Downloaded URI: $fileUri")
-                                    viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(fileUri.toString()))
-                                    viewModel.insertNotification(
-                                        "System Update",
-                                        "New version downloaded. Ready to install.",
-                                        "SYSTEM_UPDATE"
-                                    )
-                                }
-                            }
-                        }
-                        cursor.close()
-                        unregisterReceiver(this)
-                    }
-                }
-            }
-        }
-        
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(onComplete, android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                android.content.Context.RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(onComplete, android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE))
-        }
-    }
-
-    private fun installPackage(uriString: String) {
-        try {
-            val uri = android.net.Uri.parse(uriString)
-            val installIntent = Intent(Intent.ACTION_VIEW)
-            
-            if (uri.scheme == "content") {
-                installIntent.setDataAndType(uri, "application/vnd.android.package-archive")
-            } else {
-                // Determine file path
-                val path = if (uri.scheme == "file") uri.path else uriString
-                if (path == null) {
-                    Logger.e("Update", "Invalid path from URI: $uriString")
-                    return
-                }
-                
-                val file = File(path)
-                if (!file.exists()) {
-                    Logger.e("Update", "File not found: $path")
-                    return
-                }
-                
-                val contentUri = FileProvider.getUriForFile(
-                    this,
-                    "${applicationContext.packageName}.update_provider",
-                    file
-                )
-                installIntent.setDataAndType(contentUri, "application/vnd.android.package-archive")
-            }
-            
-            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(installIntent)
-        } catch (e: Exception) {
-            Logger.e("Update", "Install failed: ${e.message}")
-            e.printStackTrace()
-        }
-    }
 
     private suspend fun putString(
         key: String,

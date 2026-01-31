@@ -1,0 +1,583 @@
+Starting a Gradle Daemon, 1 busy and 15 stopped Daemons could not be reused, use --status for details
+Calculating task graph as configuration cache cannot be reused because init script '..\..\..\C:\Users\Offic\AppData\Local\Temp\ijMapper1.gradle' and 3 more have been removed.
+Type-safe project accessors is an incubating feature.
+> Task :kotlinYtmusicScraper:androidPreBuild UP-TO-DATE
+> Task :composeApp:preBuild UP-TO-DATE
+> Task :domain:androidPreBuild UP-TO-DATE
+> Task :data:androidPreBuild UP-TO-DATE
+> Task :common:androidPreBuild UP-TO-DATE
+> Task :ktorExt:androidPreBuild UP-TO-DATE
+> Task :data:preAndroidMainBuild UP-TO-DATE
+> Task :common:preAndroidMainBuild UP-TO-DATE
+> Task :domain:preAndroidMainBuild UP-TO-DATE
+> Task :composeApp:preDebugBuild UP-TO-DATE
+> Task :kotlinYtmusicScraper:preAndroidMainBuild UP-TO-DATE
+> Task :ktorExt:preAndroidMainBuild UP-TO-DATE
+> Task :composeApp:kmpPartiallyResolvedDependenciesChecker
+> Task :composeApp:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :common:kmpPartiallyResolvedDependenciesChecker
+> Task :common:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :composeApp:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :composeApp:generateDebugResValues UP-TO-DATE
+> Task :common:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :domain:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :ktorExt:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :kotlinYtmusicScraper:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :data:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :media3:preBuild UP-TO-DATE
+> Task :media3-ui:preBuild UP-TO-DATE
+> Task :sharedutils:preBuild UP-TO-DATE
+> Task :lyricsService:androidPreBuild UP-TO-DATE
+> Task :media3:preDebugBuild UP-TO-DATE
+> Task :mediaserviceinterfaces:preBuild UP-TO-DATE
+> Task :lyricsService:preAndroidMainBuild UP-TO-DATE
+> Task :sharedutils:preDebugBuild UP-TO-DATE
+> Task :media3-ui:preDebugBuild UP-TO-DATE
+> Task :mediaserviceinterfaces:preDebugBuild UP-TO-DATE
+> Task :media3:generateDebugResValues UP-TO-DATE
+> Task :sharedutils:generateDebugResValues UP-TO-DATE
+> Task :media3-ui:generateDebugResValues UP-TO-DATE
+> Task :mediaserviceinterfaces:generateDebugResValues UP-TO-DATE
+> Task :lyricsService:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :spotify:androidPreBuild UP-TO-DATE
+> Task :spotify:preAndroidMainBuild UP-TO-DATE
+> Task :spotify:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :youtubeapi:preBuild UP-TO-DATE
+> Task :youtubeapi:preDebugBuild UP-TO-DATE
+> Task :media3:generateDebugResources UP-TO-DATE
+> Task :media3-ui:generateDebugResources UP-TO-DATE
+> Task :sharedutils:generateDebugResources UP-TO-DATE
+> Task :youtubeapi:generateDebugResValues UP-TO-DATE
+> Task :mediaserviceinterfaces:generateDebugResources UP-TO-DATE
+> Task :composeApp:generateDebugResources UP-TO-DATE
+> Task :youtubeapi:generateDebugResources UP-TO-DATE
+> Task :composeApp:convertXmlValueResourcesForAndroidDebug NO-SOURCE
+> Task :youtubeapi:packageDebugResources UP-TO-DATE
+> Task :media3-ui:packageDebugResources UP-TO-DATE
+> Task :sharedutils:packageDebugResources UP-TO-DATE
+> Task :mediaserviceinterfaces:packageDebugResources UP-TO-DATE
+> Task :media3:packageDebugResources UP-TO-DATE
+> Task :composeApp:convertXmlValueResourcesForAndroidMain NO-SOURCE
+> Task :media3:processDebugNavigationResources UP-TO-DATE
+> Task :composeApp:copyNonXmlValueResourcesForAndroidDebug NO-SOURCE
+> Task :composeApp:copyNonXmlValueResourcesForAndroidMain NO-SOURCE
+> Task :composeApp:prepareComposeResourcesTaskForAndroidDebug NO-SOURCE
+> Task :media3-ui:processDebugNavigationResources UP-TO-DATE
+> Task :mediaserviceinterfaces:processDebugNavigationResources UP-TO-DATE
+> Task :sharedutils:processDebugNavigationResources UP-TO-DATE
+> Task :youtubeapi:processDebugNavigationResources UP-TO-DATE
+> Task :composeApp:prepareComposeResourcesTaskForAndroidMain NO-SOURCE
+> Task :media3:parseDebugLocalResources UP-TO-DATE
+> Task :mediaserviceinterfaces:parseDebugLocalResources UP-TO-DATE
+> Task :media3-ui:parseDebugLocalResources UP-TO-DATE
+> Task :media3:generateDebugRFile UP-TO-DATE
+> Task :mediaserviceinterfaces:generateDebugRFile UP-TO-DATE
+> Task :media3-ui:generateDebugRFile UP-TO-DATE
+> Task :composeApp:generateResourceAccessorsForAndroidMain NO-SOURCE
+> Task :sharedutils:parseDebugLocalResources UP-TO-DATE
+> Task :youtubeapi:parseDebugLocalResources UP-TO-DATE
+> Task :sharedutils:generateDebugRFile UP-TO-DATE
+> Task :youtubeapi:generateDebugRFile UP-TO-DATE
+> Task :composeApp:generateComposeResClass UP-TO-DATE
+> Task :composeApp:generateExpectResourceCollectorsForCommonMain UP-TO-DATE
+> Task :composeApp:generateBuildKonfig UP-TO-DATE
+> Task :composeApp:generateDebugBuildConfig UP-TO-DATE
+> Task :composeApp:generateResourceAccessorsForAndroidDebug NO-SOURCE
+> Task :common:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :domain:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :data:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :kotlinYtmusicScraper:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :ktorExt:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :lyricsService:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :composeApp:convertXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :mediaserviceinterfaces:writeDebugAarMetadata UP-TO-DATE
+> Task :media3:writeDebugAarMetadata UP-TO-DATE
+> Task :media3-ui:writeDebugAarMetadata UP-TO-DATE
+> Task :spotify:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :sharedutils:writeDebugAarMetadata UP-TO-DATE
+> Task :youtubeapi:writeDebugAarMetadata UP-TO-DATE
+> Task :composeApp:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :common:processAndroidMainManifest UP-TO-DATE
+> Task :composeApp:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processAndroidMainManifest UP-TO-DATE
+> Task :domain:processAndroidMainManifest UP-TO-DATE
+> Task :kotlinYtmusicScraper:processAndroidMainManifest UP-TO-DATE
+> Task :ktorExt:processAndroidMainManifest UP-TO-DATE
+> Task :lyricsService:processAndroidMainManifest UP-TO-DATE
+> Task :media3:extractDeepLinksDebug UP-TO-DATE
+> Task :media3:processDebugManifest UP-TO-DATE
+> Task :media3-ui:extractDeepLinksDebug UP-TO-DATE
+> Task :media3-ui:processDebugManifest UP-TO-DATE
+> Task :mediaserviceinterfaces:extractDeepLinksDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:processDebugManifest UP-TO-DATE
+> Task :sharedutils:extractDeepLinksDebug UP-TO-DATE
+> Task :sharedutils:processDebugManifest UP-TO-DATE
+> Task :composeApp:copyNonXmlValueResourcesForCommonMain UP-TO-DATE
+> Task :spotify:processAndroidMainManifest UP-TO-DATE
+> Task :youtubeapi:extractDeepLinksDebug UP-TO-DATE
+> Task :composeApp:prepareComposeResourcesTaskForCommonMain UP-TO-DATE
+> Task :youtubeapi:processDebugManifest UP-TO-DATE
+> Task :composeApp:generateResourceAccessorsForCommonMain UP-TO-DATE
+> Task :composeApp:generateActualResourceCollectorsForAndroidMain UP-TO-DATE
+> Task :composeApp:copyDebugComposeResourcesToAndroidAssets UP-TO-DATE
+> Task :composeApp:packageDebugResources UP-TO-DATE
+> Task :media3:compileDebugLibraryResources UP-TO-DATE
+> Task :media3-ui:compileDebugLibraryResources UP-TO-DATE
+> Task :mediaserviceinterfaces:compileDebugLibraryResources UP-TO-DATE
+> Task :sharedutils:compileDebugLibraryResources UP-TO-DATE
+> Task :youtubeapi:compileDebugLibraryResources UP-TO-DATE
+> Task :data:kmpPartiallyResolvedDependenciesChecker
+> Task :data:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :domain:kmpPartiallyResolvedDependenciesChecker
+> Task :domain:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :kotlinYtmusicScraper:kmpPartiallyResolvedDependenciesChecker
+> Task :kotlinYtmusicScraper:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :ktorExt:kmpPartiallyResolvedDependenciesChecker
+> Task :ktorExt:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :composeApp:mergeDebugResources UP-TO-DATE
+> Task :sharedutils:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :sharedutils:preReleaseBuild UP-TO-DATE
+> Task :sharedutils:generateReleaseResValues UP-TO-DATE
+> Task :composeApp:mapDebugSourceSetPaths UP-TO-DATE
+> Task :composeApp:processDebugNavigationResources UP-TO-DATE
+> Task :sharedutils:generateReleaseResources UP-TO-DATE
+> Task :sharedutils:processReleaseNavigationResources UP-TO-DATE
+> Task :composeApp:compileDebugNavigationResources UP-TO-DATE
+> Task :sharedutils:javaPreCompileRelease UP-TO-DATE
+> Task :mediaserviceinterfaces:preReleaseBuild UP-TO-DATE
+> Task :mediaserviceinterfaces:generateReleaseResValues UP-TO-DATE
+> Task :composeApp:checkDebugAarMetadata UP-TO-DATE
+> Task :mediaserviceinterfaces:generateReleaseResources UP-TO-DATE
+> Task :composeApp:parseDebugLocalResources UP-TO-DATE
+> Task :sharedutils:packageReleaseResources UP-TO-DATE
+> Task :mediaserviceinterfaces:javaPreCompileRelease UP-TO-DATE
+> Task :mediaserviceinterfaces:processReleaseNavigationResources UP-TO-DATE
+> Task :sharedutils:parseReleaseLocalResources UP-TO-DATE
+> Task :youtubeapi:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :youtubeapi:preReleaseBuild UP-TO-DATE
+> Task :youtubeapi:generateReleaseResValues UP-TO-DATE
+> Task :youtubeapi:processReleaseNavigationResources UP-TO-DATE
+> Task :mediaserviceinterfaces:packageReleaseResources UP-TO-DATE
+> Task :sharedutils:generateReleaseRFile UP-TO-DATE
+> Task :youtubeapi:javaPreCompileRelease UP-TO-DATE
+> Task :youtubeapi:generateReleaseResources UP-TO-DATE
+> Task :lyricsService:kmpPartiallyResolvedDependenciesChecker
+> Task :lyricsService:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :media3:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :media3:preReleaseBuild UP-TO-DATE
+> Task :mediaserviceinterfaces:parseReleaseLocalResources UP-TO-DATE
+> Task :media3:generateReleaseResValues UP-TO-DATE
+> Task :media3:generateReleaseResources UP-TO-DATE
+> Task :mediaserviceinterfaces:generateReleaseRFile UP-TO-DATE
+> Task :youtubeapi:packageReleaseResources UP-TO-DATE
+> Task :media3:processReleaseNavigationResources UP-TO-DATE
+> Task :youtubeapi:parseReleaseLocalResources UP-TO-DATE
+> Task :media3:javaPreCompileRelease UP-TO-DATE
+> Task :spotify:kmpPartiallyResolvedDependenciesChecker
+> Task :spotify:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :media3:javaPreCompileDebug UP-TO-DATE
+> Task :media3-ui:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :media3:packageReleaseResources UP-TO-DATE
+> Task :youtubeapi:generateReleaseRFile UP-TO-DATE
+> Task :media3-ui:javaPreCompileDebug UP-TO-DATE
+> Task :composeApp:javaPreCompileDebug UP-TO-DATE
+> Task :media3:parseReleaseLocalResources UP-TO-DATE
+> Task :composeApp:debugAssetsCopyForAGP NO-SOURCE
+> Task :composeApp:mergeDebugShaders UP-TO-DATE
+> Task :media3:mergeDebugShaders UP-TO-DATE
+> Task :media3:generateReleaseRFile UP-TO-DATE
+> Task :media3:compileDebugShaders NO-SOURCE
+> Task :media3:generateDebugAssets UP-TO-DATE
+> Task :composeApp:compileDebugShaders NO-SOURCE
+> Task :composeApp:generateDebugAssets UP-TO-DATE
+> Task :media3:mergeDebugAssets UP-TO-DATE
+> Task :media3-ui:mergeDebugShaders UP-TO-DATE
+> Task :media3-ui:compileDebugShaders NO-SOURCE
+> Task :media3-ui:generateDebugAssets UP-TO-DATE
+> Task :mediaserviceinterfaces:mergeDebugShaders UP-TO-DATE
+> Task :sharedutils:mergeDebugShaders UP-TO-DATE
+> Task :sharedutils:compileDebugShaders NO-SOURCE
+> Task :mediaserviceinterfaces:compileDebugShaders NO-SOURCE
+> Task :sharedutils:generateDebugAssets UP-TO-DATE
+> Task :mediaserviceinterfaces:generateDebugAssets UP-TO-DATE
+> Task :media3-ui:mergeDebugAssets UP-TO-DATE
+> Task :sharedutils:mergeDebugAssets UP-TO-DATE
+> Task :youtubeapi:mergeDebugShaders UP-TO-DATE
+> Task :mediaserviceinterfaces:mergeDebugAssets UP-TO-DATE
+> Task :youtubeapi:compileDebugShaders NO-SOURCE
+> Task :youtubeapi:generateDebugAssets UP-TO-DATE
+> Task :youtubeapi:mergeDebugAssets UP-TO-DATE
+> Task :composeApp:l8DexDesugarLibDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:javaPreCompileDebug UP-TO-DATE
+> Task :composeApp:processDebugMainManifest UP-TO-DATE
+> Task :sharedutils:javaPreCompileDebug UP-TO-DATE
+> Task :composeApp:processDebugManifest UP-TO-DATE
+> Task :youtubeapi:javaPreCompileDebug UP-TO-DATE
+> Task :composeApp:processDebugManifestForPackage UP-TO-DATE
+> Task :composeApp:desugarDebugFileDependencies UP-TO-DATE
+> Task :mediaserviceinterfaces:processDebugJavaRes NO-SOURCE
+> Task :common:compileAndroidMain UP-TO-DATE
+> Task :common:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :domain:kspAndroidMain SKIPPED
+> Task :composeApp:dataBindingMergeDependencyArtifactsDebug UP-TO-DATE
+> Task :ktorExt:compileAndroidMain UP-TO-DATE
+> Task :ktorExt:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :composeApp:checkDebugDuplicateClasses UP-TO-DATE
+> Task :common:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :composeApp:mergeDebugAssets UP-TO-DATE
+> Task :spotify:compileAndroidMain UP-TO-DATE
+> Task :spotify:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :domain:compileAndroidMain UP-TO-DATE
+> Task :spotify:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :composeApp:processDebugResources UP-TO-DATE
+> Task :domain:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :domain:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :composeApp:compressDebugAssets UP-TO-DATE
+> Task :ktorExt:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :common:processAndroidMainJavaRes UP-TO-DATE
+> Task :domain:processAndroidMainJavaRes UP-TO-DATE
+> Task :ktorExt:processAndroidMainJavaRes UP-TO-DATE
+> Task :spotify:processAndroidMainJavaRes UP-TO-DATE
+> Task :lyricsService:compileAndroidMain UP-TO-DATE
+> Task :lyricsService:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :lyricsService:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :lyricsService:processAndroidMainJavaRes UP-TO-DATE
+> Task :lyricsService:bundleLibRuntimeToDirAndroidMain UP-TO-DATE
+> Task :domain:bundleLibRuntimeToDirAndroidMain UP-TO-DATE
+> Task :common:bundleLibRuntimeToDirAndroidMain UP-TO-DATE
+> Task :spotify:bundleLibRuntimeToDirAndroidMain UP-TO-DATE
+> Task :ktorExt:bundleLibRuntimeToDirAndroidMain UP-TO-DATE
+> Task :common:mergeAndroidMainJniLibFolders UP-TO-DATE
+> Task :common:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :common:copyAndroidMainJniLibsProjectOnly UP-TO-DATE
+> Task :composeApp:mergeDebugJniLibFolders UP-TO-DATE
+> Task :data:mergeAndroidMainJniLibFolders UP-TO-DATE
+> Task :data:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :data:copyAndroidMainJniLibsProjectOnly UP-TO-DATE
+> Task :domain:mergeAndroidMainJniLibFolders UP-TO-DATE
+> Task :domain:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :domain:copyAndroidMainJniLibsProjectOnly UP-TO-DATE
+> Task :kotlinYtmusicScraper:mergeAndroidMainJniLibFolders UP-TO-DATE
+> Task :kotlinYtmusicScraper:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :kotlinYtmusicScraper:copyAndroidMainJniLibsProjectOnly UP-TO-DATE
+> Task :ktorExt:mergeAndroidMainJniLibFolders UP-TO-DATE
+> Task :ktorExt:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :ktorExt:copyAndroidMainJniLibsProjectOnly UP-TO-DATE
+> Task :lyricsService:mergeAndroidMainJniLibFolders UP-TO-DATE
+> Task :lyricsService:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :composeApp:dataBindingGenBaseClassesDebug UP-TO-DATE
+> Task :lyricsService:copyAndroidMainJniLibsProjectOnly UP-TO-DATE
+> Task :media3:mergeDebugJniLibFolders UP-TO-DATE
+> Task :media3-ui:mergeDebugJniLibFolders UP-TO-DATE
+> Task :media3:mergeDebugNativeLibs NO-SOURCE
+> Task :media3:compileReleaseKotlin UP-TO-DATE
+> Task :media3-ui:mergeDebugNativeLibs NO-SOURCE
+> Task :media3-ui:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :media3:compileReleaseJavaWithJavac NO-SOURCE
+> Task :mediaserviceinterfaces:mergeDebugJniLibFolders UP-TO-DATE
+> Task :composeApp:mergeExtDexDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:mergeDebugNativeLibs NO-SOURCE
+> Task :media3:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :media3:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :sharedutils:mergeDebugJniLibFolders UP-TO-DATE
+> Task :mediaserviceinterfaces:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :youtubeapi:mergeDebugJniLibFolders UP-TO-DATE
+> Task :spotify:mergeAndroidMainJniLibFolders UP-TO-DATE
+> Task :sharedutils:mergeDebugNativeLibs NO-SOURCE
+> Task :youtubeapi:mergeDebugNativeLibs NO-SOURCE
+> Task :composeApp:validateSigningDebug UP-TO-DATE
+> Task :spotify:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :youtubeapi:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :sharedutils:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :composeApp:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :spotify:copyAndroidMainJniLibsProjectOnly UP-TO-DATE
+> Task :composeApp:writeDebugAppMetadata UP-TO-DATE
+> Task :media3:compileDebugKotlin UP-TO-DATE
+> Task :media3:compileDebugJavaWithJavac NO-SOURCE
+> Task :media3:processDebugJavaRes UP-TO-DATE
+> Task :media3:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :media3:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :sharedutils:compileReleaseKotlin UP-TO-DATE
+> Task :media3:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :sharedutils:compileDebugKotlin UP-TO-DATE
+> Task :sharedutils:processDebugJavaRes UP-TO-DATE
+> Task :sharedutils:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :sharedutils:compileDebugJavaWithJavac UP-TO-DATE
+> Task :sharedutils:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :sharedutils:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :sharedutils:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:compileDebugJavaWithJavac UP-TO-DATE
+> Task :sharedutils:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :mediaserviceinterfaces:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :mediaserviceinterfaces:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :mediaserviceinterfaces:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :composeApp:mergeDebugNativeLibs UP-TO-DATE
+> Task :composeApp:stripDebugDebugSymbols UP-TO-DATE
+> Task :media3-ui:compileDebugKotlin UP-TO-DATE
+> Task :media3-ui:compileDebugJavaWithJavac NO-SOURCE
+> Task :media3-ui:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :media3-ui:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :media3-ui:processDebugJavaRes UP-TO-DATE
+> Task :media3-ui:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :youtubeapi:compileReleaseKotlin UP-TO-DATE
+> Task :youtubeapi:compileDebugKotlin UP-TO-DATE
+> Task :youtubeapi:processDebugJavaRes UP-TO-DATE
+> Task :youtubeapi:compileReleaseJavaWithJavac UP-TO-DATE
+> Task :youtubeapi:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :youtubeapi:compileDebugJavaWithJavac UP-TO-DATE
+> Task :youtubeapi:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :youtubeapi:bundleLibRuntimeToDirDebug UP-TO-DATE
+> Task :kotlinYtmusicScraper:compileAndroidMain UP-TO-DATE
+> Task :kotlinYtmusicScraper:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :kotlinYtmusicScraper:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :kotlinYtmusicScraper:processAndroidMainJavaRes UP-TO-DATE
+> Task :kotlinYtmusicScraper:bundleLibRuntimeToDirAndroidMain UP-TO-DATE
+> Task :data:kspAndroidMain UP-TO-DATE
+> Task :data:copyRoomSchemas NO-SOURCE
+> Task :data:compileAndroidMain UP-TO-DATE
+> Task :data:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :data:processAndroidMainJavaRes UP-TO-DATE
+> Task :data:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :data:bundleLibRuntimeToDirAndroidMain UP-TO-DATE
+> Task :composeApp:mergeLibDexDebug UP-TO-DATE
+
+> Task :composeApp:compileDebugKotlinAndroid FAILED
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/component/PodcastEpisodeItem.kt:98:29 Unresolved reference 'textHighEmphasis'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/component/PodcastEpisodeItem.kt:115:33 Unresolved reference 'textHighEmphasis'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/home/SettingScreen.kt:1368:24 Unresolved reference 'backgroundCard'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/library/LibraryScreen.kt:244:58 Unresolved reference 'backgroundCard'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/library/LibraryScreen.kt:420:74 Unresolved reference 'backgroundCard'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/library/LocalPlaylistScreen.kt:455:49 Unresolved reference 'overlayMedium'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/library/LocalPlaylistScreen.kt:555:49 Unresolved reference 'textHighEmphasis'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/other/AlbumScreen.kt:190:42 Unresolved reference 'backgroundCard'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/other/AlbumScreen.kt:260:61 Unresolved reference 'overlayMedium'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/other/AlbumScreen.kt:357:61 Unresolved reference 'textHighEmphasis'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/other/PlaylistScreen.kt:319:42 Unresolved reference 'backgroundCard'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/other/PlaylistScreen.kt:391:65 Unresolved reference 'overlayMedium'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/other/PodcastsScreen.kt:201:61 Unresolved reference 'overlayMedium'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/other/SearchScreen.kt:431:57 Unresolved reference 'backgroundPrimary'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/player/FullscreenPlayer.kt:84:33 Unresolved reference 'overlay'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/player/FullscreenPlayer.kt:313:45 Unresolved reference 'overlay'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/player/NowPlayingScreen.kt:151:33 Unresolved reference 'blackMoreOverlay'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/player/NowPlayingScreen.kt:153:33 Unresolved reference 'overlay'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/player/NowPlayingScreen.kt:613:65 Unresolved reference 'overlay'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/player/NowPlayingScreen.kt:862:90 Unresolved reference 'blackMoreOverlay'.
+e: file:///E:/APPS/Sonique/composeApp/src/commonMain/kotlin/com/sonique/app/ui/screen/player/NowPlayingScreen.kt:863:90 Unresolved reference 'overlay'.
+
+[Incubating] Problems report is available at: file:///E:/APPS/Sonique/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':composeApp:compileDebugKotlinAndroid'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+* Exception is:
+org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':composeApp:compileDebugKotlinAndroid'.
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.lambda$executeIfValid$1(ExecuteActionsTaskExecuter.java:130)
+	at org.gradle.internal.Try$Failure.ifSuccessfulOrElse(Try.java:293)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:128)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+Caused by: org.gradle.workers.internal.DefaultWorkerExecutor$WorkExecutionException: A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+	at org.gradle.workers.internal.DefaultWorkerExecutor$WorkItemExecution.waitForCompletion(DefaultWorkerExecutor.java:287)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.lambda$waitForItemsAndGatherFailures$2(DefaultAsyncWorkTracker.java:130)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:335)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLocks(DefaultWorkerLeaseService.java:318)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withoutLock(DefaultWorkerLeaseService.java:323)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:126)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForItemsAndGatherFailures(DefaultAsyncWorkTracker.java:92)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForAll(DefaultAsyncWorkTracker.java:78)
+	at org.gradle.internal.work.DefaultAsyncWorkTracker.waitForCompletion(DefaultAsyncWorkTracker.java:66)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$3.run(TaskExecution.java:252)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:30)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$1.execute(DefaultBuildOperationRunner.java:27)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.run(DefaultBuildOperationRunner.java:48)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeAction(TaskExecution.java:229)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeActions(TaskExecution.java:212)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.executeWithPreviousOutputFiles(TaskExecution.java:195)
+	at org.gradle.api.internal.tasks.execution.TaskExecution.execute(TaskExecution.java:162)
+	at org.gradle.internal.execution.steps.ExecuteStep.executeInternal(ExecuteStep.java:105)
+	at org.gradle.internal.execution.steps.ExecuteStep.access$000(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:59)
+	at org.gradle.internal.execution.steps.ExecuteStep$1.call(ExecuteStep.java:56)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:56)
+	at org.gradle.internal.execution.steps.ExecuteStep.execute(ExecuteStep.java:44)
+	at org.gradle.internal.execution.steps.CancelExecutionStep.execute(CancelExecutionStep.java:42)
+	at org.gradle.internal.execution.steps.TimeoutStep.executeWithoutTimeout(TimeoutStep.java:75)
+	at org.gradle.internal.execution.steps.TimeoutStep.execute(TimeoutStep.java:55)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:50)
+	at org.gradle.internal.execution.steps.PreCreateOutputParentsStep.execute(PreCreateOutputParentsStep.java:28)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:67)
+	at org.gradle.internal.execution.steps.RemovePreviousOutputsStep.execute(RemovePreviousOutputsStep.java:37)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:61)
+	at org.gradle.internal.execution.steps.BroadcastChangingOutputsStep.execute(BroadcastChangingOutputsStep.java:26)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:69)
+	at org.gradle.internal.execution.steps.CaptureOutputsAfterExecutionStep.execute(CaptureOutputsAfterExecutionStep.java:46)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:40)
+	at org.gradle.internal.execution.steps.ResolveInputChangesStep.execute(ResolveInputChangesStep.java:29)
+	at org.gradle.internal.execution.steps.BuildCacheStep.executeWithoutCache(BuildCacheStep.java:189)
+	at org.gradle.internal.execution.steps.BuildCacheStep.lambda$execute$1(BuildCacheStep.java:75)
+	at org.gradle.internal.Either$Right.fold(Either.java:175)
+	at org.gradle.internal.execution.caching.CachingState.fold(CachingState.java:62)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:73)
+	at org.gradle.internal.execution.steps.BuildCacheStep.execute(BuildCacheStep.java:48)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:46)
+	at org.gradle.internal.execution.steps.StoreExecutionStateStep.execute(StoreExecutionStateStep.java:35)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.executeBecause(SkipUpToDateStep.java:75)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.lambda$execute$2(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:53)
+	at org.gradle.internal.execution.steps.SkipUpToDateStep.execute(SkipUpToDateStep.java:35)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:37)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsFinishedStep.execute(MarkSnapshottingInputsFinishedStep.java:27)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:49)
+	at org.gradle.internal.execution.steps.ResolveIncrementalCachingStateStep.executeDelegate(ResolveIncrementalCachingStateStep.java:27)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:71)
+	at org.gradle.internal.execution.steps.AbstractResolveCachingStateStep.execute(AbstractResolveCachingStateStep.java:39)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:65)
+	at org.gradle.internal.execution.steps.ResolveChangesStep.execute(ResolveChangesStep.java:36)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:107)
+	at org.gradle.internal.execution.steps.ValidateStep.execute(ValidateStep.java:56)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:64)
+	at org.gradle.internal.execution.steps.AbstractCaptureStateBeforeExecutionStep.execute(AbstractCaptureStateBeforeExecutionStep.java:43)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.executeWithNonEmptySources(AbstractSkipEmptyWorkStep.java:125)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:61)
+	at org.gradle.internal.execution.steps.AbstractSkipEmptyWorkStep.execute(AbstractSkipEmptyWorkStep.java:36)
+	at org.gradle.internal.execution.steps.legacy.MarkSnapshottingInputsStartedStep.execute(MarkSnapshottingInputsStartedStep.java:38)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:36)
+	at org.gradle.internal.execution.steps.LoadPreviousExecutionStateStep.execute(LoadPreviousExecutionStateStep.java:23)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:75)
+	at org.gradle.internal.execution.steps.HandleStaleOutputsStep.execute(HandleStaleOutputsStep.java:41)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.lambda$execute$0(AssignMutableWorkspaceStep.java:35)
+	at org.gradle.api.internal.tasks.execution.TaskExecution$4.withWorkspace(TaskExecution.java:289)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:31)
+	at org.gradle.internal.execution.steps.AssignMutableWorkspaceStep.execute(AssignMutableWorkspaceStep.java:22)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:40)
+	at org.gradle.internal.execution.steps.ChoosePipelineStep.execute(ChoosePipelineStep.java:23)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.lambda$execute$2(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:67)
+	at org.gradle.internal.execution.steps.ExecuteWorkBuildOperationFiringStep.execute(ExecuteWorkBuildOperationFiringStep.java:39)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:46)
+	at org.gradle.internal.execution.steps.IdentityCacheStep.execute(IdentityCacheStep.java:34)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:48)
+	at org.gradle.internal.execution.steps.IdentifyStep.execute(IdentifyStep.java:35)
+	at org.gradle.internal.execution.impl.DefaultExecutionEngine$1.execute(DefaultExecutionEngine.java:64)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.executeIfValid(ExecuteActionsTaskExecuter.java:127)
+	at org.gradle.api.internal.tasks.execution.ExecuteActionsTaskExecuter.execute(ExecuteActionsTaskExecuter.java:116)
+	at org.gradle.api.internal.tasks.execution.ProblemsTaskPathTrackingTaskExecuter.execute(ProblemsTaskPathTrackingTaskExecuter.java:41)
+	at org.gradle.api.internal.tasks.execution.FinalizePropertiesTaskExecuter.execute(FinalizePropertiesTaskExecuter.java:46)
+	at org.gradle.api.internal.tasks.execution.ResolveTaskExecutionModeExecuter.execute(ResolveTaskExecutionModeExecuter.java:51)
+	at org.gradle.api.internal.tasks.execution.SkipTaskWithNoActionsExecuter.execute(SkipTaskWithNoActionsExecuter.java:57)
+	at org.gradle.api.internal.tasks.execution.SkipOnlyIfTaskExecuter.execute(SkipOnlyIfTaskExecuter.java:74)
+	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.executeTask(EventFiringTaskExecuter.java:77)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:55)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter$1.call(EventFiringTaskExecuter.java:52)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.api.internal.tasks.execution.EventFiringTaskExecuter.execute(EventFiringTaskExecuter.java:52)
+	at org.gradle.execution.plan.LocalTaskNodeExecutor.execute(LocalTaskNodeExecutor.java:42)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:331)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$InvokeNodeExecutorsAction.execute(DefaultTaskExecutionGraph.java:318)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.lambda$execute$0(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.internal.operations.CurrentBuildOperationRef.with(CurrentBuildOperationRef.java:85)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:314)
+	at org.gradle.execution.taskgraph.DefaultTaskExecutionGraph$BuildOperationAwareExecutionAction.execute(DefaultTaskExecutionGraph.java:303)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.execute(DefaultPlanExecutor.java:459)
+	at org.gradle.execution.plan.DefaultPlanExecutor$ExecutorWorker.run(DefaultPlanExecutor.java:376)
+	at org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)
+	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
+Caused by: org.jetbrains.kotlin.gradle.tasks.CompilationErrorException: Compilation error. See log for more details
+	at org.jetbrains.kotlin.gradle.tasks.TasksUtilsKt.throwExceptionIfCompilationFailed(tasksUtils.kt:21)
+	at org.jetbrains.kotlin.compilerRunner.GradleKotlinCompilerWork.run(GradleKotlinCompilerWork.kt:115)
+	at org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction.execute(GradleCompilerRunnerWithWorkers.kt:74)
+	at org.gradle.workers.internal.DefaultWorkerServer.execute(DefaultWorkerServer.java:63)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:66)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1$1.create(NoIsolationWorkerFactory.java:62)
+	at org.gradle.internal.classloader.ClassLoaderUtils.executeInClassloader(ClassLoaderUtils.java:100)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.lambda$execute$0(NoIsolationWorkerFactory.java:62)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:44)
+	at org.gradle.workers.internal.AbstractWorker$1.call(AbstractWorker.java:41)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:210)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$CallableBuildOperationWorker.execute(DefaultBuildOperationRunner.java:205)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:67)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner$2.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:167)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.execute(DefaultBuildOperationRunner.java:60)
+	at org.gradle.internal.operations.DefaultBuildOperationRunner.call(DefaultBuildOperationRunner.java:54)
+	at org.gradle.workers.internal.AbstractWorker.executeWrappedInBuildOperation(AbstractWorker.java:41)
+	at org.gradle.workers.internal.NoIsolationWorkerFactory$1.execute(NoIsolationWorkerFactory.java:59)
+	at org.gradle.workers.internal.DefaultWorkerExecutor.lambda$submitWork$0(DefaultWorkerExecutor.java:174)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runExecution(DefaultConditionalExecutionQueue.java:194)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.access$700(DefaultConditionalExecutionQueue.java:127)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner$1.run(DefaultConditionalExecutionQueue.java:169)
+	at org.gradle.internal.Factories$1.create(Factories.java:31)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.withLocks(DefaultWorkerLeaseService.java:263)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:127)
+	at org.gradle.internal.work.DefaultWorkerLeaseService.runAsWorkerThread(DefaultWorkerLeaseService.java:132)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.runBatch(DefaultConditionalExecutionQueue.java:164)
+	at org.gradle.internal.work.DefaultConditionalExecutionQueue$ExecutionRunner.run(DefaultConditionalExecutionQueue.java:133)
+	... 2 more
+
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 45s
+260 actionable tasks: 9 executed, 251 up-to-date
+Configuration cache entry stored.

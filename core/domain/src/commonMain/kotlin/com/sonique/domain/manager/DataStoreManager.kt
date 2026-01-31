@@ -8,9 +8,6 @@ interface DataStoreManager {
 
     suspend fun setAppVersion(version: String)
 
-    val lastVersionCode: Flow<Int>
-    suspend fun setLastVersionCode(code: Int)
-
     val openAppTime: Flow<Int>
 
     suspend fun openApp()
@@ -30,7 +27,8 @@ interface DataStoreManager {
     val downloadQuality: Flow<String>
     suspend fun setDownloadQuality(quality: String)
 
-
+    val videoDownloadQuality: Flow<String>
+    suspend fun setVideoDownloadQuality(quality: String)
 
     val language: Flow<String>
 
@@ -116,11 +114,17 @@ interface DataStoreManager {
 
     suspend fun setMaxSongCacheSize(size: Int)
 
+    val watchVideoInsteadOfPlayingAudio: Flow<String>
+
+    suspend fun setWatchVideoInsteadOfPlayingAudio(watch: Boolean)
+
     val playerVolume: Flow<Float>
 
     suspend fun setPlayerVolume(volume: Float)
 
+    val videoQuality: Flow<String>
 
+    suspend fun setVideoQuality(quality: String)
 
     val spdc: Flow<String>
 
@@ -271,11 +275,6 @@ interface DataStoreManager {
 
     val neverShowGithubPopup: Flow<Boolean>
     suspend fun setNeverShowGithubPopup(neverShow: Boolean)
-
-    val ambienceMode: Flow<String>
-    suspend fun setAmbienceMode(enabled: Boolean)
-    
-
 
     enum class ProxyType {
         PROXY_TYPE_HTTP,

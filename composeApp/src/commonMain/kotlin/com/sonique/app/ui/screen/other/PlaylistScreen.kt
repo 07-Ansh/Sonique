@@ -860,4 +860,43 @@ fun PlaylistScreen(
                         ListState.PAGINATION_EXHAUST -> {
                             item {
                                 EndOfPage()
-}}}}}}}}}
+                            }
+                        }
+                    }
+                    }
+                    }
+
+
+                if (itemBottomSheetShow && currentItem != null) {
+                    val track = currentItem?.toSongEntity() ?: return@Crossfade
+                    NowPlayingBottomSheet(
+                        onDismiss = {
+                            itemBottomSheetShow = false
+                            currentItem = null
+                        },
+                        navController = navController,
+                        song = track,
+                    )
+                }
+                if (playlistBottomSheetShow) {
+                    Logger.w("PlaylistScreen", "PlaylistBottomSheet")
+                    val addToQueue = {
+                        viewModel.getFullTracks { track ->
+                            sharedViewModel.addListToQueue(
+                                track.toCollection(arrayListOf()),
+                            )
+                        }
+                    }
+                    PlaylistBottomSheet(
+                        onDismiss = { playlistBottomSheetShow = false },
+                        playlistId = data.id,
+                        playlistName = data.title,
+                        isYourYouTubePlaylist = isYourYouTubePlaylist && !data.isRadio,
+                        onSaveToLocal = {
+                            viewModel.getFullTracks { track ->
+                                viewModel.saveToLocal(track)
+                            }
+                        },
+                        onEditTitle = { newTitle ->
+                            viewModel.updatePlaylistTitle(newTitle, data.id)
+}}}}}}

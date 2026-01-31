@@ -938,4 +938,43 @@ fun PlaylistScreen(
                                     true,
                                 ) {
                                     navController.navigateUp()
-}}}}}}}}
+                                }
+                            }
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = {
+                                    showSearchBar = !showSearchBar
+                                },
+                            ) {
+                                Icon(Icons.Rounded.Search, null, tint = Color.White)
+                            }
+                        },
+                        colors =
+                            TopAppBarDefaults.topAppBarColors(
+                                containerColor = Color.Transparent,
+                            ),
+                        modifier = Modifier.angledGradientBackground(listColors, 90f),
+                    )
+                }
+            }
+
+            is PlaylistUIState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CenterLoadingBox(
+                        modifier = Modifier.size(80.dp),
+                    )
+                }
+            }
+
+            is PlaylistUIState.Error -> {
+                viewModel.makeToast("Error: ${state.message}")
+                navController.navigateUp()
+            }
+        }
+    }
+}
+

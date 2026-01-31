@@ -664,4 +664,43 @@ fun PlaylistScreen(
                                                     RippleIconButton(
                                                         modifier =
                                                             Modifier.size(36.dp),
-}}}}}}}}}}}}}}
+                                                        resId = Res.drawable.baseline_more_vert_24,
+                                                        fillMaxSize = true,
+                                                    ) {
+                                                        onPlaylistMoreClick()
+                                                    }
+                                                }
+                                                val uriHandler = LocalUriHandler.current
+                                                DescriptionView(
+                                                    modifier =
+                                                        Modifier
+                                                            .padding(
+                                                                top = 8.dp,
+                                                            ),
+                                                    text =
+                                                        state.data.description.let {
+                                                            if (!it.isNullOrEmpty()) {
+                                                                it
+                                                            } else {
+                                                                stringResource(Res.string.no_description)
+                                                            }
+                                                        },
+                                                    limitLine = 3,
+                                                    onTimeClicked = {},
+                                                    onURLClicked = { url ->
+                                                        uriHandler.openUri(url)
+                                                    },
+                                                )
+                                                Text(
+                                                    text =
+                                                        if (data.isRadio) {
+                                                            stringResource(Res.string.unlimited)
+                                                        } else {
+                                                            stringResource(
+                                                                Res.string.album_length,
+                                                                (data.trackCount).toString(),
+                                                                "",
+                                                            )
+                                                        },
+                                                    color = Color.White,
+}}}}}}}}}}}}}

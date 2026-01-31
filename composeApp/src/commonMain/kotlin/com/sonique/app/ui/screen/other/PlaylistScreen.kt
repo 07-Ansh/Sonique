@@ -507,4 +507,43 @@ fun PlaylistScreen(
                                                 ) {
                                                     CompositionLocalProvider(
                                                         LocalMinimumInteractiveComponentSize provides Dp.Unspecified,
-}}}}}}}}}}}}}}
+                                                    ) {
+                                                        TextButton(
+                                                            modifier =
+                                                                Modifier
+                                                                    .wrapContentHeight()
+                                                                    .defaultMinSize(minHeight = 1.dp, minWidth = 1.dp),
+                                                            contentPadding = PaddingValues(vertical = 1.dp),
+                                                            onClick = {
+                                                                if (data.author.id.isNotEmpty()) {
+                                                                    navController.navigate(
+                                                                        ArtistDestination(
+                                                                            data.author.id,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                            },
+                                                        ) {
+                                                            Text(
+                                                                text = data.author.name,
+                                                                style = typo().labelSmall,
+                                                                color = Color.White,
+                                                            )
+                                                        }
+                                                    }
+                                                    Spacer(modifier = Modifier.size(4.dp))
+                                                    Text(
+                                                        text = "${
+                                                            if (data.isRadio) {
+                                                                stringResource(Res.string.radio)
+                                                            } else {
+                                                                stringResource(Res.string.playlist)
+                                                            }
+                                                        } • ${data.year}",
+                                                        style = typo().bodyMedium,
+                                                    )
+                                                }
+                                                Row(
+                                                    modifier =
+                                                        Modifier.fillMaxWidth(),
+}}}}}}}}}}}}}

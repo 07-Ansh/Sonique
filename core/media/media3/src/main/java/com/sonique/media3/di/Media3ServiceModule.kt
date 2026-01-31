@@ -390,7 +390,6 @@ private fun provideMergingMediaSource(
             dataStoreManager,
             coroutineScope,
         ),
-        dataStoreManager,
     )
 
 @UnstableApi

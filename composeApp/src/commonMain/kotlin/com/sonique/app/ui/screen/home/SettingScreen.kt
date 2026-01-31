@@ -132,11 +132,6 @@ fun rememberSettingsCategories(): List<SettingsCategory> {
             destination = SettingsAudioDestination
         ),
         SettingsCategory(
-            title = "Video", // No string resource for just "Video" maybe? Use string literal for now or find closest.
-            icon = Icons.Default.Videocam,
-            destination = SettingsVideoDestination
-        ),
-        SettingsCategory(
             title = stringResource(Res.string.playback),
             icon = Icons.Default.PlayCircle,
             destination = SettingsPlaybackDestination

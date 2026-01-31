@@ -8,7 +8,6 @@ import com.sonique.common.Config.PLAYLIST_CLICK
 import com.sonique.common.Config.RECOVER_TRACK_QUEUE
 import com.sonique.common.Config.SHARE
 import com.sonique.common.Config.SONG_CLICK
-import com.sonique.common.Config.VIDEO_CLICK
 import com.sonique.common.SELECTED_LANGUAGE
 import com.sonique.common.SUPPORTED_LANGUAGE
 import com.sonique.common.STATUS_DONE
@@ -123,9 +122,8 @@ class SharedViewModel(
 
     var isServiceRunning: Boolean = false
 
-    private var _sleepTimerState = MutableStateFlow(SleepTimerState(false, 0))
-    val sleepTimerState: StateFlow<SleepTimerState> = _sleepTimerState
-
+    private var _sleepTimerState = MutableStateFlow<SleepTimerState>(SleepTimerState(false, 0))
+    val sleepTimerState: StateFlow<SleepTimerState> = _sleepTimerState.asStateFlow()
     private var regionCode: String? = null
     private var language: String? = null
     private var quality: String? = null
@@ -137,11 +135,11 @@ class SharedViewModel(
     val canvas: StateFlow<CanvasResult?> = _canvas
 
     private var canvasJob: Job? = null
-
-
-
-    private val _showGitHubPopup = MutableStateFlow(false)
+    private val _showGitHubPopup = MutableStateFlow<Boolean>(false)
     val showGitHubPopup: StateFlow<Boolean> = _showGitHubPopup.asStateFlow()
+
+    private val _getVideo = MutableStateFlow<Boolean>(false)
+    val getVideo: StateFlow<Boolean> = _getVideo.asStateFlow()
 
     private val _intent: MutableStateFlow<GenericIntent?> = MutableStateFlow(null)
     val intent: StateFlow<GenericIntent?> = _intent
@@ -174,8 +172,7 @@ class SharedViewModel(
             ),
         )
     val controllerState: StateFlow<ControlState> = _controllerState
-    private val _getVideo: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val getVideo: StateFlow<Boolean> = _getVideo
+
 
     private var _timeline =
         MutableStateFlow<TimeLine>(
@@ -211,9 +208,6 @@ class SharedViewModel(
                 )
             }
             dataStoreManager.openApp()
-            if (getPlatform() == Platform.Desktop) {
-                dataStoreManager.setWatchVideoInsteadOfPlayingAudio(false)
-            }
             dataStoreManager.getString("miniplayer_guide").first().let {
                 isFirstMiniplayer = it != STATUS_DONE
             }
@@ -254,13 +248,7 @@ class SharedViewModel(
                             }
                         }
 
-            val checkGetVideoJob =
-                launch {
-                    dataStoreManager.watchVideoInsteadOfPlayingAudio.collectLatest {
-                        Logger.w(tag, "GetVideo is $it")
-                        _getVideo.value = it == TRUE
-                    }
-                }
+
             val lyricsProviderJob =
                 launch {
                     dataStoreManager.lyricsProvider.distinctUntilChanged().collectLatest {
@@ -278,7 +266,7 @@ class SharedViewModel(
  
  
  
-            checkGetVideoJob.join()
+
             lyricsProviderJob.join()
 
  
@@ -320,7 +308,7 @@ class SharedViewModel(
                         getFormat(now.mediaId)
                         _nowPlayingScreenData.update {
                             it.copy(
-                                isVideo = now.isVideo(),
+                                isVideo = false,
                             )
                         }
                     }
@@ -685,9 +673,7 @@ class SharedViewModel(
                     mediaPlayerHandler.getRelated(track.videoId)
                 }
 
-                VIDEO_CLICK -> {
-                    mediaPlayerHandler.getRelated(track.videoId)
-                }
+
 
                 SHARE -> {
                     mediaPlayerHandler.getRelated(track.videoId)

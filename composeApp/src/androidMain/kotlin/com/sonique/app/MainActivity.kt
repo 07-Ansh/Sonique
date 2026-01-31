@@ -223,8 +223,16 @@ class MainActivity : AppCompatActivity() {
                 viewModel.makeToast(
                     when (type) {
                         ToastType.ExplicitContent -> getString(Res.string.explicit_content_blocked)
-                        is ToastType.PlayerError ->
-                            getString(Res.string.time_out_check_internet_connection_or_change_piped_instance_in_settings, type.error)
+                        is ToastType.PlayerError -> {
+                            if (type.error == "ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED") {
+                                "Playback failed. Try re-downloading the track."
+                            } else {
+                                getString(
+                                    Res.string.time_out_check_internet_connection_or_change_piped_instance_in_settings,
+                                    type.error
+                                )
+                            }
+                        }
                     }
                 )
             }

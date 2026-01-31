@@ -97,7 +97,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import okio.FileSystem
 import okio.Path
+import okio.Path.Companion.toPath
 import kotlin.jvm.JvmInline
 import kotlin.math.round
 import kotlin.random.Random
@@ -2187,6 +2189,14 @@ class YouTube {
                     } else {
                          
                         runCatching {
+                            try {
+                                val videoPath = "$filePath.mp4".toPath()
+                                if (FileSystem.SYSTEM.exists(videoPath)) {
+                                    FileSystem.SYSTEM.delete(videoPath)
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
                             ytMusic
                                 .download(audioUrl, ("$filePath.webm"))
                                 .collect { downloadProgress ->

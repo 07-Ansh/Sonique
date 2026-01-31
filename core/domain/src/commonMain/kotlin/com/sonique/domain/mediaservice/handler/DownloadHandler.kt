@@ -7,6 +7,7 @@ interface DownloadHandler {
         videoId: String,
         title: String,
         thumbnail: String,
+        isVideo: Boolean = false,
     )
 
     fun removeDownload(videoId: String)

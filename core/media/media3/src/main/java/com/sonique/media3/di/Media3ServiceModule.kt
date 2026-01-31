@@ -124,7 +124,7 @@ private val mediaServiceModule =
             provideSimpleCache(
                 context = androidContext(),
                 cacheName = "spotifyCanvas",
-                cacheSize = -1,
+                cacheSize = 512 * 1024 * 1024,
                 databaseProvider = get<DatabaseProvider>(),
             )
         }

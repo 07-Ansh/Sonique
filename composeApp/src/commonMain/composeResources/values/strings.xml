@@ -13,7 +13,7 @@
     <string name="like">Like</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="general">General</string>
-    <string name="download">Downloads</string>
+    <string name="download">Download</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading">Downloading</string>
     <string name="preparing">Preparing</string>
@@ -446,7 +446,7 @@
     <string name="contributor_name">Contributor name</string>
     <string name="contributor_email">Contributor email</string>
     <string name="anonymous">Anonymous</string>
-    <string name="sonique_lyrics">Sonique Lyrics</string>
+    <string name="sonique_lyrics">Sonique</string>
     <string name="backup_in_progress">Backup in progress</string>
     <string name="restore_in_progress">Restore in progress</string>
     <string name="backup_downloaded">Backup downloaded data</string>

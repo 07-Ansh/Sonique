@@ -3,10 +3,10 @@
 version-name="1.0.3"
 version-code="46"
 
-android = "8.13.2"
+android = "9.0.0"
 kotlin = "2.2.21"
 serialization = "2.2.21"
-ksp = "2.2.20-2.0.3"
+ksp = "2.3.2"
 compose-bom = "2025.12.00"
 
 constraintlayout-compose = "1.1.1"

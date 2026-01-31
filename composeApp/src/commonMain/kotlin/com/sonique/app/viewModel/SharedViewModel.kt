@@ -1295,7 +1295,7 @@ class SharedViewModel(
                         track = track,
                         videoId = track.videoId,
                         path = path,
-                        isVideo = nowPlayingScreenData.value.isVideo,
+                        isVideo = false,
                     ).collectLatest {
                         _downloadFileProgress.value = it
                     }

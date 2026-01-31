@@ -166,18 +166,15 @@ internal class DownloadUtils(
         videoId: String,
         title: String,
         thumbnail: String,
+        isVideo: Boolean,
     ) {
-        var isVideo = false
         val request =
             ImageRequest
                 .Builder(context)
                 .data(thumbnail)
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .build()
-        val imageResult = ImageLoader(context).execute(request)
-        if (imageResult.image?.height != imageResult.image?.width && imageResult.image != null) {
-            isVideo = true
-        }
+        ImageLoader(context).execute(request)
         val downloadRequest =
             DownloadRequest
                 .Builder(videoId, videoId.toUri())

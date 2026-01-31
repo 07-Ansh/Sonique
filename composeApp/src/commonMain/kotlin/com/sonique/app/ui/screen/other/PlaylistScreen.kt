@@ -546,4 +546,44 @@ fun PlaylistScreen(
                                                 Row(
                                                     modifier =
                                                         Modifier.fillMaxWidth(),
-}}}}}}}}}}}}}
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                ) {
+                                                    Crossfade(isPlaying && playingPlaylistId == data.id) { isThisPlaying ->
+                                                        if (isThisPlaying) {
+                                                            RippleIconButton(
+                                                                resId = Res.drawable.baseline_pause_circle_24,
+                                                                fillMaxSize = true,
+                                                                tint = seed,
+                                                                modifier = Modifier.size(48.dp),
+                                                            ) {
+                                                                sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                                            }
+                                                        } else {
+                                                            RippleIconButton(
+                                                                resId = Res.drawable.baseline_play_circle_24,
+                                                                fillMaxSize = true,
+                                                                tint = seed,
+                                                                modifier = Modifier.size(48.dp),
+                                                            ) {
+                                                                viewModel.onUIEvent(PlaylistUIEvent.PlayAll)
+                                                            }
+                                                        }
+                                                    }
+                                                    if (!data.isRadio) {
+                                                        HeartCheckBox(
+                                                            size = 32,
+                                                            checked = liked,
+                                                            onStateChange = {
+                                                                viewModel.onUIEvent(PlaylistUIEvent.Favorite)
+                                                            },
+                                                        )
+                                                        Crossfade(targetState = downloadState) {
+                                                            when (it) {
+                                                                DownloadState.STATE_DOWNLOADED -> {
+                                                                    Box(
+                                                                        modifier =
+                                                                            Modifier
+                                                                                .size(36.dp)
+                                                                                .clip(
+                                                                                    CircleShape,
+}}}}}}}}}}}}}}}}}}

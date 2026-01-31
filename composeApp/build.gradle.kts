@@ -243,6 +243,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
+                "consumer-rules.pro",
                 "proguard-rules.pro",
             )
             splits {
@@ -288,9 +289,9 @@ android {
                     "META-INF/notice",
                     "META-INF/*.kotlin_module",
                 )
-            keepDebugSymbols += setOf("**/libpython.zip.so")
         }
         // Prevent stripping libpython.zip.so (it's a ZIP file, not a native library)
+        doNotStrip += "**/libpython.zip.so"
         resources {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }

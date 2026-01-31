@@ -9,9 +9,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun GitHubStarDialog(
@@ -38,18 +35,9 @@ fun GitHubStarDialog(
                 onClick = {
                     uriHandler.openUri(githubUrl)
                     onStar()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                }
             ) {
-                Text(
-                    text = "Star on GitHub",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    )
-                )
+                Text("Star on GitHub")
             }
         },
         dismissButton = {
@@ -58,7 +46,5 @@ fun GitHubStarDialog(
             }
         },
         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHigh,
-        titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
-        textContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
     )
 }

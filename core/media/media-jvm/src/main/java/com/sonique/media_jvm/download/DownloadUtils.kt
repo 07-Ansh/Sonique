@@ -40,7 +40,6 @@ internal class DownloadUtils(
         videoId: String,
         title: String,
         thumbnail: String,
-        isVideo: Boolean,
     ) {
         val song = songRepository.getSongById(videoId).lastOrNull()
         if (song != null) {
@@ -56,7 +55,7 @@ internal class DownloadUtils(
                     song.toTrack(),
                     path = getDownloadPath() + File.separator + videoId,
                     videoId = videoId,
-                    isVideo = isVideo,
+                    isVideo = false,
                 ).collect { state ->
                     if (state.isError) {
                         songRepository.updateDownloadState(

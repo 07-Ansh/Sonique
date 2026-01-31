@@ -1,9 +1,7 @@
 package com.sonique.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.Animatable
 import androidx.compose.animation.Crossfade
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,7 +9,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.SnapLayoutInfoProvider
-import org.jetbrains.compose.resources.painterResource
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.horizontalScroll
@@ -23,8 +20,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -39,7 +34,6 @@ import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -62,7 +56,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -76,7 +69,6 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
-import kotlinx.coroutines.withContext
 import com.sonique.common.CHART_SUPPORTED_COUNTRY
 import com.sonique.common.Config
 import com.sonique.domain.data.model.browse.album.Track
@@ -102,8 +94,6 @@ import com.sonique.app.ui.component.QuickPicksItem
 import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.component.InAppNotification
 import com.sonique.app.ui.component.OfflineScreen
-import com.sonique.app.ui.screen.home.SpeedDialSection
-import com.sonique.domain.utils.toTrack
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.MoodDestination
 import com.sonique.app.ui.navigation.destination.home.NotificationDestination
@@ -138,7 +128,6 @@ import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.app_name
 import sonique.composeapp.generated.resources.baseline_settings_24
 import com.sonique.app.expect.ui.rememberNotificationPermissionLauncher
-import sonique.composeapp.generated.resources.app_icon
 import sonique.composeapp.generated.resources.energize
 import sonique.composeapp.generated.resources.feel_good
 import sonique.composeapp.generated.resources.focus
@@ -291,9 +280,20 @@ fun HomeScreen(
             )
         }
     }
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+    Box {
         InAppNotification(
             visible = shouldShowLogInAlert,
             message = stringResource(Res.string.log_in_warning),
@@ -308,7 +308,8 @@ fun HomeScreen(
                 .zIndex(1f)
         )
         PullToRefreshBox(
-            modifier = Modifier,
+            modifier =
+                Modifier,
             state = pullToRefreshState,
             onRefresh = onRefresh,
             isRefreshing = isRefreshing,
@@ -363,32 +364,46 @@ fun HomeScreen(
                                     }
                                 }
                             }
-                            itemsIndexed(homeData, key = { index, item -> item.hashCode() + index }) { index, item ->
-                                if (index == 0) {
-                                     // Replace first section with Speed Dial
-                                     SpeedDialSection(
-                                         navController = navController,
-                                         data = item,
-                                         onPlayClick = { content ->
-                                             if (content is com.sonique.domain.data.model.home.Content) {
-                                                 val firstQueue = content.toTrack()
-                                                 viewModel.setQueueData(
-                                                     com.sonique.domain.mediaservice.handler.QueueData.Data(
-                                                         listTracks = arrayListOf(firstQueue),
-                                                         firstPlayedTrack = firstQueue,
-                                                         playlistId = "RDAMVM${content.videoId}",
-                                                         playlistName = content.title,
-                                                         playlistType = com.sonique.domain.mediaservice.handler.PlaylistType.RADIO,
-                                                         continuation = null,
-                                                     )
-                                                 )
-                                                 viewModel.loadMediaItem(
-                                                     firstQueue,
-                                                     com.sonique.common.Config.SONG_CLICK,
-                                                 )
-                                             }
-                                         }
-                                     )
+                            items(homeData, key = { it.hashCode() }) { item ->
+                                if (item.title == stringResource(Res.string.quick_picks)) {
+                                    AnimatedVisibility(
+                                        visible =
+                                            homeData.find {
+                                                it.title ==
+                                                    stringResource(
+                                                        Res.string.quick_picks,
+                                                    )
+                                            } != null,
+                                    ) {
+                                        QuickPicks(
+                                            homeItem =
+                                                (
+                                                    homeData.find {
+                                                        it.title ==
+                                                            stringResource(
+                                                                Res.string.quick_picks,
+                                                            )
+                                                    } ?: return@AnimatedVisibility
+                                                    ).let { content ->
+                                                        content.copy(
+                                                            contents =
+                                                                content.contents.mapNotNull { ct ->
+                                                                    ct?.copy(
+                                                                        artists =
+                                                                            ct.artists?.let { art ->
+                                                                                if (art.size > 1) {
+                                                                                    art.dropLast(1)
+                                                                                } else {
+                                                                                    art
+                                                                                }
+                                                                            },
+                                                                    )
+                                                                },
+                                                        )
+                                                    },
+                                            viewModel = viewModel,
+                                        )
+                                    }
                                 } else {
                                     HomeItem(
                                         navController = navController,
@@ -433,7 +448,58 @@ fun HomeScreen(
                                     }
                                 }
                             }
-
+                            item {
+                                Column(
+                                    Modifier
+                                        .padding(vertical = 10.dp),
+                                    verticalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    ChartTitle()
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    Crossfade(targetState = regionChart) {
+                                        Logger.w("HomeScreen", "regionChart: $it")
+                                        if (it != null) {
+                                            DropdownButton(
+                                                items = CHART_SUPPORTED_COUNTRY.itemsData.toList(),
+                                                defaultSelected =
+                                                    CHART_SUPPORTED_COUNTRY.itemsData.getOrNull(
+                                                        CHART_SUPPORTED_COUNTRY.items.indexOf(it),
+                                                    )
+                                                        ?: CHART_SUPPORTED_COUNTRY.itemsData[1],
+                                            ) {
+                                                viewModel.exploreChart(
+                                                    CHART_SUPPORTED_COUNTRY.items[
+                                                        CHART_SUPPORTED_COUNTRY.itemsData.indexOf(
+                                                            it,
+                                                        ),
+                                                    ],
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(5.dp))
+                                    Crossfade(
+                                        targetState = chartLoading,
+                                        label = "Chart",
+                                    ) { loading ->
+                                        if (!loading) {
+                                            chart?.let {
+                                                ChartData(
+                                                    chart = it,
+                                                    navController = navController,
+                                                )
+                                            }
+                                        } else {
+                                            CenterLoadingBox(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxWidth()
+                                                        .height(400.dp),
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                         item {
                             EndOfPage()
@@ -562,19 +628,11 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(Res.drawable.app_icon),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(35.dp)
-                    .clip(CircleShape),
-            )
-            Spacer(modifier = Modifier.width(15.dp))
+        Column {
             Text(
                 text = stringResource(Res.string.app_name),
                 style = typo().headlineMedium,
-                color = Color.White,
+                color = Color.White
             )
         }
         
@@ -783,5 +841,108 @@ fun MoodMomentAndGenre(
     }
 }
 
+@Composable
+fun ChartTitle() {
+    Column {
+        Text(
+            text = "Featuring Today",
+            style = typo().headlineMedium,
+            color = white,
+            maxLines = 1,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 5.dp),
+        )
+    }
+}
 
+@Composable
+fun ChartData(
+    chart: Chart,
+    navController: NavController,
+) {
+    var gridWidthDp by remember {
+        mutableStateOf(0.dp)
+    }
+    val density = LocalDensity.current
+
+    val lazyListState2 = rememberLazyGridState()
+    val snapperFlingBehavior2 = rememberSnapFlingBehavior(SnapLayoutInfoProvider(lazyGridState = lazyListState2))
+
+    Column(
+        Modifier.onGloballyPositioned { coordinates ->
+            with(density) {
+                gridWidthDp = (coordinates.size.width).toDp()
+            }
+        },
+    ) {
+        chart.listChartItem.forEach { item ->
+            Text(
+                text = item.title,
+                style = typo().headlineMedium,
+                color = white,
+                maxLines = 1,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),
+            )
+            val lazyListState = rememberLazyListState()
+            val snapperFlingBehavior = rememberSnapFlingBehavior(SnapLayoutInfoProvider(lazyListState = lazyListState))
+            LazyRow(flingBehavior = snapperFlingBehavior) {
+                items(item.playlists.size, key = { index ->
+                    val data = item.playlists[index]
+                    data.id + data.title + index
+                }) {
+                    HomeItemContentPlaylist(
+                        onClick = {
+                            navController.navigate(
+                                PlaylistDestination(
+                                    playlistId = item.playlists[it].id,
+                                    isYourYouTubePlaylist = false,
+                                ),
+                            )
+                        },
+                        data = item.playlists[it],
+                    )
+                }
+            }
+        }
+        Text(
+            text = stringResource(Res.string.top_artists),
+            style = typo().headlineMedium,
+            color = white,
+            maxLines = 1,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 10.dp),
+        )
+        LazyHorizontalGrid(
+            rows = GridCells.Fixed(3),
+            modifier = Modifier.height(240.dp),
+            state = lazyListState2,
+            flingBehavior = snapperFlingBehavior2,
+        ) {
+            items(chart.artists.itemArtists.size, key = { index ->
+                val item = chart.artists.itemArtists[index]
+                item.title + item.browseId + index
+            }) {
+                val data = chart.artists.itemArtists[it]
+                ItemArtistChart(
+                    onClick = {
+                        navController.navigate(
+                            ArtistDestination(
+                                channelId = data.browseId,
+                            ),
+                        )
+                    },
+                    data = data,
+                    widthDp = gridWidthDp,
+                )
+            }
+        }
+    }
+}
 

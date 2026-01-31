@@ -47,7 +47,6 @@ import com.sonique.common.Config.PLAYER_CACHE
 import com.sonique.common.Config.SERVICE_SCOPE
 import com.sonique.common.MERGING_DATA_TYPE
 import com.sonique.domain.extension.now
-import com.sonique.domain.data.entities.DownloadState
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.mediaservice.handler.DownloadHandler
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
@@ -125,7 +124,7 @@ private val mediaServiceModule =
             provideSimpleCache(
                 context = androidContext(),
                 cacheName = "spotifyCanvas",
-                cacheSize = 512 * 1024 * 1024,
+                cacheSize = -1,
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
@@ -152,10 +151,9 @@ private val mediaServiceModule =
                 androidContext(),
                 get(named(DOWNLOAD_CACHE)),
                 get(named(PLAYER_CACHE)),
-                get(), // StreamRepository
-                get(), // SongRepository
-                get(named(SERVICE_SCOPE)), // CoroutineScope
-                get(), // DataStoreManager
+                get(),
+                get(named(SERVICE_SCOPE)),
+                get(),
             )
         }
 
@@ -224,7 +222,6 @@ private fun provideResolvingDataSourceFactory(
     playerCache: SimpleCache,
     dataStoreManager: DataStoreManager,
     streamRepository: StreamRepository,
-    songRepository: SongRepository,
     coroutineScope: CoroutineScope,
 ): DataSource.Factory {
     val chunkLength = 10 * 512 * 1024L
@@ -239,28 +236,17 @@ private fun provideResolvingDataSourceFactory(
                 length,
             )
         ) {
-            val isDownloaded = runBlocking {
-                val id = if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                    mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                } else {
-                    mediaId
-                }
-                songRepository.getSongById(id).firstOrNull()?.downloadState == DownloadState.STATE_DOWNLOADED
+            coroutineScope.launch(Dispatchers.IO) {
+                streamRepository.updateFormat(
+                    if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
+                        mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
+                    } else {
+                        mediaId
+                    },
+                )
             }
-
-            if (isDownloaded) {
-                coroutineScope.launch(Dispatchers.IO) {
-                    streamRepository.updateFormat(
-                        if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                            mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                        } else {
-                            mediaId
-                        },
-                    )
-                }
-                Logger.w("Stream", "Downloaded $mediaId")
-                return@Factory dataSpec
-            }
+            Logger.w("Stream", "Downloaded $mediaId")
+            return@Factory dataSpec
         }
         if (playerCache.isCached(mediaId, dataSpec.position, chunkLength)) {
             coroutineScope.launch(Dispatchers.IO) {
@@ -358,7 +344,6 @@ private fun provideMediaSourceFactory(
     downloadCache: SimpleCache,
     playerCache: SimpleCache,
     streamRepository: StreamRepository,
-    songRepository: SongRepository,
     dataStoreManager: DataStoreManager,
     coroutineScope: CoroutineScope,
 ): DefaultMediaSourceFactory =
@@ -382,7 +367,6 @@ private fun provideMediaSourceFactory(
             playerCache,
             dataStoreManager,
             streamRepository,
-            songRepository,
             coroutineScope,
         ),
         provideExtractorFactory(),
@@ -394,7 +378,6 @@ private fun provideMergingMediaSource(
     downloadCache: SimpleCache,
     playerCache: SimpleCache,
     streamRepository: StreamRepository,
-    songRepository: SongRepository,
     coroutineScope: CoroutineScope,
     dataStoreManager: DataStoreManager,
 ): MergingMediaSourceFactory =
@@ -404,10 +387,10 @@ private fun provideMergingMediaSource(
             downloadCache,
             playerCache,
             streamRepository,
-            songRepository,
             dataStoreManager,
             coroutineScope,
         ),
+        dataStoreManager,
     )
 
 @UnstableApi

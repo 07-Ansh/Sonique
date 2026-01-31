@@ -49,19 +49,6 @@ internal class DataStoreManagerImpl(
         }
     }
 
-    override val lastVersionCode: Flow<Int> =
-        settingsDataStore.data.map { preferences ->
-            preferences[LAST_VERSION_CODE] ?: 0
-        }
-
-    override suspend fun setLastVersionCode(code: Int) {
-        withContext(Dispatchers.IO) {
-            settingsDataStore.edit { settings ->
-                settings[LAST_VERSION_CODE] = code
-            }
-        }
-    }
-
     override val openAppTime: Flow<Int> =
         settingsDataStore.data.map { preferences ->
             preferences[OPEN_APP_TIME] ?: 0
@@ -130,7 +117,18 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val videoDownloadQuality: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[VIDEO_DOWNLOAD_QUALITY] ?: "720p"
+        }
 
+    override suspend fun setVideoDownloadQuality(quality: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[VIDEO_DOWNLOAD_QUALITY] = quality
+            }
+        }
+    }
 
     override val language: Flow<String> =
         settingsDataStore.data.map { preferences ->
@@ -286,7 +284,7 @@ internal class DataStoreManagerImpl(
 
     override val saveRecentSongAndQueue: Flow<String> =
         settingsDataStore.data.map { preferences ->
-            preferences[SAVE_RECENT_SONG] ?: TRUE
+            preferences[SAVE_RECENT_SONG] ?: FALSE
         }
 
     override suspend fun setSaveRecentSongAndQueue(save: Boolean) {
@@ -464,7 +462,24 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val watchVideoInsteadOfPlayingAudio =
+        settingsDataStore.data.map { preferences ->
+            preferences[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] ?: FALSE
+        }
 
+    override suspend fun setWatchVideoInsteadOfPlayingAudio(watch: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (watch) {
+                settingsDataStore.edit { settings ->
+                    settings[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] = FALSE
+                }
+            }
+        }
+    }
 
     override val playerVolume: Flow<Float> =
         settingsDataStore.data.map { preferences ->
@@ -479,7 +494,18 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val videoQuality =
+        settingsDataStore.data.map { preferences ->
+            preferences[VIDEO_QUALITY] ?: "720p"
+        }
 
+    override suspend fun setVideoQuality(quality: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[VIDEO_QUALITY] = quality
+            }
+        }
+    }
 
     override val spdc =
         settingsDataStore.data.map { preferences ->
@@ -1106,26 +1132,6 @@ internal class DataStoreManagerImpl(
         }
     }
 
-    override val ambienceMode: Flow<String> =
-        settingsDataStore.data.map { preferences ->
-            preferences[AMBIENCE_MODE] ?: TRUE
-        }
-
-    override suspend fun setAmbienceMode(enabled: Boolean) {
-        withContext(Dispatchers.IO) {
-            if (enabled) {
-                settingsDataStore.edit { settings ->
-                    settings[AMBIENCE_MODE] = TRUE
-                }
-            } else {
-                settingsDataStore.edit { settings ->
-                    settings[AMBIENCE_MODE] = FALSE
-                }
-            }
-        }
-    }
-
-
 
     companion object Settings {
         val APP_VERSION = stringPreferencesKey("app_version")
@@ -1158,7 +1164,9 @@ internal class DataStoreManagerImpl(
 
         val SPONSOR_BLOCK_ENABLED = stringPreferencesKey("sponsor_block_enabled")
         val MAX_SONG_CACHE_SIZE = intPreferencesKey("maxSongCacheSize")
-
+        val WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO =
+            stringPreferencesKey("watch_video_instead_of_playing_audio")
+        val VIDEO_QUALITY = stringPreferencesKey("video_quality")
         val PLAYER_VOLUME = floatPreferencesKey("player_volume")
         val SPDC = stringPreferencesKey("sp_dc")
         val SPOTIFY_LYRICS = stringPreferencesKey("spotify_lyrics")
@@ -1191,8 +1199,6 @@ internal class DataStoreManagerImpl(
         val LOCAL_PLAYLIST_FILTER = stringPreferencesKey("local_playlist_filter")
         val YOUTUBE_SUBTITLE_LANGUAGE = stringPreferencesKey("youtube_subtitle_language")
 
-        val AMBIENCE_MODE = stringPreferencesKey("ambience_mode")
-
 
         val BACKUP_DOWNLOADED = stringPreferencesKey("backup_downloaded")
 
@@ -1202,7 +1208,6 @@ internal class DataStoreManagerImpl(
 
         val GITHUB_POPUP_SHOWN_COUNT = intPreferencesKey("github_popup_shown_count")
         val NEVER_SHOW_GITHUB_POPUP = booleanPreferencesKey("never_show_github_popup")
-        val LAST_VERSION_CODE = intPreferencesKey("last_version_code")
 
     }
 

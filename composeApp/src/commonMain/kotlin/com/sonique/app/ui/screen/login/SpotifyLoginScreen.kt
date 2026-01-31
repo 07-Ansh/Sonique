@@ -176,7 +176,7 @@ fun SpotifyLoginScreen(
                             }
                         viewModel.setFullSpotifyCookies(cookies)
                     }
-                if (url == Config.SPOTIFY_ACCOUNT_URL) {
+                if (url.startsWith(Config.SPOTIFY_ACCOUNT_URL)) {
                     createWebViewCookieManager()
                         .getCookie(url)
                         .takeIf {

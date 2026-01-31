@@ -270,6 +270,12 @@ interface DataStoreManager {
 
     suspend fun setExplicitContentEnabled(enabled: Boolean)
 
+    val githubPopupShownCount: Flow<Int>
+    suspend fun setGithubPopupShownCount(count: Int)
+
+    val neverShowGithubPopup: Flow<Boolean>
+    suspend fun setNeverShowGithubPopup(neverShow: Boolean)
+
     enum class ProxyType {
         PROXY_TYPE_HTTP,
         PROXY_TYPE_SOCKS,

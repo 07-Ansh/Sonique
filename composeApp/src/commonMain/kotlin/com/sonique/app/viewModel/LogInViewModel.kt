@@ -35,8 +35,11 @@ class LogInViewModel(
                 }
                 .toMap()
                 .let {
-                    dataStoreManager.setSpdc(it["sp_dc"] ?: "")
-                    _spotifyStatus.value = true
+                    val spdc = it["sp_dc"]
+                    if (!spdc.isNullOrEmpty()) {
+                        dataStoreManager.setSpdc(spdc)
+                        _spotifyStatus.value = true
+                    }
                 }
         }
     }

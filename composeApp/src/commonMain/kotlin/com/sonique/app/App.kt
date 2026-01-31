@@ -112,6 +112,15 @@ fun App(
             onDismiss = { updateViewModel.dismissUpdate() }
         )
     }
+
+    val showGitHubPopup by viewModel.showGitHubPopup.collectAsStateWithLifecycle()
+    if (showGitHubPopup) {
+        com.sonique.app.ui.component.GitHubStarDialog(
+            onDismiss = { viewModel.dismissGitHubPopup() },
+            onStar = { viewModel.neverShowGitHubPopupAgain() },
+            onNeverShowAgain = { viewModel.neverShowGitHubPopupAgain() }
+        )
+    }
     
 
 

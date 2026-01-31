@@ -625,4 +625,43 @@ fun PlaylistScreen(
                                                                     }
                                                                 }
 
-}}}}}}}}}}}}}}}}}
+                                                                else -> {
+                                                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                                        RippleIconButton(
+                                                                            fillMaxSize = true,
+                                                                            resId = Res.drawable.download_button,
+                                                                            modifier = Modifier.size(36.dp),
+                                                                        ) {
+                                                                            Logger.w("PlaylistScreen", "downloadState: $downloadState")
+                                                                            viewModel.onUIEvent(PlaylistUIEvent.Download)
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    Spacer(Modifier.weight(1f))
+                                                    if (!data.isRadio) {
+                                                        RippleIconButton(
+                                                            modifier =
+                                                                Modifier.size(36.dp),
+                                                            resId = Res.drawable.baseline_sensors_24,
+                                                            fillMaxSize = true,
+                                                        ) {
+                                                            viewModel.onUIEvent(PlaylistUIEvent.StartRadio)
+                                                        }
+                                                        Spacer(Modifier.size(5.dp))
+                                                        RippleIconButton(
+                                                            modifier =
+                                                                Modifier.size(36.dp),
+                                                            resId = Res.drawable.baseline_shuffle_24,
+                                                            fillMaxSize = true,
+                                                        ) {
+                                                            viewModel.onUIEvent(PlaylistUIEvent.Shuffle)
+                                                        }
+                                                        Spacer(Modifier.size(5.dp))
+                                                    }
+                                                    RippleIconButton(
+                                                        modifier =
+                                                            Modifier.size(36.dp),
+}}}}}}}}}}}}}}

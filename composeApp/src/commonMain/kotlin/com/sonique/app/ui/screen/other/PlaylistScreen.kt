@@ -899,4 +899,43 @@ fun PlaylistScreen(
                         },
                         onEditTitle = { newTitle ->
                             viewModel.updatePlaylistTitle(newTitle, data.id)
-}}}}}}
+                        },
+                        onAddToQueue = if (data.isRadio) null else addToQueue,
+                    )
+                }
+                AnimatedVisibility(
+                    visible = shouldHideTopBar && !showSearchBar,
+                    enter = fadeIn() + slideInVertically(),
+                    exit = fadeOut() + slideOutVertically(),
+                ) {
+                    TopAppBar(
+                        windowInsets =
+                            TopAppBarDefaults.windowInsets.exclude(
+                                TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Start),
+                            ),
+                        title = {
+                            Text(
+                                text = data.title,
+                                style = typo().titleMedium,
+                                maxLines = 1,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight(
+                                            align = Alignment.CenterVertically,
+                                        ).basicMarquee(
+                                            iterations = Int.MAX_VALUE,
+                                            animationMode = MarqueeAnimationMode.Immediately,
+                                        ).focusable(),
+                            )
+                        },
+                        navigationIcon = {
+                            Box(Modifier.padding(horizontal = 5.dp)) {
+                                RippleIconButton(
+                                    Res.drawable.baseline_arrow_back_ios_new_24,
+                                    Modifier
+                                        .size(32.dp),
+                                    true,
+                                ) {
+                                    navController.navigateUp()
+}}}}}}}}

@@ -782,4 +782,43 @@ fun PlaylistScreen(
                                     track = item,
                                     onMoreClickListener = { onItemMoreClick(it) },
                                     onClickListener = {
-}}}}}}}}}}
+                                        Logger.w("PlaylistScreen", "index: $index")
+                                        onPlaylistItemClick(it)
+                                    },
+                                    onAddToQueue = {
+                                        sharedViewModel.addListToQueue(
+                                            arrayListOf(item),
+                                        )
+                                    },
+                                    modifier = Modifier.animateItem(),
+                                )
+                            } else {
+                                SongFullWidthItems(
+                                    isPlaying = false,
+                                    track = item,
+                                    onMoreClickListener = { onItemMoreClick(it) },
+                                    onClickListener = {
+                                        Logger.w("PlaylistScreen", "index: $index")
+                                        onPlaylistItemClick(it)
+                                    },
+                                    onAddToQueue = {
+                                        sharedViewModel.addListToQueue(
+                                            arrayListOf(item),
+                                        )
+                                    },
+                                    modifier = Modifier.animateItem(),
+                                )
+                            }
+                        }
+                    }
+                    when (tracksListState) {
+                        ListState.IDLE -> {
+                             
+                            item {
+                                EndOfPage()
+                            }
+                        }
+
+                        ListState.LOADING, ListState.PAGINATING -> {
+                            item {
+}}}}}}}}}

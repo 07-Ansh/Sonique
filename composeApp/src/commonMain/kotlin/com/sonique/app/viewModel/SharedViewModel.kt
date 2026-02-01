@@ -180,7 +180,7 @@ class SharedViewModel(
                 current = -1L,
                 total = -1L,
                 bufferedPercent = 0,
-                loading = true,
+                loading = false,
             ),
         )
     val timeline: StateFlow<TimeLine> = _timeline
@@ -337,7 +337,7 @@ class SharedViewModel(
                             }
 
                             SimpleMediaState.Initial -> {
-                                _timeline.update { it.copy(loading = true) }
+                                _timeline.update { it.copy(loading = false) }
                             }
 
                             SimpleMediaState.Ended -> {

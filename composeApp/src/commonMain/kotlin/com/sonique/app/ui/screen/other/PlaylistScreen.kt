@@ -43,6 +43,10 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.LocalTextStyle
@@ -103,6 +107,7 @@ import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.seed
 import com.sonique.app.ui.theme.typo
+import kotlinx.coroutines.launch
 import com.sonique.app.viewModel.ListState
 import com.sonique.app.viewModel.PlaylistUIEvent
 import com.sonique.app.viewModel.PlaylistUIState
@@ -169,6 +174,9 @@ fun PlaylistScreen(
 
     var showSearchBar by rememberSaveable { mutableStateOf(false) }
     var showCancelDownloadDialog by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val pullToRefreshState = rememberPullToRefreshState()
 
     val lazyState = rememberLazyListState()
     val firstItemVisible by remember {
@@ -349,13 +357,37 @@ fun PlaylistScreen(
                     )
                 }
 
-                LazyColumn(
+                PullToRefreshBox(
                     modifier =
                         Modifier
-                            .fillMaxWidth()
-                            .background(md_theme_dark_background),
-                    state = lazyState,
+                            .fillMaxSize(),
+                    state = pullToRefreshState,
+                    onRefresh = {
+                        scope.launch {
+                            isRefreshing = true
+                            viewModel.getData(playlistId, false).join()
+                            isRefreshing = false
+                        }
+                    },
+                    isRefreshing = isRefreshing,
+                    indicator = {
+                        PullToRefreshDefaults.Indicator(
+                            state = pullToRefreshState,
+                            isRefreshing = isRefreshing,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                            containerColor = PullToRefreshDefaults.indicatorContainerColor,
+                            color = PullToRefreshDefaults.indicatorColor,
+                            maxDistance = PullToRefreshDefaults.PositionalThreshold - 5.dp,
+                        )
+                    },
                 ) {
+                    LazyColumn(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .background(md_theme_dark_background),
+                        state = lazyState,
+                    ) {
                     if (!showSearchBar) {
                         item(contentType = "header") {
                             Box(
@@ -466,7 +498,7 @@ fun PlaylistScreen(
                                                 Spacer(modifier = Modifier.size(25.dp))
                                                 Text(
                                                     text = data.title,
-                                                    style = typo().titleMedium,
+                                                    style = typo().headlineMedium,
                                                     color = Color.White,
                                                     maxLines = 2,
                                                 )
@@ -594,13 +626,15 @@ fun PlaylistScreen(
                                                                 }
 
                                                                 else -> {
-                                                                    RippleIconButton(
-                                                                        fillMaxSize = true,
-                                                                        resId = Res.drawable.download_button,
-                                                                        modifier = Modifier.size(36.dp),
-                                                                    ) {
-                                                                        Logger.w("PlaylistScreen", "downloadState: $downloadState")
-                                                                        viewModel.onUIEvent(PlaylistUIEvent.Download)
+                                                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                                        RippleIconButton(
+                                                                            fillMaxSize = true,
+                                                                            resId = Res.drawable.download_button,
+                                                                            modifier = Modifier.size(36.dp),
+                                                                        ) {
+                                                                            Logger.w("PlaylistScreen", "downloadState: $downloadState")
+                                                                            viewModel.onUIEvent(PlaylistUIEvent.Download)
+                                                                        }
                                                                     }
                                                                 }
                                                             }
@@ -829,7 +863,9 @@ fun PlaylistScreen(
                             }
                         }
                     }
-                }
+                    }
+                    }
+
 
                 if (itemBottomSheetShow && currentItem != null) {
                     val track = currentItem?.toSongEntity() ?: return@Crossfade

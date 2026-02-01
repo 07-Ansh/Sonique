@@ -187,9 +187,11 @@ class PlaylistViewModel(
     }
 
 
-    fun getData(id: String) {
-        resetData()
-        viewModelScope.launch {
+    fun getData(id: String, reset: Boolean = true): Job {
+        if (reset) {
+            resetData()
+        }
+        return viewModelScope.launch {
             if (id == LOCAL_PLAYLIST_ID_LIKED) {
                 playlistEntityJob = launch {
                     songRepository.getLikedSongs().collect { songs ->

@@ -49,6 +49,19 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val lastVersionCode: Flow<Int> =
+        settingsDataStore.data.map { preferences ->
+            preferences[LAST_VERSION_CODE] ?: 0
+        }
+
+    override suspend fun setLastVersionCode(code: Int) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[LAST_VERSION_CODE] = code
+            }
+        }
+    }
+
     override val openAppTime: Flow<Int> =
         settingsDataStore.data.map { preferences ->
             preferences[OPEN_APP_TIME] ?: 0
@@ -273,7 +286,7 @@ internal class DataStoreManagerImpl(
 
     override val saveRecentSongAndQueue: Flow<String> =
         settingsDataStore.data.map { preferences ->
-            preferences[SAVE_RECENT_SONG] ?: FALSE
+            preferences[SAVE_RECENT_SONG] ?: TRUE
         }
 
     override suspend fun setSaveRecentSongAndQueue(save: Boolean) {
@@ -1093,6 +1106,26 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val ambienceMode: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[AMBIENCE_MODE] ?: TRUE
+        }
+
+    override suspend fun setAmbienceMode(enabled: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (enabled) {
+                settingsDataStore.edit { settings ->
+                    settings[AMBIENCE_MODE] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[AMBIENCE_MODE] = FALSE
+                }
+            }
+        }
+    }
+
+
 
     companion object Settings {
         val APP_VERSION = stringPreferencesKey("app_version")
@@ -1158,6 +1191,8 @@ internal class DataStoreManagerImpl(
         val LOCAL_PLAYLIST_FILTER = stringPreferencesKey("local_playlist_filter")
         val YOUTUBE_SUBTITLE_LANGUAGE = stringPreferencesKey("youtube_subtitle_language")
 
+        val AMBIENCE_MODE = stringPreferencesKey("ambience_mode")
+
 
         val BACKUP_DOWNLOADED = stringPreferencesKey("backup_downloaded")
 
@@ -1167,6 +1202,7 @@ internal class DataStoreManagerImpl(
 
         val GITHUB_POPUP_SHOWN_COUNT = intPreferencesKey("github_popup_shown_count")
         val NEVER_SHOW_GITHUB_POPUP = booleanPreferencesKey("never_show_github_popup")
+        val LAST_VERSION_CODE = intPreferencesKey("last_version_code")
 
     }
 

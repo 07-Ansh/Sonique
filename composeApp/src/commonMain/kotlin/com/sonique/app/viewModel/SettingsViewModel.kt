@@ -121,6 +121,19 @@ class SettingsViewModel(
     private var _backupDownloaded: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val backupDownloaded: StateFlow<Boolean> = _backupDownloaded
 
+    sealed class BackupRestoreState {
+        object Idle : BackupRestoreState()
+        object InProgress : BackupRestoreState()
+        object Success : BackupRestoreState()
+        data class Error(val message: String) : BackupRestoreState()
+    }
+
+    private var _backupState: MutableStateFlow<BackupRestoreState> = MutableStateFlow(BackupRestoreState.Idle)
+    val backupState: StateFlow<BackupRestoreState> = _backupState
+
+    private var _restoreState: MutableStateFlow<BackupRestoreState> = MutableStateFlow(BackupRestoreState.Idle)
+    val restoreState: StateFlow<BackupRestoreState> = _restoreState
+
 
 
     private val _explicitContentEnabled = MutableStateFlow(false)
@@ -182,6 +195,9 @@ class SettingsViewModel(
     private var _spotifyCanvas: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val spotifyCanvas: StateFlow<Boolean> = _spotifyCanvas
 
+    private var _ambienceMode: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val ambienceMode: StateFlow<Boolean> = _ambienceMode
+
 
 
     init {
@@ -210,6 +226,8 @@ class SettingsViewModel(
         getSpotifyLogIn()
         getSpotifyLyrics()
         getSpotifyCanvas()
+        getAmbienceMode()
+
     }
 
     fun getAudioSessionId() = mediaPlayerHandler.player.audioSessionId
@@ -235,8 +253,7 @@ class SettingsViewModel(
         getTranslationLanguage()
         getCanvasCache()
         getYoutubeSubtitleLanguage()
-        getSponsorBlockEnabled()
-        getSponsorBlockCategories()
+        getAmbienceMode()
 
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
@@ -658,6 +675,7 @@ class SettingsViewModel(
 
     fun backup(uri: Uri) {
         viewModelScope.launch {
+            _backupState.value = BackupRestoreState.InProgress
             runCatching {
                 makeToast(getString(Res.string.backup_in_progress))
                 withContext(Dispatchers.IO) {
@@ -665,12 +683,18 @@ class SettingsViewModel(
                 }
             }.onSuccess {
                 withContext(Dispatchers.Main) {
+                    _backupState.value = BackupRestoreState.Success
                     makeToast(getString(Res.string.backup_create_success))
+                    delay(2000) // Keep success state for 2 seconds
+                    _backupState.value = BackupRestoreState.Idle
                 }
             }.onFailure {
                 withContext(Dispatchers.Main) {
                     it.printStackTrace()
+                    _backupState.value = BackupRestoreState.Error(it.message ?: "Unknown error")
                     makeToast(getString(Res.string.backup_create_failed))
+                    delay(3000) // Keep error state for 3 seconds
+                    _backupState.value = BackupRestoreState.Idle
                 }
             }
         }
@@ -678,16 +702,26 @@ class SettingsViewModel(
 
     fun restore(uri: Uri) {
         viewModelScope.launch {
+            _restoreState.value = BackupRestoreState.InProgress
             makeToast(getString(Res.string.restore_in_progress))
             withContext(Dispatchers.IO) {
                 runCatching {
                     restoreNative(commonRepository, uri) {
                         getData()
                     }
+                }.onSuccess {
+                    withContext(Dispatchers.Main) {
+                        _restoreState.value = BackupRestoreState.Success
+                        delay(2000) // Keep success state for 2 seconds
+                        _restoreState.value = BackupRestoreState.Idle
+                    }
                 }.onFailure {
                     withContext(Dispatchers.Main) {
                         it.printStackTrace()
+                        _restoreState.value = BackupRestoreState.Error(it.message ?: "Unknown error")
                         makeToast(getString(Res.string.restore_failed))
+                        delay(3000) // Keep error state for 3 seconds
+                        _restoreState.value = BackupRestoreState.Idle
                     }
                 }
             }
@@ -1072,6 +1106,29 @@ class SettingsViewModel(
             getSpotifyCanvas()
         }
     }
+
+    fun getAmbienceMode() {
+        viewModelScope.launch {
+            dataStoreManager.ambienceMode.collect {
+                if (it == DataStoreManager.TRUE) {
+                    _ambienceMode.emit(true)
+                } else {
+                    _ambienceMode.emit(false)
+                }
+            }
+        }
+    }
+
+    fun setAmbienceMode(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setAmbienceMode(enabled)
+            getAmbienceMode()
+        }
+    }
+
+
+
+
 
      
     fun getKillServiceOnExit() {

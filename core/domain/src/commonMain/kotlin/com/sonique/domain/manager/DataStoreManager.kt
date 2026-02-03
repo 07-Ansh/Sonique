@@ -8,6 +8,9 @@ interface DataStoreManager {
 
     suspend fun setAppVersion(version: String)
 
+    val lastVersionCode: Flow<Int>
+    suspend fun setLastVersionCode(code: Int)
+
     val openAppTime: Flow<Int>
 
     suspend fun openApp()
@@ -268,6 +271,11 @@ interface DataStoreManager {
 
     val neverShowGithubPopup: Flow<Boolean>
     suspend fun setNeverShowGithubPopup(neverShow: Boolean)
+
+    val ambienceMode: Flow<String>
+    suspend fun setAmbienceMode(enabled: Boolean)
+    
+
 
     enum class ProxyType {
         PROXY_TYPE_HTTP,

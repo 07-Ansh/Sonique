@@ -51,7 +51,7 @@ fun LibraryTilingBox(
 ) {
     val listItem =
         listOf(
-            LibraryTilingState.Downloaded,
+
             LibraryTilingState.Playlists,
             LibraryTilingState.MixForYou,
             LibraryTilingState.YouTubePlaylists,

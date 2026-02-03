@@ -325,7 +325,7 @@ fun SettingsGeneralScreen(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
-                color = backgroundCard,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = AlertDialogDefaults.TonalElevation,
                 shadowElevation = 1.dp,
             ) {

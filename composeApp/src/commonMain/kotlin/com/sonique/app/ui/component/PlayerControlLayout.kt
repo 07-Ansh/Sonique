@@ -71,7 +71,7 @@ fun PlayerControlLayout(
                     if (!isShuffle) {
                         Icon(
                             imageVector = Icons.Rounded.Shuffle,
-                            tint = Color.White,
+                            tint = Color.Gray,
                             contentDescription = "",
                             modifier = Modifier.size(smallIcon.first),
                         )
@@ -189,7 +189,7 @@ fun PlayerControlLayout(
                         is RepeatState.None -> {
                             Icon(
                                 imageVector = Icons.Rounded.Repeat,
-                                tint = Color.White,
+                                tint = Color.Gray,
                                 contentDescription = "",
                                 modifier = Modifier.size(smallIcon.first),
                             )

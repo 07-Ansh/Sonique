@@ -8,6 +8,9 @@ interface DataStoreManager {
 
     suspend fun setAppVersion(version: String)
 
+    val lastVersionCode: Flow<Int>
+    suspend fun setLastVersionCode(code: Int)
+
     val openAppTime: Flow<Int>
 
     suspend fun openApp()

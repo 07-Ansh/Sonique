@@ -137,6 +137,9 @@ fun NotificationScreen(
         if (showClearDialog) {
             AlertDialog(
                 onDismissRequest = { showClearDialog = false },
+                containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHigh,
+                titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                textContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
                 title = { Text("Clear All Notifications") },
                 text = { Text("Are you sure you want to clear all notifications? This action cannot be undone.") },
                 confirmButton = {

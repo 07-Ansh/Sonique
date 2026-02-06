@@ -179,6 +179,39 @@ class SharedViewModel(
         }
     }
 
+    private val _showChangelog = MutableStateFlow(false)
+    val showChangelog = _showChangelog.asStateFlow()
+    // Hardcoded changelog for now, can be moved to resource or fetched
+    val changelogText = """
+        v1.1.0 Updates:
+        
+        • New Speed Dial: Quick access to your favorite content with a new paged grid on the Home Screen.
+        • Player Ambience: Immersive, dynamic backgrounds in the player for a more emotional listening experience.
+        • Unified Dark Theme: All dialogs and pop-ups now consistently follow the app's premium dark aesthetics.
+        • Advanced App Updates: Track download progress in Settings and verify updates before installation.
+        • Notification Management: Added a "Clear All" feature to manage your in-app notification history.
+        • UI Enhancements: Added Sonique logo to the top bar and refined media controls.
+        • Stability & Performance: Updated core components and optimized downloads for improved reliability.
+    """.trimIndent()
+
+    private fun checkChangelog() {
+        viewModelScope.launch {
+            val lastVersion = dataStoreManager.lastVersionCode.first()
+            val currentVersion = VersionManager.getVersionCode()
+             
+            if (currentVersion > lastVersion) {
+                _showChangelog.value = true
+            }
+        }
+    }
+
+    fun dismissChangelog() {
+        _showChangelog.value = false
+        viewModelScope.launch {
+            dataStoreManager.setLastVersionCode(VersionManager.getVersionCode())
+        }
+    }
+
     private val _showGitHubPopup = MutableStateFlow<Boolean>(false)
     val showGitHubPopup: StateFlow<Boolean> = _showGitHubPopup.asStateFlow()
 
@@ -266,6 +299,11 @@ class SharedViewModel(
                 isFirstLiked = it != STATUS_DONE
             }
 
+            dataStoreManager.getString("liked_guide").first().let {
+                isFirstLiked = it != STATUS_DONE
+            }
+
+            checkChangelog()
             checkGitHubPopup()
 
                     nowPlayingState

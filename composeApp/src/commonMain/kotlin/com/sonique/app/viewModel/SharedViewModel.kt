@@ -198,9 +198,14 @@ class SharedViewModel(
         viewModelScope.launch {
             val lastVersion = dataStoreManager.lastVersionCode.first()
             val currentVersion = VersionManager.getVersionCode()
-             
             if (currentVersion > lastVersion) {
-                _showChangelog.value = true
+                if (lastVersion == 0) {
+                    // First time or restore - mark it as seen silently
+                    dataStoreManager.setLastVersionCode(currentVersion)
+                } else {
+                    _showChangelog.value = true
+                    dataStoreManager.setLastVersionCode(currentVersion)
+                }
             }
         }
     }

@@ -4,11 +4,13 @@ import co.touchlab.kermit.Logger
 
 object Logger {
     private val logger = Logger
+    private const val isDebug = false
 
     fun d(
         tag: String,
         message: String,
     ) {
+        if (!isDebug) return
         logger.d(
             tag,
             message = {
@@ -21,6 +23,7 @@ object Logger {
         tag: String,
         message: String,
     ) {
+        if (!isDebug) return
         logger.i(tag, message = { message })
     }
 
@@ -28,6 +31,7 @@ object Logger {
         tag: String,
         message: String,
     ) {
+        if (!isDebug) return
         logger.w(tag, message = { message })
     }
 
@@ -36,6 +40,7 @@ object Logger {
         message: String,
         e: Throwable? = null,
     ) {
+        if (!isDebug) return
         logger.e(tag, throwable = e, message = { message })
     }
 }

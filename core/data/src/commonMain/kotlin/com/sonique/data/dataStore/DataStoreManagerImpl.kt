@@ -273,7 +273,7 @@ internal class DataStoreManagerImpl(
 
     override val saveRecentSongAndQueue: Flow<String> =
         settingsDataStore.data.map { preferences ->
-            preferences[SAVE_RECENT_SONG] ?: FALSE
+            preferences[SAVE_RECENT_SONG] ?: TRUE
         }
 
     override suspend fun setSaveRecentSongAndQueue(save: Boolean) {
@@ -1093,6 +1093,26 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val ambienceMode: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[AMBIENCE_MODE] ?: TRUE
+        }
+
+    override suspend fun setAmbienceMode(enabled: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (enabled) {
+                settingsDataStore.edit { settings ->
+                    settings[AMBIENCE_MODE] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[AMBIENCE_MODE] = FALSE
+                }
+            }
+        }
+    }
+
+
 
     companion object Settings {
         val APP_VERSION = stringPreferencesKey("app_version")
@@ -1157,6 +1177,8 @@ internal class DataStoreManagerImpl(
 
         val LOCAL_PLAYLIST_FILTER = stringPreferencesKey("local_playlist_filter")
         val YOUTUBE_SUBTITLE_LANGUAGE = stringPreferencesKey("youtube_subtitle_language")
+
+        val AMBIENCE_MODE = stringPreferencesKey("ambience_mode")
 
 
         val BACKUP_DOWNLOADED = stringPreferencesKey("backup_downloaded")

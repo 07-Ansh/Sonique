@@ -109,7 +109,39 @@ fun App(
     if (updateAvailable != null) {
         UpdateDialog(
             releaseInfo = updateAvailable!!,
-            onDismiss = { updateViewModel.dismissUpdate() }
+            onDismiss = { updateViewModel.dismissUpdate() },
+            onDownload = {
+                // Navigate to settings update screen
+                navController.navigate(com.sonique.app.ui.navigation.destination.home.SettingsUpdateDestination)
+                updateViewModel.dismissUpdate()
+            }
+        )
+    }
+
+    val showInstallPrompt by viewModel.showInstallPrompt.collectAsStateWithLifecycle()
+    val downloadStatus by viewModel.downloadStatus.collectAsStateWithLifecycle()
+    
+    if (showInstallPrompt && downloadStatus is SharedViewModel.DownloadStatus.Downloaded) {
+        val path = (downloadStatus as SharedViewModel.DownloadStatus.Downloaded).path
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissInstallPrompt() },
+            title = { Text("Update Ready") },
+            text = { Text("The update has been downloaded. Do you want to install it now?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.installUpdate(path)
+                        viewModel.dismissInstallPrompt()
+                    }
+                ) {
+                    Text("Install Now")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissInstallPrompt() }) {
+                    Text("Later")
+                }
+            }
         )
     }
 

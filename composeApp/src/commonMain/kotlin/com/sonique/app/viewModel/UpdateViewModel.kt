@@ -19,8 +19,23 @@ class UpdateViewModel(
     private val _updateAvailable = MutableStateFlow<ReleaseInfo?>(null)
     val updateAvailable: StateFlow<ReleaseInfo?> = _updateAvailable.asStateFlow()
 
+    private val _isChecking = MutableStateFlow(false)
+    val isChecking: StateFlow<Boolean> = _isChecking.asStateFlow()
+
     init {
         checkForUpdate()
+    }
+
+    fun manualCheckForUpdate() {
+        viewModelScope.launch {
+            _isChecking.value = true
+            // Add slight delay for better UX (let animation show)
+            kotlinx.coroutines.delay(1000)
+            checkForUpdate()
+            // Keep spinner for at least 1.5 seconds for smooth feel
+            kotlinx.coroutines.delay(500)
+            _isChecking.value = false
+        }
     }
 
     private fun checkForUpdate() {

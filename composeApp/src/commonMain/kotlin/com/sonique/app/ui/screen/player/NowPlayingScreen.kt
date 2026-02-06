@@ -277,6 +277,8 @@ fun NowPlayingScreenContent(
      
     val isInPipMode = rememberIsInPipMode()
 
+    val ambienceMode by sharedViewModel.ambienceMode.collectAsStateWithLifecycle()
+
     val mainScrollState = rememberScrollState()
 
     var showHideMiddleLayout by rememberSaveable {
@@ -550,7 +552,20 @@ fun NowPlayingScreenContent(
                             }
                         }
                     }
-                }.background(md_theme_dark_background),  
+                }.background(
+                    if (ambienceMode) {
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                startColor.value, 
+                                endColor.value
+                            )
+                        )
+                    } else {
+                        Brush.linearGradient(
+                            colors = listOf(md_theme_dark_background, md_theme_dark_background)
+                        )
+                    }
+                ),  
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                  
@@ -654,7 +669,7 @@ fun NowPlayingScreenContent(
                                 color = Color.White,
                             )
                             Text(
-                                text = screenDataState.playlistName,
+                                text = screenDataState.nowPlayingTitle,
                                 style = typo().labelMedium,
                                 color = Color.White,
                                 textAlign = TextAlign.Center,

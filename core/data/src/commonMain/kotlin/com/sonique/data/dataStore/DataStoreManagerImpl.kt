@@ -49,6 +49,19 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val lastVersionCode: Flow<Int> =
+        settingsDataStore.data.map { preferences ->
+            preferences[LAST_VERSION_CODE] ?: 0
+        }
+
+    override suspend fun setLastVersionCode(code: Int) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[LAST_VERSION_CODE] = code
+            }
+        }
+    }
+
     override val openAppTime: Flow<Int> =
         settingsDataStore.data.map { preferences ->
             preferences[OPEN_APP_TIME] ?: 0
@@ -1189,6 +1202,7 @@ internal class DataStoreManagerImpl(
 
         val GITHUB_POPUP_SHOWN_COUNT = intPreferencesKey("github_popup_shown_count")
         val NEVER_SHOW_GITHUB_POPUP = booleanPreferencesKey("never_show_github_popup")
+        val LAST_VERSION_CODE = intPreferencesKey("last_version_code")
 
     }
 

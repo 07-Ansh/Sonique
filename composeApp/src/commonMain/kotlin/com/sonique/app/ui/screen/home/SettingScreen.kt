@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -125,6 +126,11 @@ fun rememberSettingsCategories(): List<SettingsCategory> {
             title = stringResource(Res.string.general), // Mapping "Google" and general stuff here
             icon = Icons.Default.Settings,
             destination = SettingsGeneralDestination
+        ),
+        SettingsCategory(
+            title = "App Updates",
+            icon = Icons.Default.SystemUpdate,
+            destination = SettingsUpdateDestination
         ),
         SettingsCategory(
             title = stringResource(Res.string.audio),

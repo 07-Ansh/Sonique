@@ -269,6 +269,11 @@ interface DataStoreManager {
     val neverShowGithubPopup: Flow<Boolean>
     suspend fun setNeverShowGithubPopup(neverShow: Boolean)
 
+    val ambienceMode: Flow<String>
+    suspend fun setAmbienceMode(enabled: Boolean)
+    
+
+
     enum class ProxyType {
         PROXY_TYPE_HTTP,
         PROXY_TYPE_SOCKS,

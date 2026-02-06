@@ -21,11 +21,11 @@ fun parseRichSyncWords(
 ): ParsedRichSyncLine? {
      
     if (words.isBlank()) {
-        println("[parseRichSyncWords] Input is blank")
+
         return null
     }
 
-    println("[parseRichSyncWords] Input preview: ${words.take(100)}")
+
 
      
      
@@ -65,11 +65,11 @@ fun parseRichSyncWords(
 
      
     if (wordTimings.isEmpty()) {
-        println("[parseRichSyncWords] No words matched the regex")
+
         return null
     }
 
-    println("[parseRichSyncWords] Successfully parsed ${wordTimings.size} words")
+
 
      
     val lineStart = lineStartTimeMs.toLongOrNull() ?: 0L

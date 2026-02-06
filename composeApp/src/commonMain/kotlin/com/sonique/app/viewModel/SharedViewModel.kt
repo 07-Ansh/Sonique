@@ -2,6 +2,7 @@ package com.sonique.app.viewModel
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.viewModelScope
+import com.sonique.app.expect.startWorker
 import com.sonique.common.Config.ALBUM_CLICK
 import com.sonique.common.Config.DOWNLOAD_CACHE
 import com.sonique.common.Config.PLAYLIST_CLICK
@@ -16,6 +17,7 @@ import com.sonique.domain.data.entities.DownloadState
 import com.sonique.domain.data.entities.LocalPlaylistEntity
 import com.sonique.domain.data.entities.LyricsEntity
 import com.sonique.domain.data.entities.NewFormatEntity
+import com.sonique.domain.data.entities.NotificationEntity
 import com.sonique.domain.data.entities.PlaylistEntity
 import com.sonique.domain.data.entities.SongEntity
 import com.sonique.domain.data.entities.SongInfoEntity
@@ -41,6 +43,7 @@ import com.sonique.domain.mediaservice.handler.SimpleMediaState
 import com.sonique.domain.mediaservice.handler.SleepTimerState
 import com.sonique.domain.repository.AlbumRepository
 import com.sonique.domain.repository.CacheRepository
+import com.sonique.domain.repository.CommonRepository
 import com.sonique.domain.repository.LocalPlaylistRepository
 import com.sonique.domain.repository.LyricsCanvasRepository
 import com.sonique.domain.repository.PlaylistRepository
@@ -65,6 +68,7 @@ import com.sonique.app.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -80,6 +84,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -108,6 +113,7 @@ class SharedViewModel(
     private val playlistRepository: PlaylistRepository,
     private val lyricsCanvasRepository: LyricsCanvasRepository,
     private val cacheRepository: CacheRepository,
+    private val commonRepository: CommonRepository,
 ) : BaseViewModel() {
     var isFirstLiked: Boolean = false
     var isFirstMiniplayer: Boolean = false
@@ -135,6 +141,44 @@ class SharedViewModel(
     val canvas: StateFlow<CanvasResult?> = _canvas
 
     private var canvasJob: Job? = null
+
+    sealed class DownloadStatus {
+        data object Idle : DownloadStatus()
+        data class Downloading(val progress: Float) : DownloadStatus()
+        data object Verifying : DownloadStatus()
+        data class Downloaded(val path: String) : DownloadStatus()
+    }
+
+    private val _downloadStatus = MutableStateFlow<DownloadStatus>(DownloadStatus.Idle)
+    val downloadStatus = _downloadStatus.asStateFlow()
+
+    private val _showInstallPrompt = MutableStateFlow(false)
+    val showInstallPrompt = _showInstallPrompt.asStateFlow()
+
+    fun updateDownloadStatus(status: DownloadStatus) {
+        _downloadStatus.value = status
+        if (status is DownloadStatus.Downloaded) {
+            _showInstallPrompt.value = true
+        }
+    }
+
+    fun dismissInstallPrompt() {
+        _showInstallPrompt.value = false
+    }
+    
+    fun cancelDownload() {
+        viewModelScope.launch {
+            onUIEvent(UIEvent.CancelDownload)
+            _downloadStatus.value = DownloadStatus.Idle
+        }
+    }
+    
+    fun installUpdate(path: String) {
+        viewModelScope.launch {
+            onUIEvent(UIEvent.InstallUpdate(path))
+        }
+    }
+
     private val _showGitHubPopup = MutableStateFlow<Boolean>(false)
     val showGitHubPopup: StateFlow<Boolean> = _showGitHubPopup.asStateFlow()
 
@@ -193,6 +237,10 @@ class SharedViewModel(
 
     private var _likeStatus = MutableStateFlow<Boolean>(false)
     val likeStatus: StateFlow<Boolean> = _likeStatus
+
+    val ambienceMode: StateFlow<Boolean> = dataStoreManager.ambienceMode
+        .map { it == DataStoreManager.TRUE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
     val openAppTime: StateFlow<Int> = dataStoreManager.openAppTime.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0)
     private val _shareSavedLyrics: MutableStateFlow<Boolean> = MutableStateFlow(true)
@@ -430,6 +478,8 @@ class SharedViewModel(
         checkAllDownloadingSongs()
         checkAllDownloadingPlaylists()
         checkAllDownloadingLocalPlaylists()
+        
+        runWorker()
     }
 
     fun setIntent(intent: GenericIntent?) {
@@ -648,7 +698,7 @@ class SharedViewModel(
             quality = dataStoreManager.quality.first()
             mediaPlayerHandler.clearMediaItems()
             songRepository.insertSong(track.toSongEntity()).lastOrNull()?.let {
-                println("insertSong: $it")
+
                 songRepository
                     .getSongById(track.videoId)
                     .collect { songEntity ->
@@ -702,9 +752,18 @@ class SharedViewModel(
         }
     }
 
+    private val _uiEvent = kotlinx.coroutines.flow.MutableSharedFlow<UIEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
+
     fun onUIEvent(uiEvent: UIEvent) =
         viewModelScope.launch {
             when (uiEvent) {
+                is UIEvent.DownloadUpdate,
+                UIEvent.CancelDownload,
+                is UIEvent.InstallUpdate -> {
+                    _uiEvent.emit(uiEvent)
+                }
+
                 UIEvent.Backward ->
                     mediaPlayerHandler.onPlayerEvent(
                         PlayerEvent.Backward,
@@ -723,6 +782,8 @@ class SharedViewModel(
                     )
 
                 UIEvent.Stop -> mediaPlayerHandler.onPlayerEvent(PlayerEvent.Stop)
+                UIEvent.Shuffle -> mediaPlayerHandler.onPlayerEvent(PlayerEvent.Shuffle)
+                UIEvent.Repeat -> mediaPlayerHandler.onPlayerEvent(PlayerEvent.Repeat)
                 is UIEvent.UpdateProgress -> {
                     mediaPlayerHandler.onPlayerEvent(
                         PlayerEvent.UpdateProgress(
@@ -730,18 +791,17 @@ class SharedViewModel(
                         ),
                     )
                 }
-
-                UIEvent.Repeat -> mediaPlayerHandler.onPlayerEvent(PlayerEvent.Repeat)
-                UIEvent.Shuffle -> mediaPlayerHandler.onPlayerEvent(PlayerEvent.Shuffle)
-                UIEvent.ToggleLike -> {
-                    Logger.w(tag, "ToggleLike")
-                    mediaPlayerHandler.onPlayerEvent(PlayerEvent.ToggleLike)
-                }
-
                 is UIEvent.UpdateVolume -> {
                     val newVolume = uiEvent.newVolume
                     dataStoreManager.setPlayerVolume(newVolume)
-                    mediaPlayerHandler.onPlayerEvent(PlayerEvent.UpdateVolume(newVolume))
+                    mediaPlayerHandler.onPlayerEvent(
+                        PlayerEvent.UpdateVolume(
+                            newVolume,
+                        ),
+                    )
+                }
+                UIEvent.ToggleLike -> {
+                    mediaPlayerHandler.onPlayerEvent(PlayerEvent.ToggleLike)
                 }
             }
         }
@@ -1269,6 +1329,32 @@ class SharedViewModel(
         startWorker()
     }
 
+    fun downloadAppUpdate(url: String, title: String) {
+        viewModelScope.launch {
+            _shareSavedLyrics.emit(false) // Trigger UI Event
+            onUIEvent(UIEvent.DownloadUpdate(url, title))
+        }
+    }
+    
+    fun insertNotification(title: String, message: String, type: String = "SYSTEM_UPDATE") {
+        viewModelScope.launch {
+            commonRepository.insertNotification(
+                NotificationEntity(
+                    channelId = type,
+                    name = title,
+                    thumbnail = null,
+                    single = listOf(
+                        mapOf(
+                            "browseId" to "",
+                            "title" to message,
+                            "thumbnails" to ""
+                        )
+                    )
+                )
+            )
+        }
+    }
+
     private var _downloadFileProgress = MutableStateFlow<DownloadProgress>(DownloadProgress.INIT)
     val downloadFileProgress: StateFlow<DownloadProgress> get() = _downloadFileProgress
 
@@ -1354,6 +1440,13 @@ sealed class UIEvent {
     data class UpdateVolume(
         val newVolume: Float,
     ) : UIEvent()
+
+    data class DownloadUpdate(
+        val url: String,
+        val title: String,
+    ) : UIEvent()
+    data object CancelDownload : UIEvent()
+    data class InstallUpdate(val path: String) : UIEvent()
 
     data object ToggleLike : UIEvent()
 }

@@ -20,6 +20,7 @@ import com.sonique.domain.repository.ReleaseInfo
 fun UpdateDialog(
     releaseInfo: ReleaseInfo,
     onDismiss: () -> Unit,
+    onDownload: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
 
@@ -43,11 +44,11 @@ fun UpdateDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    uriHandler.openUri(releaseInfo.downloadUrl)
+                    onDownload()
                     onDismiss()
                 }
             ) {
-                Text("Download")
+                Text("Update")
             }
         },
         dismissButton = {

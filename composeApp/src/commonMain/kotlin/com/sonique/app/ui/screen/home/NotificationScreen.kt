@@ -4,6 +4,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,11 +25,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,6 +73,8 @@ fun NotificationScreen(
     viewModel: NotificationViewModel = koinViewModel(),
 ) {
     val listNotification by viewModel.listNotification.collectAsStateWithLifecycle()
+    var showClearDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    
     Column {
         TopAppBar(
             title = {
@@ -79,6 +86,18 @@ fun NotificationScreen(
             navigationIcon = {
                 RippleIconButton(resId = Res.drawable.baseline_arrow_back_ios_new_24) {
                     navController.navigateUp()
+                }
+            },
+            actions = {
+                if (!listNotification.isNullOrEmpty()) {
+                    androidx.compose.material3.TextButton(
+                        onClick = { showClearDialog = true }
+                    ) {
+                        Text(
+                            text = "Clear",
+                            style = typo().labelMedium,
+                        )
+                    }
                 }
             },
         )
@@ -114,6 +133,31 @@ fun NotificationScreen(
                 }
             }
         }
+        
+        if (showClearDialog) {
+            AlertDialog(
+                onDismissRequest = { showClearDialog = false },
+                title = { Text("Clear All Notifications") },
+                text = { Text("Are you sure you want to clear all notifications? This action cannot be undone.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.clearAllNotifications()
+                            showClearDialog = false
+                        }
+                    ) {
+                        Text("Clear")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showClearDialog = false }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
 
@@ -130,7 +174,7 @@ fun NotificationItem(
     ) {
         Column {
             Row(
-                Modifier.clickable {
+                Modifier.clickable(enabled = !notification.channelId.startsWith("SYSTEM")) {
                     navController.navigate(
                         ArtistDestination(
                             channelId = notification.channelId,

@@ -31,6 +31,8 @@ fun SettingsPlaybackScreen(
     val saveLastPlayed by viewModel.saveRecentSongAndQueue.map { it == DataStoreManager.Values.TRUE }.collectAsStateWithLifecycle(initialValue = false)
     val killServiceOnExit by viewModel.killServiceOnExit.map { it == DataStoreManager.Values.TRUE }.collectAsStateWithLifecycle(initialValue = true)
     val keepServiceAlive by viewModel.keepServiceAlive.collectAsStateWithLifecycle()
+    val ambienceMode by viewModel.ambienceMode.collectAsStateWithLifecycle()
+
 
     val crossfadeDuration by viewModel.crossfadeDuration.collectAsStateWithLifecycle()
 
@@ -64,6 +66,11 @@ fun SettingsPlaybackScreen(
                     title = stringResource(Res.string.save_last_played),
                     subtitle = stringResource(Res.string.save_last_played_track_and_queue),
                     switch = (saveLastPlayed to { viewModel.setSaveLastPlayed(it) }),
+                )
+                SettingItem(
+                    title = "Ambience Mode",
+                    subtitle = "Show gradient background based on album art colors",
+                    switch = (ambienceMode to { viewModel.setAmbienceMode(it) }),
                 )
                 if (getPlatform() == Platform.Android) {
                     SettingItem(

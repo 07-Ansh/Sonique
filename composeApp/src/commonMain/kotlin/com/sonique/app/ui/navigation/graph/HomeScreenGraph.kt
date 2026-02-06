@@ -172,5 +172,18 @@ fun NavGraphBuilder.homeScreenGraph(
             onBack = { navController.popBackStack() }
         )
     }
+
+    composable<SettingsUpdateDestination>(
+        enterTransition = { fadeIn(animationSpec = tween(400)) },
+        exitTransition = { fadeOut(animationSpec = tween(400)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(400)) },
+        popExitTransition = { fadeOut(animationSpec = tween(400)) }
+    ) {
+        val sharedViewModel = koinInject<SharedViewModel>()
+        SettingsUpdateScreen(
+            onBack = { navController.popBackStack() },
+            sharedViewModel = sharedViewModel
+        )
+    }
 }
 

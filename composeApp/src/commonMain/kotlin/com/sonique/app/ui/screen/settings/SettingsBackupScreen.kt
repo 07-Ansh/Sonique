@@ -39,6 +39,8 @@ fun SettingsBackupScreen(
     val coroutineScope = rememberCoroutineScope()
     val pl = com.mohamedrejeb.calf.core.LocalPlatformContext.current
     val backupDownloaded by viewModel.backupDownloaded.collectAsStateWithLifecycle()
+    val backupState by viewModel.backupState.collectAsStateWithLifecycle()
+    val restoreState by viewModel.restoreState.collectAsStateWithLifecycle()
     val appName = stringResource(Res.string.app_name)
 
     val formatter = LocalDateTime.Format {
@@ -91,21 +93,37 @@ fun SettingsBackupScreen(
                 )
                 SettingItem(
                     title = stringResource(Res.string.backup),
-                    subtitle = stringResource(Res.string.save_all_your_playlist_data),
+                    subtitle = when (backupState) {
+                        is SettingsViewModel.BackupRestoreState.InProgress -> "Backing up data..."
+                        is SettingsViewModel.BackupRestoreState.Success -> "✓ Backup complete!"
+                        is SettingsViewModel.BackupRestoreState.Error -> "✗ Backup failed"
+                        else -> stringResource(Res.string.save_all_your_playlist_data)
+                    },
                     onClick = {
-                        coroutineScope.launch {
-                            backupLauncher.launch()
+                        if (backupState !is SettingsViewModel.BackupRestoreState.InProgress) {
+                            coroutineScope.launch {
+                                backupLauncher.launch()
+                            }
                         }
                     },
+                    loading = backupState is SettingsViewModel.BackupRestoreState.InProgress
                 )
                 SettingItem(
                     title = stringResource(Res.string.restore_your_data),
-                    subtitle = stringResource(Res.string.restore_your_saved_data),
+                    subtitle = when (restoreState) {
+                        is SettingsViewModel.BackupRestoreState.InProgress -> "Restoring data..."
+                        is SettingsViewModel.BackupRestoreState.Success -> "✓ Restore complete!"
+                        is SettingsViewModel.BackupRestoreState.Error -> "✗ Restore failed"
+                        else -> stringResource(Res.string.restore_your_saved_data)
+                    },
                     onClick = {
-                        coroutineScope.launch {
-                            restoreLauncher.launch()
+                        if (restoreState !is SettingsViewModel.BackupRestoreState.InProgress) {
+                            coroutineScope.launch {
+                                restoreLauncher.launch()
+                            }
                         }
                     },
+                    loading = restoreState is SettingsViewModel.BackupRestoreState.InProgress
                 )
             }
         }

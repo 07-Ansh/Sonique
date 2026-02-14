@@ -46,5 +46,7 @@ fun GitHubStarDialog(
             }
         },
         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHigh,
+        titleContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+        textContentColor = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
     )
 }

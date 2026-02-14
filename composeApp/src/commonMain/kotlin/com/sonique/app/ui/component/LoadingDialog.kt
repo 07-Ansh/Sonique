@@ -41,7 +41,7 @@ fun LoadingDialog(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.large,
-                    color = Color(0xFF242424),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     tonalElevation = AlertDialogDefaults.TonalElevation,
                     shadowElevation = 1.dp,
                 ) {

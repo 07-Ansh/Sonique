@@ -131,6 +131,9 @@ fun SettingDialog(
             TextButton(onClick = onDismiss) {
                 Text(alert.dismiss)
             }
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface,
     )
 }

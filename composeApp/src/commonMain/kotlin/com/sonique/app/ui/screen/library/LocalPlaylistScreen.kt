@@ -53,6 +53,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -983,6 +984,9 @@ fun LocalPlaylistScreen(
     }
     if (showSyncAlertDialog) {
         AlertDialog(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
             title = { Text(text = stringResource(Res.string.warning)) },
             text = { Text(text = stringResource(Res.string.sync_playlist_warning)) },
             onDismissRequest = { showSyncAlertDialog = false },
@@ -1005,6 +1009,9 @@ fun LocalPlaylistScreen(
     }
     if (showUnsyncAlertDialog) {
         AlertDialog(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
             title = { Text(text = stringResource(Res.string.warning)) },
             text = { Text(text = stringResource(Res.string.unsync_playlist_warning)) },
             onDismissRequest = { showUnsyncAlertDialog = false },

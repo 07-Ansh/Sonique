@@ -298,7 +298,7 @@ fun InfoPlayerBottomSheet(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.large,
-                    color = Color(0xFF242424),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
                     tonalElevation = AlertDialogDefaults.TonalElevation,
                     shadowElevation = 1.dp,
                 ) {
@@ -1160,7 +1160,7 @@ fun QueueItemBottomSheet(
                     .fillMaxWidth()
                     .wrapContentHeight(),
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+            colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1399,7 +1399,9 @@ fun NowPlayingBottomSheet(
 
     if (sleepTimerWarning) {
         AlertDialog(
-            containerColor = Color(0xFF242424),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
             onDismissRequest = { sleepTimerWarning = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -1429,7 +1431,9 @@ fun NowPlayingBottomSheet(
 
     if (showCancelDownloadDialog) {
         AlertDialog(
-            containerColor = Color(0xFF242424),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurface,
             onDismissRequest = { showCancelDownloadDialog = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -1473,7 +1477,7 @@ fun NowPlayingBottomSheet(
                         .fillMaxWidth()
                         .wrapContentHeight(),
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+                colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -1912,7 +1916,7 @@ fun PlaybackSpeedPitchBottomSheet(
                     .fillMaxWidth()
                     .wrapContentHeight(),
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+            colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -1926,7 +1930,7 @@ fun PlaybackSpeedPitchBottomSheet(
                             .height(4.dp),
                     colors =
                         CardDefaults.cardColors().copy(
-                            containerColor = Color(0xFF474545),
+                            containerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         ),
                     shape = RoundedCornerShape(50),
                 ) {}
@@ -2010,7 +2014,7 @@ fun AddToPlaylistModalBottomSheet(
                         .fillMaxWidth()
                         .wrapContentHeight(),
                 shape = BottomSheetDefaults.ExpandedShape,
-                colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+                colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2204,7 +2208,7 @@ fun SleepTimerBottomSheet(
                     .fillMaxWidth()
                     .wrapContentHeight(),
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+            colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -2217,7 +2221,7 @@ fun SleepTimerBottomSheet(
                             .height(4.dp),
                     colors =
                         CardDefaults.cardColors().copy(
-                            containerColor = Color(0xFF474545),
+                            containerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         ),
                     shape = RoundedCornerShape(50),
                 ) {}
@@ -2297,7 +2301,7 @@ fun ArtistModalBottomSheet(
                         .fillMaxWidth()
                         .wrapContentHeight(),
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+                colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2419,7 +2423,7 @@ fun PlaylistBottomSheet(
                         .fillMaxWidth()
                         .wrapContentHeight(),
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+                colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2494,7 +2498,7 @@ fun PlaylistBottomSheet(
                     .fillMaxWidth()
                     .wrapContentHeight(),
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+            colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -2507,7 +2511,7 @@ fun PlaylistBottomSheet(
                             .height(4.dp),
                     colors =
                         CardDefaults.cardColors().copy(
-                            containerColor = Color(0xFF474545),
+                            containerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         ),
                     shape = RoundedCornerShape(50),
                 ) {}
@@ -2621,7 +2625,7 @@ fun LocalPlaylistBottomSheet(
                         .fillMaxWidth()
                         .wrapContentHeight(),
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+                colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2690,7 +2694,7 @@ fun LocalPlaylistBottomSheet(
                         .fillMaxWidth()
                         .wrapContentHeight(),
                 shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-                colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+                colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -2800,7 +2804,7 @@ fun SortPlaylistBottomSheet(
                     .fillMaxWidth()
                     .wrapContentHeight(),
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+            colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -2813,7 +2817,7 @@ fun SortPlaylistBottomSheet(
                             .height(4.dp),
                     colors =
                         CardDefaults.cardColors().copy(
-                            containerColor = Color(0xFF474545),
+                            containerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         ),
                     shape = RoundedCornerShape(50),
                 ) {}
@@ -2897,7 +2901,7 @@ fun DevLogInBottomSheet(
                     .fillMaxWidth()
                     .wrapContentHeight(),
             shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            colors = CardDefaults.cardColors().copy(containerColor = Color(0xFF242424)),
+            colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -2910,7 +2914,7 @@ fun DevLogInBottomSheet(
                             .height(4.dp),
                     colors =
                         CardDefaults.cardColors().copy(
-                            containerColor = Color(0xFF474545),
+                            containerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         ),
                     shape = RoundedCornerShape(50),
                 ) {}
@@ -3009,7 +3013,7 @@ fun DevCookieLogInBottomSheet(
                             .height(4.dp),
                     colors =
                         CardDefaults.cardColors().copy(
-                            containerColor = Color(0xFF474545),
+                            containerColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         ),
                     shape = RoundedCornerShape(50),
                 ) {}

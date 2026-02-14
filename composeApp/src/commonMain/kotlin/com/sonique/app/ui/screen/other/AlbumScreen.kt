@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -189,35 +190,37 @@ fun AlbumScreen(
         when (it) {
             LocalPlaylistState.PlaylistLoadState.Success -> {
                 if (showCancelDownloadDialog) {
-                    androidx.compose.material3.AlertDialog(
-                        containerColor = backgroundCard,
-                        onDismissRequest = { showCancelDownloadDialog = false },
-                        confirmButton = {
-                            TextButton(onClick = {
-                                showCancelDownloadDialog = false
-                                viewModel.cancelDownload()
-                            }) {
-                                Text(text = "Yes", style = typo().labelSmall)
+                androidx.compose.material3.AlertDialog(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    textContentColor = MaterialTheme.colorScheme.onSurface,
+                    onDismissRequest = { showCancelDownloadDialog = false },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showCancelDownloadDialog = false
+                            viewModel.cancelDownload()
+                        }) {
+                            Text(text = "Yes", style = typo().labelSmall)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showCancelDownloadDialog = false }) {
+                            Text(text = "Cancel", style = typo().labelSmall)
+                        }
+                    },
+                    title = {
+                        Text(text = "Warning", style = typo().labelSmall)
+                    },
+                    text = {
+                        val text =
+                            if (uiState.downloadState == DownloadState.STATE_DOWNLOADED) {
+                                "Do you want to remove this download?"
+                            } else {
+                                "Do you want to cancel the download?"
                             }
-                        },
-                        dismissButton = {
-                            TextButton(onClick = { showCancelDownloadDialog = false }) {
-                                Text(text = "Cancel", style = typo().labelSmall)
-                            }
-                        },
-                        title = {
-                            Text(text = "Warning", style = typo().labelSmall)
-                        },
-                        text = {
-                            val text =
-                                if (uiState.downloadState == DownloadState.STATE_DOWNLOADED) {
-                                    "Do you want to remove this download?"
-                                } else {
-                                    "Do you want to cancel the download?"
-                                }
-                            Text(text = text, style = typo().bodyMedium)
-                        },
-                    )
+                        Text(text = text, style = typo().bodyMedium)
+                    },
+                )
                 }
 
                 LazyColumn(

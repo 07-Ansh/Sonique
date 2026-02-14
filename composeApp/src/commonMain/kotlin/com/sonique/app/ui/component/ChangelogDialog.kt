@@ -5,54 +5,58 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.width
-import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.sonique.domain.repository.ReleaseInfo
 
 @Composable
-fun UpdateDialog(
-    releaseInfo: ReleaseInfo,
+fun ChangelogDialog(
+    changelog: String,
     onDismiss: () -> Unit,
-    onDownload: () -> Unit,
 ) {
-    val uriHandler = LocalUriHandler.current
-
     AlertDialog(
         onDismissRequest = onDismiss,
+        icon = {
+            androidx.compose.material3.Icon(
+                androidx.compose.material.icons.Icons.Rounded.Info,
+                contentDescription = null
+            )
+        },
         title = {
-            Text(text = "New Update Available: ${releaseInfo.version}")
+            Text(text = "What's New")
         },
         text = {
+            val lines = changelog.split("\n").filter { it.isNotBlank() }
+            val header = lines.firstOrNull()?.replace(":", "") ?: ""
+            val items = if (lines.size > 1) lines.drop(1) else emptyList()
+
             Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
+                modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
                 Text(
-                    text = releaseInfo.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    text = header,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
-                
-                val lines = releaseInfo.changelog.split("\n").filter { it.isNotBlank() }
-                lines.forEach { item ->
+
+                items.forEach { item ->
                     val cleanItem = item.trim().removePrefix("•").trim()
                     Card(
                         modifier = Modifier
@@ -88,17 +92,9 @@ fun UpdateDialog(
         },
         confirmButton = {
             Button(
-                onClick = {
-                    onDownload()
-                    onDismiss()
-                }
+                onClick = onDismiss
             ) {
-                Text("Update")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Later")
+                Text("Got it")
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

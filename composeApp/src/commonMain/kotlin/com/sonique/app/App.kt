@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -106,22 +107,6 @@ fun App(
     val updateViewModel: UpdateViewModel = koinInject()
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
 
-    if (updateAvailable != null) {
-        UpdateDialog(
-            releaseInfo = updateAvailable!!,
-            onDismiss = { updateViewModel.dismissUpdate() }
-        )
-    }
-
-    val showGitHubPopup by viewModel.showGitHubPopup.collectAsStateWithLifecycle()
-    if (showGitHubPopup) {
-        com.sonique.app.ui.component.GitHubStarDialog(
-            onDismiss = { viewModel.dismissGitHubPopup() },
-            onStar = { viewModel.neverShowGitHubPopupAgain() },
-            onNeverShowAgain = { viewModel.neverShowGitHubPopupAgain() }
-        )
-    }
-    
 
 
      
@@ -286,6 +271,65 @@ fun App(
         }
 
         AppTheme {
+            if (updateAvailable != null) {
+                UpdateDialog(
+                    releaseInfo = updateAvailable!!,
+                    onDismiss = { updateViewModel.dismissUpdate() },
+                    onDownload = {
+                        // Navigate to settings update screen
+                        navController.navigate(com.sonique.app.ui.navigation.destination.home.SettingsUpdateDestination)
+                        updateViewModel.dismissUpdate()
+                    }
+                )
+            }
+
+            val showInstallPrompt by viewModel.showInstallPrompt.collectAsStateWithLifecycle()
+            val downloadStatus by viewModel.downloadStatus.collectAsStateWithLifecycle()
+
+            if (showInstallPrompt && downloadStatus is SharedViewModel.DownloadStatus.Downloaded) {
+                val path = (downloadStatus as SharedViewModel.DownloadStatus.Downloaded).path
+                AlertDialog(
+                    onDismissRequest = { viewModel.dismissInstallPrompt() },
+                    title = { Text("Update Ready") },
+                    text = { Text("The update has been downloaded. Do you want to install it now?") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.installUpdate(path)
+                                viewModel.dismissInstallPrompt()
+                            }
+                        ) {
+                            Text("Install Now")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.dismissInstallPrompt() }) {
+                            Text("Later")
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    textContentColor = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+
+            val showGitHubPopup by viewModel.showGitHubPopup.collectAsStateWithLifecycle()
+            if (showGitHubPopup) {
+                com.sonique.app.ui.component.GitHubStarDialog(
+                    onDismiss = { viewModel.dismissGitHubPopup() },
+                    onStar = { viewModel.neverShowGitHubPopupAgain() },
+                    onNeverShowAgain = { viewModel.neverShowGitHubPopupAgain() }
+                )
+            }
+
+            val showChangelog by viewModel.showChangelog.collectAsStateWithLifecycle()
+            if (showChangelog) {
+                com.sonique.app.ui.component.ChangelogDialog(
+                    changelog = viewModel.changelogText,
+                    onDismiss = { viewModel.dismissChangelog() }
+                )
+            }
+
             Box(Modifier.fillMaxSize()) {
                 Scaffold(
                     bottomBar = {
@@ -518,6 +562,9 @@ fun App(
                                         style = typo().bodySmall,
                                     )
                                 },
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                                textContentColor = MaterialTheme.colorScheme.onSurface,
                             )
                         }
 

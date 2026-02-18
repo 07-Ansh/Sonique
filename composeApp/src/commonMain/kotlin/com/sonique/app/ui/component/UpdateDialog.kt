@@ -24,6 +24,8 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sonique.domain.repository.ReleaseInfo
@@ -91,9 +93,18 @@ fun UpdateDialog(
                 onClick = {
                     onDownload()
                     onDismiss()
-                }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
             ) {
-                Text("Update")
+                Text(
+                    text = "Update",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
             }
         },
         dismissButton = {

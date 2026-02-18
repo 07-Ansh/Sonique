@@ -2226,16 +2226,47 @@ fun SleepTimerBottomSheet(
                     shape = RoundedCornerShape(50),
                 ) {}
                 Spacer(modifier = Modifier.height(10.dp))
+                val sleepIntervals = listOf(5, 10, 15, 20, 25, 30, 45, 60)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    sleepIntervals.forEach { interval ->
+                        Chip(
+                            text = interval.toString(),
+                            isSelected = minutes == interval,
+                            onClick = {
+                                minutes = interval
+                                onSetTimer(interval)
+                                coroutineScope.launch {
+                                    modelBottomSheetState.hide()
+                                    onDismiss()
+                                }
+                            }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
                 Text(text = stringResource(Res.string.sleep_minutes), style = typo().labelSmall)
                 Spacer(modifier = Modifier.height(5.dp))
                 OutlinedTextField(
-                    value = minutes.toString(),
+                    value = if (minutes == 0) "" else minutes.toString(),
+                    placeholder = { Text("0", style = typo().bodyMedium.copy(color = Color.Gray)) },
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 20.dp),
-                    onValueChange = { value -> if (value.all { it.isDigit() } && value.isNotEmpty() && value.isNotBlank()) minutes = value.toInt() },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    onValueChange = { value ->
+                        if (value.isEmpty()) {
+                            minutes = 0
+                        } else if (value.all { it.isDigit() } && value.length < 5) {
+                            minutes = value.toInt()
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
                 Spacer(modifier = Modifier.height(5.dp))
                 TextButton(

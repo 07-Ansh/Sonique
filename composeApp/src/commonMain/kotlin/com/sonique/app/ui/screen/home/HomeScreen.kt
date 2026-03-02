@@ -111,6 +111,7 @@ import com.sonique.app.ui.navigation.destination.home.SettingsDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
+import com.sonique.app.ui.navigation.destination.home.SettingsGeneralDestination
 import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.typo
@@ -294,19 +295,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        InAppNotification(
-            visible = shouldShowLogInAlert,
-            message = stringResource(Res.string.log_in_warning),
-            actionLabel = stringResource(Res.string.log_in),
-            onActionClick = {
-                viewModel.doneShowLogInAlert(false)
-                navController.navigate(LoginDestination)
-            },
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = with(LocalDensity.current) { topAppBarHeightPx.toDp() })
-                .zIndex(1f)
-        )
+
         PullToRefreshBox(
             modifier = Modifier,
             state = pullToRefreshState,
@@ -340,35 +329,82 @@ fun HomeScreen(
                                 navController.navigate(LibraryDestination(openDownloads = true))
                             }
                         )
-                    } else {
-                        LazyColumn(
+                        } else {
+                            val speedDialData = remember(homeData) {
+                                val priorityKeywords = listOf("listen again")
+                                val generalKeywords = listOf(
+                                    "quick picks", "albums for you", "your daily discover",
+                                    "long listens", "from your library", "featured playlists for you"
+                                )
+
+                                // 1. Gather matching contents
+                                val priorityContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
+                                val generalContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
+
+                                homeData.forEach { section ->
+                                    val titleLower = section.title.lowercase()
+                                    val subtitleLower = section.subtitle?.lowercase() ?: ""
+                                    
+                                    val contents = section.contents.filterNotNull()
+                                    if (priorityKeywords.any { it in titleLower || it in subtitleLower }) {
+                                        priorityContents.addAll(contents)
+                                    } else if (generalKeywords.any { it in titleLower || it in subtitleLower }) {
+                                        generalContents.addAll(contents)
+                                    }
+                                }
+
+                                val distinctPriority = priorityContents.distinctBy { it.title }.shuffled()
+                                val remainingGeneral = generalContents.filter { gen -> distinctPriority.none { pri -> pri.title == gen.title } }.distinctBy { it.title }.shuffled()
+
+                                // 2. Combine and Shuffle
+                                // Prioritize Listen Again items at the very beginning
+                                val combined = (distinctPriority + remainingGeneral)
+                                
+                                // 3. Guarantee 36 items (4 pages of 9)
+                                val finalContents = if (combined.size >= 36) {
+                                    combined.take(36)
+                                } else {
+                                    val allOtherContents = homeData.flatMap { it.contents }.filterNotNull().filter { other -> combined.none { c -> c.title == other.title } }.distinctBy { it.title }.shuffled()
+                                    (combined + allOtherContents).take(36)
+                                }
+
+                                // 4. Create the injected Speed Dial home item
+                                com.sonique.domain.data.model.home.HomeItem(
+                                    title = "Speed dial",
+                                    contents = finalContents
+                                )
+                            }
+
+                            LazyColumn(
                             modifier =
                                 Modifier
                                     .padding(horizontal = 15.dp),
                             contentPadding =
                                 PaddingValues(
-                                    top = with(LocalDensity.current) { topAppBarHeightPx.toDp() },
+                                    top = with(LocalDensity.current) { topAppBarHeightPx.toDp() } + 24.dp,
                                 ),
                             state = scrollState,
                             verticalArrangement = Arrangement.spacedBy(28.dp),
                         ) {
-                            item {
-                                Column {
-                                    if (accountInfo != null && accountShow) {
-                                        AccountLayout(
-                                            accountName = accountInfo?.first ?: "",
-                                            url = accountInfo?.second ?: "",
-                                        )
-                                        Spacer(Modifier.height(8.dp))
-                                    }
+                            if (shouldShowLogInAlert) {
+                                item {
+                                    InAppNotification(
+                                        visible = true,
+                                        message = stringResource(Res.string.log_in_warning),
+                                        actionLabel = stringResource(Res.string.log_in),
+                                        onActionClick = {
+                                            navController.navigate(SettingsGeneralDestination(showYouTubeAccount = true))
+                                        }
+                                    )
                                 }
                             }
+
                             itemsIndexed(homeData, key = { index, item -> item.hashCode() + index }) { index, item ->
                                 if (index == 0) {
                                      // Replace first section with Speed Dial
                                      SpeedDialSection(
                                          navController = navController,
-                                         data = item,
+                                         data = speedDialData,
                                          onPlayClick = { content ->
                                              if (content is com.sonique.domain.data.model.home.Content) {
                                                  val firstQueue = content.toTrack()
@@ -435,12 +471,12 @@ fun HomeScreen(
                             }
 
                         }
-                        item {
-                            EndOfPage()
+                            item {
+                                EndOfPage()
+                            }
                         }
                     }
-                }
-            } else {
+                } else {
                 Column {
                         Spacer(
                             Modifier.height(

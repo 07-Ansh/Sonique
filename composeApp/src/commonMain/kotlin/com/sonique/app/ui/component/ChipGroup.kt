@@ -2,6 +2,7 @@ package com.sonique.app.ui.component
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material3.ElevatedFilterChip
@@ -9,6 +10,7 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -28,22 +30,29 @@ fun Chip(
     InfiniteBorderAnimationView(
         isAnimated = isAnimated && isSelected,
         brush = Brush.sweepGradient(listOf(musica_accent, Color.White)),
-        backgroundColor = Color.Transparent,
+        backgroundColor = MaterialTheme.colorScheme.background,
         contentPadding = 0.dp,
         borderWidth = 1.dp,
-        shape = CircleShape,
+        shape = RoundedCornerShape(8.dp),
         oneCircleDurationMillis = 2500,
     ) {
         CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
             ElevatedFilterChip(
-                shape = CircleShape,
+                elevation = FilterChipDefaults.elevatedFilterChipElevation(
+                    elevation = 0.dp,
+                    pressedElevation = 0.dp,
+                    focusedElevation = 0.dp,
+                    hoveredElevation = 0.dp,
+                    disabledElevation = 0.dp
+                ),
+                shape = RoundedCornerShape(8.dp),
                 colors =
                     FilterChipDefaults.elevatedFilterChipColors(
-                        containerColor = Color.Transparent,
+                        containerColor = Color.White.copy(alpha = 0.05f),
                         iconColor = Color.White,
-                        selectedContainerColor = Color.DarkGray.copy(alpha = 0.8f),
-                        labelColor = Color.LightGray,
-                        selectedLabelColor = Color.LightGray,
+                        selectedContainerColor = Color.White.copy(alpha = 0.15f),
+                        labelColor = Color.Gray,
+                        selectedLabelColor = Color.White,
                     ),
                 onClick = { onClick.invoke() },
                 label = {

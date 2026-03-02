@@ -264,6 +264,9 @@ class SettingsViewModel(
         getSpotifyLogIn()
         getSpotifyLyrics()
         getSpotifyCanvas()
+        
+        getSponsorBlockEnabled()
+        getSponsorBlockCategories()
 
         viewModelScope.launch {
             calculateDataFraction(

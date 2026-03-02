@@ -125,7 +125,7 @@ fun rememberSettingsCategories(): List<SettingsCategory> {
         SettingsCategory(
             title = stringResource(Res.string.general), // Mapping "Google" and general stuff here
             icon = Icons.Default.Settings,
-            destination = SettingsGeneralDestination
+            destination = SettingsGeneralDestination()
         ),
         SettingsCategory(
             title = "App Updates",

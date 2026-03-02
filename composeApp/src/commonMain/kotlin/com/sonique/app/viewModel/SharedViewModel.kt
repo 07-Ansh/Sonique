@@ -1316,6 +1316,13 @@ class SharedViewModel(
         }
     }
 
+    fun playNext(track: Track) {
+        viewModelScope.launch {
+            mediaPlayerHandler.playNext(track)
+            makeToast(getString(Res.string.play_next))
+        }
+    }
+
     fun addToYouTubeLiked() {
         viewModelScope.launch {
             val videoId = mediaPlayerHandler.nowPlaying.first()?.mediaId

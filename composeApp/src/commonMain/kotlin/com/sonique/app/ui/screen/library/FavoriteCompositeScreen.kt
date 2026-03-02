@@ -189,9 +189,7 @@ fun FavoriteCompositeScreen(
                                 dynamicPlaylistViewModel.playSong(videoId, type = LibraryDynamicPlaylistType.Favorite)
                             },
                             onAddToQueue = {
-                                sharedViewModel.addListToQueue(
-                                    arrayListOf(song.toTrack()),
-                                )
+                                sharedViewModel.playNext(song.toTrack())
                             },
                         )
                     }

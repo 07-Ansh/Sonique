@@ -371,9 +371,7 @@ fun ArtistScreen(
                                             )
                                         },
                                         onAddToQueue = {
-                                            sharedViewModel.addListToQueue(
-                                                arrayListOf(song),
-                                            )
+                                            sharedViewModel.playNext(song)
                                         },
                                     )
                                 }

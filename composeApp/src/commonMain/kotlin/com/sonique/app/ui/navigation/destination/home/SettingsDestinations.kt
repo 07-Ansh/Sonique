@@ -3,7 +3,9 @@ package com.sonique.app.ui.navigation.destination.home
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object SettingsGeneralDestination
+data class SettingsGeneralDestination(
+    val showYouTubeAccount: Boolean = false
+)
 
 @Serializable
 data object SettingsAudioDestination

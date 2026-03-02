@@ -62,6 +62,7 @@ fun SettingsGeneralScreen(
     navController: NavController,
     viewModel: SettingsViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel,
+    showYouTubeAccount: Boolean = false,
     onBack: () -> Unit
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -99,6 +100,13 @@ fun SettingsGeneralScreen(
     LaunchedEffect(true) {
         viewModel.getData()
         viewModel.getAllGoogleAccount()
+    }
+
+    LaunchedEffect(showYouTubeAccount) {
+        if (showYouTubeAccount) {
+            viewModel.getAllGoogleAccount()
+            showYouTubeAccountDialog = true
+        }
     }
 
     Scaffold(

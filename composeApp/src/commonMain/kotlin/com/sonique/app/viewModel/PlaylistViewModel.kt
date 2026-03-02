@@ -576,12 +576,33 @@ class PlaylistViewModel(
             PlaylistUIEvent.Shuffle -> {
                 val shuffleEndpoint = data.shuffleEndpoint
                 if (shuffleEndpoint == null) {
+                    val loadedList = tracks.value.shuffled()
+                    if (loadedList.isEmpty()) {
+                        viewModelScope.launch {
+                            makeToast(
+                                getString(Res.string.playlist_is_empty),
+                            )
+                        }
+                        return
+                    }
+                    val clickedSong = loadedList.first()
                     viewModelScope.launch {
-                        makeToast(
-                            getString(Res.string.shuffle_not_available),
+                        setQueueData(
+                            QueueData.Data(
+                                listTracks = loadedList.toCollection(arrayListOf<Track>()),
+                                firstPlayedTrack = clickedSong,
+                                playlistId = data.id,
+                                playlistName = "\"${data.title}\" ${getString(Res.string.shuffle)}",
+                                playlistType = PlaylistType.PLAYLIST,
+                                continuation = continuation.value,
+                            ),
+                        )
+                        loadMediaItem(
+                            clickedSong,
+                            Config.PLAYLIST_CLICK,
+                            0,
                         )
                     }
-                    return
                 } else {
                     viewModelScope.launch {
                         songRepository.getRadioFromEndpoint(shuffleEndpoint).collectLatest { res ->

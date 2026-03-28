@@ -1,0 +1,276 @@
+# Sonique — Agent Context File
+# This file tells the AI agent everything it needs to know about this project.
+# Read this BEFORE touching any code.
+
+## 1. What Is This Project?
+Sonique is a **Kotlin Multiplatform (KMP) music player app** targeting Android (primary) and JVM Desktop.
+It is a YouTube Music / Spotify client — it scrapes YTMusic via a custom scraper module and can also
+authenticate with Spotify for lyrics and canvas videos. It supports local playback, lyrics (multiple
+providers), podcasts, playlists, albums, artists, canvas videos, and a full library system with
+offline support, crossfade playback, sponsor block, and pitch/speed controls.
+
+The app is under active development. The user works feature-by-feature and expects clean,
+production-quality Kotlin/Compose Multiplatform code with NO shortcuts.
+
+
+## 2. Project Root
+```
+e:\APPS\Sonique\
+```
+
+
+## 3. Module Map
+| Module                      | Location                                              | Purpose                                                |
+|-----------------------------|-------------------------------------------------------|--------------------------------------------------------|
+| `composeApp`                | `composeApp/`                                         | Main app — UI, ViewModels, navigation, DI              |
+| `:common`                   | `core/common/`                                        | Shared constants, enums, config (MERGING_DATA_TYPE, LibraryChipType) |
+| `:data`                     | `core/data/`                                          | Room database, DAOs, DataStore, RepositoryImpl, MediaServiceHandler |
+| `:domain`                   | `core/domain/`                                        | Repository interfaces, entities, media handler interface, extension utils |
+| `:kotlinYtmusicScraper`     | `core/service/kotlinYtmusicScraper/`                  | YouTube Music API scraper (KMP)                        |
+| `:spotify`                  | `core/service/spotify/`                               | Spotify integration (lyrics, canvas, auth)             |
+| `:lyricsService`            | `core/service/lyricsService/`                         | Lyrics fetching (LrcLib, YouTube)                      |
+| `:ktorExt`                  | `core/service/ktorExt/`                               | Ktor HTTP client extensions                            |
+| `:media3`                   | `core/media/media3/`                                  | Media3 (ExoPlayer) integration — Android playback      |
+| `:media3-ui`                | `core/media/media3-ui/`                               | Media3 UI components                                   |
+| `:mediaserviceinterfaces`   | `MediaServiceCore/mediaserviceinterfaces/`            | Media service interfaces (shared contracts)            |
+| `:youtubeapi`               | `MediaServiceCore/youtubeapi/`                        | Raw YouTube Data API / InnerTube calls                 |
+| `:googleapi`                | `MediaServiceCore/googleapi/`                         | Google auth API                                        |
+| `:sharedutils`              | `MediaServiceCore/SharedModules/sharedutils/`         | Shared utility helpers                                 |
+
+> **Note**: `core/media/media-jvm/` and `core/media/media-jvm-ui/` exist for JVM Desktop playback
+> (GStreamer-based). The JVM MediaPlayerHandler is in `core/data/src/jvmMain/`.
+
+
+## 4. Key Source Paths (commonMain — Compose Multiplatform)
+```
+composeApp/src/commonMain/kotlin/com/sonique/app/
+├── App.kt                    ← Top-level navigation graph (NavHost) — ALL routes defined here
+├── di/
+│   └── ViewModelModule.kt    ← Koin DI module for all ViewModels
+├── expect/
+│   ├── CommandLine.kt        ← expect for CLI ops
+│   ├── CopyToClipboard.kt
+│   ├── FolderPath.kt
+│   ├── OpenUrl.kt
+│   ├── Orientation.kt
+│   ├── Worker.kt             ← expect for background workers
+│   └── ui/
+│       ├── BackHandler.kt    ← expect for back-nav (actual: androidMain, jvmMain)
+│       ├── Bitmap.kt
+│       ├── Cookies.kt
+│       ├── FilePicker.kt
+│       ├── LiquidGlass.kt    ← expect for platform liquid glass rendering
+│       ├── MediaPlayerView.kt
+│       ├── OpenEq.kt
+│       ├── Permission.kt
+│       ├── PhotoPicker.kt
+│       └── Scrollbar.kt
+├── extension/                ← Kotlin extension functions
+├── pagination/               ← Paging helpers
+├── ui/
+│   ├── component/            ← Reusable composables (41 files)
+│   │   ├── AdapterItems.kt           ← Song/album/artist item renderers
+│   │   ├── AppBottomNavigationBar.kt ← Bottom nav
+│   │   ├── FullWidthItems.kt         ← ArtistCircularItem, horizontal lists
+│   │   ├── LibraryItem.kt            ← Library section renderer
+│   │   ├── LyricsView.kt             ← Fullscreen lyrics composable
+│   │   ├── ModalBottomSheet.kt       ← All bottom sheets (136KB — huge file)
+│   │   ├── PlayerControlLayout.kt    ← Play/pause/skip/shuffle/repeat buttons + rubberyClick
+│   │   ├── WavySliderTrack.kt        ← Animated wavy progress track for seekbar
+│   │   ├── LiquidGlassContainer.kt   ← Liquid glass background wrapper
+│   │   └── ...
+│   ├── navigation/
+│   │   ├── destination/      ← NavDestination @Serializable data classes (by feature)
+│   │   └── graph/            ← Navigation graphs
+│   ├── screen/
+│   │   ├── MiniPlayer.kt    ← Mini player bar (bottom of screen)
+│   │   ├── home/             ← HomeScreen, MoodScreen, SpeedDialSection, NotificationScreen
+│   │   ├── library/          ← LibraryScreen, LocalPlaylistScreen, FavoriteCompositeScreen
+│   │   ├── login/            ← Login / auth screen
+│   │   ├── other/            ← ArtistScreen, AlbumScreen, PlaylistScreen, SearchScreen, PodcastsScreen
+│   │   ├── player/           ← NowPlayingScreen (108KB), FullscreenPlayer
+│   │   └── settings/         ← 10 settings sub-screens (UI, Audio, General, Playback, etc.)
+│   └── theme/
+│       ├── Color.kt          ← Color palette
+│       ├── Theme.kt          ← Material theme setup
+│       └── Typo.kt           ← Typography tokens
+└── viewModel/
+    ├── SharedViewModel.kt    ← Central "god" VM (~62KB): queue, media control, player state, downloads
+    ├── SettingsViewModel.kt  ← App settings (~50KB)
+    ├── PlaylistViewModel.kt  ← Playlist page (~40KB)
+    ├── LocalPlaylistViewModel.kt ← Local playlist management (~43KB)
+    ├── HomeViewModel.kt      ← Home feed
+    ├── LibraryViewModel.kt   ← Library screen state (filters, followed artists)
+    ├── SearchViewModel.kt    ← Search
+    ├── ArtistViewModel.kt    ← Artist page
+    ├── AlbumViewModel.kt     ← Album page
+    ├── PodcastViewModel.kt   ← Podcast page
+    ├── NowPlayingBottomSheetViewModel.kt ← Song bottom sheet actions
+    └── base/BaseViewModel.kt ← Base class for all VMs
+```
+
+
+## 5. Architecture & Patterns
+
+### Overall Pattern: Clean Architecture + MVI-ish
+- **Unidirectional flow**: ViewModel exposes `StateFlow` → UI collects via `.collectAsStateWithLifecycle()`
+- **Repository pattern**: Domain defines interfaces (`:domain`), Data implements them (`:data`)
+- **DI**: Koin — all modules are in `composeApp/src/commonMain/kotlin/com/sonique/app/di/`
+- **Navigation**: Compose Navigation (type-safe destinations defined as `@Serializable` data classes)
+
+### State Wrappers
+```kotlin
+// Used everywhere for async data:
+sealed class LocalResource<T>(val data: T? = null, val message: String? = null) {
+    class Success<T>(data: T) : LocalResource<T>(data)
+    class Error<T>(message: String, data: T? = null) : LocalResource<T>(data, message)
+    class Loading<T> : LocalResource<T>()
+}
+// Also: Resource<T>, NoResponseResource (no-data operations)
+```
+
+### Media Playback Architecture
+- **Interface**: `MediaPlayerHandler` (in `:domain`) — defines all playback operations
+- **Android impl**: `MediaServiceHandlerImpl` (`:data` androidMain) — wraps Media3/ExoPlayer
+- **JVM impl**: `JvmMediaPlayerHandlerImpl` (`:data` jvmMain) — wraps GStreamer
+- **State objects**:
+  - `NowPlayingTrackState` — current `GenericMediaItem` + optional `Track` (API data) + optional `SongEntity` (DB data)
+  - `ControlState` — isPlaying, isShuffle, repeatState, isLiked, volume, etc.
+  - `SimpleMediaState` — Initial/Ready/Loading/Progress/Buffering/Ended
+  - `QueueData` — current queue tracks, playlist name, source
+- **Song/Video discrimination**: `MERGING_DATA_TYPE.SONG` vs `MERGING_DATA_TYPE.VIDEO` stored in
+  `GenericMediaItem.metadata.description` — use `mediaItem.isSong()` / `mediaItem.isVideo()` extensions
+- **Video ID extraction**: Videos have their mediaId prefixed with `"Video"` — strip it with
+  `mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)` to get the raw YouTube videoId
+
+### NowPlayingTrackState Resolution Pattern
+When `NowPlayingTrackState` updates, it arrives in two phases:
+1. First: `mediaItem` + `track` update (from queue), but `songEntity` may still be from the PREVIOUS song
+2. Second: `songEntity` updates asynchronously after a database fetch
+
+**Always validate** that `songEntity.videoId` matches the current `mediaItem.mediaId` before using
+songEntity data for display. See `SharedViewModel.kt` for the canonical pattern.
+
+### DataStore Preferences Pattern
+- All preferences use string-based `TRUE`/`FALSE` constants from `DataStoreManager.Values`
+- Flow-based: `val settingName: Flow<String>` with `suspend fun setSettingName(value: Boolean)`
+- One-time migrations use `putString("migration_key", STATUS_DONE)` + `getString("migration_key").first() != STATUS_DONE` guard
+
+### Library Screen Pattern
+- `LibraryChipType` enum (in `:common`) controls which sub-screen is shown
+- `LibraryViewModel.setCurrentScreen(type)` drives navigation between library sub-sections
+- `BackHandler(enabled = currentFilter != LibraryChipType.YOUR_LIBRARY)` intercepts back to return to dashboard
+- `LibraryItemType` enum drives what `LibraryItem()` composable renders
+
+### ArtistEntity / FollowedArtists
+- Followed artists are fetched from YouTube Music and stored in Room via `ArtistRepositoryImpl`
+- `LibraryViewModel.followedArtists` is a `StateFlow<LocalResource<List<ArtistEntity>>>`
+- Displayed as circular avatars using `ArtistCircularItem` in `FullWidthItems.kt`
+
+### Room Database
+- `MusicDatabase` (version 21) with 19 entity types
+- Extensive auto-migration chain (versions 1 through 21)
+- DAO: `DatabaseDao` with `LocalDataSource` facade
+- Entities: SongEntity, AlbumEntity, ArtistEntity, PlaylistEntity, LocalPlaylistEntity, LyricsEntity,
+  PodcastsEntity, EpisodeEntity, QueueEntity, NewFormatEntity, SongInfoEntity, SearchHistory, etc.
+
+
+## 6. Build Commands
+```powershell
+# From: e:\APPS\Sonique\
+
+# Compile only (fast check):
+./gradlew :composeApp:compileDebugKotlinAndroid
+
+# Full debug APK:
+./gradlew :composeApp:assembleDebug
+
+# Clean build:
+./gradlew clean :composeApp:assembleDebug
+```
+> Note: Config cache is frequently invalidated. Expected warnings about deprecated AGP options —
+> these are pre-existing and NOT caused by our changes. Focus on `e:` errors only.
+> **Do NOT build unless the user explicitly asks.** The user builds from Android Studio.
+
+
+## 7. Conventions & Rules
+1. **Always use `CRLF` line endings** — Windows project, files use `\r\n`
+2. **KMP-first**: Any new logic goes in `commonMain` unless it is platform-specific (camera, BackHandler, etc.)
+3. **No hardcoded strings** — use `Res.string.*` from `composeResources/values/strings.xml`
+4. **Imports matter**: Missing imports are a common build failure cause.
+   - `ArtistEntity` → `com.sonique.domain.data.entities.ArtistEntity`
+   - `SongEntity` → `com.sonique.domain.data.entities.SongEntity`
+   - `LocalResource` → `com.sonique.domain.utils.LocalResource`
+   - `BackHandler` → `com.sonique.app.expect.ui.BackHandler`
+   - `LibraryChipType` → `com.sonique.common.LibraryChipType`
+   - `MERGING_DATA_TYPE` → `com.sonique.common.MERGING_DATA_TYPE`
+   - `Track` → `com.sonique.domain.data.model.browse.album.Track`
+   - `GenericMediaItem` → `com.sonique.domain.data.player.GenericMediaItem`
+   - `NowPlayingTrackState` → `com.sonique.domain.mediaservice.handler.NowPlayingTrackState`
+   - `DataStoreManager` → `com.sonique.domain.manager.DataStoreManager`
+5. **Null safety**: Prefer `data?.isNotEmpty() == true` over `!data.isNullOrEmpty()` to avoid
+   compiler issues with nullable `StateFlow` data
+6. **Do NOT touch `SharedViewModel`** unless explicitly asked — it is large (~62KB) and complex
+7. **Do NOT build** unless the user explicitly says to build. The user builds from Android Studio.
+8. **Verify build** after significant changes: always run `compileDebugKotlinAndroid` before claiming done
+   (only when the user asks you to verify)
+
+
+## 8. Common Pitfalls (Lessons Learned)
+- **Extra braces**: When editing `LibraryItem.kt`, the `if-else if` chain for `LibraryItemType`
+  variants is fragile — always verify brace counts after edits
+- **`@Composable` context**: Ensure `LazyRow { items(...) }` blocks are inside a `@Composable` scope
+- **`BackHandler` expect/actual**: The expect is in `commonMain/expect/ui/`, actual is in `androidMain/expect/ui/`
+- **ArtistEntity import in LibraryScreen**: Must be imported explicitly even if the type is only
+  used transitively (Kotlin strict mode)
+- The `CanvasSong` block in `LibraryItem.kt` uses `item.canvasThumbUrl` — `item` must be cast to
+  `SongEntity` first via `val song = item as? SongEntity ?: return@items`
+- **NowPlayingTrackState stale data**: When a new song starts, the first emission has the new
+  `mediaItem`/`track` but the OLD `songEntity`. Always check `songEntity.videoId == videoId` before
+  using songEntity data. Use `distinctUntilChangedBy { Pair(it.mediaItem.mediaId, it.songEntity?.videoId) }`
+  to receive both the initial and database-resolved updates.
+- **Track.thumbnails is `List<Thumbnail>?`**, not a `String`. To get the URL, use
+  `track.thumbnails?.lastOrNull()?.url`. SongEntity.thumbnails IS a `String?`.
+- **SongEntity.artistName is `List<String>?`**, not a `String`. Use `.joinToString(", ")` to display.
+- **DataStore preferences**: All boolean-like prefs use `TRUE`/`FALSE` string constants, not actual booleans.
+  Flows return `Flow<String>`, not `Flow<Boolean>`. Compare with `== DataStoreManager.TRUE`.
+- **ModalBottomSheet.kt** is ~137KB — be very careful with edits. Prefer targeted line-range edits.
+- **NowPlayingScreen.kt** is ~108KB — same caution applies.
+
+
+## 9. Recent Features & Session History
+- Implemented Material 3 Expressive player controls (squircle play/pause, pill skip buttons,
+  outlined shuffle/repeat, animated wavy seekbar track with pill thumb) — togglable from Settings > Appearance
+- Added `rubberyClick` modifier with dual-spring zoom/bounce animation for player control buttons
+  (press: stiff spring to 0.86x, release: under-damped spring with overshoot bounce)
+- Replaced all pure-white player UI elements with cream-white `Color(0xFFFAF9F6)` for premium feel
+- Fixed NowPlayingTrackState stale-data bug where old song metadata showed on track change
+- Synced MiniPlayer to use `nowPlayingScreenData` for consistent metadata display
+- One-time migration to force-disable "Frosted Player Background" on update (`frosted_force_disabled_v4`)
+- Changed default for `BLUR_PLAYER_BACKGROUND` from `TRUE` to `FALSE`
+- Implemented `LibraryChipType` back navigation with granular `BackHandler`
+- Added "Followed Artists" section to Library dashboard with `LazyRow` of circular items
+- Liked Music was removed from the library dashboard (user's request)
+
+
+## 10. Where to Look First for Common Tasks
+| Task                               | File(s) to check                                                  |
+|------------------------------------|-------------------------------------------------------------------|
+| Add a new library section          | `LibraryViewModel.kt`, `LibraryItem.kt`, `LibraryScreen.kt`      |
+| Add a new screen                   | `App.kt` (NavHost), create screen in `ui/screen/`                 |
+| Add a new data field / entity      | `core/data/` (Room entity + DAO), `core/domain/` (interface)      |
+| Change navigation/routing          | `App.kt`, destination objects in `ui/navigation/destination/`     |
+| Add a new composable component     | `ui/component/`                                                   |
+| Change chip order in library       | `LibraryScreen.kt` (Crossfade → `when (filter)` block)           |
+| Change string resources            | `composeApp/src/commonMain/composeResources/values/strings.xml`   |
+| Change theme/colors                | `ui/theme/`                                                       |
+| Add a new preference/setting       | `DataStoreManager.kt` (interface), `DataStoreManagerImpl.kt` (impl), `SettingsViewModel.kt` |
+| Modify player controls layout      | `PlayerControlLayout.kt`                                          |
+| Modify seekbar / progress bar      | `NowPlayingScreen.kt` (Slider), `WavySliderTrack.kt`             |
+| Modify lyrics view                 | `LyricsView.kt`                                                  |
+| Modify mini player                 | `MiniPlayer.kt`                                                  |
+| Modify playback behavior (Android) | `MediaServiceHandlerImpl.kt` (`:data` androidMain)               |
+| Modify playback behavior (JVM)     | `JvmMediaPlayerHandlerImpl.kt` (`:data` jvmMain)                 |
+| Modify now-playing state flow      | `SharedViewModel.kt` (nowPlayingState collection block)           |
+| Add a bottom sheet action          | `ModalBottomSheet.kt`                                             |
+| Song/album/artist item rendering   | `AdapterItems.kt`, `FullWidthItems.kt`                            |

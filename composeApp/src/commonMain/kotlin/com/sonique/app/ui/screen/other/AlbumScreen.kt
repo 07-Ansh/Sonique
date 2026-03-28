@@ -521,9 +521,7 @@ fun AlbumScreen(
                                     viewModel.playTrack(item)
                                 },
                                 onAddToQueue = {
-                                    sharedViewModel.addListToQueue(
-                                        arrayListOf(item),
-                                    )
+                                    sharedViewModel.playNext(item)
                                 },
                                 modifier = Modifier.animateItem(),
                             )

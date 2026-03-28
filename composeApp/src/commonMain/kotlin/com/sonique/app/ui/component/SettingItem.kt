@@ -31,6 +31,7 @@ fun SettingItem(
     switch: Pair<Boolean, ((Boolean) -> Unit)>? = null,
     onDisable: (() -> Unit)? = null,  
     otherView: @Composable (() -> Unit)? = null,
+    loading: Boolean = false,
 ) {
     LaunchedEffect(Unit) {
         if (!isEnable && onDisable != null) {
@@ -40,7 +41,7 @@ fun SettingItem(
     Box(
         Modifier
             .then(
-                if (onClick != null && isEnable) {
+                if (onClick != null && isEnable && !loading) {
                     Modifier.clickable { onClick.invoke() }
                 } else {
                     Modifier
@@ -96,7 +97,13 @@ fun SettingItem(
                     it.invoke()
                 }
             }
-            if (switch != null) {
+            if (loading) {
+                Spacer(Modifier.width(10.dp))
+                androidx.compose.material3.CircularProgressIndicator(
+                    modifier = Modifier.width(24.dp).height(24.dp),
+                    strokeWidth = 2.dp
+                )
+            } else if (switch != null) {
                 Spacer(Modifier.width(10.dp))
                 Switch(
                     modifier = Modifier.wrapContentWidth(),
@@ -110,4 +117,5 @@ fun SettingItem(
         }
     }
 }
+
 

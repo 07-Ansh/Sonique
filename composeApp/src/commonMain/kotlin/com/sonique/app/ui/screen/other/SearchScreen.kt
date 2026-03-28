@@ -1,11 +1,14 @@
 package com.sonique.app.ui.screen.other
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import com.sonique.app.ui.theme.backgroundPrimary
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -94,9 +97,11 @@ import com.sonique.app.ui.navigation.destination.list.PodcastDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.SearchScreenUIState
+import com.sonique.app.viewModel.SearchScreenState
 import com.sonique.app.viewModel.SearchType
 import com.sonique.app.viewModel.SearchViewModel
 import com.sonique.app.viewModel.SharedViewModel
+import androidx.compose.ui.focus.FocusManager
 import com.sonique.app.viewModel.toStringRes
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -202,7 +207,7 @@ fun SearchScreen(
             Modifier
                 .fillMaxSize()
                 .background(Color.Transparent)
-                .padding(vertical = 10.dp),
+                .padding(bottom = 10.dp),
     ) {
          
          
@@ -250,19 +255,19 @@ fun SearchScreen(
                         )
                     },
                     trailingIcon = {
-                        IconButton(
-                            modifier =
-                                Modifier
-                                    .clip(CircleShape),
-                            onClick = {
-                                searchText = ""
-                                isSearchSubmitted = false
-                            },
-                        ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.baseline_close_24),
-                                contentDescription = "Clear search",
-                            )
+                        if (searchText.isNotEmpty()) {
+                            IconButton(
+                                modifier = Modifier.clip(CircleShape),
+                                onClick = {
+                                    searchText = ""
+                                    isSearchSubmitted = false
+                                },
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.baseline_close_24),
+                                    contentDescription = "Clear search",
+                                )
+                            }
                         }
                     },
                 )
@@ -276,9 +281,11 @@ fun SearchScreen(
                     .onFocusChanged {
                         isFocused = it.isFocused
                     }.padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(8.dp),
+            shape = CircleShape,
             content = {},
         )
+        
+        Spacer(modifier = Modifier.height(16.dp))
 
         Crossfade(targetState = searchUIType) {
             when (it) {
@@ -387,126 +394,21 @@ fun SearchScreen(
                     }
                 }
 
-                SearchUIType.SEARCH_HISTORY -> {
-                     
-                    Column(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(
-                                    horizontal = 16.dp,
-                                    vertical = 10.dp,
-                                ),
-                    ) {
-                        LazyColumn {
-                            stickyHeader {
-                                Crossfade(
-                                    targetState = searchHistory.isNotEmpty(),
-                                ) {
-                                    if (it) {
-                                        Row(
-                                            modifier =
-                                                Modifier
-                                                    .fillMaxWidth()
-                                                    .background(md_theme_dark_background),
-                                        ) {
-                                            TextButton(
-                                                onClick = { searchViewModel.deleteSearchHistory() },
-                                            ) {
-                                                Text(
-                                                    text = stringResource(Res.string.clear_search_history),
-                                                    color = MaterialTheme.colorScheme.onBackground,
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            items(searchHistory) { historyItem ->
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp)
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(backgroundPrimary)
-                                            .clickable {
-                                                searchText = historyItem
-                                                focusManager.clearFocus()
-                                                isSearchSubmitted = true
-                                                searchViewModel.insertSearchHistory(historyItem)
-                                                when (searchScreenState.searchType) {
-                                                    SearchType.ALL -> searchViewModel.searchAll(historyItem)
-                                                    SearchType.SONGS -> searchViewModel.searchSongs(historyItem)
-                                                    SearchType.VIDEOS -> searchViewModel.searchVideos(historyItem)
-                                                    SearchType.ALBUMS -> searchViewModel.searchAlbums(historyItem)
-                                                    SearchType.ARTISTS -> searchViewModel.searchArtists(historyItem)
-                                                    SearchType.PLAYLISTS -> searchViewModel.searchPlaylists(historyItem)
-                                                    SearchType.FEATURED_PLAYLISTS -> searchViewModel.searchFeaturedPlaylist(historyItem)
-                                                    SearchType.PODCASTS -> searchViewModel.searchPodcast(historyItem)
-                                                }
-                                            }
-                                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.baseline_history_24),
-                                        contentDescription = "Search history",
-                                        modifier = Modifier.size(24.dp),
-                                        tint = Color.LightGray
-                                    )
-                                    Spacer(modifier = Modifier.width(16.dp))
-                                    Text(
-                                        text = historyItem,
-                                        style = typo().bodyLarge,
-                                        color = Color.White
-                                    )
-                                    Spacer(modifier = Modifier.weight(1f))
-                                    IconButton(
-                                        onClick = {
-                                            searchText = historyItem
-                                            focusRequester.requestFocus()
-                                        },
-                                    ) {
-                                        Icon(
-                                            painter = painterResource(Res.drawable.baseline_arrow_outward_24),
-                                            contentDescription = "Fill search",
-                                            modifier = Modifier.size(24.dp),
-                                            tint = Color.Gray
-                                        )
-                                    }
-                                }
-                            }
-                            item {
-                                EndOfPage(
-                                    withoutCredit = true,
-                                )
-                            }
+                SearchUIType.SEARCH_HISTORY, SearchUIType.EMPTY -> {
+                    DefaultSearchContent(
+                        searchScreenState = searchScreenState,
+                        searchHistory = searchHistory,
+                        searchViewModel = searchViewModel,
+                        focusManager = focusManager,
+                        onMoreClick = onMoreClick,
+                        onHistoryItemClick = { historyItem ->
+                            searchText = historyItem
+                            focusManager.clearFocus()
+                            isSearchSubmitted = true
+                            searchViewModel.insertSearchHistory(historyItem)
+                            searchViewModel.searchAll(historyItem)
                         }
-                    }
-                }
-
-                SearchUIType.EMPTY -> {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                    ) {
-                         
-                        Column(
-                            modifier = Modifier.align(Alignment.Center),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                        ) {
-
-                            Text(
-                                text = stringResource(Res.string.search_for_songs_artists_albums_playlists_and_more),
-                                style = typo().bodySmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth().alpha(0.5f),
-                            )
-                             
-                        }
-                    }
+                    )
                 }
 
                 SearchUIType.SEARCH_RESULTS -> {
@@ -631,9 +533,7 @@ fun SearchScreen(
                                                                             searchViewModel.loadMediaItem(firstTrack, Config.SONG_CLICK)
                                                                         },
                                                                         onAddToQueue = {
-                                                                            sharedViewModel.addListToQueue(
-                                                                                arrayListOf(result.toTrack()),
-                                                                            )
+                                                                            sharedViewModel.playNext(result.toTrack())
                                                                         },
                                                                     )
                                                                 }
@@ -666,9 +566,7 @@ fun SearchScreen(
                                                                             searchViewModel.loadMediaItem(firstTrack, Config.VIDEO_CLICK)
                                                                         },
                                                                         onAddToQueue = {
-                                                                            sharedViewModel.addListToQueue(
-                                                                                arrayListOf(result.toTrack()),
-                                                                            )
+                                                                            sharedViewModel.playNext(result.toTrack())
                                                                         },
                                                                     )
                                                                 }
@@ -911,5 +809,162 @@ enum class SearchUIType {
     SEARCH_HISTORY,
     SEARCH_SUGGESTIONS,
     SEARCH_RESULTS,
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun DefaultSearchContent(
+    searchScreenState: SearchScreenState,
+    searchHistory: List<String>,
+    searchViewModel: SearchViewModel,
+    focusManager: FocusManager,
+    onMoreClick: (SongEntity) -> Unit,
+    onHistoryItemClick: (String) -> Unit
+) {
+    val recentlyPlayed = searchScreenState.recentlyPlayedSongs
+    
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 120.dp)
+    ) {
+        if (recentlyPlayed.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Recently played songs",
+                        style = typo().titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Clear",
+                        style = typo().bodySmall,
+                        color = Color.Gray,
+                        modifier = Modifier.clickable { searchViewModel.clearRecentlyPlayedSongs() }
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    for (song in recentlyPlayed) {
+                        Column(
+                            modifier = Modifier
+                                .width(100.dp)
+                                .padding(end = 12.dp)
+                                .combinedClickable(
+                                    onClick = {
+                                        val track = song.toTrack()
+                                        searchViewModel.setQueueData(
+                                            QueueData.Data(
+                                                listTracks = arrayListOf(track),
+                                                firstPlayedTrack = track,
+                                                playlistId = "RDAMVM${track.videoId}",
+                                                playlistName = track.title,
+                                                playlistType = PlaylistType.RADIO,
+                                                continuation = null,
+                                            ),
+                                        )
+                                        searchViewModel.loadMediaItem(track, Config.SONG_CLICK)
+                                    },
+                                    onLongClick = {
+                                        onMoreClick(song)
+                                    }
+                                )
+                        ) {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalPlatformContext.current)
+                                    .data(song.thumbnails)
+                                    .crossfade(true)
+                                    .build(),
+                                contentDescription = song.title,
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(RoundedCornerShape(8.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = song.title,
+                                style = typo().bodySmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        if (searchHistory.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Search history",
+                        style = typo().titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Clear",
+                        style = typo().bodySmall,
+                        color = Color.Gray,
+                        modifier = Modifier.clickable { searchViewModel.deleteSearchHistory() }
+                    )
+                }
+            }
+
+            items(searchHistory.take(10)) { historyItem ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onHistoryItemClick(historyItem) }
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.baseline_history_24),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = Color.Gray
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = historyItem,
+                        style = typo().bodyMedium
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        painter = painterResource(Res.drawable.baseline_arrow_outward_24),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = Color.Gray
+                    )
+                }
+            }
+        } else if (recentlyPlayed.isEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier.fillParentMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(Res.string.search_for_songs_artists_albums_playlists_and_more),
+                        style = typo().bodySmall,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().alpha(0.5f),
+                    )
+                }
+            }
+        }
+    }
 }
 

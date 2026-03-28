@@ -183,9 +183,7 @@ fun LibraryDynamicPlaylistScreen(
                         viewModel.playSong(videoId, type = type)
                     },
                     onAddToQueue = {
-                        sharedViewModel.addListToQueue(
-                            arrayListOf(song.toTrack()),
-                        )
+                        sharedViewModel.playNext(song.toTrack())
                     },
                 )
             }

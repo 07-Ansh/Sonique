@@ -41,7 +41,6 @@ fun InAppNotification(
     ) {
         Box(
             modifier = Modifier
-                .padding(8.dp)
                 .clip(RoundedCornerShape(12.dp))
                 .background(backgroundColor)
                 .padding(horizontal = 16.dp, vertical = 12.dp)

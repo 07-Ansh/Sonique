@@ -225,6 +225,11 @@ fun HomeScreen(
     var topAppBarHeightPx by rememberSaveable {
         mutableIntStateOf(0)
     }
+    // Track the max height the top bar ever reaches so contentPadding stays stable
+    // when the bar animates out. This prevents the feedback-loop jump.
+    var topAppBarMaxHeightPx by rememberSaveable {
+        mutableIntStateOf(0)
+    }
 
 
 
@@ -320,7 +325,7 @@ fun HomeScreen(
                 )
             },
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+
             Crossfade(targetState = loading, label = "Home Shimmer") { loading ->
                 if (!loading) {
                     if (isError) {
@@ -381,7 +386,7 @@ fun HomeScreen(
                                     .padding(horizontal = 15.dp),
                             contentPadding =
                                 PaddingValues(
-                                    top = with(LocalDensity.current) { topAppBarHeightPx.toDp() } + 24.dp,
+                                    top = with(LocalDensity.current) { topAppBarMaxHeightPx.toDp() } + 24.dp,
                                 ),
                             state = scrollState,
                             verticalArrangement = Arrangement.spacedBy(28.dp),
@@ -435,7 +440,7 @@ fun HomeScreen(
                         item {
                             AnimatedVisibility(
                                 homeListState == ListState.PAGINATING,
-                                enter = expandVertically() + expandVertically(),
+                                enter = fadeIn() + expandVertically(),
                                 exit = fadeOut() + shrinkVertically(),
                             ) {
                                 CenterLoadingBox(
@@ -481,7 +486,7 @@ fun HomeScreen(
                         Spacer(
                             Modifier.height(
                                 with(LocalDensity.current) {
-                                    topAppBarHeightPx.toDp()
+                                    topAppBarMaxHeightPx.toDp()
                                 },
                             ),
                         )
@@ -490,41 +495,25 @@ fun HomeScreen(
                 }
             }
         }
-        Column(
-            modifier =
-                Modifier
-                    .align(Alignment.TopCenter)
-                    .background(md_theme_dark_background.copy(alpha = 0.8f))  
-                    .onGloballyPositioned { coordinates ->
-                        topAppBarHeightPx = coordinates.size.height
-                    },
+        AnimatedVisibility(
+            visible = isScrollingUp,
+            modifier = Modifier.align(Alignment.TopCenter),
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
         ) {
-            AnimatedVisibility(
-                visible = isScrollingUp,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(md_theme_dark_background)
+                        .onGloballyPositioned { coordinates ->
+                            topAppBarHeightPx = coordinates.size.height
+                            if (coordinates.size.height > topAppBarMaxHeightPx) {
+                                topAppBarMaxHeightPx = coordinates.size.height
+                            }
+                        },
             ) {
                 HomeTopAppBar(navController)
-            }
-            AnimatedVisibility(
-                visible = !isScrollingUp,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
-                Spacer(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .windowInsetsPadding(
-                                WindowInsets.statusBars,
-                            ),
-                )
-            }
-            AnimatedVisibility(
-                visible = isScrollingUp,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
-            ) {
                 Row(
                     modifier =
                     Modifier

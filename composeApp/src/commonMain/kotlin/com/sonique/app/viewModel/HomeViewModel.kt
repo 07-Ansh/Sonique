@@ -88,10 +88,13 @@ class HomeViewModel(
 
     init {
         viewModelScope.launch {
-            if (dataStoreManager.cookie.first().isEmpty() &&
-                dataStoreManager.shouldShowLogInRequiredAlert.first() == TRUE
-            ) {
-                _showLogInAlert.update { true }
+            combine(
+                dataStoreManager.cookie,
+                dataStoreManager.shouldShowLogInRequiredAlert
+            ) { cookie, showAlert ->
+                cookie.isEmpty() && showAlert == DataStoreManager.Values.TRUE
+            }.collect { shouldShow ->
+                _showLogInAlert.update { shouldShow }
             }
         }
         homeJob = Job()

@@ -881,9 +881,7 @@ fun LocalPlaylistScreen(
                                 onPlaylistItemClick(it)
                             },
                             onAddToQueue = {
-                                sharedViewModel.addListToQueue(
-                                    arrayListOf(item.toTrack()),
-                                )
+                                sharedViewModel.playNext(item.toTrack())
                             },
                             modifier = Modifier.animateItem(),
                         )
@@ -898,9 +896,7 @@ fun LocalPlaylistScreen(
                                 onPlaylistItemClick(it)
                             },
                             onAddToQueue = {
-                                sharedViewModel.addListToQueue(
-                                    arrayListOf(item.toTrack()),
-                                )
+                                sharedViewModel.playNext(item.toTrack())
                             },
                             modifier = Modifier.animateItem(),
                         )

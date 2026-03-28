@@ -9,8 +9,10 @@ import com.sonique.domain.data.model.searchResult.playlists.PlaylistsResult
 import com.sonique.domain.data.model.searchResult.songs.SongsResult
 import com.sonique.domain.data.model.searchResult.videos.VideosResult
 import com.sonique.domain.data.type.SearchResultType
+import com.sonique.domain.data.entities.SongEntity
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.repository.SearchRepository
+import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.utils.Resource
 import com.sonique.domain.utils.toQueryList
 import com.sonique.logger.LogLevel
@@ -49,6 +51,7 @@ data class SearchScreenState(
     val searchPodcastsResult: List<PlaylistsResult> = emptyList(),
     val suggestQueries: List<String> = emptyList(),
     val suggestYTItems: List<SearchResultType> = emptyList(),
+    val recentlyPlayedSongs: List<SongEntity> = emptyList(),
 )
 
  
@@ -89,6 +92,7 @@ sealed class SearchScreenUIState {
 class SearchViewModel(
     private val dataStoreManager: DataStoreManager,
     private val searchRepository: SearchRepository,
+    private val songRepository: SongRepository,
 ) : BaseViewModel() {
     private val _searchScreenUIState = MutableStateFlow<SearchScreenUIState>(SearchScreenUIState.Empty)
     val searchScreenUIState: StateFlow<SearchScreenUIState> get() = _searchScreenUIState.asStateFlow()
@@ -107,7 +111,20 @@ class SearchViewModel(
             regionCode = dataStoreManager.location.first()
             language = dataStoreManager.getString(SELECTED_LANGUAGE).first()
             getSearchHistory()
+            getRecentlyPlayedSongs()
         }
+    }
+
+    private fun getRecentlyPlayedSongs() {
+        viewModelScope.launch {
+            val songs = songRepository.getRecentSong(limit = 15, offset = 0)
+            _searchScreenState.update { it.copy(recentlyPlayedSongs = songs) }
+        }
+    }
+
+    fun clearRecentlyPlayedSongs() {
+        _searchScreenState.update { it.copy(recentlyPlayedSongs = emptyList()) }
+        // Note: For now we just clear it from the UI state or we could implement a DB clear if needed.
     }
 
     private fun getSearchHistory() {

@@ -107,7 +107,12 @@ fun AppBottomNavigationBar(
                                     screen.destination::class,
                                 )
                             } else {
-                                navController.navigate(screen.destination)
+                                navController.navigate(screen.destination) {
+                                    popUpTo(screen.destination) {
+                                        inclusive = false
+                                    }
+                                    launchSingleTop = true
+                                }
                             }
                         } else {
                             selectedIndex = screen.ordinal
@@ -222,7 +227,12 @@ fun AppNavigationRail(
                                 screen.destination::class,
                             )
                         } else {
-                            navController.navigate(screen.destination)
+                            navController.navigate(screen.destination) {
+                                popUpTo(screen.destination) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
+                            }
                         }
                     } else {
                         selectedIndex = screen.ordinal

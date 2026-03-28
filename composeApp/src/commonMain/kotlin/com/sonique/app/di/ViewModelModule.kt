@@ -34,10 +34,12 @@ val viewModelModule =
                 get(),
                 get(),
                 get(),
+                get(),
             )
         }
-        single {
+        viewModel {
             SearchViewModel(
+                get(),
                 get(),
                 get(),
             )

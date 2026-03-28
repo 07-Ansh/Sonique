@@ -383,7 +383,7 @@ internal class DownloadUtils(
                 override fun onDownloadRemoved(
                     downloadManager: DownloadManager,
                     download: Download,
-                ) {
+                    ) {
                     download.request.id.let { id ->
                         val songId =
                             if (id.contains(MERGING_DATA_TYPE.VIDEO)) {
@@ -410,4 +410,3 @@ internal class DownloadUtils(
         )
     }
 }
-

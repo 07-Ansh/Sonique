@@ -645,15 +645,17 @@ fun PlaylistScreen(
                                                     }
                                                     Spacer(Modifier.weight(1f))
                                                     if (!data.isRadio) {
-                                                        RippleIconButton(
-                                                            modifier =
-                                                                Modifier.size(36.dp),
-                                                            resId = Res.drawable.baseline_sensors_24,
-                                                            fillMaxSize = true,
-                                                        ) {
-                                                            viewModel.onUIEvent(PlaylistUIEvent.StartRadio)
+                                                        if (data.radioEndpoint != null) {
+                                                            RippleIconButton(
+                                                                modifier =
+                                                                    Modifier.size(36.dp),
+                                                                resId = Res.drawable.baseline_sensors_24,
+                                                                fillMaxSize = true,
+                                                            ) {
+                                                                viewModel.onUIEvent(PlaylistUIEvent.StartRadio)
+                                                            }
+                                                            Spacer(Modifier.size(5.dp))
                                                         }
-                                                        Spacer(Modifier.size(5.dp))
                                                         RippleIconButton(
                                                             modifier =
                                                                 Modifier.size(36.dp),
@@ -789,9 +791,7 @@ fun PlaylistScreen(
                                         onPlaylistItemClick(it)
                                     },
                                     onAddToQueue = {
-                                        sharedViewModel.addListToQueue(
-                                            arrayListOf(item),
-                                        )
+                                        sharedViewModel.playNext(item)
                                     },
                                     modifier = Modifier.animateItem(),
                                 )
@@ -805,9 +805,7 @@ fun PlaylistScreen(
                                         onPlaylistItemClick(it)
                                     },
                                     onAddToQueue = {
-                                        sharedViewModel.addListToQueue(
-                                            arrayListOf(item),
-                                        )
+                                        sharedViewModel.playNext(item)
                                     },
                                     modifier = Modifier.animateItem(),
                                 )

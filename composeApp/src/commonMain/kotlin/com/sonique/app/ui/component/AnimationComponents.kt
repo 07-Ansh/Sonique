@@ -78,6 +78,7 @@ fun InfiniteBorderAnimationView(
                     }
                 },
         shape = shape,
+        color = backgroundColor,
     ) {
         Box(
             modifier =
@@ -155,6 +156,7 @@ fun LimitedBorderAnimationView(
                     }
                 },
         shape = shape,
+        color = backgroundColor,
     ) {
         Box(
             modifier =

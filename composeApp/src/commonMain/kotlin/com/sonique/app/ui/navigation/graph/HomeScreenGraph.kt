@@ -76,12 +76,13 @@ fun NavGraphBuilder.homeScreenGraph(
         exitTransition = { fadeOut(animationSpec = tween(100)) },
         popEnterTransition = { fadeIn(animationSpec = tween(100)) },
         popExitTransition = { fadeOut(animationSpec = tween(100)) }
-    ) {
-
+    ) { entry ->
+        val data = entry.toRoute<SettingsGeneralDestination>()
         val sharedViewModel = koinInject<SharedViewModel>()
         SettingsGeneralScreen(
             navController = navController,
             sharedViewModel = sharedViewModel,
+            showYouTubeAccount = data.showYouTubeAccount,
             onBack = { navController.popBackStack() }
         )
     }
@@ -170,6 +171,19 @@ fun NavGraphBuilder.homeScreenGraph(
         SettingsAboutScreen(
             navController = navController,
             onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable<SettingsUpdateDestination>(
+        enterTransition = { fadeIn(animationSpec = tween(400)) },
+        exitTransition = { fadeOut(animationSpec = tween(400)) },
+        popEnterTransition = { fadeIn(animationSpec = tween(400)) },
+        popExitTransition = { fadeOut(animationSpec = tween(400)) }
+    ) {
+        val sharedViewModel = koinInject<SharedViewModel>()
+        SettingsUpdateScreen(
+            onBack = { navController.popBackStack() },
+            sharedViewModel = sharedViewModel
         )
     }
 }

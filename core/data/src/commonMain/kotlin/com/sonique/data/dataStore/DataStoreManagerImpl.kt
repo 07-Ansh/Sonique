@@ -379,7 +379,10 @@ internal class DataStoreManagerImpl(
     override suspend fun getSponsorBlockCategories(): ArrayList<String> {
         val list: ArrayList<String> = arrayListOf()
         for (category in SponsorBlockType.toList()) {
-            if (getString(category.value).first() == TRUE) list.add(category.value)
+            val isEnabled = getString(category.value).first()
+            if (isEnabled == TRUE) {
+                list.add(category.value)
+            }
         }
         return list
     }
@@ -394,7 +397,7 @@ internal class DataStoreManagerImpl(
             }
             SponsorBlockType.toList().filter { !categories.contains(it.value) }.forEach { category ->
                 settingsDataStore.edit { settings ->
-                    settings[stringPreferencesKey(category.toString())] = FALSE
+                    settings[stringPreferencesKey(category.value)] = FALSE
                 }
             }
         }
@@ -778,7 +781,7 @@ internal class DataStoreManagerImpl(
 
     override val shouldShowLogInRequiredAlert =
         settingsDataStore.data.map { preferences ->
-            preferences[SHOULD_SHOW_LOG_IN_REQUIRED_ALERT] ?: FALSE
+            preferences[SHOULD_SHOW_LOG_IN_REQUIRED_ALERT] ?: TRUE
         }
 
     override suspend fun setShouldShowLogInRequiredAlert(shouldShow: Boolean) {

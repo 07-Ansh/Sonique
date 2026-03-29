@@ -1,8 +1,6 @@
 package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.MarqueeAnimationMode
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -130,11 +128,7 @@ fun LibraryItem(
                             .fillMaxWidth()
                             .height(35.dp)
                             .wrapContentHeight(align = Alignment.CenterVertically)
-                            .weight(1f)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .weight(1f).focusable(),
                 )
             }
             Crossfade(targetState = state.isLoading, label = "Loading") { isLoading ->
@@ -294,9 +288,6 @@ fun LibraryItem(
                                                     .fillMaxWidth()
                                                     .wrapContentHeight(
                                                         align = Alignment.CenterVertically,
-                                                    ).basicMarquee(
-                                                        iterations = Int.MAX_VALUE,
-                                                        animationMode = MarqueeAnimationMode.Immediately,
                                                     ).focusable(),
                                         )
                                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -318,9 +309,6 @@ fun LibraryItem(
                                                         .weight(1f)
                                                         .wrapContentHeight(
                                                             align = Alignment.CenterVertically,
-                                                        ).basicMarquee(
-                                                            iterations = Int.MAX_VALUE,
-                                                            animationMode = MarqueeAnimationMode.Immediately,
                                                         ).focusable(),
                                             )
                                         }
@@ -442,4 +430,7 @@ data class LibraryItemState(
     val data: List<LibraryType>,
     val isLoading: Boolean = true,
 )
+
+
+
 

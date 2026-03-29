@@ -340,17 +340,14 @@ fun FullscreenPlayer(
                                 ),
                             title = {
                                 Text(
-                                    text = nowPlayingState.nowPlayingTitle,
+                                    text = nowPlayingState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
                                     style = typo().titleMedium,
                                     maxLines = 1,
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()
                                             .wrapContentHeight(align = Alignment.CenterVertically)
-                                            .basicMarquee(
-                                                iterations = Int.MAX_VALUE,
-                                                animationMode = MarqueeAnimationMode.Immediately,
-                                            ).focusable(),
+                                            .focusable(),
                                 )
                             },
                             navigationIcon = {

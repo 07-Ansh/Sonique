@@ -1,9 +1,7 @@
 package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.unit.*
@@ -397,4 +395,7 @@ fun NavigationHeader(
         )
     }
 }
+
+
+
 

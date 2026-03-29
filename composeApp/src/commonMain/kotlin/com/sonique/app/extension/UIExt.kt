@@ -415,6 +415,27 @@ fun Palette?.getColorFromPalette(): Color {
     return Color(startColor)
 }
 
+fun Palette?.getSecondaryColorFromPalette(): Color {
+    val p = this ?: return md_theme_dark_background
+    val defaultColor = 0x000000
+    val primary = p.getDarkVibrantColor(defaultColor)
+    var secondaryColor = p.getMutedColor(defaultColor)
+    
+    if (secondaryColor == defaultColor || secondaryColor == primary) {
+        secondaryColor = p.getVibrantColor(defaultColor)
+        if (secondaryColor == defaultColor || secondaryColor == primary) {
+            secondaryColor = p.getDarkMutedColor(defaultColor)
+            if (secondaryColor == defaultColor || secondaryColor == primary) {
+                secondaryColor = p.getLightMutedColor(defaultColor)
+                if (secondaryColor == defaultColor) {
+                    secondaryColor = primary
+                }
+            }
+        }
+    }
+    return Color(secondaryColor)
+}
+
 fun Modifier.isElementVisible(onVisibilityChanged: (Boolean) -> Unit) =
     composed {
         val isVisible by remember { derivedStateOf { mutableStateOf(false) } }

@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface UpdateRepository {
     fun checkForUpdate(): Flow<UpdateStatus>
+    suspend fun fetchChangelog(version: String): String?
 }
 
 sealed class UpdateStatus {

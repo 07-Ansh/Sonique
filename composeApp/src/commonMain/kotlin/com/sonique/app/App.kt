@@ -324,8 +324,9 @@ fun App(
 
             val showChangelog by viewModel.showChangelog.collectAsStateWithLifecycle()
             if (showChangelog) {
+                val changelogText by viewModel.changelogText.collectAsStateWithLifecycle()
                 com.sonique.app.ui.component.ChangelogDialog(
-                    changelog = viewModel.changelogText,
+                    changelog = changelogText,
                     onDismiss = { viewModel.dismissChangelog() }
                 )
             }

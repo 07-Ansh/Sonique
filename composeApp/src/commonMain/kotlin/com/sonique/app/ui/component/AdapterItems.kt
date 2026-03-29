@@ -3,9 +3,7 @@ package com.sonique.app.ui.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.focusable
@@ -399,11 +397,7 @@ fun HomeItemContentPlaylist(
                     Modifier
                         .width(thumbSize)
                         .wrapContentHeight(align = Alignment.CenterVertically)
-                        .padding(top = 8.dp)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .padding(top = 8.dp).focusable(),
             )
             Text(
                 text =
@@ -483,11 +477,7 @@ fun HomeItemContentPlaylist(
                 modifier =
                     Modifier
                         .width(thumbSize)
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
             if (data is com.sonique.domain.data.type.PlaylistType && data !is AlbumsResult) {
                 val subtitle =
@@ -513,11 +503,7 @@ fun HomeItemContentPlaylist(
                     modifier =
                         Modifier
                             .width(thumbSize)
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                 )
             }
         }
@@ -582,11 +568,7 @@ fun QuickPicksItem(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(
                                 bottom = 3.dp,
                             ),
@@ -611,11 +593,7 @@ fun QuickPicksItem(
                             modifier =
                                 Modifier
                                     .fillMaxWidth()
-                                    .wrapContentHeight(align = Alignment.CenterVertically)
-                                    .basicMarquee(
-                                        iterations = Int.MAX_VALUE,
-                                        animationMode = MarqueeAnimationMode.Immediately,
-                                    ).focusable(),
+                                    .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                         )
                     }
                 }
@@ -687,11 +665,7 @@ fun HomeItemSong(
                     Modifier
                         .width(160.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically)
-                        .padding(top = 8.dp)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .padding(top = 8.dp).focusable(),
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AnimatedVisibility(visible = data.isExplicit == true) {
@@ -710,11 +684,7 @@ fun HomeItemSong(
                     modifier =
                         Modifier
                             .width(160.dp)
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(vertical = 3.dp),
                 )
             }
@@ -725,11 +695,7 @@ fun HomeItemSong(
                 modifier =
                     Modifier
                         .width(160.dp)
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
         }
     }
@@ -791,11 +757,7 @@ fun HomeItemVideo(
                     Modifier
                         .width(284.5.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically)
-                        .padding(top = 8.dp)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .padding(top = 8.dp).focusable(),
             )
             Text(
                 text = data.artists.toListName().connectArtists(),
@@ -804,11 +766,7 @@ fun HomeItemVideo(
                 modifier =
                     Modifier
                         .width(284.5.dp)
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable()
+                        .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                         .padding(vertical = 2.dp),
             )
             Text(
@@ -818,11 +776,7 @@ fun HomeItemVideo(
                 modifier =
                     Modifier
                         .width(284.5.dp)
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
         }
     }
@@ -880,11 +834,7 @@ fun HomeItemArtist(
                     Modifier
                         .width(160.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically)
-                        .padding(top = 8.dp)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .padding(top = 8.dp).focusable(),
             )
             Text(
                 text = data.description.ifNullOrEmpty { stringResource(Res.string.artists) },
@@ -894,11 +844,7 @@ fun HomeItemArtist(
                 modifier =
                     Modifier
                         .width(160.dp)
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
             Text(
                 text = "",
@@ -908,11 +854,7 @@ fun HomeItemArtist(
                 modifier =
                     Modifier
                         .width(160.dp)
-                        .wrapContentHeight(align = Alignment.CenterVertically)
-                        .basicMarquee(
-                            iterations = Int.MAX_VALUE,
-                            animationMode = MarqueeAnimationMode.Immediately,
-                        ).focusable(),
+                        .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
         }
     }
@@ -1010,11 +952,7 @@ fun ItemVideoChart(
                         Modifier
                             .width(40.dp)
                             .wrapContentHeight(align = Alignment.CenterVertically)
-                            .align(Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .align(Alignment.CenterVertically).focusable(),
                 )
                 Column(Modifier.padding(start = 10.dp)) {
                     Text(
@@ -1026,11 +964,7 @@ fun ItemVideoChart(
                             Modifier
                                 .width(210.dp)
                                 .wrapContentHeight(align = Alignment.CenterVertically)
-                                .padding(top = 10.dp)
-                                .basicMarquee(
-                                    iterations = Int.MAX_VALUE,
-                                    animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable(),
+                                .padding(top = 10.dp).focusable(),
                     )
                     Text(
                         text = data.artists.toListName().connectArtists(),
@@ -1038,11 +972,7 @@ fun ItemVideoChart(
                         modifier =
                             Modifier
                                 .width(210.dp)
-                                .wrapContentHeight(align = Alignment.CenterVertically)
-                                .basicMarquee(
-                                    iterations = Int.MAX_VALUE,
-                                    animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable()
+                                .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                                 .padding(vertical = 3.dp),
                     )
                     Text(
@@ -1051,11 +981,7 @@ fun ItemVideoChart(
                         modifier =
                             Modifier
                                 .width(210.dp)
-                                .wrapContentHeight(align = Alignment.CenterVertically)
-                                .basicMarquee(
-                                    iterations = Int.MAX_VALUE,
-                                    animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable()
+                                .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                                 .padding(end = 10.dp),
                     )
                 }
@@ -1130,11 +1056,7 @@ fun ItemArtistChart(
                     style = typo().titleMedium,
                     modifier =
                         Modifier
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                 )
                 Text(
                     text =
@@ -1152,11 +1074,7 @@ fun ItemArtistChart(
                     style = typo().bodySmall,
                     modifier =
                         Modifier
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                 )
             }
         }
@@ -1197,11 +1115,7 @@ fun ItemTrackChart(
                                 Modifier
                                     .width(40.dp)
                                     .wrapContentHeight(align = Alignment.CenterVertically)
-                                    .align(Alignment.CenterVertically)
-                                    .basicMarquee(
-                                        iterations = Int.MAX_VALUE,
-                                        animationMode = MarqueeAnimationMode.Immediately,
-                                    ).focusable(),
+                                    .align(Alignment.CenterVertically).focusable(),
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                     }
@@ -1245,11 +1159,7 @@ fun ItemTrackChart(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(
                                 bottom = 3.dp,
                             ),
@@ -1262,11 +1172,7 @@ fun ItemTrackChart(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                 )
             }
         }
@@ -1326,4 +1232,7 @@ fun MoodAndGenresContentItem(
         }
     }
 }
+
+
+
 

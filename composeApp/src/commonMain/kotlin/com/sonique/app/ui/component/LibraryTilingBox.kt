@@ -118,7 +118,7 @@ fun LibraryTilingItem(
     Box(
         modifier =
             Modifier
-                .clip(RoundedCornerShape(50))
+                .clip(RoundedCornerShape(8.dp))
                 .background(state.containerColor)
                 .clickable {
                     onClick.invoke()

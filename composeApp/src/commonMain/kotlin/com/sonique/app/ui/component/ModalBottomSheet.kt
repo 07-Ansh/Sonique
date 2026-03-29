@@ -5,9 +5,7 @@ import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -465,11 +463,7 @@ fun InfoPlayerBottomSheet(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .wrapContentHeight(align = Alignment.CenterVertically)
-                                        .basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                             )
                         }
                     },
@@ -511,11 +505,7 @@ fun InfoPlayerBottomSheet(
                         Modifier
                             .fillMaxWidth()
                             .wrapContentHeight(align = Alignment.CenterVertically)
-                            .padding(horizontal = 10.dp)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .padding(horizontal = 10.dp).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -536,11 +526,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -561,11 +547,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -586,11 +568,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -611,11 +589,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -636,11 +610,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -661,11 +631,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -686,11 +652,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,
@@ -716,11 +678,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable()
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     textAlign = TextAlign.Center,
@@ -770,11 +728,7 @@ fun InfoPlayerBottomSheet(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                     style = typo().bodyMedium,
                     textAlign = TextAlign.Center,
                 )
@@ -944,11 +898,7 @@ fun QueueBottomSheet(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .wrapContentHeight(align = Alignment.CenterVertically)
-                                        .basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                             )
                         }
                     },
@@ -1535,10 +1485,7 @@ fun NowPlayingBottomSheet(
                                 maxLines = 1,
                                 modifier =
                                     Modifier
-                                        .wrapContentHeight(Alignment.CenterVertically)
-                                        .basicMarquee(
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        .wrapContentHeight(Alignment.CenterVertically).focusable(),
                             )
                             Text(
                                 text =
@@ -1549,10 +1496,7 @@ fun NowPlayingBottomSheet(
                                 maxLines = 1,
                                 modifier =
                                     Modifier
-                                        .wrapContentHeight(Alignment.CenterVertically)
-                                        .basicMarquee(
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        .wrapContentHeight(Alignment.CenterVertically).focusable(),
                             )
                         }
                     }
@@ -3117,4 +3061,7 @@ sealed class DevLogInType {
             is YouTube -> getString(Res.string.your_youtube_cookie)
         }
 }
+
+
+
 

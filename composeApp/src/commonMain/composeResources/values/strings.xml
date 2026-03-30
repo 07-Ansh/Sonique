@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="Song_and_artist_name">Song â€¢ %1$s</string>
-    <string name="playlist_and_author">Playlist â€¢ %1$s</string>
-    <string name="album_and_artist_name">Album â€¢ %1$s</string>
+    <string name="Song_and_artist_name">Song • %1$s</string>
+    <string name="playlist_and_author">Playlist • %1$s</string>
+    <string name="album_and_artist_name">Album • %1$s</string>
     <string name="subscribers">%1$s subscribers</string>
-    <string name="year_and_category">%1$s â€¢ %2$s</string>
+    <string name="year_and_category">%1$s • %2$s</string>
     <string name="album_length">%1$s tracks  %2$s</string>
     <string name="view_count">%1$s views</string>
     <string name="clear_search_history">Clear search history</string>

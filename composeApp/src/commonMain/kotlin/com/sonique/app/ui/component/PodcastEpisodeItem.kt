@@ -1,8 +1,6 @@
 package com.sonique.app.ui.component
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.MarqueeAnimationMode
-import androidx.compose.foundation.basicMarquee
 import com.sonique.app.ui.theme.textHighEmphasis
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -85,11 +83,7 @@ fun PodcastEpisodeFullWidthItem(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                 )
 
                 Text(
@@ -100,11 +94,7 @@ fun PodcastEpisodeFullWidthItem(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(align = Alignment.CenterVertically)
-                            .basicMarquee(
-                                iterations = Int.MAX_VALUE,
-                                animationMode = MarqueeAnimationMode.Immediately,
-                            ).focusable(),
+                            .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                 )
 
                 val description = episode.description
@@ -117,11 +107,7 @@ fun PodcastEpisodeFullWidthItem(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
-                                .wrapContentHeight(align = Alignment.CenterVertically)
-                                .basicMarquee(
-                                    iterations = Int.MAX_VALUE,
-                                    animationMode = MarqueeAnimationMode.Immediately,
-                                ).focusable(),
+                                .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
                     )
                 }
             }
@@ -134,4 +120,6 @@ fun PodcastEpisodeFullWidthItem(
         }
     }
 }
+
+
 

@@ -181,18 +181,8 @@ class SharedViewModel(
 
     private val _showChangelog = MutableStateFlow(false)
     val showChangelog = _showChangelog.asStateFlow()
-    // Hardcoded changelog for now, can be moved to resource or fetched
-    val changelogText = """
-        v1.1.0 Updates:
-        
-        • New Speed Dial: Quick access to your favorite content with a new paged grid on the Home Screen.
-        • Player Ambience: Immersive, dynamic backgrounds in the player for a more emotional listening experience.
-        • Unified Dark Theme: All dialogs and pop-ups now consistently follow the app's premium dark aesthetics.
-        • Advanced App Updates: Track download progress in Settings and verify updates before installation.
-        • Notification Management: Added a "Clear All" feature to manage your in-app notification history.
-        • UI Enhancements: Added Sonique logo to the top bar and refined media controls.
-        • Stability & Performance: Updated core components and optimized downloads for improved reliability.
-    """.trimIndent()
+    private val _changelogText = MutableStateFlow("")
+    val changelogText = _changelogText.asStateFlow()
 
     private fun checkChangelog() {
         viewModelScope.launch {
@@ -203,6 +193,18 @@ class SharedViewModel(
                     // First time or restore - mark it as seen silently
                     dataStoreManager.setLastVersionCode(currentVersion)
                 } else {
+                    val versionString = VersionManager.getVersionName()
+                    val fallback = "Updated to version ${versionString}\n• Bug fixes and performance improvements."
+                    try {
+                        val result = updateRepository.fetchChangelog(versionString)
+                        if (!result.isNullOrBlank()) {
+                            _changelogText.value = result
+                        } else {
+                            _changelogText.value = fallback
+                        }
+                    } catch (e: Exception) {
+                        _changelogText.value = fallback
+                    }
                     _showChangelog.value = true
                     dataStoreManager.setLastVersionCode(currentVersion)
                 }

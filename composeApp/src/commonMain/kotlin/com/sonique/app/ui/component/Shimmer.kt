@@ -1,5 +1,8 @@
 package com.sonique.app.ui.component
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +35,7 @@ fun HomeItemShimmer() {
                 .padding(vertical = 8.dp)
                 .background(
                     color = shimmerBackground,
-                ).clip(RoundedCornerShape(12.dp))
+                ).clip(RoundedCornerShape(8.dp))
                 .shimmer(),
         )
         LazyRow(userScrollEnabled = false) {
@@ -47,15 +50,14 @@ fun HomeItemShimmer() {
 fun PlaylistShimmer() {
     Column(
         Modifier
-            .height(270.dp)
+            .height(260.dp)
             .padding(10.dp),
     ) {
         Box(
             Modifier
                 .size(160.dp)
-                .clip(
-                    RoundedCornerShape(10),
-                ).background(
+                .clip(RoundedCornerShape(8.dp))
+                .background(
                     color = shimmerBackground,
                 ).shimmer(),
         )
@@ -64,20 +66,18 @@ fun PlaylistShimmer() {
             Modifier
                 .width(130.dp)
                 .height(18.dp)
-                .clip(
-                    RoundedCornerShape(10),
-                ).background(
+                .clip(RoundedCornerShape(4.dp))
+                .background(
                     color = shimmerBackground,
                 ).shimmer(),
         )
         Spacer(modifier = Modifier.size(10.dp))
         Box(
             Modifier
-                .width(130.dp)
+                .width(100.dp)
                 .height(18.dp)
-                .clip(
-                    RoundedCornerShape(10),
-                ).background(
+                .clip(RoundedCornerShape(4.dp))
+                .background(
                     color = shimmerBackground,
                 ).shimmer(),
         )
@@ -85,49 +85,19 @@ fun PlaylistShimmer() {
 }
 
 @Composable
-fun QuickPicksShimmerItem() {
-    Row(
-        Modifier
-            .height(70.dp)
-            .padding(10.dp),
-    ) {
-        Box(
-            Modifier
-                .size(50.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(shimmerBackground)
-                .shimmer(),
-        )
-        Column(
-            Modifier
-                .padding(start = 10.dp)
-                .wrapContentHeight(align = Alignment.CenterVertically)
-                .align(Alignment.CenterVertically),
-        ) {
-            Box(
-                Modifier
-                    .width(300.dp)
-                    .height(21.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(shimmerBackground)
-                    .shimmer(),
-            )
-            Spacer(modifier = Modifier.height(3.dp))
-            Box(
-                Modifier
-                    .width(260.dp)
-                    .height(21.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(shimmerBackground)
-                    .shimmer(),
-            )
-        }
-    }
+fun SpeedDialShimmerItem(modifier: Modifier = Modifier) {
+    Box(
+        modifier
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(8.dp))
+            .background(shimmerBackground)
+            .shimmer(),
+    )
 }
 
 @Composable
-fun QuickPicksShimmer() {
-    Column {
+fun SpeedDialShimmer() {
+    Column(Modifier.padding(bottom = 20.dp)) {
         Box(
             Modifier
                 .width(150.dp)
@@ -135,12 +105,22 @@ fun QuickPicksShimmer() {
                 .padding(vertical = 8.dp)
                 .background(
                     color = shimmerBackground,
-                ).clip(RoundedCornerShape(12.dp))
+                ).clip(RoundedCornerShape(8.dp))
                 .shimmer(),
         )
-        LazyColumn(userScrollEnabled = false) {
-            items(4) {
-                QuickPicksShimmerItem()
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 0.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            repeat(3) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    repeat(3) {
+                        SpeedDialShimmerItem(Modifier.weight(1f))
+                    }
+                }
             }
         }
     }
@@ -151,7 +131,7 @@ fun HomeShimmer() {
     Column(
         Modifier.padding(horizontal = 15.dp),
     ) {
-        QuickPicksShimmer()
+        SpeedDialShimmer()
         LazyColumn(userScrollEnabled = false) {
             items(10) {
                 HomeItemShimmer()

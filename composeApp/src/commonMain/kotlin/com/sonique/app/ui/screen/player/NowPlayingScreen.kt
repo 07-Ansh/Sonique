@@ -130,6 +130,7 @@ import com.sonique.app.extension.GradientOffset
 import com.sonique.app.extension.KeepScreenOn
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.extension.getColorFromPalette
+import com.sonique.app.extension.getSecondaryColorFromPalette
 import com.sonique.app.extension.getScreenSizeInfo
 import com.sonique.app.extension.isElementVisible
 import com.sonique.app.extension.parseTimestampToMilliseconds
@@ -312,6 +313,10 @@ fun NowPlayingScreenContent(
         remember {
             Animatable(md_theme_dark_background)
         }
+    val midColor =
+        remember {
+            Animatable(md_theme_dark_background)
+        }
     val endColor =
         remember {
             Animatable(md_theme_dark_background)
@@ -342,6 +347,7 @@ fun NowPlayingScreenContent(
             .collectLatest {
                 spotShadowColor = it.getColorFromPalette()
                 startColor.animateTo(it.getColorFromPalette())
+                midColor.animateTo(it.getSecondaryColorFromPalette())
                 endColor.animateTo(md_theme_dark_background)
             }
     }
@@ -555,9 +561,10 @@ fun NowPlayingScreenContent(
                 }.background(
                     if (ambienceMode) {
                         Brush.verticalGradient(
-                            colors = listOf(
-                                startColor.value, 
-                                endColor.value
+                            colorStops = arrayOf(
+                                0.0f to startColor.value.copy(alpha = 0.9f),
+                                0.5f to midColor.value.copy(alpha = 0.5f),
+                                1.0f to endColor.value
                             )
                         )
                     } else {
@@ -669,7 +676,7 @@ fun NowPlayingScreenContent(
                                 color = Color.White,
                             )
                             Text(
-                                text = screenDataState.nowPlayingTitle,
+                                text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
                                 style = typo().labelMedium,
                                 color = Color.White,
                                 textAlign = TextAlign.Center,
@@ -678,10 +685,7 @@ fun NowPlayingScreenContent(
                                     Modifier
                                         .fillMaxWidth()
                                         .wrapContentHeight(align = Alignment.CenterVertically)
-                                        .basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
+                                        .focusable(),
                             )
                         }
                     },
@@ -1011,7 +1015,7 @@ fun NowPlayingScreenContent(
 
                                         Column(Modifier.weight(1f)) {
                                             Text(
-                                                text = screenDataState.nowPlayingTitle,
+                                                text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
                                                 style = typo().headlineMedium,
                                                 maxLines = 1,
                                                 color = Color.White,
@@ -1019,10 +1023,7 @@ fun NowPlayingScreenContent(
                                                     Modifier
                                                         .fillMaxWidth()
                                                         .wrapContentHeight(align = Alignment.CenterVertically)
-                                                        .basicMarquee(
-                                                            iterations = Int.MAX_VALUE,
-                                                            animationMode = MarqueeAnimationMode.Immediately,
-                                                        ).focusable(),
+                                                        .focusable(),
                                             )
                                             Spacer(modifier = Modifier.height(3.dp))
                                             LazyRow(
@@ -1764,7 +1765,7 @@ fun NowPlayingScreenContent(
                                     .wrapContentHeight(),
                             ) {
                                 Text(
-                                    text = screenDataState.nowPlayingTitle,
+                                    text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
                                     style = typo().bodyMedium,
                                     color = Color.White,
                                     maxLines = 1,
@@ -1773,9 +1774,6 @@ fun NowPlayingScreenContent(
                                             .fillMaxWidth()
                                             .wrapContentHeight(
                                                 align = Alignment.CenterVertically,
-                                            ).basicMarquee(
-                                                iterations = Int.MAX_VALUE,
-                                                animationMode = MarqueeAnimationMode.Immediately,
                                             ).focusable(),
                                 )
                                 LazyRow(verticalAlignment = Alignment.CenterVertically) {

@@ -27,77 +27,77 @@ fun typo(): Typography {
              
             titleSmall =
                 TextStyle(
-                    fontSize = 15.sp,  
+                    fontSize = 14.sp,  
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
                     color = Color.White,
                 ),
             titleMedium =
                 TextStyle(
-                    fontSize = 18.sp, 
+                    fontSize = 16.sp, 
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
                     color = Color.White,
                 ),
             titleLarge =
                 TextStyle(
-                    fontSize = 28.sp, 
+                    fontSize = 22.sp, 
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily,
                     color = Color.White,
                 ),
             bodySmall =
                 TextStyle(
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = fontFamily,
                     color = musica_grey_text,
                 ),
             bodyMedium =
                 TextStyle(
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = fontFamily,
                     color = musica_grey_text,
                 ),
             bodyLarge =
                 TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Normal,
                     fontFamily = fontFamily,
                     color = musica_grey_text,
                 ),
             displayLarge =
                 TextStyle(
-                    fontSize = 26.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily,
                     color = Color.White,
                 ),
             headlineMedium =
                 TextStyle(
-                    fontSize = 22.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
                     color = Color.White,
                 ),
             headlineLarge =
                 TextStyle(
-                    fontSize = 30.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily,
                     color = Color.White,
                 ),
             labelMedium =
                 TextStyle(
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
                     color = musica_grey_text,
                 ),
             labelSmall =
                 TextStyle(
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
                     fontFamily = fontFamily,
                     color = musica_grey_text,

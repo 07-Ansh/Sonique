@@ -24,6 +24,17 @@ internal class UpdateRepositoryImpl(
     private val client = HttpClient()
     private val json = Json { ignoreUnknownKeys = true }
 
+    override suspend fun fetchChangelog(version: String): String? {
+        return try {
+            val response = client.get("https://api.github.com/repos/07-Ansh/Sonique/releases/tags/v$version")
+            val releaseJson = json.parseToJsonElement(response.bodyAsText()).jsonObject
+            releaseJson["body"]?.jsonPrimitive?.content
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     override fun checkForUpdate(): Flow<UpdateStatus> = flow {
         emit(UpdateStatus.Loading)
         try {

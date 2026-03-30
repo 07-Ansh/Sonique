@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="Song_and_artist_name">Nummer â€¢ %1$s</string>
-    <string name="playlist_and_author">Afspeellijst â€¢ %1$s</string>
-    <string name="album_and_artist_name">Album â€¢ %1$s</string>
+    <string name="Song_and_artist_name">Nummer • %1$s</string>
+    <string name="playlist_and_author">Afspeellijst • %1$s</string>
+    <string name="album_and_artist_name">Album • %1$s</string>
     <string name="subscribers">%1$s abbonnees</string>
-    <string name="year_and_category">%1$s â€¢ %2$s</string>
+    <string name="year_and_category">%1$s • %2$s</string>
     <string name="album_length">%1$s nummers  %2$s</string>
     <string name="view_count">%1$s weergaven</string>
     <string name="clear_search_history">Zoekgeschiedenis wissen</string>
@@ -76,7 +76,7 @@
     <string name="clear_thumbnail_cache">Miniatuur-Cache wissen</string>
     <string name="add">Toevoegen</string>
     <string name="playlist_name">Playlist-Naam</string>
-    <string name="create">CreÃ«ren</string>
+    <string name="create">Creëren</string>
     <string name="edit">Bewerken</string>
     <string name="edit_title">Titel bewerken</string>
     <string name="edit_thumbnail">Miniatuur bewerken</string>
@@ -133,7 +133,7 @@
     <string name="songs_inArtist">Nummers</string>
     <string name="albums_inArtist">Albums</string>
     <string name="singles_inArtist">Singles</string>
-    <string name="fans_might_also_like_inArtist">Je bent misschien ook geÃ¯nteresseerd in</string>
+    <string name="fans_might_also_like_inArtist">Je bent misschien ook geïnteresseerd in</string>
     <string name="crash_log">Sonique is gecrasht, excuses!\nStuur foutlog naar ontwikkelaar</string>
     <string name="crash">Crash</string>
     <string name="send">Verstuur</string>
@@ -187,7 +187,7 @@
     <string name="save">Opslaan</string>
     <string name="saved">Opgeslagen</string>
     <string name="customactivityoncrash_error_activity_error_occurred_explanation">Er is een onverwachte fout opgetreden. Sorry voor het ongemak.</string>
-    <string name="customactivityoncrash_error_activity_error_details_copy">KopiÃ«ren naar klembord</string>
+    <string name="customactivityoncrash_error_activity_error_details_copy">Kopiëren naar klembord</string>
     <string name="yes">Ja</string>
     <string name="welcome_back">Welkom terug,</string>
     <string name="upload_your_listening_history_to_youtube_music_server_it_will_make_yt_music_recommendation_system_better_working_only_if_logged_in">Upload je luistergeschiedenis naar de YouTube-muziekserver, het zal de aanbeveling van YT Music systeem verbeteren. Het werkt alleen als je ingelogd bent</string>

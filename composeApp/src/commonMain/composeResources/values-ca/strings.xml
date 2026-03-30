@@ -394,8 +394,8 @@
     <string name="other_version">Altra versió</string>
     <string name="later">Més tard</string>
     <string name="give_a_star">Dona una estrella</string>
-    <string name="enjoying_simpmusic">Està gaudint de Sonique?</string>
-    <string name="if_you_enjoy_using_simpmusic_star_simpmusic_on_github_or_leave_a_review_on">Si està gaudint de Sonique, doni-li una estrella a GitHub o deixi una ressenya a</string>
+    <string name="enjoying_sonique">Està gaudint de Sonique?</string>
+    <string name="if_you_enjoy_using_sonique_star_sonique_on_github_or_leave_a_review_on">Si està gaudint de Sonique, doni-li una estrella a GitHub o deixi una ressenya a</string>
     <string name="if_you_love_my_work_consider">"Si t'agrada el meu treball, considera"</string>
     <string name="buying_me_a_coffee">invitar-me a un cafè.</string>
     <string name="fade_audio_effect">Efecte d\'atenuació de l\'àudio</string>
@@ -438,8 +438,8 @@
     <string name="contributor_name">Nom de contribuïdor</string>
     <string name="contributor_email">Email de contribuïdor</string>
     <string name="anonymous">Anònim</string>
-    <string name="simpmusic_lyrics">Sonique Lyrics</string>
-    <string name="lyrics_provider_simpmusic">Lletra de cançó proporcionada per Sonique Lyrics</string>
+    <string name="sonique_lyrics">Sonique Lyrics</string>
+    <string name="lyrics_provider_sonique">Lletra de cançó proporcionada per Sonique Lyrics</string>
     <string name="backup_in_progress">Còpia de seguretat en progrés</string>
     <string name="restore_in_progress">Restauració en progrés</string>
     <string name="backup_downloaded">Fer una còpia de seguretat de les dades descarregades</string>

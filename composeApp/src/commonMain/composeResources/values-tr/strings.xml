@@ -395,8 +395,8 @@
     <string name="other_version">Baska versiyon</string>
     <string name="later">Daha sonra</string>
     <string name="give_a_star">Yildiz birak</string>
-    <string name="enjoying_simpmusic">Sonique\'in keyfini çikarin</string>
-    <string name="if_you_enjoy_using_simpmusic_star_simpmusic_on_github_or_leave_a_review_on">Sonique\'i kullanmaktan hoslaniyorsaniz, GitHub\'da Sonique\'i yildizlayin veya</string>
+    <string name="enjoying_sonique">Sonique\'in keyfini çikarin</string>
+    <string name="if_you_enjoy_using_sonique_star_sonique_on_github_or_leave_a_review_on">Sonique\'i kullanmaktan hoslaniyorsaniz, GitHub\'da Sonique\'i yildizlayin veya</string>
     <string name="if_you_love_my_work_consider">"Eger çalismalarimi seviyorsaniz"</string>
     <string name="buying_me_a_coffee">bana bir kavhe ismarla.</string>
     <string name="fade_audio_effect">Ses efektini soldur</string>
@@ -441,8 +441,8 @@
     <string name="contributor_name">Katkida bulunanin adi</string>
     <string name="contributor_email">Katkida bulunanin e-postasi</string>
     <string name="anonymous">Anonim</string>
-    <string name="simpmusic_lyrics">Sonique Sarki Sözleri</string>
-    <string name="lyrics_provider_simpmusic">Sarki sözleri Sonique tarafindan saglanmistir</string>
+    <string name="sonique_lyrics">Sonique Sarki Sözleri</string>
+    <string name="lyrics_provider_sonique">Sarki sözleri Sonique tarafindan saglanmistir</string>
     <string name="backup_in_progress">Yedekleme devam ediyor</string>
     <string name="restore_in_progress">Geri yükleme devam ediyor</string>
     <string name="backup_downloaded">Indirilen verileri yedekleyin</string>

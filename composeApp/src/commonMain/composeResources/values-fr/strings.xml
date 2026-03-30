@@ -395,8 +395,8 @@
     <string name="other_version">Autre version</string>
     <string name="later">Plus tard</string>
     <string name="give_a_star">Donner une étoile</string>
-    <string name="enjoying_simpmusic">Vous appréciez Sonique</string>
-    <string name="if_you_enjoy_using_simpmusic_star_simpmusic_on_github_or_leave_a_review_on">Si vous aimez utiliser Sonique, donnez une étoile à Sonique sur GitHub ou laissez un avis sur</string>
+    <string name="enjoying_sonique">Vous appréciez Sonique</string>
+    <string name="if_you_enjoy_using_sonique_star_sonique_on_github_or_leave_a_review_on">Si vous aimez utiliser Sonique, donnez une étoile à Sonique sur GitHub ou laissez un avis sur</string>
     <string name="if_you_love_my_work_consider">"Si vous aimez mon travail, considérez "</string>
     <string name="buying_me_a_coffee">m'offrir un café.</string>
     <string name="fade_audio_effect">Effet de fondu audio</string>
@@ -441,8 +441,8 @@
     <string name="contributor_name">Nom du contributeur</string>
     <string name="contributor_email">Email du contributeur</string>
     <string name="anonymous">Anonyme</string>
-    <string name="simpmusic_lyrics">Paroles de Sonique</string>
-    <string name="lyrics_provider_simpmusic">Paroles fournies par Sonique</string>
+    <string name="sonique_lyrics">Paroles de Sonique</string>
+    <string name="lyrics_provider_sonique">Paroles fournies par Sonique</string>
     <string name="backup_in_progress">Sauvegarde en cours</string>
     <string name="restore_in_progress">Restauration en cours</string>
     <string name="backup_downloaded">Sauvegarder les données téléchargées</string>

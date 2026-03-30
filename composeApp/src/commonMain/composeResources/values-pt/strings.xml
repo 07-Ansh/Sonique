@@ -395,8 +395,8 @@
     <string name="other_version">Outra versão</string>
     <string name="later">Depois</string>
     <string name="give_a_star">Dê uma estrela</string>
-    <string name="enjoying_simpmusic">Aproveitando o Sonique</string>
-    <string name="if_you_enjoy_using_simpmusic_star_simpmusic_on_github_or_leave_a_review_on">Se gosta de usar o Sonique, dê-nos uma estrela no GitHub ou deixe-nos uma avaliação</string>
+    <string name="enjoying_sonique">Aproveitando o Sonique</string>
+    <string name="if_you_enjoy_using_sonique_star_sonique_on_github_or_leave_a_review_on">Se gosta de usar o Sonique, dê-nos uma estrela no GitHub ou deixe-nos uma avaliação</string>
     <string name="if_you_love_my_work_consider">"Se aprecia o meu trabalho, considere "</string>
     <string name="buying_me_a_coffee">compre-me um café.</string>
     <string name="fade_audio_effect">Efeito de Áudio em Fade</string>
@@ -441,8 +441,8 @@
     <string name="contributor_name">Nome do colaborador</string>
     <string name="contributor_email">E-mail do colaborador</string>
     <string name="anonymous">Anônimo</string>
-    <string name="simpmusic_lyrics">Sonique Letras</string>
-    <string name="lyrics_provider_simpmusic">Lyrics provided by Sonique Lyrics</string>
+    <string name="sonique_lyrics">Sonique Letras</string>
+    <string name="lyrics_provider_sonique">Lyrics provided by Sonique Lyrics</string>
     <string name="backup_in_progress">Recuperação Em Progresso</string>
     <string name="restore_in_progress">Restauração Em Progresso</string>
     <string name="backup_downloaded">Recuperação dos dados baixados</string>

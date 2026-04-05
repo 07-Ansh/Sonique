@@ -71,6 +71,8 @@ interface PlaylistRepository {
 
     fun getMixedForYou(): Flow<List<PlaylistsResult>?>
 
+    fun getLibraryAlbums(): Flow<List<PlaylistsResult>?>
+
     fun updateYourYouTubePlaylistTitle(
         playlistId: String,
         newTitle: String,

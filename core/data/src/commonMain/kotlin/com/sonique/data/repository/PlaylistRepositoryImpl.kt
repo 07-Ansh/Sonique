@@ -733,6 +733,70 @@ internal class PlaylistRepositoryImpl(
                 }
         }.flowOn(Dispatchers.IO)
 
+    override fun getLibraryAlbums(): Flow<List<PlaylistsResult>?> =
+        flow {
+            youTube
+                .getLibraryAlbums()
+                .onSuccess { data ->
+                    val input =
+                        data.contents
+                            ?.singleColumnBrowseResultsRenderer
+                            ?.tabs
+                            ?.get(0)
+                            ?.tabRenderer
+                            ?.content
+                            ?.sectionListRenderer
+                            ?.contents
+                            ?.get(0)
+                            ?.gridRenderer
+                            ?.items
+                    val listItem = mutableListOf<PlaylistsResult>()
+                    if (input.isNullOrEmpty()) {
+                        Logger.w("LibraryAlbums", "No albums found")
+                        emit(null)
+                        return@onSuccess
+                    }
+                    listItem.addAll(parseLibraryPlaylist(input))
+                    var continuation =
+                        data.contents
+                            ?.singleColumnBrowseResultsRenderer
+                            ?.tabs
+                            ?.firstOrNull()
+                            ?.tabRenderer
+                            ?.content
+                            ?.sectionListRenderer
+                            ?.contents
+                            ?.firstOrNull()
+                            ?.gridRenderer
+                            ?.continuations
+                            ?.firstOrNull()
+                            ?.nextContinuationData
+                            ?.continuation
+                    while (continuation != null) {
+                        youTube
+                            .nextYouTubePlaylists(continuation)
+                            .onSuccess { nextData ->
+                                continuation = nextData.second
+                                Logger.w("LibraryAlbums", "continuation: $continuation")
+                                listItem.addAll(parseNextLibraryPlaylist(nextData.first))
+                            }.onFailure { exception ->
+                                exception.printStackTrace()
+                                Logger.e("LibraryAlbums", "Error: ${exception.message}")
+                                continuation = null
+                            }
+                    }
+                    if (listItem.isNotEmpty()) {
+                        emit(listItem)
+                    } else {
+                        emit(null)
+                    }
+                }.onFailure { e ->
+                    Logger.e("LibraryAlbums", "Error: ${e.message}")
+                    e.printStackTrace()
+                    emit(null)
+                }
+        }.flowOn(Dispatchers.IO)
+
     override fun updateYourYouTubePlaylistTitle(
         playlistId: String,
         newTitle: String,

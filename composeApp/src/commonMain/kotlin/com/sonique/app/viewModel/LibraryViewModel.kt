@@ -13,12 +13,14 @@ import com.sonique.domain.data.type.PlaylistType
 import com.sonique.domain.data.type.RecentlyType
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.repository.AlbumRepository
+import com.sonique.domain.repository.ArtistRepository
 import com.sonique.domain.repository.CommonRepository
 import com.sonique.domain.repository.LocalPlaylistRepository
 import com.sonique.domain.repository.PlaylistRepository
 import com.sonique.domain.repository.PodcastRepository
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.utils.LocalResource
+import com.sonique.domain.data.entities.ArtistEntity
 import com.sonique.app.viewModel.base.BaseViewModel
 import com.sonique.domain.mediaservice.handler.DownloadHandler
 import kotlinx.collections.immutable.toImmutableList
@@ -43,6 +45,9 @@ import sonique.composeapp.generated.resources.youtube_liked_music
 import sonique.composeapp.generated.resources.liked_songs
 import sonique.composeapp.generated.resources.downloaded_songs
 import sonique.composeapp.generated.resources.sonique_lyrics
+import sonique.composeapp.generated.resources.your_youtube_playlists
+import sonique.composeapp.generated.resources.youtube_albums
+import sonique.composeapp.generated.resources.mix_for_you
 import com.sonique.domain.extension.now
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
@@ -56,6 +61,7 @@ class LibraryViewModel(
     private val playlistRepository: PlaylistRepository,
     private val localPlaylistRepository: LocalPlaylistRepository,
     private val albumRepository: AlbumRepository,
+    private val artistRepository: ArtistRepository,
     private val podcastRepository: PodcastRepository,
     private val downloadHandler: DownloadHandler,
 ) : BaseViewModel() {
@@ -77,6 +83,10 @@ class LibraryViewModel(
         MutableStateFlow(LocalResource.Loading())
     val youTubeMixForYou: StateFlow<LocalResource<List<PlaylistsResult>>> get() = _youTubeMixForYou.asStateFlow()
 
+    private val _youTubeAlbums: MutableStateFlow<LocalResource<List<PlaylistsResult>>> =
+        MutableStateFlow(LocalResource.Loading())
+    val youTubeAlbums: StateFlow<LocalResource<List<PlaylistsResult>>> get() = _youTubeAlbums.asStateFlow()
+
     private val _favoritePlaylist: MutableStateFlow<LocalResource<List<PlaylistType>>> =
         MutableStateFlow(LocalResource.Loading())
     val favoritePlaylist: StateFlow<LocalResource<List<PlaylistType>>> get() = _favoritePlaylist.asStateFlow()
@@ -95,6 +105,10 @@ class LibraryViewModel(
 
     private val _accountThumbnail: MutableStateFlow<String?> = MutableStateFlow(null)
     val accountThumbnail: StateFlow<String?> get() = _accountThumbnail.asStateFlow()
+
+    private val _followedArtists: MutableStateFlow<LocalResource<List<ArtistEntity>>> =
+        MutableStateFlow(LocalResource.Loading())
+    val followedArtists: StateFlow<LocalResource<List<ArtistEntity>>> get() = _followedArtists.asStateFlow()
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val youtubeLoggedIn = dataStoreManager.loggedIn.mapLatest { it == DataStoreManager.TRUE }
@@ -130,8 +144,14 @@ class LibraryViewModel(
                     _accountThumbnail.value = dataStoreManager.getString("AccountThumbUrl").first().takeIf { !it.isNullOrEmpty() }
                 }
             }
+            val artistJob = launch {
+                artistRepository.getFollowedArtists().collect { artists ->
+                    _followedArtists.value = LocalResource.Success(artists)
+                }
+            }
             currentScreenJob.join()
             cookieJob.join()
+            artistJob.join()
         }
     }
 
@@ -162,7 +182,7 @@ class LibraryViewModel(
                 temp.add(
                     PlaylistEntity(
                         id = LOCAL_PLAYLIST_ID_LIKED,
-                        title = getString(Res.string.liked_songs),
+                        title = runBlocking { getString(Res.string.liked_songs) },
                         author = "Sonique",
                         thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
                         description = "PIN"
@@ -173,16 +193,46 @@ class LibraryViewModel(
                      
                     temp.add(
                         PlaylistEntity(
-                            title = getString(Res.string.youtube_liked_music),
+                            title = runBlocking { getString(Res.string.youtube_liked_music) },
                             author = "YouTube Music",
                             id = "LM",
                             description = "PIN",
                             thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
                         )
                     )
+                    
+                    // Add New Pins
+                    temp.add(
+                        PlaylistEntity(
+                            title = runBlocking { getString(Res.string.your_youtube_playlists) },
+                            author = "YouTube Music",
+                            id = Config.PIN_YT_PLAYLISTS,
+                            description = "PIN",
+                            thumbnails = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.iconfinder.com%2Ficons%2F183618%2Fplaylist_icon&psig=AOvVaw2gXU9z_E_Y_M-s_-s_Y_M-&ust=1712239123456000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCKC_y_S_Y_MDFQAAAAAdAAAAABAE"
+                        )
+                    )
+                    temp.add(
+                        PlaylistEntity(
+                            title = runBlocking { getString(Res.string.youtube_albums) },
+                            author = "YouTube Music",
+                            id = Config.PIN_YT_ALBUMS,
+                            description = "PIN",
+                            thumbnails = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.flaticon.com%2Ffree-icon%2Falbum_1143890&psig=AOvVaw2gXU9z_E_Y_M-s_-s_Y_M-&ust=1712239123456000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCKC_y_S_Y_MDFQAAAAAdAAAAABAE"
+                        )
+                    )
+                    temp.add(
+                        PlaylistEntity(
+                            title = runBlocking { getString(Res.string.mix_for_you) },
+                            author = "YouTube Music",
+                            id = Config.PIN_YT_MIX,
+                            description = "PIN",
+                            thumbnails = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.iconfinder.com%2Ficons%2F216345%2Fmix_icon&psig=AOvVaw2gXU9z_E_Y_M-s_-s_Y_M-&ust=1712239123456000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCKC_y_S_Y_MDFQAAAAAdAAAAABAE"
+                        )
+                    )
                 }
                 temp.reverse()
-                _recentlyAdded.value = LocalResource.Success(temp.toImmutableList())
+                val limited = temp.take(5)
+                _recentlyAdded.value = LocalResource.Success(limited.toImmutableList())
             }
         }
     }
@@ -202,6 +252,28 @@ class LibraryViewModel(
             playlistRepository.getMixedForYou().collect { data ->
                 _youTubeMixForYou.value = LocalResource.Success(data ?: emptyList())
             }
+        }
+    }
+
+    fun getYouTubeAlbums() {
+        _youTubeAlbums.value = LocalResource.Loading()
+        viewModelScope.launch {
+            playlistRepository.getLibraryAlbums().collect { data ->
+                _youTubeAlbums.value = LocalResource.Success(data ?: emptyList())
+            }
+        }
+    }
+
+    fun syncFollowedArtists() {
+        val currentList = (_followedArtists.value as? LocalResource.Success)?.data ?: emptyList()
+        if (currentList.isEmpty()) {
+            _followedArtists.value = LocalResource.Loading()
+        }
+        viewModelScope.launch {
+            artistRepository.syncFollowedArtistsFromYouTube()
+            // Ensure we transition out of loading even if the database didn't change
+            val savedList = artistRepository.getFollowedArtists().first()
+            _followedArtists.value = LocalResource.Success(savedList)
         }
     }
 

@@ -142,6 +142,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                 is PlaylistsResult -> item.title
                                 is AlbumsResult -> item.title
                                 is PodcastsEntity -> item.title
+                                is com.sonique.domain.data.entities.ArtistEntity -> item.name
                                 else -> ""
                             }
                             itemTitle.contains(query, ignoreCase = true)
@@ -212,56 +213,75 @@ internal inline fun <reified T> GridLibraryPlaylist(
                             }
                         }
                         items(filteredList) { item ->
-                            if (item !is PlaylistType) {
-                                return@items
-                            }
-                            PlaylistFullWidthItems(
-                                onClickListener = {
-                                    when (item) {
-                                        is LocalPlaylistEntity -> {
-                                            navController.navigate(
-                                                LocalPlaylistDestination(
-                                                    item.id,
-                                                ),
-                                            )
-                                        }
+                            if (item is PlaylistType) {
+                                PlaylistFullWidthItems(
+                                    onClickListener = {
+                                        when (item) {
+                                            is LocalPlaylistEntity -> {
+                                                navController.navigate(
+                                                    LocalPlaylistDestination(
+                                                        item.id,
+                                                    ),
+                                                )
+                                            }
 
-                                        is PlaylistsResult -> {
-                                            navController.navigate(
-                                                PlaylistDestination(
-                                                    item.browseId,
-                                                    isYourYouTubePlaylist = true,
-                                                ),
-                                            )
-                                        }
+                                            is PlaylistsResult -> {
+                                                if (item.browseId.startsWith("MPRE")) {
+                                                    // This is an album browseId — route to AlbumScreen
+                                                    navController.navigate(
+                                                        AlbumDestination(
+                                                            item.browseId,
+                                                        ),
+                                                    )
+                                                } else {
+                                                    navController.navigate(
+                                                        PlaylistDestination(
+                                                            item.browseId,
+                                                            isYourYouTubePlaylist = true,
+                                                        ),
+                                                    )
+                                                }
+                                            }
 
-                                        is AlbumEntity -> {
-                                            navController.navigate(
-                                                AlbumDestination(
-                                                    item.browseId,
-                                                ),
-                                            )
-                                        }
+                                            is AlbumEntity -> {
+                                                navController.navigate(
+                                                    AlbumDestination(
+                                                        item.browseId,
+                                                    ),
+                                                )
+                                            }
 
-                                        is PlaylistEntity -> {
-                                            navController.navigate(
-                                                PlaylistDestination(
-                                                    item.id,
-                                                ),
-                                            )
-                                        }
+                                            is PlaylistEntity -> {
+                                                navController.navigate(
+                                                    PlaylistDestination(
+                                                        item.id,
+                                                    ),
+                                                )
+                                            }
 
-                                        is PodcastsEntity -> {
-                                            navController.navigate(
-                                                PodcastDestination(
-                                                    podcastId = item.podcastId,
-                                                ),
-                                            )
+                                            is PodcastsEntity -> {
+                                                navController.navigate(
+                                                    PodcastDestination(
+                                                        podcastId = item.podcastId,
+                                                    ),
+                                                )
+                                            }
                                         }
+                                    },
+                                    data = item,
+                                )
+                            } else if (item is com.sonique.domain.data.entities.ArtistEntity) {
+                                com.sonique.app.ui.component.ArtistFullWidthItems(
+                                    data = item,
+                                    onClickListener = {
+                                        navController.navigate(
+                                            com.sonique.app.ui.navigation.destination.list.ArtistDestination(
+                                                channelId = item.channelId,
+                                            )
+                                        )
                                     }
-                                },
-                                data = item,
-                            )
+                                )
+                            }
                         }
 
                         item {

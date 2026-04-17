@@ -38,6 +38,7 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.sonique.common.Config
+import com.sonique.common.LibraryChipType
 import com.sonique.domain.data.entities.AlbumEntity
 import com.sonique.domain.data.entities.ArtistEntity
 import com.sonique.domain.data.entities.LocalPlaylistEntity
@@ -73,6 +74,7 @@ import sonique.composeapp.generated.resources.no_favorite_playlists
 import sonique.composeapp.generated.resources.no_playlists_downloaded
 import sonique.composeapp.generated.resources.radio
 import sonique.composeapp.generated.resources.recently_added
+import sonique.composeapp.generated.resources.followed_artists
 import com.sonique.domain.mediaservice.handler.PlaylistType as DomainPlaylistType
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,6 +91,7 @@ fun LibraryItem(
         when (state.type) {
             is LibraryItemType.RecentlyAdded -> stringResource(Res.string.recently_added)
             is LibraryItemType.CanvasSong -> stringResource(Res.string.most_played)
+            is LibraryItemType.FollowedArtists -> stringResource(Res.string.followed_artists)
             else -> return
         }
     val noPlaylistTitle =
@@ -97,6 +100,7 @@ fun LibraryItem(
             LibraryItemType.FavoritePlaylist -> stringResource(Res.string.no_favorite_playlists)
             is LibraryItemType.RecentlyAdded -> stringResource(Res.string.recently_added)
             is LibraryItemType.CanvasSong -> stringResource(Res.string.most_played)
+            is LibraryItemType.FollowedArtists -> stringResource(Res.string.followed_artists)
             else -> return
         }
     Box {
@@ -199,11 +203,18 @@ fun LibraryItem(
                                                         }
 
                                                         is PlaylistEntity -> {
-                                                            navController.navigate(
-                                                                PlaylistDestination(
-                                                                    item.id,
-                                                                ),
-                                                            )
+                                                            when (item.id) {
+                                                                Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                                Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
+                                                                Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                                                                else -> {
+                                                                    navController.navigate(
+                                                                        PlaylistDestination(
+                                                                            item.id,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                            }
                                                         }
 
                                                         is PodcastsEntity -> {
@@ -219,6 +230,27 @@ fun LibraryItem(
                                         }
                                     }
                                 }
+                            }
+                        }
+                    } else if (state.type is LibraryItemType.FollowedArtists) {
+                        LazyRow(
+                            Modifier.padding(
+                                top = 10.dp,
+                            ),
+                        ) {
+                            items(state.data) { item ->
+                                val artist = item as? ArtistEntity ?: return@items
+                                ArtistCircularItem(
+                                    artist = artist,
+                                    onClick = {
+                                        navController.navigate(
+                                            ArtistDestination(
+                                                channelId = artist.channelId,
+                                            ),
+                                        )
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
                             }
                         }
                     } else if (state.type is LibraryItemType.CanvasSong) {
@@ -423,6 +455,8 @@ sealed class LibraryItemType {
     data class RecentlyAdded(
         val playingVideoId: String,
     ) : LibraryItemType()
+
+    data object FollowedArtists : LibraryItemType()
 }
 
 data class LibraryItemState(

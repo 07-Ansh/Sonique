@@ -59,10 +59,12 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.sonique.common.LibraryChipType
+import com.sonique.domain.data.entities.ArtistEntity
 import com.sonique.domain.utils.LocalResource
 import com.sonique.logger.Logger
 import com.sonique.app.extension.copy
 import com.sonique.app.extension.isScrollingUp
+import com.sonique.app.expect.ui.BackHandler
 import com.sonique.app.ui.component.EndOfPage
 import com.sonique.app.ui.component.GridLibraryPlaylist
 import com.sonique.app.ui.component.LibraryItem
@@ -99,6 +101,10 @@ import sonique.composeapp.generated.resources.playlist_name
 import sonique.composeapp.generated.resources.playlist_name_cannot_be_empty
 import sonique.composeapp.generated.resources.your_playlists
 import sonique.composeapp.generated.resources.your_youtube_playlists
+import sonique.composeapp.generated.resources.youtube_albums
+import sonique.composeapp.generated.resources.no_youtube_albums
+import sonique.composeapp.generated.resources.followed
+import sonique.composeapp.generated.resources.no_artist_found
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -128,6 +134,8 @@ fun LibraryScreen(
     val recentlyAdded by viewModel.recentlyAdded.collectAsStateWithLifecycle()
     val accountThumbnail by viewModel.accountThumbnail.collectAsStateWithLifecycle()
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
+    val youTubeAlbums by viewModel.youTubeAlbums.collectAsStateWithLifecycle()
+    val followedArtists by viewModel.followedArtists.collectAsStateWithLifecycle()
 
     var showAddSheet by remember { mutableStateOf(false) }
     var isScrollingUp by remember { mutableStateOf(true) }
@@ -144,7 +152,7 @@ fun LibraryScreen(
 
     val currentFilter by viewModel.currentScreen.collectAsStateWithLifecycle()
 
-    LaunchedEffect(currentFilter) {
+    LaunchedEffect(currentFilter, loggedIn) {
         when (currentFilter) {
             LibraryChipType.YOUTUBE_MUSIC_PLAYLIST -> {
                 if (youTubePlaylist.data.isNullOrEmpty()) {
@@ -158,9 +166,24 @@ fun LibraryScreen(
                 }
             }
 
+            LibraryChipType.FOLLOWED_ARTISTS -> {
+                if (loggedIn) {
+                    viewModel.syncFollowedArtists()
+                }
+            }
+
             LibraryChipType.YOUR_LIBRARY -> {
                 viewModel.getCanvasSong()
                 viewModel.getRecentlyAdded()
+                if (loggedIn) {
+                    viewModel.syncFollowedArtists()
+                }
+            }
+
+            LibraryChipType.YOUTUBE_ALBUMS -> {
+                if (youTubeAlbums.data.isNullOrEmpty()) {
+                    viewModel.getYouTubeAlbums()
+                }
             }
 
             LibraryChipType.LOCAL_PLAYLIST -> {
@@ -182,6 +205,10 @@ fun LibraryScreen(
     }
 
      
+    BackHandler(enabled = currentFilter != LibraryChipType.YOUR_LIBRARY) {
+        viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY)
+    }
+
     val handleScrolling: (Boolean) -> Unit = { scrollingUp ->
         isScrollingUp = scrollingUp
         onScrolling(scrollingUp)
@@ -233,6 +260,8 @@ fun LibraryScreen(
                                 )
                             }
                         }
+
+
 
 
                         if (activeDownloads > 0) {
@@ -346,6 +375,20 @@ fun LibraryScreen(
                     }
                 }
 
+                LibraryChipType.FOLLOWED_ARTISTS -> {
+                    GridLibraryPlaylist(
+                        navController,
+                        innerPadding.copy(top = 30.dp),
+                        followedArtists,
+                        onScrolling = handleScrolling,
+                        emptyText = Res.string.no_artist_found,
+                        title = Res.string.followed,
+                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) }
+                    ) {
+                        viewModel.syncFollowedArtists()
+                    }
+                }
+
                 LibraryChipType.FAVORITE_PLAYLIST -> {
                     FavoriteCompositeScreen(
                         navController = navController,
@@ -384,6 +427,20 @@ fun LibraryScreen(
                         onScrolling = handleScrolling,
                     ) {
                         viewModel.getFavoritePodcasts()
+                    }
+                }
+
+                LibraryChipType.YOUTUBE_ALBUMS -> {
+                    GridLibraryPlaylist(
+                        navController,
+                        innerPadding.copy(top = 30.dp),
+                        youTubeAlbums,
+                        emptyText = Res.string.no_youtube_albums,
+                        title = Res.string.youtube_albums,
+                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                        onScrolling = handleScrolling,
+                    ) {
+                        viewModel.getYouTubeAlbums()
                     }
                 }
             }

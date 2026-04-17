@@ -43,6 +43,7 @@ import sonique.composeapp.generated.resources.playlists
 import sonique.composeapp.generated.resources.your_youtube_playlists
 import sonique.composeapp.generated.resources.followed
 import sonique.composeapp.generated.resources.mix_for_you
+import sonique.composeapp.generated.resources.youtube_albums
 
 @Composable
 fun LibraryTilingBox(
@@ -51,10 +52,10 @@ fun LibraryTilingBox(
 ) {
     val listItem =
         listOf(
-
-            LibraryTilingState.Playlists,
-            LibraryTilingState.MixForYou,
             LibraryTilingState.YouTubePlaylists,
+            LibraryTilingState.YouTubeAlbums,
+            LibraryTilingState.MixForYou,
+            LibraryTilingState.Playlists,
             LibraryTilingState.Followed,
         )
     Row(
@@ -75,12 +76,7 @@ fun LibraryTilingBox(
                         }
 
                         LibraryTilingState.Followed -> {
-                            
-                            navController.navigate(
-                                LibraryDynamicPlaylistDestination(
-                                    type = LibraryDynamicPlaylistType.Followed.toStringParams(),
-                                ),
-                            )
+                            onNavigate(LibraryChipType.FOLLOWED_ARTISTS)
                         }
 
                         LibraryTilingState.Playlists -> {
@@ -93,6 +89,10 @@ fun LibraryTilingBox(
 
                         LibraryTilingState.MixForYou -> {
                             onNavigate(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                        }
+
+                        LibraryTilingState.YouTubeAlbums -> {
+                            onNavigate(LibraryChipType.YOUTUBE_ALBUMS)
                         }
 
                         LibraryTilingState.Downloaded -> {
@@ -181,6 +181,13 @@ data class LibraryTilingState(
                 title = Res.string.mix_for_you,
                 containerColor = Color(0xFF2C2C2C),
                 icon = Icons.Default.Downloading,  
+                iconColor = musica_accent,
+            )
+        val YouTubeAlbums =
+            LibraryTilingState(
+                title = Res.string.youtube_albums,
+                containerColor = Color(0xFF2C2C2C),
+                icon = Icons.Default.Downloading,
                 iconColor = musica_accent,
             )
     }

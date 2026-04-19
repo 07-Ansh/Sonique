@@ -307,7 +307,10 @@ interface DatabaseDao {
     suspend fun getAllArtists(limit: Int): List<ArtistEntity>
 
     @Query("SELECT * FROM artist WHERE channelId = :channelId")
-    suspend fun getArtist(channelId: String): ArtistEntity
+    suspend fun getArtist(channelId: String): ArtistEntity?
+
+    @Query("SELECT * FROM artist WHERE followed = 1 ORDER BY followedAt DESC")
+    fun getFollowedArtistsAsFlow(): Flow<List<ArtistEntity>>
 
     @Query("SELECT * FROM artist WHERE followed = 1 ORDER BY followedAt DESC LIMIT :limit OFFSET :offset")
     suspend fun getFollowedArtists(

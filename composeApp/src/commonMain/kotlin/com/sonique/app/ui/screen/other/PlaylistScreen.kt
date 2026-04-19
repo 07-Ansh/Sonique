@@ -549,13 +549,15 @@ fun PlaylistScreen(
                                                                     }
                                                                 }
                                                             }
-                                                            HeartCheckBox(
-                                                                size = 32,
-                                                                checked = liked,
-                                                                onStateChange = {
-                                                                    viewModel.onUIEvent(PlaylistUIEvent.Favorite)
-                                                                },
-                                                            )
+                                                            if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                                HeartCheckBox(
+                                                                    size = 32,
+                                                                    checked = liked,
+                                                                    onStateChange = {
+                                                                        viewModel.onUIEvent(PlaylistUIEvent.Favorite)
+                                                                    },
+                                                                )
+                                                            }
                                                             IconButton(
                                                                 onClick = {
                                                                     showSearchBar = !showSearchBar
@@ -570,13 +572,15 @@ fun PlaylistScreen(
                                                             ) {
                                                                 viewModel.onUIEvent(PlaylistUIEvent.Shuffle)
                                                             }
-                                                            Spacer(Modifier.size(5.dp))
-                                                            RippleIconButton(
-                                                                modifier = Modifier.size(36.dp),
-                                                                resId = Res.drawable.baseline_more_vert_24,
-                                                                fillMaxSize = true,
-                                                            ) {
-                                                                onPlaylistMoreClick()
+                                                            if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                                Spacer(Modifier.size(5.dp))
+                                                                RippleIconButton(
+                                                                    modifier = Modifier.size(36.dp),
+                                                                    resId = Res.drawable.baseline_more_vert_24,
+                                                                    fillMaxSize = true,
+                                                                ) {
+                                                                    onPlaylistMoreClick()
+                                                                }
                                                             }
                                                         }
                                                     }
@@ -857,7 +861,7 @@ fun PlaylistScreen(
                                 SongFullWidthItems(
                                     isPlaying = true,
                                     track = item,
-                                    onMoreClickListener = { onItemMoreClick(it) },
+                                    onMoreClickListener = if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) null else { { onItemMoreClick(it) } },
                                     onClickListener = {
                                         Logger.w("PlaylistScreen", "index: $index")
                                         onPlaylistItemClick(it)
@@ -871,7 +875,7 @@ fun PlaylistScreen(
                                 SongFullWidthItems(
                                     isPlaying = false,
                                     track = item,
-                                    onMoreClickListener = { onItemMoreClick(it) },
+                                    onMoreClickListener = if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) null else { { onItemMoreClick(it) } },
                                     onClickListener = {
                                         Logger.w("PlaylistScreen", "index: $index")
                                         onPlaylistItemClick(it)

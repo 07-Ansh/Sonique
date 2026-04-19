@@ -97,11 +97,13 @@ class ArtistViewModel(
             artistRepository.updateArtistInLibrary(now(), artist.channelId)
             delay(100)
             artistRepository.getArtistById(artist.channelId).collect { artistEntity ->
-                artist.thumbnails?.let {
-                    artistRepository.updateArtistImage(artistEntity.channelId, it)
+                artistEntity?.let {
+                    artist.thumbnails?.let { thumb ->
+                        artistRepository.updateArtistImage(it.channelId, thumb)
+                    }
+                    _followed.value = it.followed
+                    log("insertArtist: ${it.followed}")
                 }
-                _followed.value = artistEntity.followed
-                log("insertArtist: ${artistEntity.followed}")
             }
         }
     }

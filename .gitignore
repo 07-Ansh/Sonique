@@ -51,3 +51,6 @@ google-services.json
 **/build/
 **/release/
 
+# AI Agent Context
+.agent
+

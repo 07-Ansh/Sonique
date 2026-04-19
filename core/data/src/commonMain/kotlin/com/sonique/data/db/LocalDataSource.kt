@@ -146,6 +146,8 @@ internal class LocalDataSource(
 
     suspend fun getArtist(channelId: String) = databaseDao.getArtist(channelId)
 
+    fun getFollowedArtistsAsFlow() = databaseDao.getFollowedArtistsAsFlow()
+
     suspend fun getFollowedArtists(
         limit: Int,
         offset: Int,

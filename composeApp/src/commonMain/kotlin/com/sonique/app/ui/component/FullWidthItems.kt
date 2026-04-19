@@ -669,6 +669,45 @@ fun ArtistFullWidthItems(
     }
 }
 
+@Composable
+fun ArtistCircularItem(
+    artist: ArtistEntity,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .width(100.dp)
+            .clickable { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalPlatformContext.current)
+                .data(artist.thumbnails)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .diskCacheKey(artist.thumbnails)
+                .crossfade(true)
+                .build(),
+            placeholder = painterResource(Res.drawable.holder),
+            error = painterResource(Res.drawable.holder),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(80.dp)
+                .clip(CircleShape)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = artist.name,
+            style = typo().labelSmall,
+            color = Color.White,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 4.dp)
+        )
+    }
+}
+
+
 
 
 

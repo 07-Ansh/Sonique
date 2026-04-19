@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="Song_and_artist_name">Song • %1$s</string>
@@ -13,7 +13,7 @@
     <string name="like">Like</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="general">General</string>
-    <string name="download">Download</string>
+    <string name="download">Downloads</string>
     <string name="downloaded">Downloaded</string>
     <string name="downloading">Downloading</string>
     <string name="preparing">Preparing</string>
@@ -463,6 +463,10 @@
     <string name="explicit_content_blocked">Explicit content is skipped</string>
     <string name="mix_for_you">Mix for you</string>
     <string name="no_mixes_found">No mixes found</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="no_artist_found">No artist found</string>
     <string name="desktop_webview_description">Because of the limitations of Compose Multiplatform, I can not implement WebView on desktop.\nRead this to learn more how to log in in desktop:\n</string>
     <string name="open_blog_post">Open blog post</string>
 

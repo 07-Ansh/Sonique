@@ -23,6 +23,9 @@ object Config {
     const val MINIPLAYER_CLICK = "MINIPLAYER_CLICK"
     const val SHARE = "SHARE"
     const val RECOVER_TRACK_QUEUE = "RECOVER_TRACK_QUEUE"
+    const val PIN_YT_PLAYLISTS = "PIN_YT_PLAYLISTS"
+    const val PIN_YT_ALBUMS = "PIN_YT_ALBUMS"
+    const val PIN_YT_MIX = "PIN_YT_MIX"
 
     const val PLAYER_CACHE = "playerCache"
     const val DOWNLOAD_CACHE = "downloadCache"
@@ -527,13 +530,15 @@ object MERGING_DATA_TYPE {
 }
 
 enum class LibraryChipType {
-    YOUR_LIBRARY,
     YOUTUBE_MUSIC_PLAYLIST,
+    YOUTUBE_ALBUMS,
     YOUTUBE_MIX_FOR_YOU,
+    YOUR_LIBRARY,
     LOCAL_PLAYLIST,
     FAVORITE_PLAYLIST,
     DOWNLOADED_PLAYLIST,
     FAVORITE_PODCAST,
+    FOLLOWED_ARTISTS,
     ;
 
     fun toStringValue(): String =
@@ -541,10 +546,12 @@ enum class LibraryChipType {
             YOUR_LIBRARY -> "your_library"
             YOUTUBE_MUSIC_PLAYLIST -> "youtube_music_playlist"
             YOUTUBE_MIX_FOR_YOU -> "youtube_mix_for_you"
+            YOUTUBE_ALBUMS -> "youtube_albums"
             LOCAL_PLAYLIST -> "local_playlist"
             FAVORITE_PLAYLIST -> "favorite_playlist"
             DOWNLOADED_PLAYLIST -> "downloaded_playlist"
             FAVORITE_PODCAST -> "favorite_podcast"
+            FOLLOWED_ARTISTS -> "followed_artists"
         }
 
     companion object {
@@ -553,10 +560,12 @@ enum class LibraryChipType {
                 "your_library" -> YOUR_LIBRARY
                 "youtube_music_playlist" -> YOUTUBE_MUSIC_PLAYLIST
                 "youtube_mix_for_you" -> YOUTUBE_MIX_FOR_YOU
+                "youtube_albums" -> YOUTUBE_ALBUMS
                 "local_playlist" -> LOCAL_PLAYLIST
                 "favorite_playlist" -> FAVORITE_PLAYLIST
                 "downloaded_playlist" -> DOWNLOADED_PLAYLIST
                 "favorite_podcast" -> FAVORITE_PODCAST
+                "followed_artists" -> FOLLOWED_ARTISTS
                 else -> null
             }
     }

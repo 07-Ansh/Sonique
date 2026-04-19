@@ -1979,6 +1979,21 @@ class YouTube {
             ytMusic.browse(WEB_REMIX, "FEmusic_mixed_for_you", setLogin = true).body<BrowseResponse>()
         }
 
+    suspend fun getLibraryAlbums() =
+        runCatching {
+            ytMusic.browse(WEB_REMIX, "FEmusic_liked_albums", setLogin = true).body<BrowseResponse>()
+        }
+
+    suspend fun getLibraryArtists() =
+        runCatching {
+            ytMusic.browse(WEB_REMIX, "FEmusic_liked_artists", setLogin = true).body<BrowseResponse>()
+        }
+
+    suspend fun getLibrarySubscriptions() =
+        runCatching {
+            ytMusic.browse(WEB_REMIX, "FEmusic_library_subscriptions", setLogin = true).body<BrowseResponse>()
+        }
+
     @JvmInline
     value class SearchFilter(
         val value: String,

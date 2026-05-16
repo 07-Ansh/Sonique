@@ -389,51 +389,49 @@ fun LazyGridState.isScrollingUp(): State<Boolean> {
 fun Palette?.getColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    var startColor = p.getDarkVibrantColor(defaultColor)
-    if (startColor == defaultColor) {
-        startColor = p.getDarkMutedColor(defaultColor)
-        if (startColor == defaultColor) {
-            startColor = p.getVibrantColor(defaultColor)
-            if (startColor == defaultColor) {
-                startColor =
-                    p.getMutedColor(defaultColor)
-                if (startColor == defaultColor) {
-                    startColor =
-                        p.getLightVibrantColor(
-                            defaultColor,
-                        )
-                    if (startColor == defaultColor) {
-                        startColor =
-                            p.getLightMutedColor(
-                                defaultColor,
-                            )
-                    }
-                }
-            }
-        }
+    // Only use the darkest swatches — no fallback to Vibrant/Muted (which can be bright)
+    val startColor = p.getDarkVibrantColor(defaultColor)
+        .takeIf { it != defaultColor }
+        ?: p.getDarkMutedColor(defaultColor)
+    return if (startColor == defaultColor) {
+        md_theme_dark_background
+    } else {
+        Color(startColor).darkenForAmbience()
     }
-    return Color(startColor)
 }
 
 fun Palette?.getSecondaryColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    val primary = p.getDarkVibrantColor(defaultColor)
-    var secondaryColor = p.getMutedColor(defaultColor)
-    
-    if (secondaryColor == defaultColor || secondaryColor == primary) {
-        secondaryColor = p.getVibrantColor(defaultColor)
-        if (secondaryColor == defaultColor || secondaryColor == primary) {
-            secondaryColor = p.getDarkMutedColor(defaultColor)
-            if (secondaryColor == defaultColor || secondaryColor == primary) {
-                secondaryColor = p.getLightMutedColor(defaultColor)
-                if (secondaryColor == defaultColor) {
-                    secondaryColor = primary
-                }
-            }
-        }
+    // Only use the darkest swatches — prefer DarkMuted as a complement to DarkVibrant
+    val secondaryColor = p.getDarkMutedColor(defaultColor)
+        .takeIf { it != defaultColor }
+        ?: p.getDarkVibrantColor(defaultColor)
+    return if (secondaryColor == defaultColor) {
+        md_theme_dark_background
+    } else {
+        Color(secondaryColor).darkenForAmbience()
     }
-    return Color(secondaryColor)
+}
+
+/**
+ * Safety clamp: ensures any color used in the ambient gradient stays dark.
+ * Since we only pick DarkVibrant/DarkMuted this rarely triggers, but guards
+ * against edge cases where even those swatches are surprisingly bright.
+ */
+fun Color.darkenForAmbience(): Color {
+    val maxComponent = maxOf(red, green, blue)
+    return if (maxComponent > 0.40f) {
+        val scale = 0.35f / maxComponent
+        Color(
+            red = red * scale,
+            green = green * scale,
+            blue = blue * scale,
+            alpha = alpha,
+        )
+    } else {
+        this
+    }
 }
 
 fun Modifier.isElementVisible(onVisibilityChanged: (Boolean) -> Unit) =

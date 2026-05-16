@@ -80,6 +80,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -100,6 +101,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -281,6 +283,18 @@ fun NowPlayingScreenContent(
     val ambienceMode by sharedViewModel.ambienceMode.collectAsStateWithLifecycle()
 
     val mainScrollState = rememberScrollState()
+
+    // Fraction of scroll progress (0f = top, 1f = scrolled far down)
+    val scrollFraction by remember {
+        derivedStateOf {
+            if (mainScrollState.maxValue == 0) 0f
+            else (mainScrollState.value.toFloat() / mainScrollState.maxValue.toFloat()).coerceIn(0f, 1f)
+        }
+    }
+    // Album art contracts from full size to 70% as user scrolls
+    val playerScale by remember { derivedStateOf { 1f - (scrollFraction * 0.30f) } }
+    // Player info fades out over first 60% of scroll
+    val playerInfoAlpha by remember { derivedStateOf { (1f - (scrollFraction / 0.6f)).coerceIn(0f, 1f) } }
 
     var showHideMiddleLayout by rememberSaveable {
         mutableStateOf(true)
@@ -562,8 +576,8 @@ fun NowPlayingScreenContent(
                     if (ambienceMode) {
                         Brush.verticalGradient(
                             colorStops = arrayOf(
-                                0.0f to startColor.value.copy(alpha = 0.9f),
-                                0.5f to midColor.value.copy(alpha = 0.5f),
+                                0.0f to startColor.value.copy(alpha = 1.0f),
+                                0.5f to midColor.value.copy(alpha = 0.4f),
                                 1.0f to endColor.value
                             )
                         )
@@ -749,7 +763,11 @@ fun NowPlayingScreenContent(
                                                 }
                                         }.alpha(
                                             if (showHideMiddleLayout) 1f else 0f,
-                                        ).aspectRatio(1f),
+                                        ).aspectRatio(1f)
+                                        .graphicsLayer {
+                                            scaleX = playerScale
+                                            scaleY = playerScale
+                                        },
                             ) {
                                  
                                 Box(
@@ -993,7 +1011,7 @@ fun NowPlayingScreenContent(
                             Box {
                                 Column(
                                     Modifier
-                                        .alpha(controlLayoutAlpha)
+                                        .alpha(controlLayoutAlpha * playerInfoAlpha)
                                         .onGloballyPositioned {
                                             infoLayoutHeightDp =
                                                 with(localDensity) {

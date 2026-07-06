@@ -14,6 +14,7 @@ interface HomeRepository {
         params: String? = null,
         viewString: String,
         songString: String,
+        forceRefresh: Boolean = false,
     ): Flow<Resource<Pair<String?, List<HomeItem>>>>
 
     fun getHomeDataContinue(
@@ -25,11 +26,17 @@ interface HomeRepository {
     fun getNewRelease(
         newReleaseString: String,
         musicVideoString: String,
+        forceRefresh: Boolean = false,
     ): Flow<Resource<List<HomeItem>>>
 
-    fun getChartData(countryCode: String = "KR"): Flow<Resource<Chart>>
+    fun getChartData(
+        countryCode: String = "KR",
+        forceRefresh: Boolean = false,
+    ): Flow<Resource<Chart>>
 
-    fun getMoodAndMomentsData(): Flow<Resource<Mood>>
+    fun getMoodAndMomentsData(
+        forceRefresh: Boolean = false,
+    ): Flow<Resource<Mood>>
 
     fun getGenreData(params: String): Flow<Resource<GenreObject>>
 

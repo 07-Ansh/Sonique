@@ -331,6 +331,9 @@ class ExoPlayerAdapter(
             val domainErrorCode =
                 when (error.errorCode) {
                     PlaybackException.ERROR_CODE_TIMEOUT -> PlayerConstants.ERROR_CODE_TIMEOUT
+                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED -> PlayerConstants.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> PlayerConstants.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+                    PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS -> PlayerConstants.ERROR_CODE_IO_BAD_HTTP_STATUS
                     else -> error.errorCode
                 }
             val genericError =

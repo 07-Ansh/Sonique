@@ -23,112 +23,48 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 
 internal class HomeRepositoryImpl(
     private val dataStoreManager: DataStoreManager,
     private val youTube: YouTube,
 ) : HomeRepository {
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        encodeDefaults = true
+    }
     override fun getHomeData(
         params: String?,
         viewString: String,
         songString: String,
+        forceRefresh: Boolean,
     ): Flow<Resource<Pair<String?, List<HomeItem>>>> =
         flow {
-            runCatching {
-                val limit = dataStoreManager.homeLimit.first()
-                youTube
-                    .customQuery(browseId = "FEmusic_home", params = params)
-                    .onSuccess { result ->
+            var cacheLoaded = false
+            if (params == null && !forceRefresh) {
+                runCatching {
+                    val cachedJson = dataStoreManager.getString("cache_home_data").first()
+                    if (!cachedJson.isNullOrEmpty()) {
+                        val result = json.decodeFromString<com.sonique.kotlinytmusicscraper.models.response.BrowseResponse>(cachedJson)
                         val list: ArrayList<HomeItem> = arrayListOf()
-                        if (result.contents
-                                ?.singleColumnBrowseResultsRenderer
-                                ?.tabs
-                                ?.get(
-                                    0,
-                                )?.tabRenderer
-                                ?.content
-                                ?.sectionListRenderer
-                                ?.contents
-                                ?.get(
-                                    0,
-                                )?.musicCarouselShelfRenderer
-                                ?.header
-                                ?.musicCarouselShelfBasicHeaderRenderer
-                                ?.strapline
-                                ?.runs
-                                ?.get(
-                                    0,
-                                )?.text != null
-                        ) {
-                            val accountName =
-                                result.contents
-                                    ?.singleColumnBrowseResultsRenderer
-                                    ?.tabs
-                                    ?.get(
-                                        0,
-                                    )?.tabRenderer
-                                    ?.content
-                                    ?.sectionListRenderer
-                                    ?.contents
-                                    ?.get(
-                                        0,
-                                    )?.musicCarouselShelfRenderer
-                                    ?.header
-                                    ?.musicCarouselShelfBasicHeaderRenderer
-                                    ?.strapline
-                                    ?.runs
-                                    ?.get(
-                                        0,
-                                    )?.text ?: ""
-                            val accountThumbUrl =
-                                result.contents
-                                    ?.singleColumnBrowseResultsRenderer
-                                    ?.tabs
-                                    ?.get(
-                                        0,
-                                    )?.tabRenderer
-                                    ?.content
-                                    ?.sectionListRenderer
-                                    ?.contents
-                                    ?.get(
-                                        0,
-                                    )?.musicCarouselShelfRenderer
-                                    ?.header
-                                    ?.musicCarouselShelfBasicHeaderRenderer
-                                    ?.thumbnail
-                                    ?.musicThumbnailRenderer
-                                    ?.thumbnail
-                                    ?.thumbnails
-                                    ?.get(
-                                        0,
-                                    )?.url
-                                    ?.replace("s88", "s352") ?: ""
-                            if (accountName != "" && accountThumbUrl != "") {
-                                dataStoreManager.putString("AccountName", accountName)
-                                dataStoreManager.putString("AccountThumbUrl", accountThumbUrl)
-                            }
-                        }
                         val continueParam =
                             result.contents
                                 ?.singleColumnBrowseResultsRenderer
                                 ?.tabs
-                                ?.get(
-                                    0,
-                                )?.tabRenderer
+                                ?.get(0)?.tabRenderer
                                 ?.content
                                 ?.sectionListRenderer
                                 ?.continuations
-                                ?.get(
-                                    0,
-                                )?.nextContinuationData
+                                ?.get(0)?.nextContinuationData
                                 ?.continuation
                         val data =
                             result.contents
                                 ?.singleColumnBrowseResultsRenderer
                                 ?.tabs
-                                ?.get(
-                                    0,
-                                )?.tabRenderer
+                                ?.get(0)?.tabRenderer
                                 ?.content
                                 ?.sectionListRenderer
                                 ?.contents
@@ -139,41 +75,106 @@ internal class HomeRepositoryImpl(
                                 songString,
                             ),
                         )
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-                        Logger.d("Repository", "List size: ${list.size}")
                         emit(Resource.Success(continueParam to list.toList()))
-                    }.onFailure { error ->
-                        emit(Resource.Error<Pair<String?, List<HomeItem>>>(error.message.toString()))
+                        cacheLoaded = true
                     }
+                }
+            }
+
+            if (!cacheLoaded || forceRefresh) {
+                runCatching {
+                    val limit = dataStoreManager.homeLimit.first()
+                    youTube
+                        .customQuery(browseId = "FEmusic_home", params = params)
+                        .onSuccess { result ->
+                            if (params == null) {
+                                runCatching {
+                                    val jsonString = json.encodeToString(result)
+                                    dataStoreManager.putString("cache_home_data", jsonString)
+                                }
+                            }
+                            val list: ArrayList<HomeItem> = arrayListOf()
+                            if (result.contents
+                                    ?.singleColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.get(0)?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                                    ?.contents
+                                    ?.get(0)?.musicCarouselShelfRenderer
+                                    ?.header
+                                    ?.musicCarouselShelfBasicHeaderRenderer
+                                    ?.strapline
+                                    ?.runs
+                                    ?.get(0)?.text != null
+                            ) {
+                                val accountName =
+                                    result.contents
+                                        ?.singleColumnBrowseResultsRenderer
+                                        ?.tabs
+                                        ?.get(0)?.tabRenderer
+                                        ?.content
+                                        ?.sectionListRenderer
+                                        ?.contents
+                                        ?.get(0)?.musicCarouselShelfRenderer
+                                        ?.header
+                                        ?.musicCarouselShelfBasicHeaderRenderer
+                                        ?.strapline
+                                        ?.runs
+                                        ?.get(0)?.text ?: ""
+                                val accountThumbUrl =
+                                    result.contents
+                                        ?.singleColumnBrowseResultsRenderer
+                                        ?.tabs
+                                        ?.get(0)?.tabRenderer
+                                        ?.content
+                                        ?.sectionListRenderer
+                                        ?.contents
+                                        ?.get(0)?.musicCarouselShelfRenderer
+                                        ?.header
+                                        ?.musicCarouselShelfBasicHeaderRenderer
+                                        ?.thumbnail
+                                        ?.musicThumbnailRenderer
+                                        ?.thumbnail
+                                        ?.thumbnails
+                                        ?.get(0)?.url
+                                        ?.replace("s88", "s352") ?: ""
+                                if (accountName != "" && accountThumbUrl != "") {
+                                    dataStoreManager.putString("AccountName", accountName)
+                                    dataStoreManager.putString("AccountThumbUrl", accountThumbUrl)
+                                }
+                            }
+                            val continueParam =
+                                result.contents
+                                    ?.singleColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.get(0)?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                                    ?.continuations
+                                    ?.get(0)?.nextContinuationData
+                                    ?.continuation
+                            val data =
+                                result.contents
+                                    ?.singleColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.get(0)?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                                    ?.contents
+                            list.addAll(
+                                parseMixedContent(
+                                    data,
+                                    viewString,
+                                    songString,
+                                ),
+                            )
+                            Logger.d("Repository", "List size: ${list.size}")
+                            emit(Resource.Success(continueParam to list.toList()))
+                        }.onFailure { error ->
+                            emit(Resource.Error<Pair<String?, List<HomeItem>>>(error.message.toString()))
+                        }
+                }
             }
         }.flowOn(Dispatchers.IO)
 
@@ -211,6 +212,7 @@ internal class HomeRepositoryImpl(
     override fun getNewRelease(
         newReleaseString: String,
         musicVideoString: String,
+        forceRefresh: Boolean,
     ): Flow<Resource<List<HomeItem>>> =
         flow {
             youTube
@@ -222,34 +224,60 @@ internal class HomeRepositoryImpl(
                 }
         }.flowOn(Dispatchers.IO)
 
-    override fun getChartData(countryCode: String): Flow<Resource<Chart>> =
+    override fun getChartData(countryCode: String, forceRefresh: Boolean): Flow<Resource<Chart>> =
         flow {
-            runCatching {
-                youTube
-                    .customQuery("FEmusic_charts", country = countryCode)
-                    .onSuccess { result ->
+            var cacheLoaded = false
+            if (!forceRefresh) {
+                runCatching {
+                    val cachedJson = dataStoreManager.getString("cache_chart_data").first()
+                    if (!cachedJson.isNullOrEmpty()) {
+                        val result = json.decodeFromString<com.sonique.kotlinytmusicscraper.models.response.BrowseResponse>(cachedJson)
                         val data =
                             result.contents
                                 ?.singleColumnBrowseResultsRenderer
                                 ?.tabs
-                                ?.get(
-                                    0,
-                                )?.tabRenderer
+                                ?.get(0)?.tabRenderer
                                 ?.content
                                 ?.sectionListRenderer
                         val chart = parseChart(data)
                         if (chart != null) {
                             emit(Resource.Success<Chart>(chart))
-                        } else {
-                            emit(Resource.Error<Chart>("Error"))
+                            cacheLoaded = true
                         }
-                    }.onFailure { error ->
-                        emit(Resource.Error<Chart>(error.message.toString()))
                     }
+                }
+            }
+
+            if (!cacheLoaded || forceRefresh) {
+                runCatching {
+                    youTube
+                        .customQuery("FEmusic_charts", country = countryCode)
+                        .onSuccess { result ->
+                            val data =
+                                result.contents
+                                    ?.singleColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.get(0)?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                            val chart = parseChart(data)
+                            if (chart != null) {
+                                runCatching {
+                                    val jsonString = json.encodeToString(result)
+                                    dataStoreManager.putString("cache_chart_data", jsonString)
+                                }
+                                emit(Resource.Success<Chart>(chart))
+                            } else {
+                                emit(Resource.Error<Chart>("Error"))
+                            }
+                        }.onFailure { error ->
+                            emit(Resource.Error<Chart>(error.message.toString()))
+                        }
+                }
             }
         }.flowOn(Dispatchers.IO)
 
-    override fun getMoodAndMomentsData(): Flow<Resource<Mood>> =
+    override fun getMoodAndMomentsData(forceRefresh: Boolean): Flow<Resource<Mood>> =
         flow {
             runCatching {
                 youTube

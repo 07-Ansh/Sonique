@@ -231,7 +231,7 @@ fun SearchScreen(
 
         SearchBar(
             inputField = {
-                CompositionLocalProvider(LocalTextStyle provides typo().bodyLarge) {
+                    CompositionLocalProvider(LocalTextStyle provides typo().bodyLarge) {
                     SearchBarDefaults.InputField(
                         query = searchText,
                         onQueryChange = { newText ->

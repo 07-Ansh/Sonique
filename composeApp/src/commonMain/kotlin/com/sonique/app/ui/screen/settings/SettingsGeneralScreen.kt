@@ -33,6 +33,9 @@ import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.SettingBasicDialog
 import com.sonique.app.ui.component.SettingDialog
 import com.sonique.app.ui.component.SettingItem
+import com.sonique.app.ui.component.SettingsSectionHeader
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
 import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.theme.DarkColors
 import com.sonique.app.ui.theme.backgroundCard
@@ -69,9 +72,13 @@ fun SettingsGeneralScreen(
     
     val language by viewModel.language.collectAsStateWithLifecycle()
     val location by viewModel.location.collectAsStateWithLifecycle()
-    val sendData by viewModel.sendBackToGoogle.map { it == TRUE }.collectAsStateWithLifecycle(initialValue = false)
+    val sendDataFlow = remember(viewModel.sendBackToGoogle) {
+        viewModel.sendBackToGoogle.map { it == TRUE }
+    }
+    val sendData by sendDataFlow.collectAsStateWithLifecycle(initialValue = false)
     val explicitContentEnabled by viewModel.explicitContentEnabled.collectAsStateWithLifecycle()
     val keepYoutubePlaylistOffline by viewModel.keepYouTubePlaylistOffline.collectAsStateWithLifecycle()
+    val showMostPlayed by sharedViewModel.showMostPlayed.collectAsStateWithLifecycle()
     val usingProxy by viewModel.usingProxy.collectAsStateWithLifecycle()
     val proxyType by viewModel.proxyType.collectAsStateWithLifecycle()
     val proxyHost by viewModel.proxyHost.collectAsStateWithLifecycle()
@@ -109,22 +116,36 @@ fun SettingsGeneralScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("General") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Back")
-                    }
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("General") },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .then(
+                            if (enableLiquidGlass) {
+                                Modifier.liquidGlass(backdrop, shape = CircleShape, interactive = true)
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Back")
                 }
-            )
-        }
-    ) { innerPadding ->
+            }
+        )
         LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 140.dp)
         ) {
+            item {
+                SettingsSectionHeader("Regional & Account")
+            }
             item {
                 SettingItem(
                     title = stringResource(Res.string.youtube_account),
@@ -134,6 +155,8 @@ fun SettingsGeneralScreen(
                         showYouTubeAccountDialog = true
                     },
                 )
+            }
+            item {
                 SettingItem(
                     title = stringResource(Res.string.language),
                     subtitle = SUPPORTED_LANGUAGE.getLanguageFromCode(language ?: "en-US"),
@@ -173,6 +196,8 @@ fun SettingsGeneralScreen(
                         }
                     },
                 )
+            }
+            item {
                 SettingItem(
                     title = stringResource(Res.string.content_country),
                     subtitle = location ?: "",
@@ -197,28 +222,51 @@ fun SettingsGeneralScreen(
                         }
                     },
                 )
+            }
 
+            item {
+                SettingsSectionHeader("Content & Sync")
+            }
+            item {
                 SettingItem(
                     title = stringResource(Res.string.send_back_listening_data_to_google),
                     subtitle = stringResource(Res.string.upload_your_listening_history_to_youtube_music_server_it_will_make_yt_music_recommendation_system_better_working_only_if_logged_in),
                     smallSubtitle = true,
                     switch = (sendData to { viewModel.setSendBackToGoogle(it) }),
                 )
+            }
+            item {
                 SettingItem(
                     title = stringResource(Res.string.play_explicit_content),
                     subtitle = stringResource(Res.string.play_explicit_content_description),
                     switch = (explicitContentEnabled to { viewModel.setExplicitContentEnabled(it) }),
                 )
+            }
+            item {
                 SettingItem(
                     title = stringResource(Res.string.keep_your_youtube_playlist_offline),
                     subtitle = stringResource(Res.string.keep_your_youtube_playlist_offline_description),
                     switch = (keepYoutubePlaylistOffline to { viewModel.setKeepYouTubePlaylistOffline(it) }),
                 )
+            }
+            item {
+                SettingItem(
+                    title = "Show Most Played section",
+                    subtitle = "Show the most played tracks section on the Library screen.",
+                    switch = (showMostPlayed to { sharedViewModel.setShowMostPlayed(it) }),
+                )
+            }
+            item {
+                SettingsSectionHeader("Network & Connection")
+            }
+            item {
                 SettingItem(
                     title = stringResource(Res.string.proxy),
                     subtitle = stringResource(Res.string.proxy_description),
                     switch = (usingProxy to { viewModel.setUsingProxy(it) }),
                 )
+            }
+            item {
                 Crossfade(usingProxy) { it ->
                     if (it) {
                         Column {

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -93,14 +94,19 @@ fun Modifier.shimmer(): Modifier =
             label = "Shimmer",
         )
 
+        val sharedViewModel: com.sonique.app.viewModel.SharedViewModel = org.koin.compose.koinInject()
+        val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsState(false)
+        val shimmerBg = if (enableLiquidGlass && com.sonique.app.getPlatform() == com.sonique.app.Platform.Android) Color(0x15FFFFFF) else shimmerBackground
+        val shimmerLn = if (enableLiquidGlass && com.sonique.app.getPlatform() == com.sonique.app.Platform.Android) Color(0x35FFFFFF) else shimmerLine
+
         background(
             brush =
                 Brush.linearGradient(
                     colors =
                         listOf(
-                            shimmerBackground,
-                            shimmerLine,
-                            shimmerBackground,
+                            shimmerBg,
+                            shimmerLn,
+                            shimmerBg,
                         ),
                     start = Offset(startOffsetX, 0f),
                     end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat()),

@@ -1,6 +1,8 @@
 package com.sonique.app.ui.screen.settings
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -17,6 +19,13 @@ import com.sonique.app.ui.navigation.destination.login.SpotifyLoginDestination
 import com.sonique.app.viewModel.SettingsViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
+import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.fillMaxSize
 import sonique.composeapp.generated.resources.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,6 +35,10 @@ fun SettingsSpotifyScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
+    val sharedViewModel: SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
     val spotifyLoggedIn by viewModel.spotifyLogIn.collectAsStateWithLifecycle()
     val spotifyLyrics by viewModel.spotifyLyrics.collectAsStateWithLifecycle()
     val spotifyCanvas by viewModel.spotifyCanvas.collectAsStateWithLifecycle()
@@ -34,21 +47,29 @@ fun SettingsSpotifyScreen(
         viewModel.getData()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Spotify") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Back")
-                    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Spotify") },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .then(
+                            if (enableLiquidGlass) {
+                                Modifier.liquidGlass(backdrop, shape = CircleShape, interactive = true)
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Back")
                 }
-            )
-        }
-    ) { innerPadding ->
+            }
+        )
         LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 140.dp)
         ) {
             item {
                 SettingItem(

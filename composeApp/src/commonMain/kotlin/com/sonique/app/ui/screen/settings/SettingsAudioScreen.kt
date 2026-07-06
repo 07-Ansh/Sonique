@@ -1,6 +1,8 @@
 package com.sonique.app.ui.screen.settings
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -8,6 +10,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,6 +29,13 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.*
+import org.koin.compose.koinInject
+import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.fillMaxSize
 
 import com.sonique.app.ui.component.SettingDialog
 
@@ -35,11 +45,22 @@ fun SettingsAudioScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
+    val sharedViewModel: SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
     val coroutineScope = rememberCoroutineScope()
     val quality by viewModel.quality.collectAsStateWithLifecycle()
     val downloadQuality by viewModel.downloadQuality.collectAsStateWithLifecycle()
-    val normalizeVolume by viewModel.normalizeVolume.map { it == DataStoreManager.Values.TRUE }.collectAsStateWithLifecycle(initialValue = false)
-    val skipSilent by viewModel.skipSilent.map { it == DataStoreManager.Values.TRUE }.collectAsStateWithLifecycle(initialValue = false)
+    val normalizeVolumeFlow = remember(viewModel.normalizeVolume) {
+        viewModel.normalizeVolume.map { it == DataStoreManager.Values.TRUE }
+    }
+    val normalizeVolume by normalizeVolumeFlow.collectAsStateWithLifecycle(initialValue = false)
+
+    val skipSilentFlow = remember(viewModel.skipSilent) {
+        viewModel.skipSilent.map { it == DataStoreManager.Values.TRUE }
+    }
+    val skipSilent by skipSilentFlow.collectAsStateWithLifecycle(initialValue = false)
 
     val resultLauncher = openEqResult(viewModel.getAudioSessionId())
     val alertData by viewModel.alertData.collectAsStateWithLifecycle()
@@ -55,21 +76,29 @@ fun SettingsAudioScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Audio") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Back")
-                    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Audio") },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .then(
+                            if (enableLiquidGlass) {
+                                Modifier.liquidGlass(backdrop, shape = CircleShape, interactive = true)
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Back")
                 }
-            )
-        }
-    ) { innerPadding ->
+            }
+        )
         LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 140.dp)
         ) {
             item {
                 SettingItem(

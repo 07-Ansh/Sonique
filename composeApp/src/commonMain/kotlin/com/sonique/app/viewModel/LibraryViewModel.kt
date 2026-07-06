@@ -113,6 +113,7 @@ class LibraryViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     val youtubeLoggedIn = dataStoreManager.loggedIn.mapLatest { it == DataStoreManager.TRUE }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val activeDownloads = downloadHandler.downloadTask.mapLatest { tasks ->
         tasks.count {
             it.value == DownloadState.STATE_DOWNLOADING || it.value == DownloadState.STATE_PREPARING

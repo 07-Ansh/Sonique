@@ -56,9 +56,11 @@ import com.sonique.app.expect.Orientation
 import com.sonique.app.expect.currentOrientation
 
 import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.expect.ui.layerBackdrop
 import com.sonique.app.extension.copy
 import com.sonique.app.ui.component.AppBottomNavigationBar
 import com.sonique.app.ui.component.AppNavigationRail
+import com.sonique.app.ui.component.LiquidGlassAppBottomNavigationBar
 
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.NotificationDestination
@@ -133,6 +135,7 @@ fun App(
 
 
     val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
+    val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
 
     LaunchedEffect(reloadDestination) {
         val destination = reloadDestination
@@ -270,7 +273,7 @@ fun App(
              isPlayerExpanded = isShowNowPlaylistScreen
         }
 
-        AppTheme {
+        AppTheme(enableLiquidGlass = enableLiquidGlass && getPlatform() == Platform.Android) {
             if (updateAvailable != null) {
                 UpdateDialog(
                     releaseInfo = updateAvailable!!,
@@ -333,6 +336,7 @@ fun App(
 
             Box(Modifier.fillMaxSize()) {
                 Scaffold(
+                    containerColor = if (enableLiquidGlass && getPlatform() == Platform.Android) Color.Black else MaterialTheme.colorScheme.background,
                     bottomBar = {
                         if (!isTablet) {
                             AnimatedVisibility(
@@ -340,69 +344,83 @@ fun App(
                                 enter = fadeIn() + slideInHorizontally(),
                                 exit = fadeOut(),
                             ) {
-                                Column {
-                                    AnimatedVisibility(
-                                        isShowMiniPlayer,
-                                        enter = fadeIn() + expandVertically(),
-                                        exit = fadeOut() + shrinkVertically(),
-                                    ) {
-                                        MiniPlayer(
-                                            Modifier
-                                                .height(64.dp)
-                                                .fillMaxWidth()
-                                                .padding(
-                                                    horizontal = 12.dp,
-                                                ).padding(
-                                                    bottom = 4.dp,
-                                                ),
-                                            backdrop = backdrop,
-                                            onClick = {
-                                                isShowNowPlaylistScreen = true
-                                            },
-                                            onClose = {
-                                                viewModel.stopPlayer()
-                                                viewModel.isServiceRunning = false
-                                            },
-                                            onDrag = { delta ->
-                                                coreScope.launch {
-                                                    playerOffsetY.snapTo((playerOffsetY.value + delta).coerceIn(0f, screenHeight.value))
-                                                }
-                                            },
-                                            onDragEnd = {
-                                                coreScope.launch {
-                                                    val expandThreshold = screenHeight.value * 0.7f
-                                                    val collapseThreshold = screenHeight.value * 0.3f
-                                                    
-                                                    val shouldExpand = if (playerOffsetY.value < expandThreshold) true else isShowNowPlaylistScreen
-                                                    
-                                                     
-                                                    val spec = androidx.compose.animation.core.tween<Float>(
-                                                        durationMillis = 500,
-                                                        easing = androidx.compose.animation.core.EaseInOut
-                                                    )
+                                if (enableLiquidGlass && getPlatform() == Platform.Android) {
+                                    LiquidGlassAppBottomNavigationBar(
+                                        startDestination = HomeDestination,
+                                        navController = navController,
+                                        backdrop = backdrop,
+                                        viewModel = viewModel,
+                                        onOpenNowPlaying = { isShowNowPlaylistScreen = true },
+                                        isScrolledToTop = isScrolledToTop,
+                                    ) { klass ->
+                                        viewModel.reloadDestination(klass)
+                                    }
+                                } else {
+                                    Column {
+                                        AnimatedVisibility(
+                                            isShowMiniPlayer,
+                                            enter = fadeIn() + expandVertically(),
+                                            exit = fadeOut() + shrinkVertically(),
+                                        ) {
+                                            MiniPlayer(
+                                                modifier = Modifier
+                                                    .height(64.dp)
+                                                    .fillMaxWidth()
+                                                    .padding(
+                                                        horizontal = 12.dp,
+                                                    ).padding(
+                                                        bottom = 4.dp,
+                                                    ),
+                                                backdrop = backdrop,
+                                                enableLiquidGlass = false,
+                                                onClick = {
+                                                    isShowNowPlaylistScreen = true
+                                                },
+                                                onClose = {
+                                                    viewModel.stopPlayer()
+                                                    viewModel.isServiceRunning = false
+                                                },
+                                                onDrag = { delta ->
+                                                    coreScope.launch {
+                                                        playerOffsetY.snapTo((playerOffsetY.value + delta).coerceIn(0f, screenHeight.value))
+                                                    }
+                                                },
+                                                onDragEnd = {
+                                                    coreScope.launch {
+                                                        val expandThreshold = screenHeight.value * 0.7f
+                                                        val collapseThreshold = screenHeight.value * 0.3f
+                                                        
+                                                        val shouldExpand = if (playerOffsetY.value < expandThreshold) true else isShowNowPlaylistScreen
+                                                        
+                                                         
+                                                        val spec = androidx.compose.animation.core.tween<Float>(
+                                                            durationMillis = 500,
+                                                            easing = androidx.compose.animation.core.EaseInOut
+                                                        )
 
-                                                    if (shouldExpand) {
-                                                        if (!isShowNowPlaylistScreen) {
-                                                            isShowNowPlaylistScreen = true
+                                                        if (shouldExpand) {
+                                                            if (!isShowNowPlaylistScreen) {
+                                                                isShowNowPlaylistScreen = true
+                                                            } else {
+                                                                playerOffsetY.animateTo(0f, spec)
+                                                            }
                                                         } else {
-                                                            playerOffsetY.animateTo(0f, spec)
-                                                        }
-                                                    } else {
-                                                        if (isShowNowPlaylistScreen) {
-                                                            isShowNowPlaylistScreen = false
-                                                        } else {
-                                                            playerOffsetY.animateTo(screenHeight.value, spec)
+                                                            if (isShowNowPlaylistScreen) {
+                                                                isShowNowPlaylistScreen = false
+                                                            } else {
+                                                                playerOffsetY.animateTo(screenHeight.value, spec)
+                                                            }
                                                         }
                                                     }
                                                 }
-                                            }
-                                        )
-                                    }
-                                    AppBottomNavigationBar(
-                                        navController = navController,
-                                        isTranslucentBackground = false,
-                                    ) { klass ->
-                                        viewModel.reloadDestination(klass)
+                                            )
+                                        }
+                                        AppBottomNavigationBar(
+                                            navController = navController,
+                                            isTranslucentBackground = false,
+                                        ) { klass ->
+                                            viewModel.reloadDestination(klass)
+                                        }
                                     }
                                 }
                             }
@@ -412,10 +430,24 @@ fun App(
                         Box(
                             Modifier
                                 .fillMaxSize()
-                                .padding(innerPadding),
+                                .then(
+                                    if (enableLiquidGlass && !isTablet) {
+                                        Modifier.layerBackdrop(backdrop)
+                                    } else {
+                                        Modifier
+                                    }
+                                ),
                         ) {
                             Row(
-                                Modifier.fillMaxSize(),
+                                Modifier
+                                    .fillMaxSize()
+                                    .then(
+                                        if (enableLiquidGlass) {
+                                            Modifier.padding(top = 0.dp)
+                                        } else {
+                                            Modifier.padding(innerPadding)
+                                        }
+                                    ),
                             ) {
                                  
                                 if (isTablet && !isInFullscreen) {
@@ -430,10 +462,17 @@ fun App(
                                         .fillMaxSize()
                                         .weight(1f),
                                 ) {
-                                    Box(
-                                        Modifier
-                                            .fillMaxSize(),
-                                    ) {
+                                     Box(
+                                         Modifier
+                                             .fillMaxSize()
+                                             .then(
+                                                 if (enableLiquidGlass && isTablet && !isInFullscreen) {
+                                                     Modifier.layerBackdrop(backdrop)
+                                                 } else {
+                                                     Modifier
+                                                 }
+                                             ),
+                                     ) {
                                         AppNavigationGraph(
                                             innerPadding = innerPadding,
                                             navController = navController,
@@ -477,6 +516,7 @@ fun App(
                                                     .background(Color.Transparent)
                                             },
                                             backdrop = backdrop,
+                                            enableLiquidGlass = false,
                                             onClick = {
                                                 isShowNowPlaylistScreen = true
                                             },

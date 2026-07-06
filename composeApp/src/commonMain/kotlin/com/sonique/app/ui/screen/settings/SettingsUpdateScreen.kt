@@ -19,6 +19,7 @@ import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.ui.component.liquidGlass
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import com.mikepenz.markdown.m3.Markdown
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,7 +121,8 @@ fun UpdateAvailableContent(
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = "Changelog", style = MaterialTheme.typography.labelLarge)
-            Text(text = releaseInfo.changelog, style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(8.dp))
+            Markdown(content = releaseInfo.changelog)
             Spacer(modifier = Modifier.height(16.dp))
             
             when (status) {

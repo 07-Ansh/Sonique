@@ -58,7 +58,7 @@ fun SettingScreen(
 
     Column(
         modifier = Modifier
-            .padding(top = innerPadding.calculateTopPadding())
+            .padding(top = innerPadding.calculateTopPadding() + 8.dp)
             .padding(horizontal = 16.dp)
             .fillMaxSize()
     ) {
@@ -67,7 +67,6 @@ fun SettingScreen(
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
-                .offset(y = (-12).dp)
                 .padding(bottom = 16.dp)
         )
 

@@ -22,6 +22,7 @@ import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -206,55 +207,16 @@ fun NowPlayingScreen(
     navController: NavController,
     onDismiss: () -> Unit = {},
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
-    var swipeEnabled by rememberSaveable { mutableStateOf(false) }
-
-    val sheetState =
-        rememberModalBottomSheetState(
-            skipPartiallyExpanded = true,
-            confirmValueChange = { swipeEnabled },
-        )
-
-    LaunchedEffect(swipeEnabled) {
-        Logger.d(TAG, "Swipe Enabled: $swipeEnabled")
-    }
-
-    val hideSheet: () -> Unit = {
-        coroutineScope.launch {
-            sheetState.hide()
-            onDismiss()
-        }
-    }
-
-    ModalBottomSheet(
-        modifier =
-            Modifier
-                .fillMaxHeight(),
-        onDismissRequest = {
+    NowPlayingScreenContent(
+        sharedViewModel = sharedViewModel,
+        navController = navController,
+        isExpanded = true,
+        dismissIcon = Icons.Rounded.KeyboardArrowDown,
+        onSwipeEnabledChange = {},
+        onDismiss = {
             onDismiss()
         },
-        sheetGesturesEnabled = swipeEnabled,
-        containerColor = md_theme_dark_background,
-        dragHandle = {},
-        scrimColor = md_theme_dark_background,
-        sheetState = sheetState,
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-        shape = RectangleShape,
-    ) {
-        NowPlayingScreenContent(
-            sharedViewModel = sharedViewModel,
-            navController = navController,
-            isExpanded = sheetState.currentValue == SheetValue.Expanded,
-            dismissIcon = Icons.Rounded.KeyboardArrowDown,
-            onSwipeEnabledChange = {
-                swipeEnabled = it
-            },
-            onDismiss = {
-                hideSheet()
-            },
-        )
-    }
+    )
 }
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalHazeMaterialsApi::class)
@@ -301,8 +263,8 @@ fun NowPlayingScreenContent(
     }
     // Album art contracts from full size to 70% as user scrolls
     val playerScale by remember { derivedStateOf { 1f - (scrollFraction * 0.30f) } }
-    // Player info fades out over first 60% of scroll
-    val playerInfoAlpha by remember { derivedStateOf { (1f - (scrollFraction / 0.6f)).coerceIn(0f, 1f) } }
+    // Player info alpha — always fully visible, no fade during scroll/slide
+    val playerInfoAlpha = 1f
 
     var showHideMiddleLayout by rememberSaveable {
         mutableStateOf(true)
@@ -806,6 +768,22 @@ fun NowPlayingScreenContent(
                                         .graphicsLayer {
                                             scaleX = playerScale
                                             scaleY = playerScale
+                                        }
+                                        .pointerInput(Unit) {
+                                            var accumulatedDragY = 0f
+                                            detectVerticalDragGestures(
+                                                onDragStart = { accumulatedDragY = 0f },
+                                                onDragEnd = {
+                                                    if (accumulatedDragY > 150f) {
+                                                        onDismiss()
+                                                    }
+                                                },
+                                                onDragCancel = { accumulatedDragY = 0f },
+                                                onVerticalDrag = { change, dragAmount ->
+                                                    change.consume()
+                                                    accumulatedDragY += dragAmount
+                                                }
+                                            )
                                         },
                             ) {
                                  

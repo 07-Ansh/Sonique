@@ -21,6 +21,9 @@ object PlayerConstants {
 
      
     const val ERROR_CODE_TIMEOUT = 1003
+    const val ERROR_CODE_IO_NETWORK_CONNECTION_FAILED = 2101
+    const val ERROR_CODE_IO_BAD_HTTP_STATUS = 2003
+    const val ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT = 2102
 
      
     const val AUDIO_SESSION_ID_UNSET = 0

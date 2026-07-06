@@ -2165,25 +2165,40 @@ internal class MediaServiceHandlerImpl(
     }
 
     override fun onPlayerError(error: PlayerError) {
-        when (error.errorCode) {
-            PlayerConstants.ERROR_CODE_TIMEOUT -> {
-                Logger.e("Player Error", "onPlayerError (${error.errorCode}): ${error.message}")
-                if (isAppInForeground()) {
-                    showToast(ToastType.PlayerError(error.errorCodeName))
-                } else {
-                    Logger.w("Player Error", "App is not in foreground, skipping toast")
-                }
-                player.pause()
-            }
+        Logger.e("Player Error", "onPlayerError (${error.errorCode}): ${error.message}")
+        val isNetworkError = error.errorCode in setOf(
+            PlayerConstants.ERROR_CODE_TIMEOUT,
+            PlayerConstants.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+            PlayerConstants.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
+        )
+        val isBadUrl = error.errorCode == PlayerConstants.ERROR_CODE_IO_BAD_HTTP_STATUS
 
-            else -> {
-                Logger.e("Player Error", "onPlayerError (${error.errorCode}): ${error.message}")
-                pushPlayerError(error)
-                if (isAppInForeground()) {
-                    showToast(ToastType.PlayerError(error.errorCodeName))
-                } else {
-                    Logger.w("Player Error", "App is not in foreground, skipping toast")
+        if (isAppInForeground()) {
+            showToast(ToastType.PlayerError(error.errorCodeName))
+        } else {
+            Logger.w("Player Error", "App is not in foreground, skipping toast")
+        }
+
+        when {
+            isNetworkError -> {
+                // Recoverable network timeout/connectivity issue -> prepare the player again
+                coroutineScope.launch {
+                    delay(1000L) // Wait for connectivity/retrying
+                    player.prepare()
                 }
+            }
+            isBadUrl -> {
+                // Bad URL/403 -> stale format -> skip to next track
+                if (player.hasNextMediaItem()) {
+                    player.seekToNext()
+                } else {
+                    player.pause()
+                    pushPlayerError(error)
+                }
+            }
+            else -> {
+                // Other player errors
+                pushPlayerError(error)
                 player.pause()
             }
         }

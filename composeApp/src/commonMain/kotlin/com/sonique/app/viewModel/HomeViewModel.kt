@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -39,16 +40,16 @@ class HomeViewModel(
     private val homeRepository: HomeRepository,
 ) : BaseViewModel() {
     private val _homeItemList: MutableStateFlow<List<HomeItem>> =
-        MutableStateFlow(arrayListOf())
+        MutableStateFlow(cachedHomeItemList ?: arrayListOf())
     val homeItemList: StateFlow<List<HomeItem>> = _homeItemList
 
-    private var _homeListState = MutableStateFlow<ListState>(ListState.IDLE)
+    private var _homeListState = MutableStateFlow<ListState>(if (cachedHomeItemList != null) ListState.IDLE else ListState.LOADING)
     val homeListState: StateFlow<ListState> = _homeListState
 
-    private var _continuation = MutableStateFlow<String?>(null)
+    private var _continuation = MutableStateFlow<String?>(cachedContinuation)
     val continuation: StateFlow<String?> = _continuation
 
-    private val _exploreMoodItem: MutableStateFlow<Mood?> = MutableStateFlow(null)
+    private val _exploreMoodItem: MutableStateFlow<Mood?> = MutableStateFlow(cachedExploreMoodItem)
     val exploreMoodItem: StateFlow<Mood?> = _exploreMoodItem
     private val _accountInfo: MutableStateFlow<Pair<String?, String?>?> = MutableStateFlow(null)
     val accountInfo: StateFlow<Pair<String?, String?>?> = _accountInfo
@@ -57,21 +58,21 @@ class HomeViewModel(
 
     val showSnackBarErrorState = MutableSharedFlow<String>()
 
-    private val _chart: MutableStateFlow<Chart?> = MutableStateFlow(null)
+    private val _chart: MutableStateFlow<Chart?> = MutableStateFlow(cachedChart)
     val chart: StateFlow<Chart?> = _chart
-    private val _newRelease: MutableStateFlow<List<HomeItem>> = MutableStateFlow(arrayListOf())
+    private val _newRelease: MutableStateFlow<List<HomeItem>> = MutableStateFlow(cachedNewRelease ?: arrayListOf())
     val newRelease: StateFlow<List<HomeItem>> = _newRelease
     var regionCodeChart: MutableStateFlow<String?> = MutableStateFlow(null)
 
-    val loading = MutableStateFlow<Boolean>(true)
-    val loadingChart = MutableStateFlow<Boolean>(true)
+    val loading = MutableStateFlow<Boolean>(cachedHomeItemList == null)
+    val loadingChart = MutableStateFlow<Boolean>(cachedChart == null)
     private var regionCode: String = ""
     private var language: String = ""
 
     private val _songEntity: MutableStateFlow<SongEntity?> = MutableStateFlow(null)
     val songEntity: StateFlow<SongEntity?> = _songEntity
 
-    private var _params: MutableStateFlow<String?> = MutableStateFlow(null)
+    private var _params: MutableStateFlow<String?> = MutableStateFlow(cachedParams)
     val params: StateFlow<String?> = _params
 
      
@@ -100,13 +101,16 @@ class HomeViewModel(
         homeJob = Job()
         viewModelScope.launch {
             regionCodeChart.value = dataStoreManager.chartKey.first()
-            exploreChart(regionCodeChart.value ?: "ZZ")
+            if (cachedChart == null) {
+                exploreChart(regionCodeChart.value ?: "ZZ")
+            }
             language = dataStoreManager.getString(SELECTED_LANGUAGE).first()
                 ?: SUPPORTED_LANGUAGE.codes.first()
              
             val job1 =
                 launch {
-                    dataStoreManager.location.distinctUntilChanged().collect {
+                    val flow = dataStoreManager.location.distinctUntilChanged()
+                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collect {
                         regionCode = it
                         getHomeItemList(params.value)
                     }
@@ -114,14 +118,16 @@ class HomeViewModel(
              
             val job2 =
                 launch {
-                    dataStoreManager.language.distinctUntilChanged().collect {
+                    val flow = dataStoreManager.language.distinctUntilChanged()
+                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collect {
                         language = it
                         getHomeItemList(params.value)
                     }
                 }
             val job3 =
                 launch {
-                    dataStoreManager.cookie.distinctUntilChanged().collect {
+                    val flow = dataStoreManager.cookie.distinctUntilChanged()
+                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collect {
                         getHomeItemList(params.value)
                         _accountInfo.emit(
                             Pair(
@@ -133,23 +139,22 @@ class HomeViewModel(
                 }
             val job4 =
                 launch {
-                    params.collectLatest {
-                        getHomeItemList(it)
+                    val flow = params
+                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collectLatest {
+                        getHomeItemList(it, forceRefresh = true)
                     }
                 }
             val job5 =
                 launch {
-                    dataStoreManager
-                        .cookie
-                        .distinctUntilChanged()
-                        .collectLatest {
-                            if (it.isNotEmpty()) {
-                                Logger.w(tag, "Cookie changed, refreshing home")
-                                loading.value = true
-                                delay(1000)  
-                                getHomeItemList(params.value)
-                            }
+                    val flow = dataStoreManager.cookie.distinctUntilChanged()
+                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collectLatest {
+                        if (it.isNotEmpty()) {
+                            Logger.w(tag, "Cookie changed, refreshing home")
+                            loading.value = true
+                            delay(1000)  
+                            getHomeItemList(params.value)
                         }
+                    }
                 }
             job1.join()
             job2.join()
@@ -168,7 +173,7 @@ class HomeViewModel(
         }
     }
 
-    fun getHomeItemList(params: String? = null) {
+    fun getHomeItemList(params: String? = null, forceRefresh: Boolean = false) {
         loading.value = true
         _homeListState.value = ListState.LOADING
         homeJob?.cancel()
@@ -183,12 +188,14 @@ class HomeViewModel(
                         params,
                         getString(Res.string.view_count),
                         getString(Res.string.song),
+                        forceRefresh = forceRefresh
                     ),
-                    homeRepository.getMoodAndMomentsData(),
-                    homeRepository.getChartData(dataStoreManager.chartKey.first()),
+                    homeRepository.getMoodAndMomentsData(forceRefresh = forceRefresh),
+                    homeRepository.getChartData(dataStoreManager.chartKey.first(), forceRefresh = forceRefresh),
                     homeRepository.getNewRelease(
                         getString(Res.string.new_release),
                         getString(Res.string.music_video),
+                        forceRefresh = forceRefresh
                     ),
                 ) { home, exploreMood, exploreChart, newRelease ->
                     HomeDataCombine(home, exploreMood, exploreChart, newRelease)
@@ -253,6 +260,14 @@ class HomeViewModel(
                                 ),
                             )
                         }
+                    }
+                    if (home is Resource.Success && home.data?.second?.isNotEmpty() == true) {
+                        cachedHomeItemList = _homeItemList.value
+                        cachedExploreMoodItem = _exploreMoodItem.value
+                        cachedChart = _chart.value
+                        cachedNewRelease = _newRelease.value
+                        cachedContinuation = _continuation.value
+                        cachedParams = params
                     }
                     when {
                         home is Resource.Error -> home.message
@@ -342,6 +357,12 @@ class HomeViewModel(
     }
 
     companion object {
+        private var cachedHomeItemList: List<HomeItem>? = null
+        private var cachedChart: Chart? = null
+        private var cachedNewRelease: List<HomeItem>? = null
+        private var cachedExploreMoodItem: Mood? = null
+        private var cachedContinuation: String? = null
+        private var cachedParams: String? = null
          
         const val HOME_PARAMS_RELAX = "ggM8SgQIBxADSgQIBRABSgQICRABSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"
         const val HOME_PARAMS_SLEEP = "ggM8SgQIBxABSgQIBRADSgQICRABSgQIChABSgQIDRABSgQICBABSgQIBBABSgQIDhABSgQIAxABSgQIBhAB"

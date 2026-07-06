@@ -74,7 +74,7 @@ fun SpeedDialSection(
     val sharedViewModel: SharedViewModel = koinInject()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
 
-    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         // Header
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),

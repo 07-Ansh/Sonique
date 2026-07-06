@@ -60,6 +60,8 @@ import com.sonique.domain.repository.SearchRepository
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.repository.StreamRepository
 import com.sonique.logger.Logger
+import androidx.media3.common.Player
+import com.sonique.media3.exoplayer.CrossfadeExoPlayerAdapter
 import com.sonique.media3.exoplayer.ExoPlayerAdapter
 import com.sonique.media3.repository.CacheRepositoryImpl
 import com.sonique.media3.service.SimpleMediaService
@@ -164,24 +166,8 @@ private val mediaServiceModule =
         }
 
          
-        single<ExoPlayer>(createdAtStart = true, qualifier = named(MAIN_PLAYER)) {
-            ExoPlayer
-                .Builder(androidContext())
-                .setAudioAttributes(get(), true)
-                .setLoadControl(
-                    provideLoadControl(),
-                ).setWakeMode(C.WAKE_MODE_NETWORK)
-                .setHandleAudioBecomingNoisy(true)
-                .setSeekForwardIncrementMs(5000)
-                .setSeekBackIncrementMs(5000)
-                .setMediaSourceFactory(
-                    get<MergingMediaSourceFactory>(),
-                ).setRenderersFactory(
-                    get<DefaultRenderersFactory>(),
-                ).build()
-                .also {
-                    it.addAnalyticsListener(EventLogger())
-                }
+        single<Player>(qualifier = named(MAIN_PLAYER)) {
+            (get<MediaPlayerInterface>() as CrossfadeExoPlayerAdapter).forwardingPlayer
         }
 
          
@@ -190,7 +176,14 @@ private val mediaServiceModule =
         }
 
         single<MediaPlayerInterface>(createdAtStart = true) {
-            ExoPlayerAdapter(get(named(MAIN_PLAYER)))
+            CrossfadeExoPlayerAdapter(
+                context = androidContext(),
+                coroutineScope = get(named(SERVICE_SCOPE)),
+                dataStoreManager = get(),
+                mediaSourceFactory = get(),
+                audioAttributes = get(),
+                streamRepository = get(),
+            )
         }
 
          

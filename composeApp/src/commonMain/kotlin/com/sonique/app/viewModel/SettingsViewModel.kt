@@ -113,6 +113,8 @@ class SettingsViewModel(
     val crossfadeEnabled: StateFlow<Boolean> = _crossfadeEnabled
     private val _crossfadeDuration = MutableStateFlow<Int>(5000)
     val crossfadeDuration: StateFlow<Int> = _crossfadeDuration
+    private val _crossfadeDjMode = MutableStateFlow<Boolean>(true)
+    val crossfadeDjMode: StateFlow<Boolean> = _crossfadeDjMode
     private val _youtubeSubtitleLanguage = MutableStateFlow<String>("")
     val youtubeSubtitleLanguage: StateFlow<String> = _youtubeSubtitleLanguage
 
@@ -271,6 +273,7 @@ class SettingsViewModel(
         getSavedPlaybackState()
         getCrossfadeEnabled()
         getCrossfadeDuration()
+        getCrossfadeDjMode()
         getBackupDownloaded()
 
         getSpotifyLogIn()
@@ -1240,6 +1243,21 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setCrossfadeDuration(duration)
             getCrossfadeDuration()
+        }
+    }
+
+    private fun getCrossfadeDjMode() {
+        viewModelScope.launch {
+            dataStoreManager.crossfadeDjMode.collect { djMode ->
+                _crossfadeDjMode.value = djMode == DataStoreManager.TRUE
+            }
+        }
+    }
+
+    fun setCrossfadeDjMode(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setCrossfadeDjMode(enabled)
+            getCrossfadeDjMode()
         }
     }
 

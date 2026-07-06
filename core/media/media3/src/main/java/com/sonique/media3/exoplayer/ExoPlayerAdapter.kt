@@ -66,6 +66,8 @@ class ExoPlayerAdapter(
 
     override fun seekToPrevious() = exoPlayer.seekToPrevious()
 
+    override fun seekToPreviousMediaItem() = exoPlayer.seekToPreviousMediaItem()
+
     override fun prepare() = exoPlayer.prepare()
 
      
@@ -521,7 +523,7 @@ class ExoPlayerAdapter(
  
 
 @UnstableApi
-private fun GenericMediaItem.toMedia3MediaItem(): MediaItem {
+internal fun GenericMediaItem.toMedia3MediaItem(): MediaItem {
     val builder =
         MediaItem
             .Builder()
@@ -535,7 +537,7 @@ private fun GenericMediaItem.toMedia3MediaItem(): MediaItem {
 }
 
 @UnstableApi
-private fun MediaItem.toGenericMediaItem(): GenericMediaItem =
+internal fun MediaItem.toGenericMediaItem(): GenericMediaItem =
     GenericMediaItem(
         mediaId = mediaId,
         uri = localConfiguration?.uri.toString(),
@@ -543,7 +545,7 @@ private fun MediaItem.toGenericMediaItem(): GenericMediaItem =
         customCacheKey = localConfiguration?.customCacheKey,
     )
 
-private fun GenericMediaMetadata.toMedia3MediaMetadata(): MediaMetadata =
+internal fun GenericMediaMetadata.toMedia3MediaMetadata(): MediaMetadata =
     MediaMetadata
         .Builder()
         .apply {
@@ -554,7 +556,7 @@ private fun GenericMediaMetadata.toMedia3MediaMetadata(): MediaMetadata =
             description?.let { setDescription(it) }
         }.build()
 
-private fun MediaMetadata.toGenericMediaMetadata(): GenericMediaMetadata =
+internal fun MediaMetadata.toGenericMediaMetadata(): GenericMediaMetadata =
     GenericMediaMetadata(
         title = title?.toString(),
         artist = artist?.toString(),
@@ -567,7 +569,7 @@ private fun GenericPlaybackParameters.toMedia3PlaybackParameters(): PlaybackPara
 
 private fun PlaybackParameters.toGenericPlaybackParameters(): GenericPlaybackParameters = GenericPlaybackParameters(speed, pitch)
 
-private fun Tracks.toGenericTracks(): GenericTracks {
+internal fun Tracks.toGenericTracks(): GenericTracks {
     val genericGroups =
         groups.map { group ->
             GenericTracks.GenericTrackGroup(trackCount = group.length)

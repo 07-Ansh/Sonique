@@ -15,8 +15,10 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import androidx.core.content.getSystemService
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
+import com.sonique.domain.mediaservice.player.MediaPlayerInterface
+import com.sonique.media3.exoplayer.CrossfadeExoPlayerAdapter
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaLibraryService
@@ -50,7 +52,10 @@ internal class SimpleMediaService :
     MediaLibraryService(),
     KoinComponent {
     private val coroutineScope by inject<CoroutineScope>(named(Config.SERVICE_SCOPE))
-    private val player: ExoPlayer by inject<ExoPlayer>(named(Config.MAIN_PLAYER))
+    private val mediaPlayerAdapter: MediaPlayerInterface by inject<MediaPlayerInterface>()
+    private val player: Player by lazy {
+        (mediaPlayerAdapter as CrossfadeExoPlayerAdapter).forwardingPlayer
+    }
     private val coilBitmapLoader: CoilBitmapLoader by inject<CoilBitmapLoader>()
 
     private var mediaSession: MediaLibrarySession? = null
@@ -210,7 +215,6 @@ internal class SimpleMediaService :
                 mediaSession?.run {
                     this.player.pause()
                     this.player.playWhenReady = false
-                    this.player.release()
                     this.release()
                 }
                  
@@ -251,7 +255,7 @@ internal class SimpleMediaService :
     @UnstableApi
     private fun provideMediaLibrarySession(
         service: MediaLibraryService,
-        player: ExoPlayer,
+        player: Player,
         callback: MediaLibrarySession.Callback,
     ): MediaLibrarySession =
         MediaLibrarySession

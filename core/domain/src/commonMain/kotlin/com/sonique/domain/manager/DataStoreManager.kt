@@ -246,6 +246,10 @@ interface DataStoreManager {
 
     suspend fun setCrossfadeDuration(duration: Int)
 
+    val crossfadeDjMode: Flow<String>
+
+    suspend fun setCrossfadeDjMode(enabled: Boolean)
+
 
 
     val youtubeSubtitleLanguage: Flow<String>
@@ -311,6 +315,8 @@ interface DataStoreManager {
         const val LOCAL_PLAYLIST_FILTER_NEWER_FIRST = "newer_first"
         const val LOCAL_PLAYLIST_FILTER_TITLE = "title"
         const val LOCAL_PLAYLIST_FILTER_CUSTOM_ORDER = "custom_order"
+
+        const val CROSSFADE_DURATION_AUTO = 0
 
 
     }

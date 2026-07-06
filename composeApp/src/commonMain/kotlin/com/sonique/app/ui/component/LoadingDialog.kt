@@ -56,7 +56,7 @@ fun LoadingDialog(
                             style = typo().headlineMedium,
                         )
                         Row(Modifier.padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                            CircularProgressIndicator()
+                            GoogleCircularProgressIndicator()
                             Spacer(Modifier.size(15.dp))
                             Text(text = message)
                         }

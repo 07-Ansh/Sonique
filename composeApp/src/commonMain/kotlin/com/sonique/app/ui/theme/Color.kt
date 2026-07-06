@@ -6,12 +6,12 @@ import androidx.compose.ui.graphics.Color
 // Base Palette
 // ============================================
 
-val musica_accent = Color(0xFFFFFFFF)  // White accent - modern, clean
+val musica_accent = Color(0xFFFF3B30)  // Red accent - vibrant, premium
 val musica_black = Color(0xFF000000)
 val musica_dark_grey = Color(0xFF1C1C1E)
 val musica_light_grey = Color(0xFF2C2C2E)
 val musica_grey_text = Color(0xFFB3B3B3)
-val musica_white = Color(0xFFFFFFFF)
+val musica_white = Color(0xFFEEEEEE)
 
 // ============================================
 // Semantic Colors - Backgrounds
@@ -19,7 +19,7 @@ val musica_white = Color(0xFFFFFFFF)
 
 val backgroundPrimary = musica_dark_grey       // #1C1C1E - Main screen background
 val backgroundElevated = musica_light_grey     // #2C2C2E - Elevated surfaces
-val backgroundCard = Color(0xFF242424)         // Cards, dialogs
+var backgroundCard = Color(0xFF242424)         // Cards, dialogs
 
 // ============================================
 // Semantic Colors - Overlays
@@ -74,10 +74,10 @@ val md_theme_dark_errorContainer = Color(0xFF93000A)
 val md_theme_dark_onError = Color(0xFF690005)
 val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
 
-val md_theme_dark_background = backgroundPrimary
+var md_theme_dark_background = backgroundPrimary
 val md_theme_dark_onBackground = textPrimary
 
-val md_theme_dark_surface = backgroundPrimary
+var md_theme_dark_surface = backgroundPrimary
 val md_theme_dark_onSurface = textPrimary
 
 val md_theme_dark_surfaceVariant = backgroundElevated
@@ -107,6 +107,6 @@ val shimmerLine = Color(0xFF4D4848)          // Shimmer animation line
 // Utility colors
 val seed = musica_accent
 val bottomBarSeedDark = musica_accent
-val white = Color(0xFFFFFFFF)
+val white = Color(0xFFEEEEEE)
 val transparent = Color(0x00000000)
 

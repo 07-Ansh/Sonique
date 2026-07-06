@@ -287,7 +287,23 @@ class SharedViewModel(
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
+    val blurBg: StateFlow<Boolean> = dataStoreManager.blurPlayerBackground
+        .map { it == DataStoreManager.TRUE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
+
+    val enableLiquidGlass: StateFlow<Boolean> = dataStoreManager.enableLiquidGlass
+        .map { it == DataStoreManager.TRUE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
+
+    val liquidGlassGlassiness: StateFlow<Float> = dataStoreManager.liquidGlassGlassiness
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0.5f)
+
     val openAppTime: StateFlow<Int> = dataStoreManager.openAppTime.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0)
+
+    val showMostPlayed: StateFlow<Boolean> = dataStoreManager.showMostPlayed
+        .map { it == DataStoreManager.TRUE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
+
     private val _shareSavedLyrics: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val shareSavedLyrics: StateFlow<Boolean> get() = _shareSavedLyrics
 
@@ -921,6 +937,12 @@ class SharedViewModel(
         _showGitHubPopup.value = false
         viewModelScope.launch {
             dataStoreManager.setNeverShowGithubPopup(true)
+        }
+    }
+
+    fun setShowMostPlayed(show: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setShowMostPlayed(show)
         }
     }
 

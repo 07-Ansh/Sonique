@@ -1,6 +1,9 @@
 package com.sonique.app.ui.screen.settings
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -20,7 +23,15 @@ import com.mohamedrejeb.calf.picker.FilePickerSelectionMode
 import com.mohamedrejeb.calf.picker.rememberFilePickerLauncher
 import com.sonique.app.expect.ui.fileSaverResult
 import com.sonique.app.ui.component.SettingItem
+import com.sonique.app.ui.component.SettingsSectionHeader
 import com.sonique.app.viewModel.SettingsViewModel
+import com.sonique.app.viewModel.SharedViewModel
+import org.koin.compose.koinInject
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import com.sonique.domain.extension.now
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
@@ -36,6 +47,10 @@ fun SettingsBackupScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
+    val sharedViewModel: SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
     val coroutineScope = rememberCoroutineScope()
     val pl = com.mohamedrejeb.calf.core.LocalPlatformContext.current
     val backupDownloaded by viewModel.backupDownloaded.collectAsStateWithLifecycle()
@@ -44,7 +59,12 @@ fun SettingsBackupScreen(
     val appName = stringResource(Res.string.app_name)
 
     val formatter = LocalDateTime.Format {
-        byUnicodePattern("yyyyMMddHHmmss")
+        year()
+        monthNumber()
+        day()
+        hour()
+        minute()
+        second()
     }
 
     val backupLauncher = fileSaverResult(
@@ -69,28 +89,38 @@ fun SettingsBackupScreen(
         viewModel.getData()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Backup") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Back")
-                    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Backup") },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .then(
+                            if (enableLiquidGlass) {
+                                Modifier.liquidGlass(backdrop, shape = CircleShape, interactive = true)
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Back")
                 }
-            )
-        }
-    ) { innerPadding ->
+            }
+        )
         LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 140.dp)
         ) {
             item {
+                SettingsSectionHeader("Automation")
                 SettingItem(
                     title = stringResource(Res.string.backup_downloaded),
                     subtitle = stringResource(Res.string.backup_downloaded_description),
                     switch = (backupDownloaded to { viewModel.setBackupDownloaded(it) }),
                 )
+                SettingsSectionHeader("Manual Actions")
                 SettingItem(
                     title = stringResource(Res.string.backup),
                     subtitle = when (backupState) {

@@ -456,7 +456,7 @@ private fun provideCacheDataSource(
                                     ).addInterceptor(
                                         HttpLoggingInterceptor()
                                             .apply {
-                                                level = HttpLoggingInterceptor.Level.HEADERS
+                                                level = HttpLoggingInterceptor.Level.NONE
                                             },
                                     ).build(),
                             ),

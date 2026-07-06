@@ -222,3 +222,21 @@
 # JSoup and re2j
 -dontwarn com.google.re2j.Matcher
 -dontwarn com.google.re2j.Pattern
+
+# Javascript Interface keep rules for WebView
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+
+# Keep NewPipe Extractor classes
+-keep class org.schabi.newpipe.extractor.** { *; }
+-keep interface org.schabi.newpipe.extractor.** { *; }
+
+# Keep PipePipe Extractor classes
+-keep class dev.maxrave.pipepipe.extractor.** { *; }
+-keep interface dev.maxrave.pipepipe.extractor.** { *; }
+
+# Suppress warnings for optional deps referenced by PipePipe but not included at runtime
+-dontwarn org.mozilla.javascript.ObjToIntMap
+-dontwarn org.mozilla.javascript.**
+

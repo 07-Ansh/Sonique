@@ -33,6 +33,7 @@ import io.ktor.client.engine.ProxyConfig
 import io.ktor.client.plugins.compression.ContentEncoding
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
@@ -107,6 +108,7 @@ class Ytmusic {
         set(value) {
             field = value
             cookieMap = if (value == null) emptyMap() else parseCookieString(value)
+            extractor.logIn(value)
         }
 
     var pageId: String? = null
@@ -139,9 +141,13 @@ class Ytmusic {
  
  
  
+            install(HttpRedirect) {
+                checkHttpMethod = false
+                allowHttpsDowngrade = true
+            }
             install(Logging) {
                 logger = io.ktor.client.plugins.logging.Logger.DEFAULT
-                level = LogLevel.ALL
+                level = LogLevel.NONE
             }
             install(ContentNegotiation) {
                 protobuf()

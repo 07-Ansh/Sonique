@@ -2,6 +2,9 @@ package com.sonique.app.ui.navigation.graph
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,16 +43,64 @@ fun AppNavigationGraph(
         navController,
         startDestination = startDestination,
         enterTransition = {
-            fadeIn()
+            val initialIndex = getTabExtensionIndex(initialState.destination.route)
+            val targetIndex = getTabExtensionIndex(targetState.destination.route)
+            if (targetIndex > initialIndex) {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            }
         },
         exitTransition = {
-            fadeOut()
+            val initialIndex = getTabExtensionIndex(initialState.destination.route)
+            val targetIndex = getTabExtensionIndex(targetState.destination.route)
+            if (targetIndex > initialIndex) {
+                slideOutHorizontally(
+                    targetOffsetX = { -it },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            }
         },
         popEnterTransition = {
-            fadeIn()
+            val initialIndex = getTabExtensionIndex(initialState.destination.route)
+            val targetIndex = getTabExtensionIndex(targetState.destination.route)
+            if (targetIndex > initialIndex) {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            }
         },
         popExitTransition = {
-            fadeOut()
+            val initialIndex = getTabExtensionIndex(initialState.destination.route)
+            val targetIndex = getTabExtensionIndex(targetState.destination.route)
+            if (targetIndex > initialIndex) {
+                slideOutHorizontally(
+                    targetOffsetX = { -it },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            }
         },
     ) {
          
@@ -117,6 +168,17 @@ fun AppNavigationGraph(
                 showNavBar(false)
             },
         )
+    }
+}
+
+private fun getTabExtensionIndex(route: String?): Int {
+    if (route == null) return 0
+    return when {
+        route.contains("HomeDestination") -> 0
+        route.contains("SearchDestination") -> 1
+        route.contains("DownloadsDestination") -> 2
+        route.contains("LibraryDestination") -> 3
+        else -> 0
     }
 }
 

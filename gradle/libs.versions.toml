@@ -1,7 +1,7 @@
 [versions]
 # App version
-version-name="2.0.0"
-version-code="55"
+version-name="2.0.1"
+version-code="56"
 
 android = "9.0.0"
 kotlin = "2.2.21"
@@ -48,6 +48,8 @@ json = "1.9.0"
 
 slf4j = "1.7.36"
 newpipe = "v0.26.1"
+brave-newpipe = "v0.26.3"
+pipepipe = "c3139c584d"
 webkit = "1.14.0"
 kermit = "2.0.8"
 paging-common = "3.3.6"
@@ -161,6 +163,8 @@ common = { module = "commons-codec:commons-codec", version.ref = "common" }
 
 logging = { module = "org.slf4j:slf4j-android", version.ref = "slf4j" }
 newpipe-extractor = { module = "com.github.TeamNewPipe:NewPipeExtractor", version.ref = "newpipe" }
+brave-extractor = { module = "com.github.maxrave-dev:BravePipeExtractor", version.ref = "brave-newpipe" }
+pipepipe-extractor = { module = "com.github.maxrave-dev:PipePipeExtractor", version.ref = "pipepipe" }
 #leak-canary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 kermit-logging = { module = "co.touchlab:kermit", version.ref = "kermit" }
 glance = { group = "androidx.glance", name = "glance", version.ref = "glance" }

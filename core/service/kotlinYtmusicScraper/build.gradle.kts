@@ -108,7 +108,8 @@ kotlin {
                 implementation(libs.ytdlp.android)
                 implementation(libs.gson)
 
-                implementation(libs.newpipe.extractor)
+                implementation(libs.pipepipe.extractor)
+                implementation(libs.brave.extractor)
                 implementation(libs.okhttp3.okhttp)
             }
         }
@@ -125,11 +126,16 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(libs.newpipe.extractor)
+                implementation(libs.pipepipe.extractor)
+                implementation(libs.brave.extractor)
                 implementation(libs.okhttp3.okhttp)
             }
         }
     }
+}
+
+configurations.all {
+    exclude(group = "com.google.protobuf", module = "protobuf-java")
 }
 
 tasks.withType<CompileArtProfileTask> {

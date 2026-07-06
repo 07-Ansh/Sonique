@@ -6,6 +6,8 @@ import com.sonique.kotlinytmusicscraper.models.response.DownloadProgress
 expect class Extractor() {
     fun init()
 
+    fun logIn(cookie: String?)
+
     fun update()
 
     fun mergeAudioVideoDownload(filePath: String): DownloadProgress

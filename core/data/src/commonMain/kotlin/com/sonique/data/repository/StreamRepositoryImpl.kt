@@ -155,25 +155,15 @@ internal class StreamRepositoryImpl(
                         )
 
                         val audioFormat =
-                            formatList.find { it.itag == itag } ?: formatList.find { it.itag == 141 }
-                                ?: formatList.find { it.isAudio && it.url.isNullOrEmpty().not() }
+                            formatList.find { it.itag == itag } ?: if (itag == 774) {
+                                // 774 is a YouTube Premium Opus stream — fall back to 141 (256kbps AAC)
+                                formatList.find { it.itag == 141 }
+                            } else {
+                                formatList.find { it.isAudio && it.url.isNullOrEmpty().not() }
+                            }
                         var format = audioFormat
                         if (format == null) {
                             format = formatList.lastOrNull { it.url.isNullOrEmpty().not() }
-                        }
-                        val superFormat =
-                            formatList
-                                .filter {
-                                    it.audioQuality == "AUDIO_QUALITY_HIGH"
-                                }.let { highFormat ->
-                                    highFormat.firstOrNull {
-                                        it.itag == 774 && it.url.isNullOrEmpty().not()
-                                    } ?: highFormat.firstOrNull {
-                                        it.url.isNullOrEmpty().not()
-                                    }
-                                }
-                        if (!isVideo && superFormat != null) {
-                            format = superFormat
                         }
                         if (muxed) {
                             format = formatList
@@ -183,7 +173,6 @@ internal class StreamRepositoryImpl(
                                 }.maxByOrNull { it.width ?: 0 }
                         }
                         Logger.w("Stream", "Selected hls ${response.streamingData?.hlsManifestUrl}")
-                        Logger.w("Stream", "Super format: $superFormat")
                         Logger.w("Stream", "format: $format")
                         Logger.d("Stream", "expireInSeconds ${response.streamingData?.expiresInSeconds}")
                         Logger.w("Stream", "expired at ${now().plusSeconds(response.streamingData?.expiresInSeconds?.toLong() ?: 0L)}")
@@ -229,7 +218,7 @@ internal class StreamRepositoryImpl(
                                     ),
                                 cpn = data.first,
                                 expiredTime = now().plusSeconds(response.streamingData?.expiresInSeconds?.toLong() ?: 0L),
-                                audioUrl = if (muxed) response.streamingData?.hlsManifestUrl else (superFormat?.url ?: audioFormat?.url),
+                                audioUrl = if (muxed) response.streamingData?.hlsManifestUrl else format?.url,
                                 videoUrl = null,
                             ),
                         )

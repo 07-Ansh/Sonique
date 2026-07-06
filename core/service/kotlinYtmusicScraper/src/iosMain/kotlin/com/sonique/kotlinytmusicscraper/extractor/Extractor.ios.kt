@@ -6,6 +6,9 @@ import com.sonique.kotlinytmusicscraper.models.response.DownloadProgress
 actual class Extractor {
     actual fun init() {
     }
+    actual fun logIn(cookie: String?) {
+        // No-op on iOS
+    }
     actual fun update() {
     }
 

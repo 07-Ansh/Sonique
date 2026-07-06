@@ -47,7 +47,7 @@ common = "1.19.0"
 json = "1.9.0"
 
 slf4j = "1.7.36"
-newpipe = "251f7f6625c76dc8e975be77666a4ede223c56c7"
+newpipe = "v0.26.1"
 webkit = "1.14.0"
 kermit = "2.0.8"
 paging-common = "3.3.6"
@@ -160,7 +160,7 @@ kotlin-onetimepassword = { module = "dev.turingcomplete:kotlin-onetimepassword",
 common = { module = "commons-codec:commons-codec", version.ref = "common" }
 
 logging = { module = "org.slf4j:slf4j-android", version.ref = "slf4j" }
-newpipe-extractor = { module = "com.github.teamnewpipe:NewPipeExtractor", version.ref = "newpipe" }
+newpipe-extractor = { module = "com.github.TeamNewPipe:NewPipeExtractor", version.ref = "newpipe" }
 #leak-canary = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary" }
 kermit-logging = { module = "co.touchlab:kermit", version.ref = "kermit" }
 glance = { group = "androidx.glance", name = "glance", version.ref = "glance" }

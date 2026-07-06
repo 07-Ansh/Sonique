@@ -30,21 +30,21 @@ fun typo(): Typography {
                     fontSize = 14.sp,  
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
-                    color = Color.White,
+                    color = white,
                 ),
             titleMedium =
                 TextStyle(
                     fontSize = 16.sp, 
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
-                    color = Color.White,
+                    color = white,
                 ),
             titleLarge =
                 TextStyle(
                     fontSize = 22.sp, 
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily,
-                    color = Color.White,
+                    color = white,
                 ),
             bodySmall =
                 TextStyle(
@@ -72,21 +72,21 @@ fun typo(): Typography {
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily,
-                    color = Color.White,
+                    color = white,
                 ),
             headlineMedium =
                 TextStyle(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.SemiBold,
                     fontFamily = fontFamily,
-                    color = Color.White,
+                    color = white,
                 ),
             headlineLarge =
                 TextStyle(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = fontFamily,
-                    color = Color.White,
+                    color = white,
                 ),
             labelMedium =
                 TextStyle(

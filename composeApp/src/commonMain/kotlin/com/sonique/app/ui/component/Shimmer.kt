@@ -24,6 +24,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sonique.app.extension.shimmer
 import com.sonique.app.ui.theme.shimmerBackground
+import androidx.compose.ui.graphics.Color
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import org.koin.compose.koinInject
+import com.sonique.app.getPlatform
+import com.sonique.app.Platform
+
+@Composable
+fun shimmerColor(): Color {
+    val sharedViewModel: com.sonique.app.viewModel.SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsState(false)
+    return if (enableLiquidGlass && getPlatform() == Platform.Android) {
+        Color(0x15FFFFFF)
+    } else {
+        shimmerBackground
+    }
+}
 
 @Composable
 fun HomeItemShimmer() {
@@ -34,7 +51,7 @@ fun HomeItemShimmer() {
                 .height(36.dp)
                 .padding(vertical = 8.dp)
                 .background(
-                    color = shimmerBackground,
+                    color = shimmerColor(),
                 ).clip(RoundedCornerShape(8.dp))
                 .shimmer(),
         )
@@ -58,7 +75,7 @@ fun PlaylistShimmer() {
                 .size(160.dp)
                 .clip(RoundedCornerShape(8.dp))
                 .background(
-                    color = shimmerBackground,
+                    color = shimmerColor(),
                 ).shimmer(),
         )
         Spacer(modifier = Modifier.size(10.dp))
@@ -68,7 +85,7 @@ fun PlaylistShimmer() {
                 .height(18.dp)
                 .clip(RoundedCornerShape(4.dp))
                 .background(
-                    color = shimmerBackground,
+                    color = shimmerColor(),
                 ).shimmer(),
         )
         Spacer(modifier = Modifier.size(10.dp))
@@ -78,7 +95,7 @@ fun PlaylistShimmer() {
                 .height(18.dp)
                 .clip(RoundedCornerShape(4.dp))
                 .background(
-                    color = shimmerBackground,
+                    color = shimmerColor(),
                 ).shimmer(),
         )
     }
@@ -90,13 +107,16 @@ fun SpeedDialShimmerItem(modifier: Modifier = Modifier) {
         modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(8.dp))
-            .background(shimmerBackground)
+            .background(shimmerColor())
             .shimmer(),
     )
 }
 
 @Composable
 fun SpeedDialShimmer() {
+    val sharedViewModel: com.sonique.app.viewModel.SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsState(false)
+
     Column(Modifier.padding(bottom = 20.dp)) {
         Box(
             Modifier
@@ -104,21 +124,59 @@ fun SpeedDialShimmer() {
                 .height(36.dp)
                 .padding(vertical = 8.dp)
                 .background(
-                    color = shimmerBackground,
+                    color = shimmerColor(),
                 ).clip(RoundedCornerShape(8.dp))
                 .shimmer(),
         )
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 0.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            repeat(3) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    repeat(3) {
-                        SpeedDialShimmerItem(Modifier.weight(1f))
+        if (enableLiquidGlass && getPlatform() == Platform.Android) {
+            LazyRow(
+                userScrollEnabled = false,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(5) {
+                    Column(
+                        Modifier.width(160.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            Modifier
+                                .size(160.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(shimmerColor())
+                                .shimmer()
+                        )
+                        Box(
+                            Modifier
+                                .width(130.dp)
+                                .height(16.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(shimmerColor())
+                                .shimmer()
+                        )
+                        Box(
+                            Modifier
+                                .width(100.dp)
+                                .height(14.dp)
+                                .clip(RoundedCornerShape(4.dp))
+                                .background(shimmerColor())
+                                .shimmer()
+                        )
+                    }
+                }
+            }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 0.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                repeat(3) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        repeat(3) {
+                            SpeedDialShimmerItem(Modifier.weight(1f))
+                        }
                     }
                 }
             }
@@ -153,7 +211,7 @@ fun ShimmerSearchItem() {
             modifier = Modifier
                 .size(56.dp)
                 .clip(RoundedCornerShape(4.dp))
-                .background(shimmerBackground)
+                .background(shimmerColor())
                 .shimmer()
         )
 
@@ -166,7 +224,7 @@ fun ShimmerSearchItem() {
                     .width(200.dp)
                     .height(16.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(shimmerBackground)
+                    .background(shimmerColor())
                     .shimmer()
             )
 
@@ -177,7 +235,7 @@ fun ShimmerSearchItem() {
                     .width(150.dp)
                     .height(14.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(shimmerBackground)
+                    .background(shimmerColor())
                     .shimmer()
             )
 
@@ -188,7 +246,7 @@ fun ShimmerSearchItem() {
                     .width(80.dp)
                     .height(12.dp)
                     .clip(RoundedCornerShape(4.dp))
-                    .background(shimmerBackground)
+                    .background(shimmerColor())
                     .shimmer()
             )
         }

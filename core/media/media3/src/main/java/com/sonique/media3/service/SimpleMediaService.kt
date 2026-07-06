@@ -63,6 +63,7 @@ internal class SimpleMediaService :
     private val binder = MusicBinder()
 
     private lateinit var playerNotificationManager: PlayerNotificationManager
+    private var keepAliveJob: kotlinx.coroutines.Job? = null
 
     inner class MusicBinder : Binder() {
         val service: SimpleMediaService
@@ -156,7 +157,8 @@ internal class SimpleMediaService :
                                         startForeground(notificationId, notification)
                                     }
                                 }
-                                coroutineScope.launch {
+                                keepAliveJob?.cancel()
+                                keepAliveJob = coroutineScope.launch {
                                     while (coroutineScope.isActive) {
                                         startFg()
                                         delay(30.seconds)

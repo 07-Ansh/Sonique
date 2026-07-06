@@ -23,11 +23,19 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import org.koin.compose.koinInject
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.navigation.NavController
 import com.sonique.app.extension.NonLazyGrid
 import com.sonique.app.ui.navigation.destination.library.LibraryDynamicPlaylistDestination
@@ -115,15 +123,28 @@ fun LibraryTilingItem(
     onClick: () -> Unit = {},
 ) {
     val title = stringResource(state.title)
+    val sharedViewModel: SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
+    val cardModifier = if (enableLiquidGlass) {
+        Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.White.copy(alpha = 0.05f))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(20.dp))
+            .liquidGlass(backdrop, shape = RoundedCornerShape(20.dp), interactive = true)
+            .clickable { onClick.invoke() }
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    } else {
+        Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(state.containerColor)
+            .clickable { onClick.invoke() }
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+    }
+
     Box(
-        modifier =
-            Modifier
-                .clip(RoundedCornerShape(8.dp))
-                .background(state.containerColor)
-                .clickable {
-                    onClick.invoke()
-                }
-                .padding(horizontal = 20.dp, vertical = 10.dp),
+        modifier = cardModifier,
         contentAlignment = Alignment.Center,
     ) {
         Text(

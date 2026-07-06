@@ -32,3 +32,6 @@ data object SettingsAboutDestination
 
 @Serializable
 data object SettingsUpdateDestination
+
+@Serializable
+data object SettingsUiDestination

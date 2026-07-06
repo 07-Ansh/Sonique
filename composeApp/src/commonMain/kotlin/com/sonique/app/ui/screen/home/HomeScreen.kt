@@ -89,6 +89,18 @@ import com.sonique.domain.mediaservice.handler.QueueData
 import com.sonique.domain.utils.toTrack
 import com.sonique.logger.Logger
 import com.sonique.app.extension.isScrollingUp
+import com.kmpalette.rememberPaletteState
+import com.sonique.app.extension.getColorFromPalette
+import com.sonique.app.expect.ui.toImageBitmap
+import com.sonique.app.extension.angledGradientBackground
+import coil3.imageLoader
+import coil3.request.SuccessResult
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.alpha
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.collectLatest
 import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.Chip
 import com.sonique.app.ui.component.DropdownButton
@@ -220,6 +232,106 @@ fun HomeScreen(
     val openAppTime by sharedViewModel.openAppTime.collectAsStateWithLifecycle()
     val shareLyricsPermissions by sharedViewModel.shareSavedLyrics.collectAsStateWithLifecycle()
 
+    val speedDialData = remember(homeData) {
+        val priorityKeywords = listOf("listen again")
+        val generalKeywords = listOf(
+            "quick picks", "albums for you", "your daily discover",
+            "long listens", "from your library", "featured playlists for you"
+        )
+
+        // 1. Gather matching contents
+        val priorityContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
+        val generalContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
+
+        homeData.forEach { section ->
+            val titleLower = section.title.lowercase()
+            val subtitleLower = section.subtitle?.lowercase() ?: ""
+            
+            val contents = section.contents.filterNotNull()
+            if (priorityKeywords.any { it in titleLower || it in subtitleLower }) {
+                priorityContents.addAll(contents)
+            } else if (generalKeywords.any { it in titleLower || it in subtitleLower }) {
+                generalContents.addAll(contents)
+            }
+        }
+
+        val distinctPriority = priorityContents.distinctBy { it.title }.shuffled()
+        val remainingGeneral = generalContents.filter { gen -> distinctPriority.none { pri -> pri.title == gen.title } }.distinctBy { it.title }.shuffled()
+
+        // 2. Combine and Shuffle
+        // Prioritize Listen Again items at the very beginning
+        val combined = (distinctPriority + remainingGeneral)
+        
+        // 3. Guarantee 36 items (4 pages of 9)
+        val finalContents = if (combined.size >= 36) {
+            combined.take(36)
+        } else {
+            val allOtherContents = homeData.flatMap { it.contents }.filterNotNull().filter { other -> combined.none { c -> c.title == other.title } }.distinctBy { it.title }.shuffled()
+            (combined + allOtherContents).take(36)
+        }
+
+        // 4. Create the injected Speed Dial home item
+        com.sonique.domain.data.model.home.HomeItem(
+            title = "Speed dial",
+            contents = finalContents
+        )
+    }
+
+    val paletteState = rememberPaletteState()
+    val context = LocalPlatformContext.current
+    val firstThumbnailUrl = remember(speedDialData) {
+        speedDialData.contents.firstOrNull()?.thumbnails?.lastOrNull()?.url
+    }
+
+    var topHeaderColor by remember {
+        mutableStateOf(md_theme_dark_background)
+    }
+    val animatedColor by animateColorAsState(topHeaderColor, tween(500))
+
+    LaunchedEffect(firstThumbnailUrl) {
+        if (!firstThumbnailUrl.isNullOrEmpty()) {
+            try {
+                val request = ImageRequest.Builder(context)
+                    .data(firstThumbnailUrl)
+                    .crossfade(true)
+                    .build()
+                val result = context.imageLoader.execute(request)
+                if (result is SuccessResult) {
+                    val bitmap = result.image.toImageBitmap()
+                    paletteState.generate(bitmap)
+                }
+            } catch (e: Exception) {
+                Logger.e("HomeScreen", "Failed to extract dominant color: ${e.message}")
+            }
+        }
+    }
+
+    LaunchedEffect(paletteState) {
+        snapshotFlow { paletteState.palette }
+            .distinctUntilChanged()
+            .collectLatest { palette ->
+                palette?.let {
+                    topHeaderColor = it.getColorFromPalette()
+                }
+            }
+    }
+
+    val scrollProgress by remember {
+        derivedStateOf {
+            if (scrollState.firstVisibleItemIndex > 0) {
+                1f
+            } else {
+                (scrollState.firstVisibleItemScrollOffset.toFloat() / 500f).coerceIn(0f, 1f)
+            }
+        }
+    }
+
+    val topBarBackgroundColor by remember {
+        derivedStateOf {
+            md_theme_dark_background.copy(alpha = scrollProgress)
+        }
+    }
+
 
 
     var topAppBarHeightPx by rememberSaveable {
@@ -300,6 +412,29 @@ fun HomeScreen(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .alpha(1f - scrollProgress)
+                .angledGradientBackground(listOf(animatedColor, md_theme_dark_background), 25f),
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            listOf(
+                                Color.Transparent,
+                                md_theme_dark_background.copy(alpha = 0.5f),
+                                md_theme_dark_background,
+                            ),
+                        ),
+                    ),
+            )
+        }
 
         PullToRefreshBox(
             modifier = Modifier,
@@ -335,51 +470,6 @@ fun HomeScreen(
                             }
                         )
                         } else {
-                            val speedDialData = remember(homeData) {
-                                val priorityKeywords = listOf("listen again")
-                                val generalKeywords = listOf(
-                                    "quick picks", "albums for you", "your daily discover",
-                                    "long listens", "from your library", "featured playlists for you"
-                                )
-
-                                // 1. Gather matching contents
-                                val priorityContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
-                                val generalContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
-
-                                homeData.forEach { section ->
-                                    val titleLower = section.title.lowercase()
-                                    val subtitleLower = section.subtitle?.lowercase() ?: ""
-                                    
-                                    val contents = section.contents.filterNotNull()
-                                    if (priorityKeywords.any { it in titleLower || it in subtitleLower }) {
-                                        priorityContents.addAll(contents)
-                                    } else if (generalKeywords.any { it in titleLower || it in subtitleLower }) {
-                                        generalContents.addAll(contents)
-                                    }
-                                }
-
-                                val distinctPriority = priorityContents.distinctBy { it.title }.shuffled()
-                                val remainingGeneral = generalContents.filter { gen -> distinctPriority.none { pri -> pri.title == gen.title } }.distinctBy { it.title }.shuffled()
-
-                                // 2. Combine and Shuffle
-                                // Prioritize Listen Again items at the very beginning
-                                val combined = (distinctPriority + remainingGeneral)
-                                
-                                // 3. Guarantee 36 items (4 pages of 9)
-                                val finalContents = if (combined.size >= 36) {
-                                    combined.take(36)
-                                } else {
-                                    val allOtherContents = homeData.flatMap { it.contents }.filterNotNull().filter { other -> combined.none { c -> c.title == other.title } }.distinctBy { it.title }.shuffled()
-                                    (combined + allOtherContents).take(36)
-                                }
-
-                                // 4. Create the injected Speed Dial home item
-                                com.sonique.domain.data.model.home.HomeItem(
-                                    title = "Speed dial",
-                                    contents = finalContents
-                                )
-                            }
-
                             LazyColumn(
                             modifier =
                                 Modifier
@@ -505,7 +595,7 @@ fun HomeScreen(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .background(md_theme_dark_background)
+                        .background(topBarBackgroundColor)
                         .onGloballyPositioned { coordinates ->
                             topAppBarHeightPx = coordinates.size.height
                             if (coordinates.size.height > topAppBarMaxHeightPx) {
@@ -514,6 +604,7 @@ fun HomeScreen(
                         },
             ) {
                 HomeTopAppBar(navController)
+                Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     modifier =
                     Modifier
@@ -581,8 +672,8 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .offset(y = (-12).dp)
             .padding(horizontal = 16.dp, vertical = 0.dp)
+            .padding(top = 8.dp)
             .windowInsetsPadding(WindowInsets.statusBars),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

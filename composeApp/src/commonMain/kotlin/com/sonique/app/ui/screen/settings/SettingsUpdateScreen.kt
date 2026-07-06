@@ -1,8 +1,10 @@
 package com.sonique.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,6 +15,10 @@ import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UpdateViewModel
 import com.sonique.domain.repository.ReleaseInfo
 import org.koin.compose.viewmodel.koinViewModel
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,24 +30,34 @@ fun SettingsUpdateScreen(
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
     val downloadStatus by sharedViewModel.downloadStatus.collectAsStateWithLifecycle()
     val isChecking by updateViewModel.isChecking.collectAsStateWithLifecycle()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("App Updates") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back")
-                    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("App Updates") },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .then(
+                            if (enableLiquidGlass) {
+                                Modifier.liquidGlass(backdrop, shape = CircleShape, interactive = true)
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Back")
                 }
-            )
-        }
-    ) { innerPadding ->
+            }
+        )
         Column(
             modifier = Modifier
-                .padding(innerPadding)
                 .fillMaxSize()
-                .padding(16.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(start = 16.dp, end = 16.dp, bottom = 140.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             if (updateAvailable != null) {
@@ -112,7 +128,7 @@ fun UpdateAvailableContent(
                     Text("Downloading... ${(status.progress * 100).toInt()}%")
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
-                        progress = status.progress,
+                        progress = { status.progress },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(modifier = Modifier.height(8.dp))

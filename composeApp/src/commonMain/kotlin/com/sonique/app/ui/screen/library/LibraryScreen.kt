@@ -23,6 +23,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -82,6 +85,12 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import org.koin.compose.koinInject
+import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.baseline_arrow_back_ios_new_24
 import sonique.composeapp.generated.resources.create
@@ -115,6 +124,11 @@ fun LibraryScreen(
     onScrolling: (onTop: Boolean) -> Unit = {},
     openDownloads: Boolean = false,
 ) {
+    val sharedViewModel: SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val showMostPlayed by sharedViewModel.showMostPlayed.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
     LaunchedEffect(openDownloads) {
         if (openDownloads) {
             viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)
@@ -214,7 +228,7 @@ fun LibraryScreen(
         onScrolling(scrollingUp)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
         Crossfade(
             modifier = Modifier.fillMaxSize(),
             targetState = currentFilter,
@@ -247,7 +261,7 @@ fun LibraryScreen(
                             )
                         }
 
-                        if (!listCanvasSong.data.isNullOrEmpty()) {
+                        if (showMostPlayed && !listCanvasSong.data.isNullOrEmpty()) {
                             item {
                                 LibraryItem(
                                     state =
@@ -266,17 +280,28 @@ fun LibraryScreen(
 
                         if (activeDownloads > 0) {
                             item {
-                                Card(
-                                    modifier = Modifier
+                                val cardModifier = if (enableLiquidGlass) {
+                                    Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 20.dp, vertical = 8.dp),
+                                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(Color.White.copy(alpha = 0.06f))
+                                        .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(28.dp))
+                                        .liquidGlass(backdrop, shape = RoundedCornerShape(28.dp), interactive = true)
+                                } else {
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                                }
+                                Card(
+                                    modifier = cardModifier,
                                     colors = CardDefaults.cardColors(
-                                        containerColor = backgroundCard  
+                                        containerColor = if (enableLiquidGlass) Color.Transparent else backgroundCard
                                     ),
                                     onClick = {
                                         viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)
                                     },
-                                    shape = RoundedCornerShape(12.dp)
+                                    shape = if (enableLiquidGlass) RoundedCornerShape(28.dp) else RoundedCornerShape(12.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(16.dp),

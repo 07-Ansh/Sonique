@@ -11,9 +11,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun CenterLoadingBox(modifier: Modifier) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        androidx.compose.material3.CircularProgressIndicator(
+        GoogleCircularProgressIndicator(
             modifier = Modifier.size(48.dp),
-            color = MaterialTheme.colorScheme.primary,
         )
     }
 }

@@ -31,10 +31,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.rounded.DragHandle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import com.sonique.app.ui.theme.musica_accent
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -515,24 +519,49 @@ fun PlaylistFullWidthItems(
         ) {
             Spacer(modifier = Modifier.width(8.dp))
             Box(modifier = Modifier.size(48.dp)) {
-                AsyncImage(
-                    model =
-                        ImageRequest
-                            .Builder(LocalPlatformContext.current)
-                            .data(thumb)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .diskCacheKey(thumb)
-                            .crossfade(true)
-                            .build(),
-                    placeholder = painterResource(Res.drawable.holder),
-                    error = painterResource(Res.drawable.holder),
-                    contentDescription = null,
-                    contentScale = ContentScale.FillWidth,
-                    modifier =
-                        Modifier
+                val isLikedPlaylist = thumb.contains("liked-songs") || title.lowercase().contains("liked")
+                if (isLikedPlaylist) {
+                    Box(
+                        modifier = Modifier
                             .fillMaxSize()
-                            .clip(RoundedCornerShape(4.dp)),
-                )
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFFFF3B30),
+                                        Color(0xFFE50914)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                } else {
+                    AsyncImage(
+                        model =
+                            ImageRequest
+                                .Builder(LocalPlatformContext.current)
+                                .data(thumb)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .diskCacheKey(thumb)
+                                .crossfade(true)
+                                .build(),
+                        placeholder = painterResource(Res.drawable.holder),
+                        error = painterResource(Res.drawable.holder),
+                        contentDescription = null,
+                        contentScale = ContentScale.FillWidth,
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(4.dp)),
+                    )
+                }
             }
             Column(
                 Modifier
@@ -556,7 +585,7 @@ fun PlaylistFullWidthItems(
                         Image(
                             imageVector = Icons.Default.PushPin,
                             contentDescription = null,
-                            colorFilter = ColorFilter.tint(Color.Cyan),
+                            colorFilter = ColorFilter.tint(musica_accent),
                             modifier =
                                 Modifier
                                     .rotate(30f)

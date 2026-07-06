@@ -262,6 +262,10 @@ interface DataStoreManager {
 
     suspend fun setEnableLiquidGlass(enable: Boolean)
 
+    val liquidGlassGlassiness: Flow<Float>
+
+    suspend fun setLiquidGlassGlassiness(glassiness: Float)
+
     val explicitContentEnabled: Flow<String>
 
     suspend fun setExplicitContentEnabled(enabled: Boolean)
@@ -274,6 +278,9 @@ interface DataStoreManager {
 
     val ambienceMode: Flow<String>
     suspend fun setAmbienceMode(enabled: Boolean)
+
+    val showMostPlayed: Flow<String>
+    suspend fun setShowMostPlayed(show: Boolean)
     
 
 

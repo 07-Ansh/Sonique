@@ -8,6 +8,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.graphics.Color
 
 
 
@@ -48,9 +49,37 @@ val DarkColors =
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun AppTheme(
+    enableLiquidGlass: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val colors = DarkColors
+    if (enableLiquidGlass) {
+        md_theme_dark_background = Color.Black
+        md_theme_dark_surface = Color.Black
+        backgroundCard = Color(0xFF141414)
+    } else {
+        md_theme_dark_background = backgroundPrimary
+        md_theme_dark_surface = backgroundPrimary
+        backgroundCard = Color(0xFF242424)
+    }
+
+    val colors = if (enableLiquidGlass) {
+        DarkColors.copy(
+            background = Color.Black,
+            surface = Color.Black,
+            surfaceVariant = Color.Black,
+            surfaceContainer = Color.Black,
+            surfaceContainerLow = Color.Black,
+            surfaceContainerHigh = backgroundCard,
+            surfaceContainerHighest = Color.Black,
+            surfaceDim = Color.Black,
+            primaryContainer = Color(0xFFFF3B30).copy(alpha = 0.25f),
+            secondaryContainer = Color.White.copy(alpha = 0.12f),
+            onPrimaryContainer = Color.White,
+            onSecondaryContainer = Color.White,
+        )
+    } else {
+        DarkColors
+    }
 
     MaterialExpressiveTheme(
         colorScheme = colors,

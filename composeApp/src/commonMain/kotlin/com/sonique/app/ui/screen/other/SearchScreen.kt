@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -33,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -40,6 +44,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -122,6 +127,8 @@ import sonique.composeapp.generated.resources.search_for_songs_artists_albums_pl
 import sonique.composeapp.generated.resources.what_do_you_want_to_listen_to
 import com.sonique.app.ui.component.OfflineScreen
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -207,80 +214,100 @@ fun SearchScreen(
             Modifier
                 .fillMaxSize()
                 .background(Color.Transparent)
-                .padding(bottom = 10.dp),
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(bottom = 10.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    focusManager.clearFocus()
+                },
     ) {
          
          
 
          
+        val backdrop = rememberBackdrop()
+
         SearchBar(
             inputField = {
-                SearchBarDefaults.InputField(
-                    query = searchText,
-                    onQueryChange = { newText ->
-                        searchText = newText
-                    },
-                    onSearch = { query ->
-                        if (query.isNotEmpty()) {
-                            isSearchSubmitted = true
-                            focusManager.clearFocus()
-                            searchViewModel.insertSearchHistory(query)
-                            when (searchScreenState.searchType) {
-                                SearchType.ALL -> searchViewModel.searchAll(query)
-                                SearchType.SONGS -> searchViewModel.searchSongs(query)
-                                SearchType.VIDEOS -> searchViewModel.searchVideos(query)
-                                SearchType.ALBUMS -> searchViewModel.searchAlbums(query)
-                                SearchType.ARTISTS -> searchViewModel.searchArtists(query)
-                                SearchType.PLAYLISTS -> searchViewModel.searchPlaylists(query)
-                                SearchType.FEATURED_PLAYLISTS -> searchViewModel.searchFeaturedPlaylist(query)
-                                SearchType.PODCASTS -> searchViewModel.searchPodcast(query)
+                CompositionLocalProvider(LocalTextStyle provides typo().bodyLarge) {
+                    SearchBarDefaults.InputField(
+                        query = searchText,
+                        onQueryChange = { newText ->
+                            searchText = newText
+                        },
+                        onSearch = { query ->
+                            if (query.isNotEmpty()) {
+                                isSearchSubmitted = true
+                                focusManager.clearFocus()
+                                searchViewModel.insertSearchHistory(query)
+                                when (searchScreenState.searchType) {
+                                    SearchType.ALL -> searchViewModel.searchAll(query)
+                                    SearchType.SONGS -> searchViewModel.searchSongs(query)
+                                    SearchType.VIDEOS -> searchViewModel.searchVideos(query)
+                                    SearchType.ALBUMS -> searchViewModel.searchAlbums(query)
+                                    SearchType.ARTISTS -> searchViewModel.searchArtists(query)
+                                    SearchType.PLAYLISTS -> searchViewModel.searchPlaylists(query)
+                                    SearchType.FEATURED_PLAYLISTS -> searchViewModel.searchFeaturedPlaylist(query)
+                                    SearchType.PODCASTS -> searchViewModel.searchPodcast(query)
+                                }
                             }
-                        }
-                    },
-                    expanded = false,
-                    onExpandedChange = {},
-                    enabled = true,
-                    placeholder = {
-                        Text(
-                            text = stringResource(Res.string.what_do_you_want_to_listen_to),
-                            style = typo().bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    },
-                    leadingIcon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.baseline_search_24),
-                            contentDescription = "Search",
-                        )
-                    },
-                    trailingIcon = {
-                        if (searchText.isNotEmpty()) {
-                            IconButton(
-                                modifier = Modifier.clip(CircleShape),
-                                onClick = {
-                                    searchText = ""
-                                    isSearchSubmitted = false
-                                },
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.baseline_close_24),
-                                    contentDescription = "Clear search",
-                                )
+                        },
+                        expanded = false,
+                        onExpandedChange = {},
+                        enabled = true,
+                        placeholder = {
+                            Text(
+                                text = stringResource(Res.string.what_do_you_want_to_listen_to),
+                                style = typo().bodyLarge,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                painter = painterResource(Res.drawable.baseline_search_24),
+                                contentDescription = "Search",
+                            )
+                        },
+                        trailingIcon = {
+                            if (searchText.isNotEmpty()) {
+                                IconButton(
+                                    modifier = Modifier.clip(CircleShape),
+                                    onClick = {
+                                        searchText = ""
+                                        isSearchSubmitted = false
+                                    },
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.baseline_close_24),
+                                        contentDescription = "Clear search",
+                                    )
+                                }
                             }
-                        }
-                    },
-                )
+                        },
+                    )
+                }
             },
             expanded = false,
             onExpandedChange = {},
+            colors = SearchBarDefaults.colors(
+                containerColor = Color.Transparent
+            ),
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester)
                     .onFocusChanged {
                         isFocused = it.isFocused
-                    }.padding(horizontal = 16.dp),
+                    }
+                    .padding(horizontal = 16.dp)
+                    .liquidGlass(
+                        backdrop = backdrop,
+                        shape = CircleShape,
+                        interactive = false
+                    ),
             shape = CircleShape,
             content = {},
         )

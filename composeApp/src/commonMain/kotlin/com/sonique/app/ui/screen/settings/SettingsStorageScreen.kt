@@ -19,6 +19,10 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.koinInject
+import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
 import coil3.compose.LocalPlatformContext
 import com.sonique.app.Platform
 import com.sonique.app.extension.bytesToMB
@@ -39,12 +43,16 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, coil3.annotation.ExperimentalCoilApi::class)
 @Composable
 fun SettingsStorageScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
+    val sharedViewModel: SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
     if (getPlatform() != Platform.Android) return
 
     val platformContext = LocalPlatformContext.current
@@ -81,21 +89,29 @@ fun SettingsStorageScreen(
         )
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Storage") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.Close, contentDescription = "Back")
-                    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text("Storage") },
+            navigationIcon = {
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .then(
+                            if (enableLiquidGlass) {
+                                Modifier.liquidGlass(backdrop, shape = CircleShape, interactive = true)
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = "Back")
                 }
-            )
-        }
-    ) { innerPadding ->
+            }
+        )
         LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.padding(horizontal = 16.dp)
+            modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 140.dp)
         ) {
             item {
                 SettingItem(

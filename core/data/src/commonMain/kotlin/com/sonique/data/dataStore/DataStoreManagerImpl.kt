@@ -1064,6 +1064,19 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val liquidGlassGlassiness: Flow<Float> =
+        settingsDataStore.data.map { preferences ->
+            preferences[LIQUID_GLASS_GLASSINESS] ?: 0.5f
+        }
+
+    override suspend fun setLiquidGlassGlassiness(glassiness: Float) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[LIQUID_GLASS_GLASSINESS] = glassiness
+            }
+        }
+    }
+
     override val explicitContentEnabled: Flow<String> =
         settingsDataStore.data.map { preferences ->
             preferences[EXPLICIT_CONTENT_ENABLED] ?: FALSE
@@ -1123,6 +1136,25 @@ internal class DataStoreManagerImpl(
             } else {
                 settingsDataStore.edit { settings ->
                     settings[AMBIENCE_MODE] = FALSE
+                }
+            }
+        }
+    }
+
+    override val showMostPlayed: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[SHOW_MOST_PLAYED] ?: TRUE
+        }
+
+    override suspend fun setShowMostPlayed(show: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (show) {
+                settingsDataStore.edit { settings ->
+                    settings[SHOW_MOST_PLAYED] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[SHOW_MOST_PLAYED] = FALSE
                 }
             }
         }
@@ -1200,8 +1232,11 @@ internal class DataStoreManagerImpl(
         val BACKUP_DOWNLOADED = stringPreferencesKey("backup_downloaded")
 
         val LIQUID_GLASS = stringPreferencesKey("liquid_glass")
+        val LIQUID_GLASS_GLASSINESS = floatPreferencesKey("liquid_glass_glassiness")
 
         val EXPLICIT_CONTENT_ENABLED = stringPreferencesKey("explicit_content_enabled")
+
+        val SHOW_MOST_PLAYED = stringPreferencesKey("show_most_played")
 
         val GITHUB_POPUP_SHOWN_COUNT = intPreferencesKey("github_popup_shown_count")
         val NEVER_SHOW_GITHUB_POPUP = booleanPreferencesKey("never_show_github_popup")

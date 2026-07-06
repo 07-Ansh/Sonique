@@ -41,6 +41,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Speaker
+import androidx.compose.material.icons.rounded.FastForward
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -97,6 +101,7 @@ import com.sonique.app.extension.formatDuration
 import com.sonique.app.extension.getColorFromPalette
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.ExplicitBadge
+import com.sonique.app.ui.component.GoogleCircularProgressIndicator
 import com.sonique.app.ui.component.HeartCheckBox
 import com.sonique.app.ui.component.PlayPauseButton
 import com.sonique.app.ui.component.PlayerControlLayout
@@ -110,6 +115,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
+import com.sonique.app.extension.toResizedBitmap
+import com.sonique.app.ui.component.liquidGlass
+import kotlinx.coroutines.isActive
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
+import androidx.compose.foundation.shape.CircleShape
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.holder
 import kotlin.math.roundToInt
@@ -122,6 +133,7 @@ private const val TAG = "MiniPlayer"
 fun MiniPlayer(
     modifier: Modifier,
     backdrop: PlatformBackdrop,
+    enableLiquidGlass: Boolean,
     sharedViewModel: SharedViewModel = koinInject(),
     onClose: () -> Unit,
     onClick: () -> Unit,
@@ -133,6 +145,32 @@ fun MiniPlayer(
 
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
+
+    LaunchedEffect(layer, enableLiquidGlass) {
+        val buffer = IntArray(25)
+        while (isActive && enableLiquidGlass) {
+            try {
+                val imageBitmap = layer.toImageBitmap()
+                val thumbnail = imageBitmap.toResizedBitmap(5, 5)
+                thumbnail.readPixels(buffer)
+            } catch (e: Exception) {
+                Logger.e(TAG, "Error getting pixels from layer: ${e.message}")
+            }
+            val averageLuminance =
+                (0 until 25).sumOf { index ->
+                    val color = buffer.get(index)
+                    val r = (color shr 16 and 0xFF) / 255f
+                    val g = (color shr 8 and 0xFF) / 255f
+                    val b = (color and 0xFF) / 255f
+                    0.2126 * r + 0.7152 * g + 0.0722 * b
+                } / 25
+            luminanceAnimation.animateTo(
+                averageLuminance.coerceIn(0.3, 0.8).toFloat(),
+                tween(500),
+            )
+            delay(1.seconds)
+        }
+    }
 
     val textColor by animateColorAsState(
         targetValue = if (luminanceAnimation.value > 0.6f) Color.Black else Color.White,
@@ -239,16 +277,20 @@ fun MiniPlayer(
 
     if (getPlatform() == Platform.Android) {
         Card(
-            shape = RoundedCornerShape(12.dp),
+            shape = if (enableLiquidGlass) RoundedCornerShape(28.dp) else RoundedCornerShape(12.dp),
             colors =
                 CardDefaults.cardColors(
-                    containerColor = md_theme_dark_background,
-                    disabledContainerColor = md_theme_dark_background,
+                    containerColor = if (enableLiquidGlass) Color.Transparent else md_theme_dark_background,
+                    disabledContainerColor = if (enableLiquidGlass) Color.Transparent else md_theme_dark_background,
                 ),
             modifier =
                 modifier
                     .then(
-                        Modifier,
+                        if (enableLiquidGlass) {
+                            Modifier.liquidGlass(backdrop, layer, luminanceAnimation.value, RoundedCornerShape(28.dp))
+                        } else {
+                            Modifier
+                        },
                     ).then(
                         Modifier
                             .clipToBounds()
@@ -280,11 +322,12 @@ fun MiniPlayer(
                         Modifier
                             .fillMaxSize(),
                 ) {
-                    Spacer(modifier = Modifier.size(8.dp))
+                    Spacer(modifier = Modifier.width(16.dp))
                     Box(modifier = Modifier.weight(1F)) {
                         Row(
                             modifier =
                                 Modifier
+                                    .fillMaxWidth()
                                     .offset { IntOffset(offsetX.value.roundToInt(), 0) }
                                     .pointerInput(Unit) {
                                         detectHorizontalDragGestures(
@@ -342,13 +385,13 @@ fun MiniPlayer(
                                 },
                                 modifier =
                                     Modifier
-                                        .size(40.dp)
+                                        .size(36.dp)
                                         .align(Alignment.CenterVertically)
                                         .clip(
-                                            RoundedCornerShape(4.dp),
+                                            RoundedCornerShape(8.dp),
                                         ),
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(12.dp))
                             AnimatedContent(
                                 targetState = songEntity,
                                 modifier = Modifier.weight(1F).fillMaxHeight(),
@@ -434,28 +477,40 @@ fun MiniPlayer(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.width(15.dp))
-                    HeartCheckBox(checked = liked, size = 30) {
-                        sharedViewModel.onUIEvent(UIEvent.ToggleLike)
-                    }
-                    Spacer(modifier = Modifier.width(15.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Crossfade(targetState = loading, label = "") {
                         if (it) {
-                            Box(modifier = Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(
+                            Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                                GoogleCircularProgressIndicator(
                                     modifier = Modifier.size(18.dp),
-                                    color = Color.LightGray,
-                                    strokeWidth = 3.dp,
                                 )
                             }
                         } else {
-                            PlayPauseButton(isPlaying = isPlaying, modifier = Modifier.size(48.dp)) {
-                                sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                            IconButton(
+                                onClick = { sharedViewModel.onUIEvent(UIEvent.PlayPause) },
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                    contentDescription = "Play/Pause",
+                                    tint = textColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(15.dp))
+                    IconButton(
+                        onClick = { sharedViewModel.onUIEvent(UIEvent.Next) },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.FastForward,
+                            contentDescription = "Next",
+                            tint = textColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
                 }
                 Box(
                     modifier =

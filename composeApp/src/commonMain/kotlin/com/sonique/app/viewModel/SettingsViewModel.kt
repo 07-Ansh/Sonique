@@ -198,6 +198,15 @@ class SettingsViewModel(
     private var _ambienceMode: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val ambienceMode: StateFlow<Boolean> = _ambienceMode
 
+    private var _enableLiquidGlass: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val enableLiquidGlass: StateFlow<Boolean> = _enableLiquidGlass
+
+    private var _liquidGlassGlassiness: MutableStateFlow<Float> = MutableStateFlow(0.5f)
+    val liquidGlassGlassiness: StateFlow<Float> = _liquidGlassGlassiness
+
+    private var _blurPlayerBackground: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val blurPlayerBackground: StateFlow<Boolean> = _blurPlayerBackground
+
 
 
     init {
@@ -254,6 +263,9 @@ class SettingsViewModel(
         getCanvasCache()
         getYoutubeSubtitleLanguage()
         getAmbienceMode()
+        getEnableLiquidGlass()
+        getLiquidGlassGlassiness()
+        getBlurPlayerBackground()
 
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
@@ -1064,6 +1076,12 @@ class SettingsViewModel(
             _spotifyLogIn.emit(loggedIn)
             if (!loggedIn) {
                 dataStoreManager.setSpdc("")
+                dataStoreManager.setSpotifyLyrics(false)
+                dataStoreManager.setSpotifyCanvas(false)
+                dataStoreManager.setSpotifyClientToken("")
+                dataStoreManager.setSpotifyClientTokenExpires(0)
+                dataStoreManager.setSpotifyPersonalToken("")
+                dataStoreManager.setSpotifyPersonalTokenExpires(0)
                 delay(500)
             }
             getSpotifyLogIn()
@@ -1126,6 +1144,51 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setAmbienceMode(enabled)
             getAmbienceMode()
+        }
+    }
+
+    fun getEnableLiquidGlass() {
+        viewModelScope.launch {
+            dataStoreManager.enableLiquidGlass.collect {
+                _enableLiquidGlass.emit(it == DataStoreManager.TRUE)
+            }
+        }
+    }
+
+    fun setEnableLiquidGlass(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setEnableLiquidGlass(enabled)
+            getEnableLiquidGlass()
+        }
+    }
+
+    fun getLiquidGlassGlassiness() {
+        viewModelScope.launch {
+            dataStoreManager.liquidGlassGlassiness.collect {
+                _liquidGlassGlassiness.emit(it)
+            }
+        }
+    }
+
+    fun setLiquidGlassGlassiness(glassiness: Float) {
+        viewModelScope.launch {
+            dataStoreManager.setLiquidGlassGlassiness(glassiness)
+            getLiquidGlassGlassiness()
+        }
+    }
+
+    fun getBlurPlayerBackground() {
+        viewModelScope.launch {
+            dataStoreManager.blurPlayerBackground.collect {
+                _blurPlayerBackground.emit(it == DataStoreManager.TRUE)
+            }
+        }
+    }
+
+    fun setBlurPlayerBackground(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setBlurPlayerBackground(enabled)
+            getBlurPlayerBackground()
         }
     }
 

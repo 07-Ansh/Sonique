@@ -122,6 +122,11 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.toBitmap
 import com.kmpalette.rememberPaletteState
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 import com.sonique.common.Config.MAIN_PLAYER
 import com.sonique.logger.Logger
 import com.sonique.app.Platform
@@ -252,7 +257,7 @@ fun NowPlayingScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun NowPlayingScreenContent(
     sharedViewModel: SharedViewModel = koinInject(),
@@ -281,6 +286,9 @@ fun NowPlayingScreenContent(
     val isInPipMode = rememberIsInPipMode()
 
     val ambienceMode by sharedViewModel.ambienceMode.collectAsStateWithLifecycle()
+    val blurBg by sharedViewModel.blurBg.collectAsStateWithLifecycle()
+
+    val hazeState = rememberHazeState()
 
     val mainScrollState = rememberScrollState()
 
@@ -540,6 +548,27 @@ fun NowPlayingScreenContent(
         KeepScreenOn()
     }
     Box {
+        if (blurBg && screenDataState.canvasData == null) {
+            AsyncImage(
+                model =
+                    ImageRequest
+                        .Builder(LocalPlatformContext.current)
+                        .data(screenDataState.thumbnailURL)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .diskCacheKey(screenDataState.thumbnailURL + "BIGGER")
+                        .crossfade(550)
+                        .build(),
+                contentDescription = "",
+                contentScale = ContentScale.FillHeight,
+                placeholder = painterResource(Res.drawable.holder),
+                error = painterResource(Res.drawable.holder),
+                modifier =
+                    Modifier
+                        .align(Alignment.Center)
+                        .fillMaxSize()
+                        .hazeSource(hazeState),
+            )
+        }
 
         Column(
             Modifier
@@ -572,18 +601,28 @@ fun NowPlayingScreenContent(
                             }
                         }
                     }
-                }.background(
-                    if (ambienceMode) {
-                        Brush.verticalGradient(
-                            colorStops = arrayOf(
-                                0.0f to startColor.value.copy(alpha = 1.0f),
-                                0.5f to midColor.value.copy(alpha = 0.4f),
-                                1.0f to endColor.value
-                            )
-                        )
+                }.then(
+                    if (blurBg && screenDataState.canvasData == null) {
+                        Modifier
+                            .background(Color.Transparent)
+                            .hazeEffect(hazeState, style = HazeMaterials.ultraThin()) {
+                                blurEnabled = true
+                            }
                     } else {
-                        Brush.linearGradient(
-                            colors = listOf(md_theme_dark_background, md_theme_dark_background)
+                        Modifier.background(
+                            if (ambienceMode) {
+                                Brush.verticalGradient(
+                                    colorStops = arrayOf(
+                                        0.0f to startColor.value.copy(alpha = 1.0f),
+                                        0.5f to midColor.value.copy(alpha = 0.4f),
+                                        1.0f to endColor.value
+                                    )
+                                )
+                            } else {
+                                Brush.linearGradient(
+                                    colors = listOf(md_theme_dark_background, md_theme_dark_background)
+                                )
+                            }
                         )
                     }
                 ),  

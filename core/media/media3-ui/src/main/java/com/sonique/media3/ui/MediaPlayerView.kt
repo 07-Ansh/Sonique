@@ -205,7 +205,7 @@ fun MediaPlayerViewWithSubtitle(
     mainTextStyle: TextStyle,
     translatedTextStyle: TextStyle,
 ) {
-    val player: ExoPlayer = koinInject(named(playerName))
+    val player: Player = koinInject(named(playerName))
 
     var shouldEnterPipMode by rememberSaveable {
         mutableStateOf(false)
@@ -352,7 +352,7 @@ fun MediaPlayerViewWithSubtitle(
     }
     LaunchedEffect(player) {
         player.addListener(playerListener)
-        player.videoScalingMode = C.VIDEO_SCALING_MODE_DEFAULT
+        (player as? ExoPlayer)?.videoScalingMode = C.VIDEO_SCALING_MODE_DEFAULT
     }
 
     val presentationState = rememberPresentationState(player)

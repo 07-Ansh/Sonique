@@ -33,7 +33,7 @@ import com.sonique.domain.data.entities.YourYouTubePlaylistList
         NotificationEntity::class, TranslatedLyricsEntity::class, PodcastsEntity::class, EpisodeEntity::class,
         YourYouTubePlaylistList::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 2, to = 3), AutoMigration(
@@ -62,6 +62,9 @@ import com.sonique.domain.data.entities.YourYouTubePlaylistList
         AutoMigration(19, 20),
         AutoMigration(18, 20),
         AutoMigration(17, 20),
+        AutoMigration(20, 21),
+        AutoMigration(19, 21),
+        AutoMigration(18, 21),
     ],
 )
 @TypeConverters(Converters::class)

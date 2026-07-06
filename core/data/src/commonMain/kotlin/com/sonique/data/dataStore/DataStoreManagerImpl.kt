@@ -1004,6 +1004,25 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val crossfadeDjMode: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[CROSSFADE_DJ_MODE] ?: TRUE
+        }
+
+    override suspend fun setCrossfadeDjMode(enabled: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (enabled) {
+                settingsDataStore.edit { settings ->
+                    settings[CROSSFADE_DJ_MODE] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[CROSSFADE_DJ_MODE] = FALSE
+                }
+            }
+        }
+    }
+
     override val youtubeSubtitleLanguage =
         settingsDataStore.data.map { preferences ->
             val languageValue = language.first()
@@ -1187,6 +1206,7 @@ internal class DataStoreManagerImpl(
         val KEEP_SERVICE_ALIVE = stringPreferencesKey("keep_service_alive")
         val CROSSFADE_ENABLED = stringPreferencesKey("crossfade_enabled")
         val CROSSFADE_DURATION = intPreferencesKey("crossfade_duration")
+        val CROSSFADE_DJ_MODE = stringPreferencesKey("crossfade_dj_mode")
         val LYRICS_PROVIDER = stringPreferencesKey("lyrics_provider")
         val TRANSLATION_LANGUAGE = stringPreferencesKey("translation_language")
         val USE_TRANSLATION_LANGUAGE = stringPreferencesKey("use_translation_language")

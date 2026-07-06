@@ -354,5 +354,16 @@ internal class StreamRepositoryImpl(
         }.flowOn(Dispatchers.IO)
 
     override fun is403Url(url: String) = flow { emit(youTube.is403Url(url)) }.flowOn(Dispatchers.IO)
+
+    override suspend fun invalidateFormat(videoId: String) {
+        withContext(Dispatchers.IO) {
+            localDataSource.getNewFormat(videoId)?.let { format ->
+                Logger.d("Stream", "Invalidating cached format for $videoId")
+                localDataSource.updateNewFormat(
+                    format.copy(expiredTime = now().plusSeconds(-1)),
+                )
+            }
+        }
+    }
 }
 

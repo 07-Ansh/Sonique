@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -102,6 +104,7 @@ fun App(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
+
     val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
     val intent by viewModel.intent.collectAsStateWithLifecycle()
@@ -128,6 +131,29 @@ fun App(
 
     var isNavBarVisible by rememberSaveable {
         mutableStateOf(true)
+    }
+
+    val currentRoute = navBackStackEntry?.destination?.route
+    val isAtHome = currentRoute?.contains("HomeDestination") == true
+
+    com.sonique.app.expect.ui.BackHandler(
+        enabled = isShowNowPlaylistScreen || !isAtHome
+    ) {
+        if (isShowNowPlaylistScreen) {
+            isShowNowPlaylistScreen = false
+        } else {
+            if (navController.previousBackStackEntry != null) {
+                navController.popBackStack()
+            } else {
+                navController.navigate(HomeDestination) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        inclusive = false
+                    }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            }
+        }
     }
 
 
@@ -253,20 +279,27 @@ fun App(
 
     val coreScope = androidx.compose.runtime.rememberCoroutineScope()
     androidx.compose.foundation.layout.BoxWithConstraints {
-        val screenHeight = maxHeight
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        val screenHeightPx = with(density) { maxHeight.toPx() }
         val playerOffsetY = androidx.compose.runtime.remember {
-            androidx.compose.animation.core.Animatable(screenHeight.value)
+            androidx.compose.animation.core.Animatable(screenHeightPx)
         }
         var isPlayerExpanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
-        LaunchedEffect(isShowNowPlaylistScreen) {
-             val target = if (isShowNowPlaylistScreen) 0f else screenHeight.value
+        LaunchedEffect(screenHeightPx) {
+            if (!isShowNowPlaylistScreen) {
+                playerOffsetY.snapTo(screenHeightPx)
+            }
+        }
+
+        LaunchedEffect(isShowNowPlaylistScreen, screenHeightPx) {
+             val target = if (isShowNowPlaylistScreen) 0f else screenHeightPx
              if (kotlin.math.abs(playerOffsetY.value - target) > 0.5f) {
                  playerOffsetY.animateTo(
                      target,
                      animationSpec = androidx.compose.animation.core.tween(
-                         durationMillis = 500,
-                         easing = androidx.compose.animation.core.EaseInOut
+                         durationMillis = 280,
+                         easing = androidx.compose.animation.core.FastOutSlowInEasing
                      )
                  )
              }
@@ -382,13 +415,13 @@ fun App(
                                                 },
                                                 onDrag = { delta ->
                                                     coreScope.launch {
-                                                        playerOffsetY.snapTo((playerOffsetY.value + delta).coerceIn(0f, screenHeight.value))
+                                                        playerOffsetY.snapTo((playerOffsetY.value + delta).coerceIn(0f, screenHeightPx))
                                                     }
                                                 },
                                                 onDragEnd = {
                                                     coreScope.launch {
-                                                        val expandThreshold = screenHeight.value * 0.7f
-                                                        val collapseThreshold = screenHeight.value * 0.3f
+                                                        val expandThreshold = screenHeightPx * 0.7f
+                                                        val collapseThreshold = screenHeightPx * 0.3f
                                                         
                                                         val shouldExpand = if (playerOffsetY.value < expandThreshold) true else isShowNowPlaylistScreen
                                                         
@@ -408,7 +441,7 @@ fun App(
                                                             if (isShowNowPlaylistScreen) {
                                                                 isShowNowPlaylistScreen = false
                                                             } else {
-                                                                playerOffsetY.animateTo(screenHeight.value, spec)
+                                                                playerOffsetY.animateTo(screenHeightPx, spec)
                                                             }
                                                         }
                                                     }
@@ -445,7 +478,12 @@ fun App(
                                         if (enableLiquidGlass) {
                                             Modifier.padding(top = 0.dp)
                                         } else {
-                                            Modifier.padding(innerPadding)
+                                            Modifier.padding(
+                                                start = innerPadding.calculateStartPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
+                                                end = innerPadding.calculateEndPadding(androidx.compose.ui.unit.LayoutDirection.Ltr),
+                                                top = 0.dp,
+                                                bottom = innerPadding.calculateBottomPadding(),
+                                            )
                                         }
                                     ),
                             ) {
@@ -613,17 +651,15 @@ fun App(
                     },
                 )
                 if (!isTabletLandscape) {
-                    if (playerOffsetY.value < screenHeight.value) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt()) }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt()) }
+                    ) {
+                        NowPlayingScreen(
+                            navController = navController,
                         ) {
-                            NowPlayingScreen(
-                                navController = navController,
-                            ) {
-                                isShowNowPlaylistScreen = false
-                            }
+                            isShowNowPlaylistScreen = false
                         }
                     }
                 }

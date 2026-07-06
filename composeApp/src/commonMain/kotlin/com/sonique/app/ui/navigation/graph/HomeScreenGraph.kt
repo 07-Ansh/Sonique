@@ -3,6 +3,8 @@ package com.sonique.app.ui.navigation.graph
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
@@ -52,16 +54,28 @@ fun NavGraphBuilder.homeScreenGraph(
     }
     composable<SettingsDestination>(
         enterTransition = {
-            fadeIn(animationSpec = tween(100))
+            slideInHorizontally(
+                initialOffsetX = { it },
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300))
         },
         exitTransition = {
-            fadeOut(animationSpec = tween(100))
+            slideOutHorizontally(
+                targetOffsetX = { -it },
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
         },
         popEnterTransition = {
-            fadeIn(animationSpec = tween(100))
+            slideInHorizontally(
+                initialOffsetX = { -it },
+                animationSpec = tween(300)
+            ) + fadeIn(animationSpec = tween(300))
         },
         popExitTransition = {
-            fadeOut(animationSpec = tween(100))
+            slideOutHorizontally(
+                targetOffsetX = { it },
+                animationSpec = tween(300)
+            ) + fadeOut(animationSpec = tween(300))
         }
     ) {
 

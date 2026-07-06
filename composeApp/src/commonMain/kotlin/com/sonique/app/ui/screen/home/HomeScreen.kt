@@ -358,7 +358,7 @@ fun HomeScreen(
 
     val onRefresh: () -> Unit = {
         isRefreshing = true
-        viewModel.getHomeItemList(params)
+        viewModel.getHomeItemList(params, forceRefresh = true)
         Logger.w("HomeScreen", "onRefresh")
     }
     LaunchedEffect(key1 = reloadDestination) {

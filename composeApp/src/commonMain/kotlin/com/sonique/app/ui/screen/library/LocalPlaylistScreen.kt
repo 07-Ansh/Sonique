@@ -1,4 +1,7 @@
 package com.sonique.app.ui.screen.library
+import androidx.compose.ui.platform.LocalUriHandler
+import com.sonique.app.ui.component.DescriptionView
+import sonique.composeapp.generated.resources.no_description
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -173,6 +176,7 @@ import sonique.composeapp.generated.resources.unsync_playlist_warning
 import sonique.composeapp.generated.resources.warning
 import sonique.composeapp.generated.resources.yes
 import sonique.composeapp.generated.resources.your_playlist
+import com.sonique.app.extension.isScrollingUp
 
 private const val TAG = "LocalPlaylistScreen"
 
@@ -187,6 +191,7 @@ fun LocalPlaylistScreen(
     sharedViewModel: SharedViewModel = koinInject(),
     viewModel: LocalPlaylistViewModel = koinViewModel(),
     navController: NavController,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     val composition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
@@ -275,6 +280,7 @@ fun LocalPlaylistScreen(
     }
 
     val trackPagingItems: LazyPagingItems<Pair<SongEntity, PairSongLocalPlaylist>> = viewModel.tracksPagingState.collectAsLazyPagingItems()
+
     LaunchedEffect(Unit) {
         snapshotFlow {
             trackPagingItems.loadState
@@ -330,6 +336,17 @@ fun LocalPlaylistScreen(
     }
     LaunchedEffect(key1 = firstItemVisible) {
         shouldHideTopBar = !firstItemVisible
+    }
+    val isScrollingUp by lazyState.isScrollingUp()
+    LaunchedEffect(lazyState, isScrollingUp) {
+        snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
+                    onScrolling.invoke(true)
+                } else {
+                    onScrolling.invoke(isScrollingUp)
+                }
+            }
     }
     val paletteState = rememberPaletteState()
     var bitmap by remember {
@@ -483,35 +500,7 @@ fun LocalPlaylistScreen(
                     Column(
                         horizontalAlignment = Alignment.Start,
                     ) {
-                        AsyncImage(
-                            model =
-                                ImageRequest
-                                    .Builder(LocalPlatformContext.current)
-                                    .data(uiState.thumbnail)
-                                    .diskCachePolicy(CachePolicy.ENABLED)
-                                    .diskCacheKey(uiState.thumbnail)
-                                    .crossfade(550)
-                                    .build(),
-                            placeholder = painterPlaylistThumbnail(uiState.title, style = typo().labelMedium, 250.dp to 250.dp),
-                            error = painterPlaylistThumbnail(uiState.title, style = typo().labelMedium, 250.dp to 250.dp),
-                            fallback = painterPlaylistThumbnail(uiState.title, style = typo().labelMedium, 250.dp to 250.dp),
-                            contentDescription = null,
-                            contentScale = ContentScale.FillHeight,
-                            onSuccess = {
-                                bitmap =
-                                    it.result.image
-                                        .toBitmap()
-                                        .asImageBitmap()
-                            },
-                            modifier =
-                                Modifier
-                                    .height(250.dp)
-                                    .wrapContentWidth()
-                                    .align(Alignment.CenterHorizontally)
-                                    .clip(
-                                        RoundedCornerShape(8.dp),
-                                    ),
-                        )
+
                         Box(
                             modifier =
                                 Modifier
@@ -719,6 +708,16 @@ fun LocalPlaylistScreen(
                                         onPlaylistMoreClick()
                                     }
                                 }
+                                val uriHandler = LocalUriHandler.current
+                                DescriptionView(
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    text = stringResource(Res.string.no_description),
+                                    limitLine = 3,
+                                    onTimeClicked = {},
+                                    onURLClicked = { url ->
+                                        uriHandler.openUri(url)
+                                    },
+                                )
                                 Text(
                                     text =
                                         stringResource(

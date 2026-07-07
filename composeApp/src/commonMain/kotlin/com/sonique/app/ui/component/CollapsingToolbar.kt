@@ -39,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -89,12 +90,12 @@ private const val TITLE_FONT_SCALE_END = 0.46f
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@ExperimentalMaterial3Api
 fun CollapsingToolbarParallaxEffect(
     modifier: Modifier = Modifier,
     title: String,
     imageUrl: String? = null,
     onBack: () -> Unit,
+    onScrolling: (Boolean) -> Unit = {},
     content:
         @Composable()
         ((color: Color) -> Unit) = {},
@@ -104,6 +105,28 @@ fun CollapsingToolbarParallaxEffect(
         TopAppBarDefaults.TopAppBarExpandedHeight + with(density) { WindowInsets.statusBars.getTop(this).toDp() * 2 }
 
     val scroll: ScrollState = rememberScrollState(0)
+    var previousValue by remember(scroll) { mutableIntStateOf(scroll.value) }
+    val isScrollingUp by remember(scroll) {
+        derivedStateOf {
+            if (scroll.value > 0) {
+                val up = previousValue >= scroll.value
+                previousValue = scroll.value
+                up
+            } else {
+                true
+            }
+        }
+    }
+    LaunchedEffect(scroll, isScrollingUp) {
+        snapshotFlow { scroll.value == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
+                    onScrolling.invoke(true)
+                } else {
+                    onScrolling.invoke(isScrollingUp)
+                }
+            }
+    }
     val headerHeight = (getScreenSizeInfo().hDP.dp * 2 / 6).coerceAtLeast(200.dp)
 
     val headerHeightPx = with(density) { headerHeight.toPx() }

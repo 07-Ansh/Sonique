@@ -180,10 +180,6 @@ actual fun LiquidGlassAppBottomNavigationBar(
         }
     }
 
-    LaunchedEffect(isInSearchDestination) {
-        isExpanded = !isInSearchDestination
-    }
-
     var updateConstraints by remember {
         mutableStateOf(true)
     }
@@ -207,9 +203,7 @@ actual fun LiquidGlassAppBottomNavigationBar(
     }
 
     LaunchedEffect(isScrolledToTop) {
-        if (!isInSearchDestination) {
-            isExpanded = isScrolledToTop
-        }
+        isExpanded = isScrolledToTop
     }
 
     fun selectTab(index: Int) {

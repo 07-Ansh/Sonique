@@ -26,6 +26,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.compose.koinInject
@@ -130,7 +131,7 @@ fun SettingItem(
                 Text(
                     text = title,
                     style =
-                        typo().labelMedium.let {
+                        typo().labelMedium.copy(fontSize = 12.sp).let {
                             if (!isEnable) it.greyScale() else it
                         },
                     color = white,
@@ -140,11 +141,11 @@ fun SettingItem(
                     text = subtitle,
                     style =
                         if (smallSubtitle) {
-                            typo().bodySmall.let {
+                            typo().bodySmall.copy(fontSize = 9.5.sp).let {
                                 if (!isEnable) it.greyScale() else it
                             }
                         } else {
-                            typo().bodyMedium.let {
+                            typo().bodyMedium.copy(fontSize = 11.sp).let {
                                 if (!isEnable) it.greyScale() else it
                             }
                         },
@@ -235,7 +236,7 @@ fun SettingsSectionHeader(text: String) {
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     Text(
         text = text.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
+        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
         modifier = Modifier.padding(

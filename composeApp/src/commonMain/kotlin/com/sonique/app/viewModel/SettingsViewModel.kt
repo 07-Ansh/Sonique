@@ -209,6 +209,9 @@ class SettingsViewModel(
     private var _blurPlayerBackground: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val blurPlayerBackground: StateFlow<Boolean> = _blurPlayerBackground
 
+    private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("1_row")
+    val continueListeningLayout: StateFlow<String> = _continueListeningLayout
+
 
 
     init {
@@ -268,6 +271,7 @@ class SettingsViewModel(
         getEnableLiquidGlass()
         getLiquidGlassGlassiness()
         getBlurPlayerBackground()
+        getContinueListeningLayout()
 
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
@@ -1192,6 +1196,21 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setBlurPlayerBackground(enabled)
             getBlurPlayerBackground()
+        }
+    }
+
+    fun getContinueListeningLayout() {
+        viewModelScope.launch {
+            dataStoreManager.getString("continue_listening_layout").collect {
+                _continueListeningLayout.emit(it ?: "1_row")
+            }
+        }
+    }
+
+    fun setContinueListeningLayout(layout: String) {
+        viewModelScope.launch {
+            dataStoreManager.putString("continue_listening_layout", layout)
+            getContinueListeningLayout()
         }
     }
 

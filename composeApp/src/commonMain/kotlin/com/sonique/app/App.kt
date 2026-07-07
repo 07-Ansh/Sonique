@@ -260,6 +260,10 @@ fun App(
 
 
 
+    var isScrolledToTop by rememberSaveable {
+        mutableStateOf(true)
+    }
+
     LaunchedEffect(navBackStackEntry) {
         Logger.d("MainActivity", "Current destination: ${navBackStackEntry?.destination?.route}")
         if (navBackStackEntry?.destination?.route?.contains("FullscreenDestination") == true) {
@@ -268,9 +272,7 @@ fun App(
         isInFullscreen = navBackStackEntry?.destination?.hierarchy?.any {
             it.hasRoute(FullscreenDestination::class)
         } == true
-    }
-    var isScrolledToTop by rememberSaveable {
-        mutableStateOf(false)
+        isScrolledToTop = true
     }
     val isTablet = windowSize.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
     val isTabletLandscape = isTablet && currentOrientation() == Orientation.LANDSCAPE

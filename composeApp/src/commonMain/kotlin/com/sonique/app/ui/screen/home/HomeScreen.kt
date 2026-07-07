@@ -232,55 +232,12 @@ fun HomeScreen(
     val openAppTime by sharedViewModel.openAppTime.collectAsStateWithLifecycle()
     val shareLyricsPermissions by sharedViewModel.shareSavedLyrics.collectAsStateWithLifecycle()
 
-    val speedDialData = remember(homeData) {
-        val priorityKeywords = listOf("listen again")
-        val generalKeywords = listOf(
-            "quick picks", "albums for you", "your daily discover",
-            "long listens", "from your library", "featured playlists for you"
-        )
-
-        // 1. Gather matching contents
-        val priorityContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
-        val generalContents = mutableListOf<com.sonique.domain.data.model.home.Content>()
-
-        homeData.forEach { section ->
-            val titleLower = section.title.lowercase()
-            val subtitleLower = section.subtitle?.lowercase() ?: ""
-            
-            val contents = section.contents.filterNotNull()
-            if (priorityKeywords.any { it in titleLower || it in subtitleLower }) {
-                priorityContents.addAll(contents)
-            } else if (generalKeywords.any { it in titleLower || it in subtitleLower }) {
-                generalContents.addAll(contents)
-            }
-        }
-
-        val distinctPriority = priorityContents.distinctBy { it.title }.shuffled()
-        val remainingGeneral = generalContents.filter { gen -> distinctPriority.none { pri -> pri.title == gen.title } }.distinctBy { it.title }.shuffled()
-
-        // 2. Combine and Shuffle
-        // Prioritize Listen Again items at the very beginning
-        val combined = (distinctPriority + remainingGeneral)
-        
-        // 3. Guarantee 36 items (4 pages of 9)
-        val finalContents = if (combined.size >= 36) {
-            combined.take(36)
-        } else {
-            val allOtherContents = homeData.flatMap { it.contents }.filterNotNull().filter { other -> combined.none { c -> c.title == other.title } }.distinctBy { it.title }.shuffled()
-            (combined + allOtherContents).take(36)
-        }
-
-        // 4. Create the injected Speed Dial home item
-        com.sonique.domain.data.model.home.HomeItem(
-            title = "Speed dial",
-            contents = finalContents
-        )
-    }
+    val speedDialData by viewModel.speedDialData.collectAsStateWithLifecycle()
 
     val paletteState = rememberPaletteState()
     val context = LocalPlatformContext.current
     val firstThumbnailUrl = remember(speedDialData) {
-        speedDialData.contents.firstOrNull()?.thumbnails?.lastOrNull()?.url
+        speedDialData?.contents?.firstOrNull()?.thumbnails?.lastOrNull()?.url
     }
 
     var topHeaderColor by remember {
@@ -345,10 +302,10 @@ fun HomeScreen(
 
 
 
-    LaunchedEffect(scrollState) {
-        snapshotFlow { scrollState.firstVisibleItemIndex }
-            .collect {
-                if (it <= 1) {
+    LaunchedEffect(scrollState, isScrollingUp) {
+        snapshotFlow { scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
                     onScrolling.invoke(true)
                 } else {
                     onScrolling.invoke(isScrollingUp)
@@ -472,8 +429,7 @@ fun HomeScreen(
                         } else {
                             LazyColumn(
                             modifier =
-                                Modifier
-                                    .padding(horizontal = 15.dp),
+                                Modifier,
                             contentPadding =
                                 PaddingValues(
                                     top = with(LocalDensity.current) { topAppBarMaxHeightPx.toDp() } + 24.dp,
@@ -499,7 +455,7 @@ fun HomeScreen(
                                      // Replace first section with Speed Dial
                                      SpeedDialSection(
                                          navController = navController,
-                                         data = speedDialData,
+                                         data = speedDialData ?: com.sonique.domain.data.model.home.HomeItem(title = "Continue Listening", contents = listOf()),
                                          onPlayClick = { content ->
                                              if (content is com.sonique.domain.data.model.home.Content) {
                                                  val firstQueue = content.toTrack()
@@ -840,25 +796,34 @@ fun MoodMomentAndGenre(
         Modifier
             .padding(vertical = 8.dp),
     ) {
-        Text(
-            text = stringResource(Res.string.let_s_pick_a_playlist_for_you),
-            style = typo().bodyMedium,
-        )
-        Text(
-            text = stringResource(Res.string.moods_amp_moment),
-            style = typo().headlineMedium,
-            color = white,
-            maxLines = 1,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 5.dp),
-        )
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 10.dp)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = stringResource(Res.string.let_s_pick_a_playlist_for_you).uppercase(),
+                style = typo().labelLarge,
+                color = Color.LightGray.copy(alpha = 0.6f),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Normal
+            )
+            Text(
+                text = stringResource(Res.string.moods_amp_moment),
+                style = typo().headlineMedium,
+                color = Color.White,
+                maxLines = 1,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 2.dp),
+            )
+        }
         LazyHorizontalGrid(
             rows = GridCells.Fixed(3),
             modifier = Modifier.height(210.dp),
             state = lazyListState1,
             flingBehavior = snapperFlingBehavior1,
+            contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             items(mood.moodsMoments, key = { it.title }) {
                 MoodMomentAndGenreHomeItem(title = it.title) {
@@ -878,13 +843,14 @@ fun MoodMomentAndGenre(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 5.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
         )
         LazyHorizontalGrid(
             rows = GridCells.Fixed(3),
             modifier = Modifier.height(210.dp),
             state = lazyListState2,
             flingBehavior = snapperFlingBehavior2,
+            contentPadding = PaddingValues(horizontal = 16.dp),
         ) {
             items(mood.genres, key = { it.title }) {
                 MoodMomentAndGenreHomeItem(title = it.title) {

@@ -12,8 +12,10 @@ import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -131,7 +133,7 @@ fun HomeItem(
     Column {
         Row(
             modifier =
-                if (channelId != null) {
+                (if (channelId != null) {
                     Modifier
                         .focusable(true)
                         .clickable {
@@ -143,41 +145,16 @@ fun HomeItem(
                         }
                 } else {
                     Modifier
-                },
+                }).padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            AnimatedVisibility(
-                visible = (data.thumbnail?.lastOrNull() != null),
-                modifier = Modifier.align(Alignment.CenterVertically),
-            ) {
-                AsyncImage(
-                    model =
-                        ImageRequest
-                            .Builder(LocalPlatformContext.current)
-                            .data(data.thumbnail?.lastOrNull()?.url)
-                            .diskCachePolicy(CachePolicy.ENABLED)
-                            .diskCacheKey(data.thumbnail?.lastOrNull()?.url)
-                            .crossfade(550)
-                            .build(),
-                    contentDescription = "",
-                    placeholder = painterResource(Res.drawable.holder),
-                    error = painterResource(Res.drawable.holder),
-                    modifier =
-                        Modifier
-                            .size(36.dp)
-                            .clip(
-                                CircleShape,
-                            ),
-                )
-            }
-            Column(
-                Modifier
-                    .padding(start = 10.dp),
-            ) {
+            Column {
                 AnimatedVisibility(visible = (data.subtitle != null && data.subtitle != "")) {
                     Text(
-                        text = data.subtitle ?: "",
-                        style = typo().bodySmall,
+                        text = (data.subtitle ?: "").uppercase(),
+                        style = typo().labelLarge,
+                        color = Color.LightGray.copy(alpha = 0.6f),
+                        fontWeight = FontWeight.Normal
                     )
                 }
                 Text(
@@ -185,13 +162,14 @@ fun HomeItem(
                     style = typo().headlineMedium,
                     color = Color.White,
                     maxLines = 1,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
                 )
             }
         }
         LazyRow(
             state = lazyListState,
             flingBehavior = snapperFlingBehavior,
+            contentPadding = PaddingValues(horizontal = 6.dp),
         ) {
             items(data.contents) { temp ->
                 if (temp != null) {
@@ -303,7 +281,7 @@ fun HomeItem(
 fun HomeItemContentPlaylist(
     onClick: () -> Unit,
     data: HomeContentType,
-    thumbSize: Dp = 160.dp,
+    thumbSize: Dp = 140.dp,
 ) {
     Box(
         Modifier
@@ -370,7 +348,7 @@ fun HomeItemContentPlaylist(
                         .size(thumbSize)
                         .aspectRatio(1f)
                         .clip(
-                            RoundedCornerShape(12.dp),
+                            RoundedCornerShape(6.dp),
                         ),
             )
             Text(
@@ -651,9 +629,9 @@ fun HomeItemSong(
                 modifier =
                     Modifier
                         .align(Alignment.CenterHorizontally)
-                        .size(160.dp)
+                        .size(140.dp)
                         .clip(
-                            RoundedCornerShape(12.dp),
+                            RoundedCornerShape(6.dp),
                         ),
             )
             Text(
@@ -663,7 +641,7 @@ fun HomeItemSong(
                 maxLines = 1,
                 modifier =
                     Modifier
-                        .width(160.dp)
+                        .width(140.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically)
                         .padding(top = 8.dp).focusable(),
             )
@@ -683,7 +661,7 @@ fun HomeItemSong(
                     maxLines = 1,
                     modifier =
                         Modifier
-                            .width(160.dp)
+                            .width(140.dp)
                             .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                             .padding(vertical = 3.dp),
                 )
@@ -694,7 +672,7 @@ fun HomeItemSong(
                 maxLines = 1,
                 modifier =
                     Modifier
-                        .width(160.dp)
+                        .width(140.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
         }
@@ -742,10 +720,10 @@ fun HomeItemVideo(
                 modifier =
                     Modifier
                         .align(Alignment.CenterHorizontally)
-                        .height(160.dp)
+                        .height(140.dp)
                         .aspectRatio(16f / 9f)
                         .clip(
-                            RoundedCornerShape(12.dp),
+                            RoundedCornerShape(6.dp),
                         ),
             )
             Text(
@@ -755,7 +733,7 @@ fun HomeItemVideo(
                 maxLines = 1,
                 modifier =
                     Modifier
-                        .width(284.5.dp)
+                        .width(248.8.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically)
                         .padding(top = 8.dp).focusable(),
             )
@@ -765,7 +743,7 @@ fun HomeItemVideo(
                 maxLines = 1,
                 modifier =
                     Modifier
-                        .width(284.5.dp)
+                        .width(248.8.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically).focusable()
                         .padding(vertical = 2.dp),
             )
@@ -819,7 +797,7 @@ fun HomeItemArtist(
                 modifier =
                     Modifier
                         .align(Alignment.CenterHorizontally)
-                        .size(160.dp)
+                        .size(140.dp)
                         .clip(
                             CircleShape,
                         ),
@@ -832,7 +810,7 @@ fun HomeItemArtist(
                 textAlign = TextAlign.Center,
                 modifier =
                     Modifier
-                        .width(160.dp)
+                        .width(140.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically)
                         .padding(top = 8.dp).focusable(),
             )
@@ -843,7 +821,7 @@ fun HomeItemArtist(
                 textAlign = TextAlign.Center,
                 modifier =
                     Modifier
-                        .width(160.dp)
+                        .width(140.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
             Text(
@@ -853,7 +831,7 @@ fun HomeItemArtist(
                 textAlign = TextAlign.Center,
                 modifier =
                     Modifier
-                        .width(160.dp)
+                        .width(140.dp)
                         .wrapContentHeight(align = Alignment.CenterVertically).focusable(),
             )
         }

@@ -113,6 +113,7 @@ fun AppNavigationGraph(
         composable<SearchDestination> {
             SearchScreen(
                 navController = navController,
+                onScrolling = onScrolling,
             )
         }
         composable<LibraryDestination> { backStackEntry ->
@@ -130,6 +131,7 @@ fun AppNavigationGraph(
                 playlistId = LOCAL_PLAYLIST_ID_DOWNLOADED,
                 isYourYouTubePlaylist = false,
                 navController = navController,
+                onScrolling = onScrolling,
             )
         }
         composable<FullscreenDestination> {
@@ -153,11 +155,13 @@ fun AppNavigationGraph(
         libraryScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
+            onScrolling = onScrolling,
         )
          
         listScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
+            onScrolling = onScrolling,
         )
          
         loginScreenGraph(

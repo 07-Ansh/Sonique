@@ -509,7 +509,7 @@ fun NowPlayingScreenContent(
     if (screenDataState.lyricsData != null && controllerState.isPlaying) {
         KeepScreenOn()
     }
-    Box {
+    Box(modifier = Modifier.fillMaxSize().background(md_theme_dark_background)) {
         if (blurBg && screenDataState.canvasData == null) {
             AsyncImage(
                 model =
@@ -566,7 +566,7 @@ fun NowPlayingScreenContent(
                 }.then(
                     if (blurBg && screenDataState.canvasData == null) {
                         Modifier
-                            .background(Color.Transparent)
+                            .background(Color.Black.copy(alpha = 0.35f))
                             .hazeEffect(hazeState, style = HazeMaterials.ultraThin()) {
                                 blurEnabled = true
                             }

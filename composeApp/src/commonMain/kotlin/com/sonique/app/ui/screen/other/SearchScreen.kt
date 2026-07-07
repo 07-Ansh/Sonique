@@ -51,6 +51,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -129,6 +130,8 @@ import com.sonique.app.ui.component.OfflineScreen
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.ui.component.liquidGlass
+import com.sonique.app.extension.isScrollingUp
+import androidx.compose.foundation.lazy.rememberLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -136,7 +139,21 @@ fun SearchScreen(
     searchViewModel: SearchViewModel = koinInject(),
     sharedViewModel: SharedViewModel = koinInject(),
     navController: NavController,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
+    val searchResultsListState = rememberLazyListState()
+    val isScrollingUp by searchResultsListState.isScrollingUp()
+    LaunchedEffect(searchResultsListState, isScrollingUp) {
+        snapshotFlow { searchResultsListState.firstVisibleItemIndex == 0 && searchResultsListState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
+                    onScrolling.invoke(true)
+                } else {
+                    onScrolling.invoke(isScrollingUp)
+                }
+            }
+    }
+
     val uriHandler = LocalUriHandler.current
     val focusManager = LocalFocusManager.current
     val searchScreenState by searchViewModel.searchScreenState.collectAsStateWithLifecycle()
@@ -528,7 +545,7 @@ fun SearchScreen(
                                                 if (it) {
                                                     LazyColumn(
                                                         contentPadding = PaddingValues(horizontal = 4.dp),
-                                                        state = rememberLazyListState(),
+                                                        state = searchResultsListState,
                                                     ) {
                                                         items(currentResults) { result ->
                                                             when (result) {

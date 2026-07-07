@@ -57,8 +57,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.app.Platform
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.SettingItem
+import com.sonique.app.ui.component.SettingDialog
 import com.sonique.app.viewModel.SettingsViewModel
+import com.sonique.app.viewModel.SettingAlertState
 import org.koin.compose.viewmodel.koinViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,6 +70,15 @@ fun SettingsUiScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val alertData by viewModel.alertData.collectAsStateWithLifecycle()
+    if (alertData != null) {
+        SettingDialog(
+            alert = alertData!!,
+            onDismiss = { viewModel.setAlertData(null) }
+        )
+    }
+
     val ambienceMode by viewModel.ambienceMode.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val liquidGlassGlassiness by viewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
@@ -112,6 +125,51 @@ fun SettingsUiScreen(
                     subtitle = "Blur background artwork based on album art using frosted glassmorphism",
                     switch = (blurPlayerBackground to { viewModel.setBlurPlayerBackground(it) }),
                 )
+
+                SettingsSectionHeader("Home Screen")
+                val continueListeningLayout by viewModel.continueListeningLayout.collectAsStateWithLifecycle()
+                val currentLayoutLabel = when (continueListeningLayout) {
+                    "1_row" -> "1 Row (Standard)"
+                    "2_row" -> "2 Rows (Compact Grid)"
+                    "3x3" -> "3x3 Grid (Pages)"
+                    "list" -> "Vertical List"
+                    else -> "1 Row (Standard)"
+                }
+                SettingItem(
+                    title = "Continue Listening Layout",
+                    subtitle = currentLayoutLabel,
+                    smallSubtitle = true,
+                    onClick = {
+                        coroutineScope.launch {
+                            viewModel.setAlertData(
+                                SettingAlertState(
+                                    title = "Continue Listening Layout",
+                                    selectOne = SettingAlertState.SelectData(
+                                        listSelect = listOf(
+                                            (continueListeningLayout == "1_row") to "1 Row (Standard)",
+                                            (continueListeningLayout == "2_row") to "2 Rows (Compact Grid)",
+                                            (continueListeningLayout == "3x3") to "3x3 Grid (Pages)",
+                                            (continueListeningLayout == "list") to "Vertical List"
+                                        )
+                                    ),
+                                    confirm = "Change" to { state ->
+                                        val selectedLabel = state.selectOne?.getSelected() ?: ""
+                                        val layoutValue = when (selectedLabel) {
+                                            "1 Row (Standard)" -> "1_row"
+                                            "2 Rows (Compact Grid)" -> "2_row"
+                                            "3x3 Grid (Pages)" -> "3x3"
+                                            "Vertical List" -> "list"
+                                            else -> "1_row"
+                                        }
+                                        viewModel.setContinueListeningLayout(layoutValue)
+                                    },
+                                    dismiss = "Cancel"
+                                )
+                            )
+                        }
+                    }
+                )
+
                 if (getPlatform() == Platform.Android) {
                     SettingsSectionHeader("Liquid Glass")
                     SettingItem(

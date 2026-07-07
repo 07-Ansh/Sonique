@@ -237,10 +237,9 @@ fun LibraryScreen(
                 LibraryChipType.YOUR_LIBRARY -> {
                     val state = rememberLazyListState()
                     val scrollingUp by state.isScrollingUp()
-                    LaunchedEffect(state) {
-                        snapshotFlow { state.firstVisibleItemIndex }
-                            .collect { index ->
-                                val isAtTop = index <= 1
+                    LaunchedEffect(state, scrollingUp) {
+                        snapshotFlow { state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0 }
+                            .collect { isAtTop ->
                                 val shouldBeVisible = if (isAtTop) true else scrollingUp
                                 handleScrolling(shouldBeVisible)
                             }

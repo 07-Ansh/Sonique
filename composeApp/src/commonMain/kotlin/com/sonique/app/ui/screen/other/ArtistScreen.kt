@@ -109,6 +109,7 @@ fun ArtistScreen(
     viewModel: ArtistViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel = koinInject(),
     navController: NavController,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     val artistScreenState by viewModel.artistScreenState.collectAsStateWithLifecycle()
     val isFollowed by viewModel.followed.collectAsStateWithLifecycle()
@@ -149,6 +150,7 @@ fun ArtistScreen(
                     onBack = {
                         navController.navigateUp()
                     },
+                    onScrolling = onScrolling,
                 ) { color ->
                     Column {
                         Column(

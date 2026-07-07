@@ -100,12 +100,15 @@ import sonique.composeapp.generated.resources.holder
 import sonique.composeapp.generated.resources.no_description
 import sonique.composeapp.generated.resources.podcasts
 
+import com.sonique.app.extension.isScrollingUp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PodcastScreen(
     viewModel: PodcastViewModel = koinViewModel(),
     podcastId: String,
     navController: NavController,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isFavorite by viewModel.isFavorite.collectAsStateWithLifecycle()
@@ -125,6 +128,17 @@ fun PodcastScreen(
 
     LaunchedEffect(key1 = firstItemVisible) {
         shouldHideTopBar = !firstItemVisible
+    }
+    val isScrollingUp by lazyState.isScrollingUp()
+    LaunchedEffect(lazyState, isScrollingUp) {
+        snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
+                    onScrolling.invoke(true)
+                } else {
+                    onScrolling.invoke(isScrollingUp)
+                }
+            }
     }
 
      

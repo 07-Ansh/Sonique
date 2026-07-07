@@ -6,6 +6,7 @@ import com.sonique.common.SUPPORTED_LANGUAGE
 import com.sonique.domain.data.entities.SongEntity
 import com.sonique.domain.data.model.home.HomeDataCombine
 import com.sonique.domain.data.model.home.HomeItem
+import com.sonique.domain.data.model.home.Content
 import com.sonique.domain.data.model.home.chart.Chart
 import com.sonique.domain.data.model.mood.Mood
 import com.sonique.domain.manager.DataStoreManager
@@ -40,8 +41,11 @@ class HomeViewModel(
     private val homeRepository: HomeRepository,
 ) : BaseViewModel() {
     private val _homeItemList: MutableStateFlow<List<HomeItem>> =
-        MutableStateFlow(cachedHomeItemList ?: arrayListOf())
+        MutableStateFlow(cachedHomeItemList ?: listOf())
     val homeItemList: StateFlow<List<HomeItem>> = _homeItemList
+
+    private val _speedDialData: MutableStateFlow<HomeItem?> = MutableStateFlow(null)
+    val speedDialData: StateFlow<HomeItem?> = _speedDialData
 
     private var _homeListState = MutableStateFlow<ListState>(if (cachedHomeItemList != null) ListState.IDLE else ListState.LOADING)
     val homeListState: StateFlow<ListState> = _homeListState
@@ -88,6 +92,7 @@ class HomeViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
 
     init {
+        _speedDialData.value = calculateSpeedDialData(cachedHomeItemList ?: listOf())
         viewModelScope.launch {
             combine(
                 dataStoreManager.cookie,
@@ -209,14 +214,16 @@ class HomeViewModel(
                     when (home) {
                         is Resource.Success -> {
                             _continuation.value = home.data?.first
-                            _homeItemList.value = home.data?.second ?: listOf()
+                            val list = home.data?.second ?: listOf()
+                            _homeItemList.value = list
+                            _speedDialData.value = calculateSpeedDialData(list)
                         }
                         is Resource.Error -> {
                              _isError.value = true
                             _continuation.value = null
                             _homeItemList.value = listOf()
+                            _speedDialData.value = null
                         }
-
                     }
                     if (continuation.value.isNullOrEmpty())
                         _homeListState.value = ListState.PAGINATION_EXHAUST
@@ -349,6 +356,62 @@ class HomeViewModel(
 
     fun setParams(params: String?) {
         _params.value = params
+    }
+
+    private fun calculateSpeedDialData(homeData: List<HomeItem>): HomeItem? {
+        if (homeData.isEmpty()) return null
+        
+        val priorityKeywords = listOf("listen again")
+        val generalKeywords = listOf(
+            "quick picks", "albums for you", "your daily discover",
+            "long listens", "from your library", "featured playlists for you"
+        )
+
+        // 1. Gather matching contents
+        val priorityContents = mutableListOf<Content>()
+        val generalContents = mutableListOf<Content>()
+
+        homeData.forEach { section ->
+            val titleLower = section.title.lowercase()
+            val subtitleLower = section.subtitle?.lowercase() ?: ""
+            
+            val contents = section.contents.filterNotNull().filter { it.videoId != null && it.videoId != "" }
+            if (priorityKeywords.any { it in titleLower || it in subtitleLower }) {
+                priorityContents.addAll(contents)
+            } else if (generalKeywords.any { it in titleLower || it in subtitleLower }) {
+                generalContents.addAll(contents)
+            }
+        }
+
+        val distinctPriority = priorityContents.distinctBy { it.title }.shuffled()
+        val remainingGeneral = generalContents.filter { gen -> distinctPriority.none { pri -> pri.title == gen.title } }.distinctBy { it.title }.shuffled()
+
+        // 2. Combine and Shuffle
+        // Prioritize Listen Again items at the very beginning
+        val combined = (distinctPriority + remainingGeneral)
+        
+        // 3. Gather up to 54 unique items from the feed
+        val targetSize = 54
+        val finalList = combined.toMutableList()
+        if (finalList.size < targetSize) {
+            val allOtherContents = homeData.flatMap { it.contents }
+                .filterNotNull()
+                .filter { it.videoId != null && it.videoId != "" }
+                .filter { other -> combined.none { c -> c.title == other.title } }
+                .distinctBy { it.title }
+                .shuffled()
+            finalList.addAll(allOtherContents)
+        }
+
+        val finalContents = finalList.distinctBy { it.title }.take(targetSize)
+
+        if (finalContents.isEmpty()) return null
+
+        // 4. Create the injected Speed Dial home item
+        return HomeItem(
+            title = "Continue Listening",
+            contents = finalContents
+        )
     }
 
     override fun onCleared() {

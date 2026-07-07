@@ -49,7 +49,7 @@ fun SettingsSpotifyScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Spotify") },
+            title = { Text("Spotify", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,

@@ -209,7 +209,7 @@ class SettingsViewModel(
     private var _blurPlayerBackground: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val blurPlayerBackground: StateFlow<Boolean> = _blurPlayerBackground
 
-    private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("1_row")
+    private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("list")
     val continueListeningLayout: StateFlow<String> = _continueListeningLayout
 
 
@@ -1202,7 +1202,7 @@ class SettingsViewModel(
     fun getContinueListeningLayout() {
         viewModelScope.launch {
             dataStoreManager.getString("continue_listening_layout").collect {
-                _continueListeningLayout.emit(it ?: "1_row")
+                _continueListeningLayout.emit(it ?: "list")
             }
         }
     }

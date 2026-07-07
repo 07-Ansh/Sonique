@@ -91,7 +91,7 @@ fun SettingsStorageScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Storage") },
+            title = { Text("Storage", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,

@@ -291,8 +291,8 @@ class SharedViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
     val continueListeningLayout: StateFlow<String> = dataStoreManager.getString("continue_listening_layout")
-        .map { it ?: "1_row" }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "1_row")
+        .map { it ?: "list" }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "list")
 
     val liquidGlassGlassiness: StateFlow<Float> = dataStoreManager.liquidGlassGlassiness
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0.5f)

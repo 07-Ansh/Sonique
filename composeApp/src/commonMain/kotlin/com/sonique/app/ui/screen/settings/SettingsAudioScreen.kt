@@ -78,7 +78,7 @@ fun SettingsAudioScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("Audio") },
+            title = { Text("Audio", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,

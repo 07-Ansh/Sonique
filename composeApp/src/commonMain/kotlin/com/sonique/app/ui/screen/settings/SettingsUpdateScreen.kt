@@ -36,7 +36,7 @@ fun SettingsUpdateScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("App Updates") },
+            title = { Text("Update", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,

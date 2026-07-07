@@ -35,6 +35,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -91,7 +92,7 @@ fun SettingsUiScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberBackdrop()
         TopAppBar(
-            title = { Text("Appearance (New)") },
+            title = { Text("Appearance (New)", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,
@@ -187,12 +188,12 @@ fun SettingsUiScreen(
                             ) {
                                 Text(
                                     text = "Liquid Glass Opacity (Glassiness)",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = "${(liquidGlassGlassiness * 100).roundToInt()}%",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -353,7 +354,7 @@ fun SettingsUiScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "Clear is more transparent and tinted increases opacity, adding contrast to content and controls.",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
                         }

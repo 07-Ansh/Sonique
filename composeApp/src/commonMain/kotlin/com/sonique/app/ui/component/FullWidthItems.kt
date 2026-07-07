@@ -528,8 +528,8 @@ fun PlaylistFullWidthItems(
                             .background(
                                 Brush.linearGradient(
                                     colors = listOf(
-                                        Color(0xFFFF3B30),
-                                        Color(0xFFE50914)
+                                        Color(0xFF5F5CFF), // Indigo/purple
+                                        Color(0xFFFD5C93)  // Pink/rose
                                     )
                                 )
                             ),

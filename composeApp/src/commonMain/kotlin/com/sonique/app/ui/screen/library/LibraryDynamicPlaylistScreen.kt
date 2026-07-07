@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -68,6 +69,9 @@ import sonique.composeapp.generated.resources.followed
 import sonique.composeapp.generated.resources.most_played
 import sonique.composeapp.generated.resources.search
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import com.sonique.app.extension.isScrollingUp
+
 @OptIn(ExperimentalHazeMaterialsApi::class)
 @Composable
 @ExperimentalMaterial3Api
@@ -77,7 +81,20 @@ fun LibraryDynamicPlaylistScreen(
     type: String,
     viewModel: LibraryDynamicPlaylistViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel = koinInject(),
+    onScrolling: (Boolean) -> Unit = {},
 ) {
+    val state = rememberLazyListState()
+    val isScrollingUp by state.isScrollingUp()
+    LaunchedEffect(state, isScrollingUp) {
+        snapshotFlow { state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
+                    onScrolling.invoke(true)
+                } else {
+                    onScrolling.invoke(isScrollingUp)
+                }
+            }
+    }
     val nowPlayingVideoId by viewModel.nowPlayingVideoId.collectAsStateWithLifecycle()
 
     var chosenSong: SongEntity? by remember { mutableStateOf(null) }
@@ -112,6 +129,7 @@ fun LibraryDynamicPlaylistScreen(
 
     LazyColumn(
         modifier = Modifier.hazeSource(hazeState),
+        state = state,
         contentPadding = innerPadding,
     ) {
         item {

@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.BorderStroke
@@ -28,9 +31,15 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material.icons.filled.MoreVert
 import org.koin.compose.koinInject
 import com.sonique.app.viewModel.SharedViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.sonique.app.ui.component.NowPlayingBottomSheet
+import com.sonique.domain.utils.toSongEntity
 import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.ui.component.liquidGlass
 import androidx.compose.runtime.Composable
@@ -74,6 +83,17 @@ fun SpeedDialSection(
     val sharedViewModel: SharedViewModel = koinInject()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
 
+    var bottomSheetShow by remember { mutableStateOf(false) }
+    var track by remember { mutableStateOf<com.sonique.domain.data.model.browse.album.Track?>(null) }
+
+    if (bottomSheetShow) {
+        NowPlayingBottomSheet(
+            onDismiss = { bottomSheetShow = false },
+            song = track?.toSongEntity(),
+            navController = navController,
+        )
+    }
+
     Column(modifier = Modifier.fillMaxWidth()) {
         // Header
         Row(
@@ -82,88 +102,213 @@ fun SpeedDialSection(
         ) {
             Column {
                 Text(
-                    text = "Speed dial", // Static title as requested or data.title
+                    text = "PICK UP WHERE YOU LEFT OFF",
+                    style = typo().labelLarge,
+                    color = Color.LightGray.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Normal
+                )
+                Text(
+                    text = "Continue Listening",
                     style = typo().headlineMedium,
                     color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }
 
-        if (enableLiquidGlass) {
-            // Horizontal List of Big Boxes
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(data.contents.filterNotNull()) { item ->
-                    SpeedDialBigItem(
-                        item = item,
-                        navController = navController,
-                        onPlayClick = onPlayClick
-                    )
+        val continueListeningLayout by sharedViewModel.continueListeningLayout.collectAsStateWithLifecycle()
+
+        when (continueListeningLayout) {
+            "1_row" -> {
+                // Horizontal List of Big Boxes
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(data.contents.filterNotNull()) { item ->
+                        SpeedDialBigItem(
+                            item = item,
+                            navController = navController,
+                            onPlayClick = onPlayClick
+                        )
+                    }
                 }
             }
-        } else {
-            // Chunk items into groups of 9 (3x3 grid)
-            val chunks = data.contents.filterNotNull().chunked(9)
-            val pagerState = rememberPagerState(pageCount = { chunks.size })
-
-            // Pager
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxWidth()
-            ) { page ->
-                val pageItems = chunks.getOrNull(page) ?: emptyList()
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+            "2_row" -> {
+                // Horizontal 2-Row Grid
+                LazyHorizontalGrid(
+                    rows = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxWidth().height(410.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 3 Rows
-                    val rows = pageItems.chunked(3)
-                    rows.forEach { rowItems ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            // 3 Columns
-                            rowItems.forEach { item ->
-                                Box(modifier = Modifier.weight(1f)) {
-                                    SpeedDialGridItem(
-                                        item = item,
-                                        navController = navController,
-                                        onPlayClick = onPlayClick
+                    items(data.contents.filterNotNull()) { item ->
+                        SpeedDialBigItem(
+                            item = item,
+                            navController = navController,
+                            onPlayClick = onPlayClick
+                        )
+                    }
+                }
+            }
+            "list" -> {
+                // Horizontal pager of vertical lists (4 items per page with peek)
+                val chunks = data.contents.filterNotNull().chunked(4)
+                val pagerState = rememberPagerState(pageCount = { chunks.size })
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(start = 16.dp, end = 40.dp),
+                    pageSpacing = 8.dp
+                ) { page ->
+                    val pageItems = chunks.getOrNull(page) ?: emptyList()
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        pageItems.forEach { item ->
+                            val context = LocalPlatformContext.current
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        val browseId = item.browseId
+                                        val playlistId = item.playlistId
+                                        if (playlistId != null && (item.videoId == null || item.videoId == "")) {
+                                            navController.navigate(PlaylistDestination(playlistId))
+                                        } else if (browseId != null && (item.videoId == null || item.videoId == "")) {
+                                            if (browseId.startsWith("UC")) {
+                                                navController.navigate(ArtistDestination(browseId))
+                                            } else {
+                                                navController.navigate(AlbumDestination(browseId))
+                                            }
+                                        } else {
+                                            onPlayClick(item)
+                                        }
+                                    }
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(context)
+                                        .data(item.thumbnails.lastOrNull()?.url)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(56.dp)
+                                        .clip(RoundedCornerShape(6.dp)),
+                                    placeholder = painterResource(Res.drawable.holder),
+                                    error = painterResource(Res.drawable.holder)
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = item.title,
+                                        style = typo().titleMedium,
+                                        color = Color.White,
+                                        maxLines = 1
                                     )
+                                    val subtitle = item.artists?.joinToString { it.name } ?: item.description ?: ""
+                                    if (subtitle.isNotEmpty()) {
+                                        Text(
+                                            text = subtitle,
+                                            style = typo().bodySmall,
+                                            color = Color.LightGray.copy(alpha = 0.7f),
+                                            maxLines = 1
+                                        )
+                                    }
                                 }
-                            }
-                            // Fill empty spaces if last row has < 3 items
-                            repeat(3 - rowItems.size) {
-                                Spacer(modifier = Modifier.weight(1f))
+                                // 3 dots menu button
+                                if (item.videoId != null && item.videoId != "") {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clickable {
+                                                track = item.toTrack()
+                                                bottomSheetShow = true
+                                            },
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MoreVert,
+                                            contentDescription = "Options",
+                                            tint = Color.White
+                                        )
+                                    }
+                                } else {
+                                    Spacer(modifier = Modifier.width(48.dp))
+                                }
                             }
                         }
                     }
                 }
             }
+            else -> {
+                // Chunk items into groups of 9 (3x3 grid)
+                val chunks = data.contents.filterNotNull().chunked(9)
+                val pagerState = rememberPagerState(pageCount = { chunks.size })
 
-            // Pager Indicator (Dots)
-            if (chunks.size > 1) {
-                Row(
-                    modifier = Modifier
-                        .wrapContentHeight()
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    repeat(pagerState.pageCount) { iteration ->
-                        val color = if (pagerState.currentPage == iteration) Color.White else Color.White.copy(alpha = 0.3f)
-                        Box(
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                                .size(if (pagerState.currentPage == iteration) 8.dp else 6.dp)
-                        )
+                // Pager
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth()
+                ) { page ->
+                    val pageItems = chunks.getOrNull(page) ?: emptyList()
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // 3 Rows
+                        val rows = pageItems.chunked(3)
+                        rows.forEach { rowItems ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                // 3 Columns
+                                rowItems.forEach { item ->
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        SpeedDialGridItem(
+                                            item = item,
+                                            navController = navController,
+                                            onPlayClick = onPlayClick
+                                        )
+                                    }
+                                }
+                                // Fill empty spaces if last row has < 3 items
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Pager Indicator (Dots)
+                if (chunks.size > 1) {
+                    Row(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        repeat(pagerState.pageCount) { iteration ->
+                            val color = if (pagerState.currentPage == iteration) Color.White else Color.White.copy(alpha = 0.3f)
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .size(if (pagerState.currentPage == iteration) 8.dp else 6.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -195,11 +340,11 @@ fun SpeedDialBigItem(
          }
     }
 
-    val cardShape = RoundedCornerShape(12.dp)
+    val cardShape = RoundedCornerShape(6.dp)
 
     Column(
         modifier = Modifier
-            .width(160.dp)
+            .width(140.dp)
             .clickable(onClick = onClick),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -211,7 +356,7 @@ fun SpeedDialBigItem(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .width(160.dp)
+                .width(140.dp)
                 .aspectRatio(1f)
                 .clip(cardShape),
             placeholder = painterResource(Res.drawable.holder),
@@ -276,7 +421,7 @@ fun SpeedDialGridItem(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(8.dp))
+                .clip(RoundedCornerShape(6.dp))
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(context)

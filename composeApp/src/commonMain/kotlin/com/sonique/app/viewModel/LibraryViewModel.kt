@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.lastOrNull
@@ -154,36 +155,24 @@ class LibraryViewModel(
             cookieJob.join()
             artistJob.join()
         }
-    }
 
-    fun setCurrentScreen(chipType: LibraryChipType) {
-        _currentScreen.value = chipType
-        viewModelScope.launch {
-            dataStoreManager.putString("library_current_screen", chipType.toStringValue())
-        }
-    }
-
-    fun getRecentlyAdded() {
+        // Keep database collectors running continuously in background to support hot state flows and instant navigation
         viewModelScope.launch {
             commonRepository.getAllRecentData().collectLatest { data ->
                 val temp: MutableList<RecentlyType> = mutableListOf()
                 temp.addAll(data)
-                temp
-                    .find {
-                        it is PlaylistEntity && (it.id.contains("RDEM") || it.id.contains("RDAMVM"))
-                    }.let {
-                        temp.remove(it)
-                    }
+                temp.find {
+                    it is PlaylistEntity && (it.id.contains("RDEM") || it.id.contains("RDAMVM"))
+                }.let {
+                    temp.remove(it)
+                }
                 temp.removeIf { it is SongEntity && it.inLibrary == Config.REMOVED_SONG_DATE_TIME }
-                
-                 
                 temp.removeIf { it is PlaylistEntity && (it.id == "LM" || it.id == LOCAL_PLAYLIST_ID_LIKED) }
                 
-                 
                 temp.add(
                     PlaylistEntity(
                         id = LOCAL_PLAYLIST_ID_LIKED,
-                        title = runBlocking { getString(Res.string.liked_songs) },
+                        title = getString(Res.string.liked_songs),
                         author = "Sonique",
                         thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
                         description = "PIN"
@@ -191,21 +180,18 @@ class LibraryViewModel(
                 )
 
                 if (dataStoreManager.loggedIn.first() == DataStoreManager.TRUE) {
-                     
                     temp.add(
                         PlaylistEntity(
-                            title = runBlocking { getString(Res.string.youtube_liked_music) },
+                            title = getString(Res.string.youtube_liked_music),
                             author = "YouTube Music",
                             id = "LM",
                             description = "PIN",
                             thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
                         )
                     )
-                    
-                    // Add New Pins
                     temp.add(
                         PlaylistEntity(
-                            title = runBlocking { getString(Res.string.your_youtube_playlists) },
+                            title = getString(Res.string.your_youtube_playlists),
                             author = "YouTube Music",
                             id = Config.PIN_YT_PLAYLISTS,
                             description = "PIN",
@@ -214,7 +200,7 @@ class LibraryViewModel(
                     )
                     temp.add(
                         PlaylistEntity(
-                            title = runBlocking { getString(Res.string.youtube_albums) },
+                            title = getString(Res.string.youtube_albums),
                             author = "YouTube Music",
                             id = Config.PIN_YT_ALBUMS,
                             description = "PIN",
@@ -223,7 +209,7 @@ class LibraryViewModel(
                     )
                     temp.add(
                         PlaylistEntity(
-                            title = runBlocking { getString(Res.string.mix_for_you) },
+                            title = getString(Res.string.mix_for_you),
                             author = "YouTube Music",
                             id = Config.PIN_YT_MIX,
                             description = "PIN",
@@ -236,7 +222,106 @@ class LibraryViewModel(
                 _recentlyAdded.value = LocalResource.Success(limited.toImmutableList())
             }
         }
+
+        viewModelScope.launch {
+            localPlaylistRepository.getAllLocalPlaylists().collect { values ->
+                _yourLocalPlaylist.value = LocalResource.Success(values.reversed())
+            }
+        }
+
+        viewModelScope.launch {
+            val likedSongsTitle = getString(Res.string.liked_songs)
+            val soniqueLyricsAuthor = getString(Res.string.sonique_lyrics)
+            combine(
+                albumRepository.getLikedAlbums(),
+                playlistRepository.getLikedPlaylists()
+            ) { album, playlist ->
+                val temp: MutableList<PlaylistType> = mutableListOf()
+                temp.add(
+                    PlaylistEntity(
+                        id = LOCAL_PLAYLIST_ID_LIKED,
+                        title = likedSongsTitle,
+                        author = soniqueLyricsAuthor,
+                        thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
+                        favoriteAt = now(),
+                        inLibrary = now(),
+                        downloadState = 0,
+                    )
+                )
+                temp.addAll(album)
+                temp.addAll(playlist)
+                temp.sortedWith<PlaylistType>(
+                    Comparator { p0, p1 ->
+                        val timeP0: LocalDateTime? =
+                            when (p0) {
+                                is AlbumEntity -> p0.favoriteAt ?: p0.inLibrary
+                                is PlaylistEntity -> p0.favoriteAt ?: p0.inLibrary
+                                else -> null
+                            }
+                        val timeP1: LocalDateTime? =
+                            when (p1) {
+                                is AlbumEntity -> p1.favoriteAt ?: p1.inLibrary
+                                is PlaylistEntity -> p1.favoriteAt ?: p1.inLibrary
+                                else -> null
+                            }
+                        if (timeP0 == null || timeP1 == null) {
+                            return@Comparator if (timeP0 == null && timeP1 == null) {
+                                0
+                            } else if (timeP0 == null) {
+                                -1
+                            } else {
+                                1
+                            }
+                        }
+                        timeP0.compareTo(timeP1)
+                    },
+                )
+            }.collect { sortedList ->
+                _favoritePlaylist.value = LocalResource.Success(sortedList)
+            }
+        }
+
+        viewModelScope.launch {
+            podcastRepository.getFavoritePodcasts().collectLatest { podcasts ->
+                val sortedList = podcasts.sortedByDescending { it.favoriteTime }
+                _favoritePodcasts.value = LocalResource.Success(sortedList)
+            }
+        }
+
+        viewModelScope.launch {
+            songRepository.getCanvasSong(max = 5).collect { data ->
+                _listCanvasSong.value = LocalResource.Success(data)
+            }
+        }
+
+        viewModelScope.launch {
+            playlistRepository.getAllDownloadedPlaylist().collect { values ->
+                val temp = values.toMutableList()
+                temp.add(
+                    0,
+                    PlaylistEntity(
+                        id = LOCAL_PLAYLIST_ID_DOWNLOADED,
+                        title = getString(Res.string.downloaded_songs),
+                        author = getString(Res.string.sonique_lyrics),
+                        thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
+                        favoriteAt = now(),
+                        inLibrary = now(),
+                        downloadState = 0,
+                    )
+                )
+                _downloadedPlaylist.value = LocalResource.Success(temp)
+            }
+        }
     }
+
+    fun setCurrentScreen(chipType: LibraryChipType) {
+        _currentScreen.value = chipType
+        viewModelScope.launch {
+            dataStoreManager.putString("library_current_screen", chipType.toStringValue())
+        }
+    }
+
+    fun getRecentlyAdded() {}
 
     fun getYouTubePlaylist() {
         _youTubePlaylist.value = LocalResource.Loading()
@@ -281,105 +366,15 @@ class LibraryViewModel(
 
 
 
-    fun getPlaylistFavorite() {
-        viewModelScope.launch {
-            albumRepository.getLikedAlbums().collect { album ->
-                val temp: MutableList<PlaylistType> = mutableListOf()
-                temp.add(
-                    PlaylistEntity(
-                        id = LOCAL_PLAYLIST_ID_LIKED,
-                        title = getString(Res.string.liked_songs),
-                        author = getString(Res.string.sonique_lyrics),
-                        thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
-                        favoriteAt = now(),
-                        inLibrary = now(),
-                        downloadState = 0,
-                    )
-                )
-                temp.addAll(album)
-                playlistRepository.getLikedPlaylists().collect { playlist ->
-                    temp.addAll(playlist)
-                    val sortedList =
-                        temp.sortedWith<PlaylistType>(
-                            Comparator { p0, p1 ->
-                                val timeP0: LocalDateTime? =
-                                    when (p0) {
-                                        is AlbumEntity -> p0.favoriteAt ?: p0.inLibrary
-                                        is PlaylistEntity -> p0.favoriteAt ?: p0.inLibrary
-                                        else -> null
-                                    }
-                                val timeP1: LocalDateTime? =
-                                    when (p1) {
-                                        is AlbumEntity -> p1.favoriteAt ?: p1.inLibrary
-                                        is PlaylistEntity -> p1.favoriteAt ?: p1.inLibrary
-                                        else -> null
-                                    }
-                                if (timeP0 == null || timeP1 == null) {
-                                    return@Comparator if (timeP0 == null && timeP1 == null) {
-                                        0
-                                    } else if (timeP0 == null) {
-                                        -1
-                                    } else {
-                                        1
-                                    }
-                                }
-                                timeP0.compareTo(timeP1)  
-                            },
-                        )
-                    _favoritePlaylist.value = LocalResource.Success(sortedList)
-                }
-            }
-        }
-    }
+    fun getPlaylistFavorite() {}
 
-    fun getFavoritePodcasts() {
-        viewModelScope.launch {
-            podcastRepository.getFavoritePodcasts().collectLatest { podcasts ->
-                val sortedList = podcasts.sortedByDescending { it.favoriteTime }
-                _favoritePodcasts.value = LocalResource.Success(sortedList)
-            }
-        }
-    }
+    fun getFavoritePodcasts() {}
 
-    fun getCanvasSong() {
-        _listCanvasSong.value = LocalResource.Loading()
-        viewModelScope.launch {
-            songRepository.getCanvasSong(max = 5).collect { data ->
-                _listCanvasSong.value = LocalResource.Success(data)
-            }
-        }
-    }
+    fun getCanvasSong() {}
 
-    fun getLocalPlaylist() {
-        _yourLocalPlaylist.value = LocalResource.Loading()
-        viewModelScope.launch {
-            localPlaylistRepository.getAllLocalPlaylists().collect { values ->
- 
-                _yourLocalPlaylist.value = LocalResource.Success(values.reversed())
-            }
-        }
-    }
+    fun getLocalPlaylist() {}
 
-    fun getDownloadedPlaylist() {
-        viewModelScope.launch {
-            playlistRepository.getAllDownloadedPlaylist().collect { values ->
-                val temp = values.toMutableList()
-                temp.add(
-                    0,
-                    PlaylistEntity(
-                        id = LOCAL_PLAYLIST_ID_DOWNLOADED,
-                        title = getString(Res.string.downloaded_songs),
-                        author = getString(Res.string.sonique_lyrics),
-                        thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
-                        favoriteAt = now(),
-                        inLibrary = now(),
-                        downloadState = 0,
-                    )
-                )
-                _downloadedPlaylist.value = LocalResource.Success(temp)
-            }
-        }
-    }
+    fun getDownloadedPlaylist() {}
 
     fun createPlaylist(title: String) {
         viewModelScope.launch {

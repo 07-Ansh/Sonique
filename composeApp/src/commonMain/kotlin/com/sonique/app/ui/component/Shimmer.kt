@@ -72,8 +72,8 @@ fun PlaylistShimmer() {
     ) {
         Box(
             Modifier
-                .size(160.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .size(140.dp)
+                .clip(RoundedCornerShape(6.dp))
                 .background(
                     color = shimmerColor(),
                 ).shimmer(),
@@ -106,7 +106,7 @@ fun SpeedDialShimmerItem(modifier: Modifier = Modifier) {
     Box(
         modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(6.dp))
             .background(shimmerColor())
             .shimmer(),
     )
@@ -125,7 +125,7 @@ fun SpeedDialShimmer() {
                 .padding(vertical = 8.dp)
                 .background(
                     color = shimmerColor(),
-                ).clip(RoundedCornerShape(8.dp))
+                ).clip(RoundedCornerShape(6.dp))
                 .shimmer(),
         )
         if (enableLiquidGlass && getPlatform() == Platform.Android) {
@@ -135,13 +135,13 @@ fun SpeedDialShimmer() {
             ) {
                 items(5) {
                     Column(
-                        Modifier.width(160.dp),
+                        Modifier.width(140.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Box(
                             Modifier
-                                .size(160.dp)
-                                .clip(RoundedCornerShape(12.dp))
+                                .size(140.dp)
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(shimmerColor())
                                 .shimmer()
                         )

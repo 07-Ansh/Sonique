@@ -121,6 +121,8 @@ import sonique.composeapp.generated.resources.no_description
 import sonique.composeapp.generated.resources.other_version
 import sonique.composeapp.generated.resources.year_and_category
 
+import com.sonique.app.extension.isScrollingUp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlbumScreen(
@@ -128,6 +130,7 @@ fun AlbumScreen(
     navController: NavController,
     viewModel: AlbumViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel = koinInject(),
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     val uriHandler = LocalUriHandler.current
 
@@ -165,6 +168,17 @@ fun AlbumScreen(
     var shouldHideTopBar by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(key1 = firstItemVisible) {
         shouldHideTopBar = !firstItemVisible
+    }
+    val isScrollingUp by lazyState.isScrollingUp()
+    LaunchedEffect(lazyState, isScrollingUp) {
+        snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
+                    onScrolling.invoke(true)
+                } else {
+                    onScrolling.invoke(isScrollingUp)
+                }
+            }
     }
     val paletteState = rememberPaletteState()
     var bitmap by remember {

@@ -13,6 +13,7 @@ import com.sonique.app.ui.screen.library.LibraryDynamicPlaylistScreen
 fun NavGraphBuilder.libraryScreenGraph(
     innerPadding: PaddingValues,
     navController: NavController,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     composable<LibraryDynamicPlaylistDestination> { entry ->
         val data = entry.toRoute<LibraryDynamicPlaylistDestination>()
@@ -20,6 +21,7 @@ fun NavGraphBuilder.libraryScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
             type = data.type,
+            onScrolling = onScrolling,
         )
     }
 }

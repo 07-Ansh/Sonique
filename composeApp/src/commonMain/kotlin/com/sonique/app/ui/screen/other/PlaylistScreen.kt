@@ -1,10 +1,9 @@
 package com.sonique.app.ui.screen.other
 
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
-import com.sonique.app.ui.theme.backgroundCard
-import com.sonique.app.ui.theme.overlayMedium
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -14,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,6 +31,8 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -39,20 +42,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -71,12 +72,17 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -90,11 +96,20 @@ import coil3.toBitmap
 import com.kmpalette.rememberPaletteState
 import com.sonique.domain.data.entities.DownloadState
 import com.sonique.domain.data.model.browse.album.Track
+import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
 import com.sonique.domain.utils.toSongEntity
 import com.sonique.logger.Logger
+import com.sonique.app.Platform
+import com.sonique.app.expect.ui.layerBackdrop
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.expect.ui.toImageBitmap
 import com.sonique.app.extension.angledGradientBackground
 import com.sonique.app.extension.getColorFromPalette
+import com.sonique.app.extension.getScreenSizeInfo
 import com.sonique.app.extension.getStringBlocking
+import com.sonique.app.extension.toImmersiveBackground
+import com.sonique.app.extension.isScrollingUp
+import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.DescriptionView
 import com.sonique.app.ui.component.EndOfPage
@@ -102,19 +117,26 @@ import com.sonique.app.ui.component.HeartCheckBox
 import com.sonique.app.ui.component.LoadingDialog
 import com.sonique.app.ui.component.NowPlayingBottomSheet
 import com.sonique.app.ui.component.PlaylistBottomSheet
+import com.sonique.app.ui.component.LiquidGlassIconButton
 import com.sonique.app.ui.component.RippleIconButton
+import com.sonique.app.ui.component.liquidGlass
 import com.sonique.app.ui.component.SongFullWidthItems
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.seed
 import com.sonique.app.ui.theme.typo
-import kotlinx.coroutines.launch
 import com.sonique.app.viewModel.ListState
 import com.sonique.app.viewModel.PlaylistUIEvent
 import com.sonique.app.viewModel.PlaylistUIState
 import com.sonique.app.viewModel.PlaylistViewModel
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
+import dev.chrisbanes.haze.materials.HazeMaterials
+import dev.chrisbanes.haze.rememberHazeState
 import io.github.alexzhirkevich.compottie.Compottie
 import io.github.alexzhirkevich.compottie.LottieCompositionSpec
 import io.github.alexzhirkevich.compottie.rememberLottieComposition
@@ -147,9 +169,8 @@ import sonique.composeapp.generated.resources.playlist
 import sonique.composeapp.generated.resources.radio
 import sonique.composeapp.generated.resources.search
 import sonique.composeapp.generated.resources.unlimited
-import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
 
-@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun PlaylistScreen(
     viewModel: PlaylistViewModel = koinViewModel(),
@@ -157,6 +178,7 @@ fun PlaylistScreen(
     playlistId: String,
     isYourYouTubePlaylist: Boolean,
     navController: NavController,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     val tag = "PlaylistScreen"
 
@@ -174,10 +196,7 @@ fun PlaylistScreen(
     val tracksListState by viewModel.tracksListState.collectAsStateWithLifecycle()
 
     var showSearchBar by rememberSaveable { mutableStateOf(false) }
-    var showCancelDownloadDialog by remember { mutableStateOf(false) }
-    var isRefreshing by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    val pullToRefreshState = rememberPullToRefreshState()
+    var searchBarHeightPx by remember { mutableStateOf(0) }
 
     val lazyState = rememberLazyListState()
     val firstItemVisible by remember {
@@ -244,11 +263,10 @@ fun PlaylistScreen(
         }
     }
 
-    val playingTrack by sharedViewModel.nowPlayingState
-        .mapLatest {
-            it?.songEntity
-        }.collectAsState(initial = null)
-    val isPlaying by sharedViewModel.controllerState.map { it.isPlaying }.collectAsState(initial = false)
+    val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
+    val playingTrack = nowPlayingState?.songEntity
+    val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
+    val isPlaying = controllerState?.isPlaying == true
 
     var currentItem by remember {
         mutableStateOf<Track?>(null)
@@ -287,15 +305,38 @@ fun PlaylistScreen(
     LaunchedEffect(key1 = firstItemVisible) {
         shouldHideTopBar = !firstItemVisible
     }
+    val isScrollingUp by lazyState.isScrollingUp()
+    LaunchedEffect(lazyState, isScrollingUp) {
+        snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                if (isAtTop) {
+                    onScrolling.invoke(true)
+                } else {
+                    onScrolling.invoke(isScrollingUp)
+                }
+            }
+    }
     val paletteState = rememberPaletteState()
+    val hazeState =
+        rememberHazeState(
+            blurEnabled = true,
+        )
     var bitmap by remember {
         mutableStateOf<ImageBitmap?>(null)
     }
+    // Track which thumbnail URL we've already extracted a palette from.
+    // Prevents palette flash when LazyColumn recycles the header item on scroll —
+    // AsyncImage re-mount fires onSuccess again, but we skip the regenerate.
+    var paletteGeneratedFor by remember {
+        mutableStateOf<String?>(null)
+    }
+    val currentThumbnail = (uiState as? PlaylistUIState.Success)?.data?.thumbnail
 
     LaunchedEffect(bitmap) {
         val bm = bitmap
-        if (bm != null) {
+        if (bm != null && currentThumbnail != null && paletteGeneratedFor != currentThumbnail) {
             paletteState.generate(bm)
+            paletteGeneratedFor = currentThumbnail
         }
     }
 
@@ -307,7 +348,21 @@ fun PlaylistScreen(
             }
     }
 
-     
+    // Apple Music-inspired immersive treatment: gated to mobile portrait so tablets,
+    // foldable open state, landscape orientation, and Desktop keep the existing layout.
+    val screenInfo = getScreenSizeInfo()
+    val isMobilePortrait = getPlatform() == Platform.Android && screenInfo.wDP < screenInfo.hDP
+    val dominantColor = listColors.firstOrNull() ?: md_theme_dark_background
+    // Apple Music-style page background from the artwork's dominant tone (see UIExt.toImmersiveBackground).
+    val mutedPaletteBg = paletteState.palette.toImmersiveBackground()
+    val artworkSizeDp =
+        if (isMobilePortrait) {
+            (screenInfo.wDP * 0.55f).coerceIn(180f, 220f).toInt()
+        } else {
+            250
+        }
+
+    // Loading dialog
     val showLoadingDialog by viewModel.showLoadingDialog.collectAsStateWithLifecycle()
     if (showLoadingDialog.first) {
         LoadingDialog(
@@ -315,7 +370,7 @@ fun PlaylistScreen(
             showLoadingDialog.second,
         )
     }
- 
+//    Box {
     Crossfade(
         targetState = uiState,
     ) { state ->
@@ -325,72 +380,18 @@ fun PlaylistScreen(
                 val data = state.data
                 Logger.d(tag, "data: $data")
                 if (data == null) return@Crossfade
-
-                if (showCancelDownloadDialog) {
-                androidx.compose.material3.AlertDialog(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                    textContentColor = MaterialTheme.colorScheme.onSurface,
-                    onDismissRequest = { showCancelDownloadDialog = false },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showCancelDownloadDialog = false
-                            viewModel.onUIEvent(PlaylistUIEvent.CancelDownload)
-                        }) {
-                            Text(text = "Yes", style = typo().labelSmall)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showCancelDownloadDialog = false }) {
-                            Text(text = "Cancel", style = typo().labelSmall)
-                        }
-                    },
-                    title = {
-                        Text(text = "Warning", style = typo().labelSmall)
-                    },
-                    text = {
-                        val text =
-                            if (downloadState == DownloadState.STATE_DOWNLOADED) {
-                                "Do you want to remove this download?"
-                            } else {
-                                "Do you want to cancel the download?"
-                            }
-                        Text(text = text, style = typo().bodyMedium)
-                    },
-                )
-                }
-
-                PullToRefreshBox(
+                val hazeState =
+                    rememberHazeState(
+                        blurEnabled = true,
+                    )
+                LazyColumn(
                     modifier =
                         Modifier
-                            .fillMaxSize(),
-                    state = pullToRefreshState,
-                    onRefresh = {
-                        scope.launch {
-                            isRefreshing = true
-                            viewModel.getData(playlistId, false).join()
-                            isRefreshing = false
-                        }
-                    },
-                    isRefreshing = isRefreshing,
-                    indicator = {
-                        PullToRefreshDefaults.Indicator(
-                            state = pullToRefreshState,
-                            isRefreshing = isRefreshing,
-                            modifier = Modifier.align(Alignment.TopCenter),
-                            containerColor = PullToRefreshDefaults.indicatorContainerColor,
-                            color = PullToRefreshDefaults.indicatorColor,
-                            maxDistance = PullToRefreshDefaults.PositionalThreshold - 5.dp,
-                        )
-                    },
+                            .fillMaxWidth()
+                            .background(if (isMobilePortrait) mutedPaletteBg else Color.Black)
+                            .hazeSource(hazeState),
+                    state = lazyState,
                 ) {
-                    LazyColumn(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .background(md_theme_dark_background),
-                        state = lazyState,
-                    ) {
                     if (!showSearchBar) {
                         item(contentType = "header") {
                             Box(
@@ -401,12 +402,12 @@ fun PlaylistScreen(
                                         .background(Color.Transparent)
                                         .animateItem(),
                             ) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth(),
-                                ) {
-                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                if (!isMobilePortrait) {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth(),
+                                    ) {
                                         Box(
                                             modifier =
                                                 Modifier
@@ -427,8 +428,8 @@ fun PlaylistScreen(
                                                             Brush.verticalGradient(
                                                                 listOf(
                                                                     Color.Transparent,
-                                                                    overlayMedium,
-                                                                    md_theme_dark_background,
+                                                                    Color(0x75000000),
+                                                                    Color.Black,
                                                                 ),
                                                             ),
                                                     ),
@@ -439,7 +440,7 @@ fun PlaylistScreen(
                                     Modifier
                                         .background(Color.Transparent),
                                 ) {
-                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                    if (!isMobilePortrait) {
                                         Row(
                                             modifier =
                                                 Modifier
@@ -465,98 +466,71 @@ fun PlaylistScreen(
                                     Column(
                                         horizontalAlignment = Alignment.Start,
                                     ) {
-                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                        AsyncImage(
-                                            model =
-                                                ImageRequest
-                                                    .Builder(LocalPlatformContext.current)
-                                                    .data(data.thumbnail)
-                                                    .diskCachePolicy(CachePolicy.ENABLED)
-                                                    .diskCacheKey(data.thumbnail)
-                                                    .crossfade(true)
-                                                    .build(),
-                                            placeholder = painterResource(Res.drawable.holder),
-                                            error = painterResource(Res.drawable.holder),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.FillHeight,
-                                            onSuccess = {
-                                                bitmap =
-                                                    it.result.image
-                                                        .toBitmap()
-                                                        .asImageBitmap()
-                                            },
-                                            modifier =
-                                                Modifier
-                                                    .height(250.dp)
-                                                    .wrapContentWidth()
-                                                    .align(Alignment.CenterHorizontally)
-                                                    .clip(
-                                                        RoundedCornerShape(8.dp),
-                                                    ),
-                                        )
-                                    }
-                                        Box(
-                                            modifier =
-                                                Modifier
+                                        if (isMobilePortrait) {
+                                            val artworkBackdrop = rememberBackdrop()
+                                            Box(
+                                                modifier = Modifier
                                                     .fillMaxWidth()
                                                     .wrapContentHeight(),
-                                        ) {
-                                            Column(
-                                                modifier =
-                                                    Modifier
-                                                        .padding(horizontal = 32.dp)
-                                                        .then(
-                                                            if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                                Modifier.windowInsetsPadding(WindowInsets.statusBars)
-                                                            } else {
-                                                                Modifier
-                                                            },
-                                                        ),
                                             ) {
-                                                if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                    Spacer(modifier = Modifier.size(20.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .matchParentSize()
+                                                        .graphicsLayer()
+                                                        .layerBackdrop(artworkBackdrop)
+                                                        .background(
+                                                            Brush.verticalGradient(
+                                                                listOf(
+                                                                    dominantColor,
+                                                                    mutedPaletteBg,
+                                                                ),
+                                                            ),
+                                                        ),
+                                                )
+
+                                                // Column for the content overlaying the backdrop
+                                                Column(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .wrapContentHeight()
+                                                        .padding(bottom = 16.dp),
+                                                    horizontalAlignment = Alignment.CenterHorizontally
+                                                ) {
+                                                    // Header buttons (Back + Heart/Search/More) using liquid glass!
                                                     Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                                                            .windowInsetsPadding(WindowInsets.statusBars),
+                                                        verticalAlignment = Alignment.CenterVertically
                                                     ) {
-                                                        Text(
-                                                            text = data.title,
-                                                            style = typo().headlineMedium,
-                                                            color = Color.White,
-                                                            maxLines = 1,
-                                                            modifier = Modifier.wrapContentWidth(),
-                                                        )
+                                                        LiquidGlassIconButton(
+                                                            backdrop = artworkBackdrop,
+                                                            resId = Res.drawable.baseline_arrow_back_ios_new_24,
+                                                            modifier = Modifier.size(48.dp),
+                                                        ) {
+                                                            navController.navigateUp()
+                                                        }
                                                         Spacer(Modifier.weight(1f))
-                                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                                            Crossfade(isPlaying && playingPlaylistId == data.id) { isThisPlaying ->
-                                                                if (isThisPlaying) {
-                                                                    RippleIconButton(
-                                                                        resId = Res.drawable.baseline_pause_circle_24,
-                                                                        fillMaxSize = true,
-                                                                        tint = seed,
-                                                                        modifier = Modifier.size(48.dp),
-                                                                    ) {
-                                                                        sharedViewModel.onUIEvent(UIEvent.PlayPause)
-                                                                    }
-                                                                } else {
-                                                                    RippleIconButton(
-                                                                        resId = Res.drawable.baseline_play_circle_24,
-                                                                        fillMaxSize = true,
-                                                                        tint = seed,
-                                                                        modifier = Modifier.size(48.dp),
-                                                                    ) {
-                                                                        viewModel.onUIEvent(PlaylistUIEvent.PlayAll)
-                                                                    }
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .height(48.dp)
+                                                                .liquidGlass(artworkBackdrop, RoundedCornerShape(24.dp)),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            if (!data.isRadio) {
+                                                                Box(
+                                                                    modifier = Modifier.size(48.dp),
+                                                                    contentAlignment = Alignment.Center,
+                                                                ) {
+                                                                    HeartCheckBox(
+                                                                        size = 28,
+                                                                        checked = liked,
+                                                                        onStateChange = {
+                                                                            viewModel.onUIEvent(PlaylistUIEvent.Favorite)
+                                                                        },
+                                                                    )
                                                                 }
-                                                            }
-                                                            if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                                HeartCheckBox(
-                                                                    size = 32,
-                                                                    checked = liked,
-                                                                    onStateChange = {
-                                                                        viewModel.onUIEvent(PlaylistUIEvent.Favorite)
-                                                                    },
-                                                                )
                                                             }
                                                             IconButton(
                                                                 onClick = {
@@ -565,30 +539,135 @@ fun PlaylistScreen(
                                                             ) {
                                                                 Icon(Icons.Rounded.Search, null, tint = Color.White)
                                                             }
-                                                            RippleIconButton(
-                                                                modifier = Modifier.size(36.dp),
-                                                                resId = Res.drawable.baseline_shuffle_24,
-                                                                fillMaxSize = true,
+                                                            IconButton(
+                                                                onClick = onPlaylistMoreClick,
                                                             ) {
-                                                                viewModel.onUIEvent(PlaylistUIEvent.Shuffle)
-                                                            }
-                                                            if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                                Spacer(Modifier.size(5.dp))
-                                                                RippleIconButton(
-                                                                    modifier = Modifier.size(36.dp),
-                                                                    resId = Res.drawable.baseline_more_vert_24,
-                                                                    fillMaxSize = true,
-                                                                ) {
-                                                                    onPlaylistMoreClick()
-                                                                }
+                                                                Icon(
+                                                                    painter = painterResource(Res.drawable.baseline_more_vert_24),
+                                                                    contentDescription = "More",
+                                                                    tint = Color.White,
+                                                                )
                                                             }
                                                         }
                                                     }
-                                                } else {
+
+                                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                                    // Crisp square artwork centered on the blurred backdrop
+                                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                        AsyncImage(
+                                                            model = ImageRequest.Builder(LocalPlatformContext.current)
+                                                                .data(data.thumbnail)
+                                                                .diskCachePolicy(CachePolicy.ENABLED)
+                                                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                                                .diskCacheKey(data.thumbnail)
+                                                                .memoryCacheKey(data.thumbnail)
+                                                                .crossfade(true)
+                                                                .build(),
+                                                            placeholder = painterResource(Res.drawable.holder),
+                                                            error = painterResource(Res.drawable.holder),
+                                                            contentDescription = null,
+                                                            contentScale = ContentScale.Crop,
+                                                            onSuccess = {
+                                                                bitmap = it.result.image.toImageBitmap()
+                                                            },
+                                                            modifier = Modifier
+                                                                .size(artworkSizeDp.dp)
+                                                                .aspectRatio(1f)
+                                                                .clip(RoundedCornerShape(8.dp)),
+                                                        )
+
+                                                        Spacer(modifier = Modifier.height(12.dp))
+                                                    }
+
+                                                    // Centered Title and Metadata
+                                                    Text(
+                                                        text = data.title,
+                                                        style = typo().titleLarge.copy(fontWeight = FontWeight.Bold),
+                                                        color = Color.White,
+                                                        maxLines = 2,
+                                                        textAlign = TextAlign.Center,
+                                                        modifier = Modifier.padding(horizontal = 24.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    CompositionLocalProvider(
+                                                        LocalMinimumInteractiveComponentSize provides Dp.Unspecified,
+                                                    ) {
+                                                        TextButton(
+                                                            modifier = Modifier
+                                                                .wrapContentHeight()
+                                                                .defaultMinSize(minHeight = 1.dp, minWidth = 1.dp),
+                                                            contentPadding = PaddingValues(vertical = 1.dp),
+                                                            onClick = {
+                                                                if (data.author.id.isNotEmpty()) {
+                                                                    navController.navigate(
+                                                                        ArtistDestination(
+                                                                            data.author.id,
+                                                                        ),
+                                                                    )
+                                                                }
+                                                            },
+                                                        ) {
+                                                            Text(
+                                                                text = data.author.name,
+                                                                style = typo().titleSmall.copy(fontWeight = FontWeight.Bold),
+                                                                color = Color.White,
+                                                                textAlign = TextAlign.Center,
+                                                            )
+                                                        }
+                                                    }
+                                                    Spacer(modifier = Modifier.height(2.dp))
+                                                    Text(
+                                                        text = "${
+                                                            if (data.isRadio) {
+                                                                stringResource(Res.string.radio)
+                                                            } else {
+                                                                stringResource(Res.string.playlist)
+                                                            }
+                                                        } • ${data.year}",
+                                                        style = typo().bodyMedium,
+                                                        color = Color.White.copy(alpha = 0.6f),
+                                                        textAlign = TextAlign.Center,
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            AsyncImage(
+                                                model =
+                                                    ImageRequest
+                                                        .Builder(LocalPlatformContext.current)
+                                                        .data(data.thumbnail)
+                                                        .diskCachePolicy(CachePolicy.ENABLED)
+                                                        .diskCacheKey(data.thumbnail)
+                                                        .crossfade(true)
+                                                        .build(),
+                                                placeholder = painterResource(Res.drawable.holder),
+                                                error = painterResource(Res.drawable.holder),
+                                                contentDescription = null,
+                                                contentScale = ContentScale.FillHeight,
+                                                onSuccess = {
+                                                    bitmap = it.result.image.toImageBitmap()
+                                                },
+                                                modifier =
+                                                    Modifier
+                                                        .height(artworkSizeDp.dp)
+                                                        .wrapContentWidth()
+                                                        .align(Alignment.CenterHorizontally)
+                                                        .clip(RoundedCornerShape(8.dp)),
+                                            )
+                                        }
+                                        Box(
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .wrapContentHeight(),
+                                        ) {
+                                            Column(Modifier.padding(horizontal = 32.dp)) {
+                                                if (!isMobilePortrait) {
                                                     Spacer(modifier = Modifier.size(25.dp))
                                                     Text(
                                                         text = data.title,
-                                                        style = typo().headlineMedium,
+                                                        style = typo().titleMedium,
                                                         color = Color.White,
                                                         maxLines = 2,
                                                     )
@@ -633,8 +712,158 @@ fun PlaylistScreen(
                                                             style = typo().bodyMedium,
                                                         )
                                                     }
+                                                }
+                                                if (isMobilePortrait) {
+                                                    // Apple Music-style action row:
+                                                    // [Shuffle][Play pill][Download/More] (cluster centered, all 48dp matching size)
+                                                    val isThisPlaying = isPlaying && playingPlaylistId == data.id
                                                     Row(
-                                                        modifier = Modifier.fillMaxWidth(),
+                                                        modifier =
+                                                            Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(vertical = 8.dp),
+                                                        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                    ) {
+                                                        if (!data.isRadio) {
+                                                            Box(
+                                                                modifier =
+                                                                    Modifier
+                                                                        .size(48.dp)
+                                                                        .clip(CircleShape)
+                                                                        .background(Color.White.copy(alpha = 0.12f))
+                                                                        .clickable {
+                                                                            viewModel.onUIEvent(PlaylistUIEvent.Shuffle)
+                                                                        },
+                                                                contentAlignment = Alignment.Center,
+                                                            ) {
+                                                                Icon(
+                                                                    imageVector = Icons.Rounded.Shuffle,
+                                                                    contentDescription = "Shuffle",
+                                                                    tint = Color.White,
+                                                                    modifier = Modifier.size(22.dp),
+                                                                )
+                                                            }
+                                                        }
+                                                        Box(
+                                                            modifier =
+                                                                Modifier
+                                                                    .height(48.dp)
+                                                                    .widthIn(min = 110.dp)
+                                                                    .clip(CircleShape)
+                                                                    .background(Color.White)
+                                                                    .clickable {
+                                                                        if (isThisPlaying) {
+                                                                            sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                                                        } else {
+                                                                            viewModel.onUIEvent(PlaylistUIEvent.PlayAll)
+                                                                        }
+                                                                    }.padding(horizontal = 20.dp),
+                                                            contentAlignment = Alignment.Center,
+                                                        ) {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Icon(
+                                                                    imageVector =
+                                                                        if (isThisPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                                                                    contentDescription = null,
+                                                                    tint = Color.Black,
+                                                                    modifier = Modifier.size(22.dp),
+                                                                )
+                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                Text(
+                                                                    text = if (isThisPlaying) "Pause" else "Play",
+                                                                    color = Color.Black,
+                                                                    style = typo().labelLarge,
+                                                                )
+                                                            }
+                                                        }
+                                                        if (!data.isRadio) {
+                                                            Box(
+                                                                modifier =
+                                                                    Modifier
+                                                                        .size(48.dp)
+                                                                        .clip(CircleShape)
+                                                                        .background(Color.White.copy(alpha = 0.12f)),
+                                                                contentAlignment = Alignment.Center,
+                                                            ) {
+                                                                Crossfade(targetState = downloadState) { state ->
+                                                                    when (state) {
+                                                                        DownloadState.STATE_DOWNLOADED -> {
+                                                                            Box(
+                                                                                modifier =
+                                                                                    Modifier
+                                                                                        .fillMaxSize()
+                                                                                        .clickable {
+                                                                                            viewModel.makeToast(
+                                                                                                getStringBlocking(Res.string.downloaded),
+                                                                                            )
+                                                                                        },
+                                                                                contentAlignment = Alignment.Center,
+                                                                            ) {
+                                                                                Icon(
+                                                                                    painter = painterResource(Res.drawable.baseline_downloaded),
+                                                                                    tint = Color(0xFF00A0CB),
+                                                                                    contentDescription = "",
+                                                                                    modifier = Modifier.size(22.dp),
+                                                                                )
+                                                                            }
+                                                                        }
+
+                                                                        DownloadState.STATE_DOWNLOADING -> {
+                                                                            Box(
+                                                                                modifier =
+                                                                                    Modifier
+                                                                                        .fillMaxSize()
+                                                                                        .clickable {
+                                                                                            viewModel.makeToast(
+                                                                                                getStringBlocking(Res.string.downloading),
+                                                                                            )
+                                                                                        },
+                                                                                contentAlignment = Alignment.Center,
+                                                                            ) {
+                                                                                Image(
+                                                                                    painter =
+                                                                                        rememberLottiePainter(
+                                                                                            composition = composition,
+                                                                                            iterations = Compottie.IterateForever,
+                                                                                        ),
+                                                                                    contentDescription = "Lottie animation",
+                                                                                    modifier = Modifier.size(28.dp),
+                                                                                )
+                                                                            }
+                                                                        }
+
+                                                                        else -> {
+                                                                            Box(
+                                                                                modifier =
+                                                                                    Modifier
+                                                                                        .fillMaxSize()
+                                                                                        .clickable {
+                                                                                            Logger.w(
+                                                                                                "PlaylistScreen",
+                                                                                                "downloadState: $downloadState",
+                                                                                            )
+                                                                                            viewModel.onUIEvent(PlaylistUIEvent.Download)
+                                                                                        },
+                                                                                contentAlignment = Alignment.Center,
+                                                                            ) {
+                                                                                Icon(
+                                                                                    painter = painterResource(Res.drawable.download_button),
+                                                                                    tint = Color.White,
+                                                                                    contentDescription = "Download",
+                                                                                    modifier = Modifier.size(22.dp),
+                                                                                )
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                } else {
+                                                    Row(
+                                                        modifier =
+                                                            Modifier.fillMaxWidth(),
                                                         verticalAlignment = Alignment.CenterVertically,
                                                     ) {
                                                         Crossfade(isPlaying && playingPlaylistId == data.id) { isThisPlaying ->
@@ -673,39 +902,47 @@ fun PlaylistScreen(
                                                                             modifier =
                                                                                 Modifier
                                                                                     .size(36.dp)
-                                                                                    .clip(CircleShape)
-                                                                                    .clickable {
-                                                                                        showCancelDownloadDialog = true
+                                                                                    .clip(
+                                                                                        CircleShape,
+                                                                                    ).clickable {
+                                                                                        viewModel.makeToast(getStringBlocking(Res.string.downloaded))
                                                                                     },
                                                                         ) {
                                                                             Icon(
                                                                                 painter = painterResource(Res.drawable.baseline_downloaded),
                                                                                 tint = Color(0xFF00A0CB),
                                                                                 contentDescription = "",
-                                                                                modifier = Modifier.size(36.dp).padding(2.dp),
+                                                                                modifier =
+                                                                                    Modifier
+                                                                                        .size(36.dp)
+                                                                                        .padding(2.dp),
                                                                             )
                                                                         }
                                                                     }
+
                                                                     DownloadState.STATE_DOWNLOADING -> {
                                                                         Box(
                                                                             modifier =
                                                                                 Modifier
                                                                                     .size(36.dp)
-                                                                                    .clip(CircleShape)
-                                                                                    .clickable {
-                                                                                        showCancelDownloadDialog = true
+                                                                                    .clip(
+                                                                                        CircleShape,
+                                                                                    ).clickable {
+                                                                                        viewModel.makeToast(getStringBlocking(Res.string.downloading))
                                                                                     },
                                                                         ) {
                                                                             Image(
-                                                                                painter = rememberLottiePainter(
-                                                                                    composition = composition,
-                                                                                    iterations = Compottie.IterateForever,
-                                                                                ),
+                                                                                painter =
+                                                                                    rememberLottiePainter(
+                                                                                        composition = composition,
+                                                                                        iterations = Compottie.IterateForever,
+                                                                                    ),
                                                                                 contentDescription = "Lottie animation",
                                                                                 modifier = Modifier.fillMaxSize(),
                                                                             )
                                                                         }
                                                                     }
+
                                                                     else -> {
                                                                         RippleIconButton(
                                                                             fillMaxSize = true,
@@ -721,18 +958,18 @@ fun PlaylistScreen(
                                                         }
                                                         Spacer(Modifier.weight(1f))
                                                         if (!data.isRadio) {
-                                                            if (data.radioEndpoint != null) {
-                                                                RippleIconButton(
-                                                                    modifier = Modifier.size(36.dp),
-                                                                    resId = Res.drawable.baseline_sensors_24,
-                                                                    fillMaxSize = true,
-                                                                ) {
-                                                                    viewModel.onUIEvent(PlaylistUIEvent.StartRadio)
-                                                                }
-                                                                Spacer(Modifier.size(5.dp))
-                                                            }
                                                             RippleIconButton(
-                                                                modifier = Modifier.size(36.dp),
+                                                                modifier =
+                                                                    Modifier.size(36.dp),
+                                                                resId = Res.drawable.baseline_sensors_24,
+                                                                fillMaxSize = true,
+                                                            ) {
+                                                                viewModel.onUIEvent(PlaylistUIEvent.StartRadio)
+                                                            }
+                                                            Spacer(Modifier.size(5.dp))
+                                                            RippleIconButton(
+                                                                modifier =
+                                                                    Modifier.size(36.dp),
                                                                 resId = Res.drawable.baseline_shuffle_24,
                                                                 fillMaxSize = true,
                                                             ) {
@@ -741,7 +978,8 @@ fun PlaylistScreen(
                                                             Spacer(Modifier.size(5.dp))
                                                         }
                                                         RippleIconButton(
-                                                            modifier = Modifier.size(36.dp),
+                                                            modifier =
+                                                                Modifier.size(36.dp),
                                                             resId = Res.drawable.baseline_more_vert_24,
                                                             fillMaxSize = true,
                                                         ) {
@@ -750,28 +988,26 @@ fun PlaylistScreen(
                                                     }
                                                 }
                                                 val uriHandler = LocalUriHandler.current
-                                                if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                    DescriptionView(
-                                                        modifier =
-                                                            Modifier
-                                                                .padding(
-                                                                    top = 8.dp,
-                                                                ),
-                                                        text =
-                                                            state.data.description.let {
-                                                                if (!it.isNullOrEmpty()) {
-                                                                    it
-                                                                } else {
-                                                                    stringResource(Res.string.no_description)
-                                                                }
-                                                            },
-                                                        limitLine = 3,
-                                                        onTimeClicked = {},
-                                                        onURLClicked = { url ->
-                                                            uriHandler.openUri(url)
+                                                DescriptionView(
+                                                    modifier =
+                                                        Modifier
+                                                            .padding(
+                                                                top = 8.dp,
+                                                            ),
+                                                    text =
+                                                        state.data.description.let {
+                                                            if (!it.isNullOrEmpty()) {
+                                                                it
+                                                            } else {
+                                                                stringResource(Res.string.no_description)
+                                                            }
                                                         },
-                                                    )
-                                                }
+                                                    limitLine = 3,
+                                                    onTimeClicked = {},
+                                                    onURLClicked = { url ->
+                                                        uriHandler.openUri(url)
+                                                    },
+                                                )
                                                 Text(
                                                     text =
                                                         if (data.isRadio) {
@@ -794,61 +1030,13 @@ fun PlaylistScreen(
                             }
                         }
                     } else {
-                        stickyHeader {
-                            Box(Modifier.background(md_theme_dark_background)) {
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .wrapContentWidth()
-                                            .padding(16.dp)
-                                            .windowInsetsPadding(WindowInsets.statusBars),
-                                ) {
-                                    RippleIconButton(
-                                        resId = Res.drawable.baseline_arrow_back_ios_new_24,
-                                    ) {
-                                        navController.navigateUp()
-                                    }
-                                    SearchBar(
-                                        modifier =
-                                            Modifier
-                                                .height(50.dp)
-                                                .padding(horizontal = 12.dp)
-                                                .weight(1f),
-                                        colors =
-                                            SearchBarDefaults.colors().copy(
-                                                containerColor = Color.Transparent,
-                                            ),
-                                        inputField = {
-                                            CompositionLocalProvider(LocalTextStyle provides typo().bodySmall) {
-                                                SearchBarDefaults.InputField(
-                                                    query = query,
-                                                    onQueryChange = { query = it },
-                                                    onSearch = { showSearchBar = false },
-                                                    expanded = showSearchBar,
-                                                    onExpandedChange = { showSearchBar = it },
-                                                    placeholder = {
-                                                        Text(
-                                                            stringResource(Res.string.search),
-                                                            style = typo().bodyMedium,
-                                                        )
-                                                    },
-                                                )
-                                            }
-                                        },
-                                        expanded = false,
-                                        onExpandedChange = {},
-                                        windowInsets = WindowInsets(0, 0, 0, 0),
-                                    ) {
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            showSearchBar = !showSearchBar
-                                        },
-                                    ) {
-                                        Icon(Icons.Rounded.Close, null, tint = Color.White)
-                                    }
-                                }
-                            }
+                        item {
+                            val density = LocalDensity.current
+                            Spacer(
+                                Modifier.height(
+                                    with(density) { searchBarHeightPx.toDp() },
+                                ),
+                            )
                         }
                     }
                     items(count = filteredTrack.size, key = { index ->
@@ -857,40 +1045,53 @@ fun PlaylistScreen(
                     }) { index ->
                         val item = filteredTrack.getOrNull(index)
                         if (item != null) {
-                            if (playingTrack?.videoId == item.videoId && isPlaying) {
-                                SongFullWidthItems(
-                                    isPlaying = true,
-                                    track = item,
-                                    onMoreClickListener = if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) null else { { onItemMoreClick(it) } },
-                                    onClickListener = {
-                                        Logger.w("PlaylistScreen", "index: $index")
-                                        onPlaylistItemClick(it)
-                                    },
-                                    onAddToQueue = {
-                                        sharedViewModel.playNext(item)
-                                    },
-                                    modifier = Modifier.animateItem(),
-                                )
-                            } else {
-                                SongFullWidthItems(
-                                    isPlaying = false,
-                                    track = item,
-                                    onMoreClickListener = if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) null else { { onItemMoreClick(it) } },
-                                    onClickListener = {
-                                        Logger.w("PlaylistScreen", "index: $index")
-                                        onPlaylistItemClick(it)
-                                    },
-                                    onAddToQueue = {
-                                        sharedViewModel.playNext(item)
-                                    },
-                                    modifier = Modifier.animateItem(),
-                                )
+                            Column(modifier = Modifier.animateItem()) {
+                                if (playingTrack?.videoId == item.videoId && isPlaying) {
+                                    SongFullWidthItems(
+                                        isPlaying = true,
+                                        track = item,
+                                        onMoreClickListener = { onItemMoreClick(it) },
+                                        onClickListener = {
+                                            Logger.w("PlaylistScreen", "index: $index")
+                                            onPlaylistItemClick(it)
+                                        },
+                                        onAddToQueue = {
+                                            sharedViewModel.addListToQueue(
+                                                arrayListOf(item),
+                                            )
+                                        },
+                                        modifier = Modifier,
+                                    )
+                                } else {
+                                    SongFullWidthItems(
+                                        isPlaying = false,
+                                        track = item,
+                                        onMoreClickListener = { onItemMoreClick(it) },
+                                        onClickListener = {
+                                            Logger.w("PlaylistScreen", "index: $index")
+                                            onPlaylistItemClick(it)
+                                        },
+                                        onAddToQueue = {
+                                            sharedViewModel.addListToQueue(
+                                                arrayListOf(item),
+                                            )
+                                        },
+                                        modifier = Modifier,
+                                    )
+                                }
+                                if (isMobilePortrait && index < filteredTrack.size - 1) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(start = 72.dp, end = 16.dp),
+                                        thickness = 0.5.dp,
+                                        color = Color.White.copy(alpha = 0.12f),
+                                    )
+                                }
                             }
                         }
                     }
                     when (tracksListState) {
                         ListState.IDLE -> {
-                             
+                            // DO NOTHING
                             item {
                                 EndOfPage()
                             }
@@ -940,9 +1141,85 @@ fun PlaylistScreen(
                             }
                         }
                     }
-                    }
-                    }
+                }
 
+                AnimatedVisibility(
+                    visible = showSearchBar,
+                    enter = fadeIn() + slideInVertically(),
+                    exit = fadeOut() + slideOutVertically(),
+                ) {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .onGloballyPositioned { searchBarHeightPx = it.size.height }
+                            .then(
+                                if (isMobilePortrait) {
+                                    Modifier.hazeEffect(hazeState) {
+                                        blurEnabled = true
+                                        blurRadius = 24.dp
+                                        backgroundColor = mutedPaletteBg
+                                        tints = listOf(HazeTint(mutedPaletteBg.copy(alpha = 0.55f)))
+                                    }
+                                } else {
+                                    Modifier.background(Color.Black)
+                                },
+                            ),
+                    ) {
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                                    .windowInsetsPadding(WindowInsets.statusBars),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            RippleIconButton(
+                                resId = Res.drawable.baseline_arrow_back_ios_new_24,
+                            ) {
+                                navController.navigateUp()
+                            }
+                            SearchBar(
+                                modifier =
+                                    Modifier
+                                        .height(50.dp)
+                                        .padding(horizontal = 12.dp)
+                                        .weight(1f),
+                                colors =
+                                    SearchBarDefaults.colors().copy(
+                                        containerColor = Color.Transparent,
+                                    ),
+                                inputField = {
+                                    CompositionLocalProvider(LocalTextStyle provides typo().bodySmall) {
+                                        SearchBarDefaults.InputField(
+                                            query = query,
+                                            onQueryChange = { query = it },
+                                            onSearch = { showSearchBar = false },
+                                            expanded = showSearchBar,
+                                            onExpandedChange = { showSearchBar = it },
+                                            placeholder = {
+                                                Text(
+                                                    stringResource(Res.string.search),
+                                                    style = typo().bodyMedium,
+                                                )
+                                            },
+                                        )
+                                    }
+                                },
+                                expanded = false,
+                                onExpandedChange = {},
+                                windowInsets = WindowInsets(0, 0, 0, 0),
+                            ) {
+                            }
+                            IconButton(
+                                onClick = {
+                                    showSearchBar = !showSearchBar
+                                },
+                            ) {
+                                Icon(Icons.Rounded.Close, null, tint = Color.White)
+                            }
+                        }
+                    }
+                }
 
                 if (itemBottomSheetShow && currentItem != null) {
                     val track = currentItem?.toSongEntity() ?: return@Crossfade
@@ -1031,7 +1308,17 @@ fun PlaylistScreen(
                             TopAppBarDefaults.topAppBarColors(
                                 containerColor = Color.Transparent,
                             ),
-                        modifier = Modifier.angledGradientBackground(listColors, 90f),
+                        modifier =
+                            if (isMobilePortrait) {
+                                Modifier.hazeEffect(hazeState) {
+                                    blurEnabled = true
+                                    blurRadius = 24.dp
+                                    backgroundColor = mutedPaletteBg
+                                    tints = listOf(HazeTint(mutedPaletteBg.copy(alpha = 0.55f)))
+                                }
+                            } else {
+                                Modifier.angledGradientBackground(listColors, 90f)
+                            },
                     )
                 }
             }
@@ -1054,4 +1341,3 @@ fun PlaylistScreen(
         }
     }
 }
-

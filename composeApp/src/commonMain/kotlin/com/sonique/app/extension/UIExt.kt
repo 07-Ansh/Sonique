@@ -345,15 +345,15 @@ fun LazyListState.isScrollingUp(): State<Boolean> {
 
     return remember(this) {
         derivedStateOf {
-            if (firstVisibleItemIndex > 0) {
-                if (previousIndex != firstVisibleItemIndex) {
+            if (firstVisibleItemIndex > 0 || firstVisibleItemScrollOffset > 0) {
+                val scrollingUp = if (previousIndex != firstVisibleItemIndex) {
                     previousIndex > firstVisibleItemIndex
                 } else {
                     previousScrollOffset >= firstVisibleItemScrollOffset
-                }.also {
-                    previousIndex = firstVisibleItemIndex
-                    previousScrollOffset = firstVisibleItemScrollOffset
                 }
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+                scrollingUp
             } else {
                 true
             }
@@ -376,15 +376,15 @@ fun LazyGridState.isScrollingUp(): State<Boolean> {
 
     return remember(this) {
         derivedStateOf {
-            if (firstVisibleItemIndex > 0) {
-                if (previousIndex != firstVisibleItemIndex) {
+            if (firstVisibleItemIndex > 0 || firstVisibleItemScrollOffset > 0) {
+                val scrollingUp = if (previousIndex != firstVisibleItemIndex) {
                     previousIndex > firstVisibleItemIndex
                 } else {
                     previousScrollOffset >= firstVisibleItemScrollOffset
-                }.also {
-                    previousIndex = firstVisibleItemIndex
-                    previousScrollOffset = firstVisibleItemScrollOffset
                 }
+                previousIndex = firstVisibleItemIndex
+                previousScrollOffset = firstVisibleItemScrollOffset
+                scrollingUp
             } else {
                 true
             }
@@ -510,4 +510,19 @@ fun getStringBlocking(res: StringResource): String =
     runBlocking {
         getString(res)
     }
+
+fun Palette?.toImmersiveBackground(): Color {
+    val p = this ?: return md_theme_dark_background
+    val rgb =
+        p.getDominantColor(0).takeIf { it != 0 }
+            ?: p.getMutedColor(0).takeIf { it != 0 }
+            ?: p.getVibrantColor(0).takeIf { it != 0 }
+            ?: return md_theme_dark_background
+    val base = Color(rgb)
+    // Perceived luminance (0 dark .. 1 light) of the source swatch.
+    val luminance = 0.299f * base.red + 0.587f * base.green + 0.114f * base.blue
+    // Darken more for lighter artwork so the page stays dark enough for white text.
+    val darkenFactor = 0.35f + 0.45f * luminance
+    return androidx.compose.ui.graphics.lerp(base, md_theme_dark_background, darkenFactor)
+}
 

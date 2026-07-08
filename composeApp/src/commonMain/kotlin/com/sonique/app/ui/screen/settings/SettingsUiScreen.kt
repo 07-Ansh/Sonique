@@ -35,6 +35,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -57,8 +58,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.app.Platform
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.SettingItem
+import com.sonique.app.ui.component.SettingDialog
 import com.sonique.app.viewModel.SettingsViewModel
+import com.sonique.app.viewModel.SettingAlertState
 import org.koin.compose.viewmodel.koinViewModel
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,10 +71,22 @@ fun SettingsUiScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+    val alertData by viewModel.alertData.collectAsStateWithLifecycle()
+    if (alertData != null) {
+        SettingDialog(
+            alert = alertData!!,
+            onDismiss = { viewModel.setAlertData(null) }
+        )
+    }
+
     val ambienceMode by viewModel.ambienceMode.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val liquidGlassGlassiness by viewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
     val blurPlayerBackground by viewModel.blurPlayerBackground.collectAsStateWithLifecycle()
+    val enableExpressivePlayerControls by viewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
+    val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+
 
     LaunchedEffect(Unit) {
         viewModel.getData()
@@ -77,8 +94,8 @@ fun SettingsUiScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberBackdrop()
-        TopAppBar(
-            title = { Text("Appearance (New)") },
+        CenterAlignedTopAppBar(
+            title = { Text("Appearance (New)", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,
@@ -112,13 +129,72 @@ fun SettingsUiScreen(
                     subtitle = "Blur background artwork based on album art using frosted glassmorphism",
                     switch = (blurPlayerBackground to { viewModel.setBlurPlayerBackground(it) }),
                 )
+
+                SettingsSectionHeader("Player Screen")
+                SettingItem(
+                    title = "Expressive Player Controls",
+                    subtitle = "Use Material 3 Expressive shapes (rounded squares, pill shapes) for playback buttons",
+                    switch = (enableExpressivePlayerControls to { viewModel.setEnableExpressivePlayerControls(it) }),
+                )
+
+                SettingsSectionHeader("Home Screen")
+                val continueListeningLayout by viewModel.continueListeningLayout.collectAsStateWithLifecycle()
+                val currentLayoutLabel = when (continueListeningLayout) {
+                    "1_row" -> "1 Row (Standard)"
+                    "2_row" -> "2 Rows (Compact Grid)"
+                    "3x3" -> "3x3 Grid (Pages)"
+                    "list" -> "Vertical List"
+                    else -> "1 Row (Standard)"
+                }
+                SettingItem(
+                    title = "Continue Listening Layout",
+                    subtitle = currentLayoutLabel,
+                    smallSubtitle = true,
+                    onClick = {
+                        coroutineScope.launch {
+                            viewModel.setAlertData(
+                                SettingAlertState(
+                                    title = "Continue Listening Layout",
+                                    selectOne = SettingAlertState.SelectData(
+                                        listSelect = listOf(
+                                            (continueListeningLayout == "1_row") to "1 Row (Standard)",
+                                            (continueListeningLayout == "2_row") to "2 Rows (Compact Grid)",
+                                            (continueListeningLayout == "3x3") to "3x3 Grid (Pages)",
+                                            (continueListeningLayout == "list") to "Vertical List"
+                                        )
+                                    ),
+                                    confirm = "Change" to { state ->
+                                        val selectedLabel = state.selectOne?.getSelected() ?: ""
+                                        val layoutValue = when (selectedLabel) {
+                                            "1 Row (Standard)" -> "1_row"
+                                            "2 Rows (Compact Grid)" -> "2_row"
+                                            "3x3 Grid (Pages)" -> "3x3"
+                                            "Vertical List" -> "list"
+                                            else -> "1_row"
+                                        }
+                                        viewModel.setContinueListeningLayout(layoutValue)
+                                    },
+                                    dismiss = "Cancel"
+                                )
+                            )
+                        }
+                    }
+                )
+
                 if (getPlatform() == Platform.Android) {
                     SettingsSectionHeader("Liquid Glass")
                     SettingItem(
-                        title = "Apple Liquid Glass Bar",
-                        subtitle = "Apple-style floating bottom bar with real-time backdrop luminance sensing",
+                        title = "Apple Liquid Glass",
+                        subtitle = "Apple-style floating bottom layout with real-time backdrop luminance sensing",
                         switch = (enableLiquidGlass to { viewModel.setEnableLiquidGlass(it) }),
                     )
+                    if (!enableLiquidGlass) {
+                        SettingItem(
+                            title = "Page Transitions",
+                            subtitle = "Enable sliding animation when switching pages (Disabling falls back to standard fade)",
+                            switch = (enablePageTransitions to { viewModel.setEnablePageTransitions(it) }),
+                        )
+                    }
                     if (enableLiquidGlass) {
                         val backdrop = rememberBackdrop()
                         Column(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)) {
@@ -129,12 +205,12 @@ fun SettingsUiScreen(
                             ) {
                                 Text(
                                     text = "Liquid Glass Opacity (Glassiness)",
-                                    style = MaterialTheme.typography.titleMedium,
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.sp),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = "${(liquidGlassGlassiness * 100).roundToInt()}%",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -295,7 +371,7 @@ fun SettingsUiScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "Clear is more transparent and tinted increases opacity, adding contrast to content and controls.",
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 9.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                             )
                         }

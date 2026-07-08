@@ -74,8 +74,8 @@ fun SettingsSponsorBlockScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("SponsorBlock") },
+        CenterAlignedTopAppBar(
+            title = { Text("SponsorBlock", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,

@@ -25,12 +25,14 @@ import com.sonique.app.ui.screen.other.PodcastScreen
 fun NavGraphBuilder.listScreenGraph(
     innerPadding: PaddingValues,
     navController: NavController,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     composable<AlbumDestination> { entry ->
         val data = entry.toRoute<AlbumDestination>()
         AlbumScreen(
             browseId = data.browseId,
             navController = navController,
+            onScrolling = onScrolling,
         )
     }
     composable<ArtistDestination> { entry ->
@@ -38,6 +40,7 @@ fun NavGraphBuilder.listScreenGraph(
         ArtistScreen(
             channelId = data.channelId,
             navController = navController,
+            onScrolling = onScrolling,
         )
     }
     composable<LocalPlaylistDestination> { entry ->
@@ -45,6 +48,7 @@ fun NavGraphBuilder.listScreenGraph(
         LocalPlaylistScreen(
             id = data.id,
             navController = navController,
+            onScrolling = onScrolling,
         )
     }
     composable<MoreAlbumsDestination> { entry ->
@@ -62,6 +66,7 @@ fun NavGraphBuilder.listScreenGraph(
             playlistId = data.playlistId,
             isYourYouTubePlaylist = data.isYourYouTubePlaylist,
             navController = navController,
+            onScrolling = onScrolling,
         )
     }
     composable<PodcastDestination> { entry ->
@@ -69,6 +74,7 @@ fun NavGraphBuilder.listScreenGraph(
         PodcastScreen(
             podcastId = data.podcastId,
             navController = navController,
+            onScrolling = onScrolling,
         )
     }
 }

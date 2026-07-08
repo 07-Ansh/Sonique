@@ -90,8 +90,8 @@ fun SettingsBackupScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("Backup") },
+        CenterAlignedTopAppBar(
+            title = { Text("Backup & Restore", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,

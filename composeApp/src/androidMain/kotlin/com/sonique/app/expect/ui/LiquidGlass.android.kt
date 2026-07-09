@@ -2,6 +2,7 @@ package com.sonique.app.expect.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -20,20 +21,29 @@ import com.kyant.backdrop.backdrops.layerBackdrop as nativeBackdrop
 actual typealias PlatformBackdrop = LayerBackdrop
 
 @Composable
-actual fun rememberBackdrop(): PlatformBackdrop = rememberLayerBackdrop {
-    drawRect(Color.Black)
-    drawContent()
+actual fun rememberBackdrop(): PlatformBackdrop {
+    val enabled = LocalLiquidGlassEnabled.current
+    return if (enabled) {
+        rememberLayerBackdrop {
+            drawRect(Color.Black)
+            drawContent()
+        }
+    } else {
+        rememberLayerBackdrop { }
+    }
 }
 
-actual fun Modifier.layerBackdrop(backdrop: PlatformBackdrop): Modifier = this.nativeBackdrop(backdrop)
+actual fun Modifier.layerBackdrop(backdrop: PlatformBackdrop): Modifier = composed {
+    this.nativeBackdrop(backdrop)
+}
 
 actual fun Modifier.drawBackdropCustomShape(
     backdrop: PlatformBackdrop,
     layer: GraphicsLayer,
     luminanceAnimation: Float,
     shape: Shape
-): Modifier {
-    return this.drawBackdrop(
+): Modifier = composed {
+    this.drawBackdrop(
         backdrop = backdrop,
         effects = {
             val l = (luminanceAnimation * 2f - 1f).let { sign(it) * it * it }
@@ -70,4 +80,3 @@ actual fun Modifier.drawBackdropCustomShape(
         onDrawSurface = { drawRect(Color.Black.copy(alpha = 0.1f)) }
     )
 }
-

@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -117,7 +118,7 @@ fun LyricsView(
     modifier: Modifier = Modifier,
     showScrollShadows: Boolean = false,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
-
+    playerContentColor: Color = Color.White,
 ) {
     var currentLineHeight by remember {
         mutableIntStateOf(0)
@@ -301,6 +302,7 @@ fun LyricsView(
                                     translatedWords = translatedWords,
                                     currentTimeMs = current.current,
                                     isCurrent = index == currentLineIndex,
+                                    playerContentColor = playerContentColor,
                                     modifier =
                                         Modifier
                                             .clickable {
@@ -316,6 +318,7 @@ fun LyricsView(
                                     translatedWords = translatedWords,
                                     isBold = index <= currentLineIndex,
                                     isCurrent = index == currentLineIndex,
+                                    playerContentColor = playerContentColor,
                                     modifier =
                                         Modifier
                                             .clickable {
@@ -334,6 +337,7 @@ fun LyricsView(
                                 translatedWords = translatedWords,
                                 isBold = index <= currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
                                 isCurrent = index == currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
+                                playerContentColor = playerContentColor,
                                 modifier =
                                     Modifier
                                         .clickable(enabled = lyricsData.lyrics.syncType == "LINE_SYNCED") {
@@ -357,6 +361,7 @@ fun LyricsLineItem(
     isBold: Boolean,
     isCurrent: Boolean = false,
     modifier: Modifier = Modifier,
+    playerContentColor: Color = Color.White,
 ) {
     Crossfade(targetState = isBold) {
         if (it) {
@@ -377,7 +382,7 @@ fun LyricsLineItem(
                     style = typo().headlineLarge,
                     color =
                         if (isCurrent) {
-                            Color.White
+                            playerContentColor
                         } else {
                             Color.LightGray.copy(
                                 alpha = 0.35f,
@@ -448,6 +453,7 @@ fun RichSyncLyricsLineItem(
     currentTimeMs: Long,
     isCurrent: Boolean,
     modifier: Modifier = Modifier,
+    playerContentColor: Color = Color.White,
 ) {
      
     val currentWordIndex by remember(currentTimeMs, parsedLine.words) {
@@ -483,6 +489,7 @@ fun RichSyncLyricsLineItem(
                     isActive = isCurrent && index == currentWordIndex,
                     isPast = isCurrent && index < currentWordIndex,
                     isCurrent = isCurrent,
+                    playerContentColor = playerContentColor,
                 )
             }
         }
@@ -521,14 +528,15 @@ private fun AnimatedWord(
     isActive: Boolean,
     isPast: Boolean,
     isCurrent: Boolean,
+    playerContentColor: Color = Color.White,
 ) {
      
     val color by animateColorAsState(
         targetValue =
             when {
                 !isCurrent -> Color.LightGray.copy(alpha = 0.35f)  
-                isPast -> Color.White.copy(alpha = 0.7f)  
-                isActive -> Color.White  
+                isPast -> playerContentColor.copy(alpha = 0.7f)  
+                isActive -> playerContentColor  
                 else -> Color.LightGray.copy(alpha = 0.5f)  
             },
         animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
@@ -552,6 +560,8 @@ fun FullscreenLyricsSheet(
     onDismiss: () -> Unit,
 ) {
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
+    val enableExpressivePlayerControls by sharedViewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
+    val playerContentColor = if (enableExpressivePlayerControls) Color(0xFFFAF9F6) else Color.White
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
 
@@ -665,12 +675,12 @@ fun FullscreenLyricsSheet(
                                 Text(
                                     text = stringResource(Res.string.now_playing_upper),
                                     style = typo().bodyMedium,
-                                    color = Color.White,
+                                    color = playerContentColor,
                                 )
                                 Text(
                                     text = screenDataState.nowPlayingTitle,
                                     style = typo().labelMedium,
-                                    color = Color.White,
+                                    color = playerContentColor,
                                     textAlign = TextAlign.Center,
                                     maxLines = 1,
                                     modifier =
@@ -690,7 +700,7 @@ fun FullscreenLyricsSheet(
                                 Icon(
                                     painter = painterResource(Res.drawable.baseline_keyboard_arrow_down_24),
                                     contentDescription = "",
-                                    tint = Color.White,
+                                    tint = playerContentColor,
                                 )
                             }
                         },
@@ -699,7 +709,7 @@ fun FullscreenLyricsSheet(
                                 Icon(
                                     painter = painterResource(Res.drawable.baseline_more_vert_24),
                                     contentDescription = "",
-                                    tint = Color.White,
+                                    tint = playerContentColor,
                                 )
                             }
                         },
@@ -728,6 +738,7 @@ fun FullscreenLyricsSheet(
                                         modifier = Modifier.fillMaxSize(),
                                         showScrollShadows = true,
                                         backgroundColor = color,
+                                        playerContentColor = playerContentColor,
                                     )
                                 }
                             } else {
@@ -738,7 +749,7 @@ fun FullscreenLyricsSheet(
                                     Text(
                                         text = stringResource(Res.string.unavailable),
                                         style = typo().bodyMedium,
-                                        color = Color.White,
+                                        color = playerContentColor,
                                         textAlign = TextAlign.Center,
                                     )
                                 }
@@ -762,6 +773,7 @@ fun FullscreenLyricsSheet(
                                         .height(24.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
+                                if (!enableExpressivePlayerControls) {
                                 Crossfade(timelineState.loading) {
                                     if (it) {
                                         CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
@@ -802,6 +814,7 @@ fun FullscreenLyricsSheet(
                                     }
                                 }
                             }
+                            }
                             CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                                 Slider(
                                     value = sliderValue,
@@ -819,45 +832,63 @@ fun FullscreenLyricsSheet(
                                                 Alignment.TopCenter,
                                             ),
                                     track = { sliderState ->
-                                        SliderDefaults.Track(
-                                            modifier =
-                                                Modifier
-                                                    .height(5.dp),
-                                            enabled = true,
-                                            sliderState = sliderState,
-                                            colors =
-                                                SliderDefaults.colors().copy(
-                                                    thumbColor = Color.White,
-                                                    activeTrackColor = Color.White,
-                                                    inactiveTrackColor = Color.Transparent,
-                                                ),
-                                            thumbTrackGapSize = 0.dp,
-                                            drawTick = { _, _ -> },
-                                            drawStopIndicator = null,
-                                        )
-                                    },
-                                    thumb = {
-                                        SliderDefaults.Thumb(
-                                            modifier =
-                                                Modifier
-                                                    .height(18.dp)
-                                                    .width(8.dp)
-                                                    .padding(
-                                                        vertical = 4.dp,
+                                        if (enableExpressivePlayerControls) {
+                                            WavySliderTrack(
+                                                sliderState = sliderState,
+                                                isPlaying = controllerState.isPlaying,
+                                                activeColor = playerContentColor,
+                                                inactiveColor = playerContentColor.copy(alpha = 0.3f)
+                                            )
+                                        } else {
+                                            SliderDefaults.Track(
+                                                modifier =
+                                                    Modifier
+                                                        .height(5.dp),
+                                                enabled = true,
+                                                sliderState = sliderState,
+                                                colors =
+                                                    SliderDefaults.colors().copy(
+                                                        thumbColor = playerContentColor,
+                                                        activeTrackColor = playerContentColor,
+                                                        inactiveTrackColor = Color.Transparent,
                                                     ),
-                                            thumbSize = DpSize(8.dp, 8.dp),
-                                            interactionSource =
-                                                remember {
-                                                    MutableInteractionSource()
-                                                },
-                                            colors =
-                                                SliderDefaults.colors().copy(
-                                                    thumbColor = Color.White,
-                                                    activeTrackColor = Color.White,
-                                                    inactiveTrackColor = Color.Transparent,
-                                                ),
-                                            enabled = true,
-                                        )
+                                                thumbTrackGapSize = 0.dp,
+                                                drawTick = { _, _ -> },
+                                                drawStopIndicator = null,
+                                            )
+                                        }
+                                    },
+                                    thumb = { sliderState ->
+                                        if (enableExpressivePlayerControls) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .width(4.dp)
+                                                    .height(20.dp)
+                                                    .background(playerContentColor, RoundedCornerShape(2.dp))
+                                            )
+                                        } else {
+                                            SliderDefaults.Thumb(
+                                                modifier =
+                                                    Modifier
+                                                        .height(18.dp)
+                                                        .width(8.dp)
+                                                        .padding(
+                                                            vertical = 4.dp,
+                                                        ),
+                                                thumbSize = DpSize(8.dp, 8.dp),
+                                                interactionSource =
+                                                    remember {
+                                                        MutableInteractionSource()
+                                                    },
+                                                colors =
+                                                    SliderDefaults.colors().copy(
+                                                        thumbColor = playerContentColor,
+                                                        activeTrackColor = playerContentColor,
+                                                        inactiveTrackColor = Color.Transparent,
+                                                    ),
+                                                enabled = true,
+                                            )
+                                        }
                                     },
                                 )
                             }
@@ -906,7 +937,7 @@ fun FullscreenLyricsSheet(
                                             tween(300),
                                         ),
                                 ) {
-                                    PlayerControlLayout(controllerState) {
+                                    PlayerControlLayout(controllerState = controllerState, enableExpressive = enableExpressivePlayerControls) {
                                         sharedViewModel.onUIEvent(it)
                                     }
                                 }
@@ -944,7 +975,7 @@ fun FullscreenLyricsSheet(
                                                 showControlButtons = true  
                                             },
                                         ) {
-                                            Icon(imageVector = Icons.Outlined.Info, tint = Color.White, contentDescription = "")
+                                            Icon(imageVector = Icons.Outlined.Info, tint = playerContentColor, contentDescription = "")
                                         }
                                         Row(
                                             Modifier.align(Alignment.CenterEnd),
@@ -965,7 +996,7 @@ fun FullscreenLyricsSheet(
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.AutoMirrored.Outlined.QueueMusic,
-                                                    tint = Color.White,
+                                                    tint = playerContentColor,
                                                     contentDescription = "",
                                                 )
                                             }

@@ -25,6 +25,7 @@ import org.koin.compose.koinInject
 fun NavGraphBuilder.homeScreenGraph(
     innerPadding: PaddingValues,
     navController: NavController,
+    enablePageTransitions: Boolean = false,
     hideNavBar: () -> Unit = { },
     showNavBar: () -> Unit = { },
 ) {
@@ -54,28 +55,44 @@ fun NavGraphBuilder.homeScreenGraph(
     }
     composable<SettingsDestination>(
         enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { it },
-                animationSpec = tween(300)
-            ) + fadeIn(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeIn(animationSpec = tween(300))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            }
         },
         exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { -it },
-                animationSpec = tween(300)
-            ) + fadeOut(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeOut(animationSpec = tween(300))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { -it },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            }
         },
         popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { -it },
-                animationSpec = tween(300)
-            ) + fadeIn(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeIn(animationSpec = tween(300))
+            } else {
+                slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = tween(300)
+                ) + fadeIn(animationSpec = tween(300))
+            }
         },
         popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { it },
-                animationSpec = tween(300)
-            ) + fadeOut(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeOut(animationSpec = tween(300))
+            } else {
+                slideOutHorizontally(
+                    targetOffsetX = { it },
+                    animationSpec = tween(300)
+                ) + fadeOut(animationSpec = tween(300))
+            }
         }
     ) {
 

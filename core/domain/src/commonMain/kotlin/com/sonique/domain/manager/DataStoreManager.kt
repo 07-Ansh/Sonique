@@ -266,6 +266,14 @@ interface DataStoreManager {
 
     suspend fun setEnableLiquidGlass(enable: Boolean)
 
+    val enablePageTransitions: Flow<String>
+
+    suspend fun setEnablePageTransitions(enable: Boolean)
+
+    val enableExpressivePlayerControls: Flow<String>
+
+    suspend fun setEnableExpressivePlayerControls(enable: Boolean)
+
     val liquidGlassGlassiness: Flow<Float>
 
     suspend fun setLiquidGlassGlassiness(glassiness: Float)

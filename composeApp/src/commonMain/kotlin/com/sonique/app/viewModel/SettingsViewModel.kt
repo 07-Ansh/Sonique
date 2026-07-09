@@ -203,11 +203,20 @@ class SettingsViewModel(
     private var _enableLiquidGlass: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val enableLiquidGlass: StateFlow<Boolean> = _enableLiquidGlass
 
+    private var _enableExpressivePlayerControls: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val enableExpressivePlayerControls: StateFlow<Boolean> = _enableExpressivePlayerControls
+
+    private var _enablePageTransitions: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val enablePageTransitions: StateFlow<Boolean> = _enablePageTransitions
+
     private var _liquidGlassGlassiness: MutableStateFlow<Float> = MutableStateFlow(0.5f)
     val liquidGlassGlassiness: StateFlow<Float> = _liquidGlassGlassiness
 
     private var _blurPlayerBackground: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val blurPlayerBackground: StateFlow<Boolean> = _blurPlayerBackground
+
+    private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("list")
+    val continueListeningLayout: StateFlow<String> = _continueListeningLayout
 
 
 
@@ -266,8 +275,11 @@ class SettingsViewModel(
         getYoutubeSubtitleLanguage()
         getAmbienceMode()
         getEnableLiquidGlass()
+        getEnableExpressivePlayerControls()
         getLiquidGlassGlassiness()
         getBlurPlayerBackground()
+        getContinueListeningLayout()
+        getEnablePageTransitions()
 
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
@@ -1165,6 +1177,37 @@ class SettingsViewModel(
         }
     }
 
+    fun getEnablePageTransitions() {
+        viewModelScope.launch {
+            dataStoreManager.enablePageTransitions.collect {
+                _enablePageTransitions.emit(it == DataStoreManager.TRUE)
+            }
+        }
+    }
+
+    fun setEnablePageTransitions(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setEnablePageTransitions(enabled)
+            getEnablePageTransitions()
+        }
+    }
+
+
+    fun getEnableExpressivePlayerControls() {
+        viewModelScope.launch {
+            dataStoreManager.enableExpressivePlayerControls.collect {
+                _enableExpressivePlayerControls.emit(it == DataStoreManager.TRUE)
+            }
+        }
+    }
+
+    fun setEnableExpressivePlayerControls(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setEnableExpressivePlayerControls(enabled)
+            getEnableExpressivePlayerControls()
+        }
+    }
+
     fun getLiquidGlassGlassiness() {
         viewModelScope.launch {
             dataStoreManager.liquidGlassGlassiness.collect {
@@ -1192,6 +1235,21 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setBlurPlayerBackground(enabled)
             getBlurPlayerBackground()
+        }
+    }
+
+    fun getContinueListeningLayout() {
+        viewModelScope.launch {
+            dataStoreManager.getString("continue_listening_layout").collect {
+                _continueListeningLayout.emit(it ?: "list")
+            }
+        }
+    }
+
+    fun setContinueListeningLayout(layout: String) {
+        viewModelScope.launch {
+            dataStoreManager.putString("continue_listening_layout", layout)
+            getContinueListeningLayout()
         }
     }
 

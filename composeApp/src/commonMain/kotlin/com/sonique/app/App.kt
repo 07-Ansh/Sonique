@@ -59,6 +59,7 @@ import com.sonique.app.expect.currentOrientation
 
 import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.expect.ui.layerBackdrop
+import com.sonique.app.expect.ui.LocalLiquidGlassEnabled
 import com.sonique.app.extension.copy
 import com.sonique.app.ui.component.AppBottomNavigationBar
 import com.sonique.app.ui.component.AppNavigationRail
@@ -162,6 +163,8 @@ fun App(
 
     val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+
 
     LaunchedEffect(reloadDestination) {
         val destination = reloadDestination
@@ -260,6 +263,10 @@ fun App(
 
 
 
+    var isScrolledToTop by rememberSaveable {
+        mutableStateOf(true)
+    }
+
     LaunchedEffect(navBackStackEntry) {
         Logger.d("MainActivity", "Current destination: ${navBackStackEntry?.destination?.route}")
         if (navBackStackEntry?.destination?.route?.contains("FullscreenDestination") == true) {
@@ -268,17 +275,18 @@ fun App(
         isInFullscreen = navBackStackEntry?.destination?.hierarchy?.any {
             it.hasRoute(FullscreenDestination::class)
         } == true
-    }
-    var isScrolledToTop by rememberSaveable {
-        mutableStateOf(false)
+        isScrolledToTop = true
     }
     val isTablet = windowSize.isWidthAtLeastBreakpoint(WIDTH_DP_MEDIUM_LOWER_BOUND)
     val isTabletLandscape = isTablet && currentOrientation() == Orientation.LANDSCAPE
 
-    val backdrop = rememberBackdrop()
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalLiquidGlassEnabled provides (enableLiquidGlass && getPlatform() == Platform.Android)
+    ) {
+        val backdrop = rememberBackdrop()
 
-    val coreScope = androidx.compose.runtime.rememberCoroutineScope()
-    androidx.compose.foundation.layout.BoxWithConstraints {
+        val coreScope = androidx.compose.runtime.rememberCoroutineScope()
+        androidx.compose.foundation.layout.BoxWithConstraints {
         val density = androidx.compose.ui.platform.LocalDensity.current
         val screenHeightPx = with(density) { maxHeight.toPx() }
         val playerOffsetY = androidx.compose.runtime.remember {
@@ -500,20 +508,21 @@ fun App(
                                         .fillMaxSize()
                                         .weight(1f),
                                 ) {
-                                     Box(
-                                         Modifier
-                                             .fillMaxSize()
-                                             .then(
-                                                 if (enableLiquidGlass && isTablet && !isInFullscreen) {
-                                                     Modifier.layerBackdrop(backdrop)
-                                                 } else {
-                                                     Modifier
-                                                 }
-                                             ),
-                                     ) {
-                                        AppNavigationGraph(
-                                            innerPadding = innerPadding,
-                                            navController = navController,
+                                      Box(
+                                          Modifier
+                                              .fillMaxSize()
+                                              .then(
+                                                  if (enableLiquidGlass && isTablet && !isInFullscreen) {
+                                                      Modifier.layerBackdrop(backdrop)
+                                                  } else {
+                                                      Modifier
+                                                  }
+                                              ),
+                                      ) {
+                                         AppNavigationGraph(
+                                             innerPadding = innerPadding,
+                                             navController = navController,
+                                             enablePageTransitions = enablePageTransitions,
                                             hideNavBar = {
                                                 isNavBarVisible = false
                                             },
@@ -666,5 +675,6 @@ fun App(
             }
         }
     }
+}
 }
 

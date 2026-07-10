@@ -78,7 +78,7 @@ object SearchPage {
             return when {
                 renderer.isSong -> {
                     SongItem(
-                        id = renderer.playlistItemData?.videoId ?: return null,
+                        id = renderer.videoId ?: return null,
                         title =
                             renderer.flexColumns
                                 .firstOrNull()
@@ -162,13 +162,7 @@ object SearchPage {
                             renderer.navigationEndpoint?.browseEndpoint?.browseId
                                 ?: return null,
                         playlistId =
-                            renderer.overlay
-                                ?.musicItemThumbnailOverlayRenderer
-                                ?.content
-                                ?.musicPlayButtonRenderer
-                                ?.playNavigationEndpoint
-                                ?.watchPlaylistEndpoint
-                                ?.playlistId
+                            renderer.playlistId
                                 ?: return null,
                         title =
                             renderer.flexColumns

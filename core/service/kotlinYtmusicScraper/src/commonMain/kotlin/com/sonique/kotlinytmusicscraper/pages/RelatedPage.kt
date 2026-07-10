@@ -22,7 +22,7 @@ data class RelatedPage(
     companion object {
         fun fromMusicResponsiveListItemRenderer(renderer: MusicResponsiveListItemRenderer): SongItem? {
             return SongItem(
-                id = renderer.playlistItemData?.videoId ?: return null,
+                id = renderer.videoId ?: return null,
                 title =
                     renderer.flexColumns
                         .firstOrNull()
@@ -150,7 +150,14 @@ data class RelatedPage(
                                 ?.runs
                                 ?.firstOrNull()
                                 ?.text ?: return null,
-                        artists = null,
+                        artists =
+                            renderer.subtitle
+                                ?.runs
+                                ?.mapNotNull { run ->
+                                    run.navigationEndpoint?.browseEndpoint?.browseId?.let { id ->
+                                        Artist(name = run.text, id = id)
+                                    }
+                                },
                         year =
                             renderer.subtitle
                                 ?.runs
@@ -259,6 +266,28 @@ data class RelatedPage(
                                 ?.navigationEndpoint
                                 ?.watchPlaylistEndpoint
                                 ?: return null,
+                    )
+                }
+
+                                renderer.isUserChannel -> {
+                    // User channels have no shuffle/radio; surface them as an artist card.
+                    ArtistItem(
+                        id = renderer.navigationEndpoint?.browseEndpoint?.browseId ?: return null,
+                        title =
+                            renderer.title
+                                ?.runs
+                                ?.firstOrNull()
+                                ?.text ?: return null,
+                        thumbnail =
+                            renderer.thumbnailRenderer?.musicThumbnailRenderer?.getThumbnailUrl()
+                                ?: return null,
+                        shuffleEndpoint = null,
+                        radioEndpoint = null,
+                        subscribers =
+                            renderer.subtitle
+                                ?.runs
+                                ?.firstOrNull()
+                                ?.text,
                     )
                 }
 

@@ -295,6 +295,13 @@ android {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
         }
     }
+
+    applicationVariants.all {
+        outputs.all {
+            val apkOutput = this as? com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            apkOutput?.outputFileName = "Sonique-${name}.apk"
+        }
+    }
 }
 
 buildkonfig {

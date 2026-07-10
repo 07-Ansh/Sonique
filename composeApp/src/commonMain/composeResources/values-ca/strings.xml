@@ -456,4 +456,42 @@
     <string name="explicit_content_blocked">El contingut explícit serà saltat</string>
     <string name="mix_for_you">Mescla per a vostè</string>
     <string name="no_mixes_found">No s\'han trobat mescles</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">Substitueix Preferits per la Música que t'agrada de YouTube en iniciar sessió</string>
+    <string name="combine_local_and_youtube_liked_songs_description">Utilitza només la Música que t'agrada de YouTube (no es pot marcar «m'agrada» a les cançons sense connexió)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">Automàtic</string>
+    <string name="crossfade_description">Fer una transició suau entre cançons abaixant gradualment el volum de la pista actual mentre s'apuja el de la següent.</string>
+    <string name="crossfade_dj_mode">Transició a l'estil DJ</string>
+    <string name="crossfade_dj_mode_description">Aplicar crossfade de filtres passa-baix i passa-alt durant l'encadenament per a una transició més suau a l'estil DJ (similar a l'Automix d'Apple Music)</string>
+    <string name="custom_order">Ordre personalitzat</string>
+    <string name="desktop_webview_description">A causa de les limitacions de Compose Multiplatform, no puc implementar WebView a l’entorn d’escriptori.\nLlegeix això per obtenir més informació sobre com iniciar sessió a l’escriptori:\n</string>
+    <string name="download_quality">Qualitat de descàrrega</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">Activa el Rich Presence</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="filler">Farciment</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">Mantingues el servei actiu</string>
+    <string name="keep_service_alive_description">Mantingues actiu el servei del reproductor de música per evitar que el sistema l'ature</string>
+    <string name="keep_your_youtube_playlist_offline">Continua mostrant la teva llista de reproducció de YouTube sense connexió</string>
+    <string name="keep_your_youtube_playlist_offline_description">Desa la teva llista de reproducció de YT al dispositiu per continuar mostrant-la sense connexió</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">Obre l'entrada del blog</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="radio_not_available">L'endpoint de la ràdio no està disponible</string>
+    <string name="rich_synced">Paraula per paraula</string>
+    <string name="shuffle_not_available">L'endpoint de reproducció aleatòria no està disponible</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">Qualitat de descàrrega de vídeo</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">Música que t'agrada de YouTube</string>
 </resources>

@@ -279,7 +279,7 @@ internal fun parseMixedContent(
                                         ),
                                     )
                                 }
-                            } else if (musicTwoRowItemRenderer.isArtist) {
+                            } else if (musicTwoRowItemRenderer.isArtist || musicTwoRowItemRenderer.isUserChannel) {
                                 val ytItem =
                                     RelatedPage.fromMusicTwoRowItemRenderer(musicTwoRowItemRenderer) as ArtistItem?
                                 Logger.w("Artists", ytItem.toString())
@@ -748,16 +748,16 @@ internal fun parseNewRelease(
                     Content(
                         album = null,
                         artists =
-                            listOf(
+                            it.artists?.map { artist ->
                                 Artist(
-                                    id = it.author?.id ?: "",
-                                    name = it.author?.name ?: "",
-                                ),
-                            ),
-                        description = it.author?.name ?: "YouTube Music",
+                                    id = artist.id ?: "",
+                                    name = artist.name,
+                                )
+                            } ?: listOf(),
+                        description = it.artists?.firstOrNull()?.name ?: "YouTube Music",
                         isExplicit = it.explicit,
-                        playlistId = it.id,
-                        browseId = it.id,
+                        playlistId = null,
+                        browseId = it.browseId,
                         thumbnails =
                             listOf(
                                 com.sonique.domain.data.model.searchResult.songs.Thumbnail(

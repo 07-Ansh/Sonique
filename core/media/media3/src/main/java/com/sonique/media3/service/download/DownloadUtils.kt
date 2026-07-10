@@ -1,6 +1,7 @@
 package com.sonique.media3.service.download
 
 import android.content.Context
+import java.util.concurrent.TimeUnit
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.DatabaseProvider
@@ -62,6 +63,8 @@ internal class DownloadUtils(
                     OkHttpDataSource.Factory(
                         OkHttpClient
                             .Builder()
+                            .connectTimeout(30, TimeUnit.SECONDS)
+                            .readTimeout(30, TimeUnit.SECONDS)
                             .build(),
                     ),
                 ),

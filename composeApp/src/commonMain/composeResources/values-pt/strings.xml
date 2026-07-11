@@ -459,4 +459,39 @@
     <string name="explicit_content_blocked">Explicit content is skipped</string>
     <string name="mix_for_you">Mix for you</string>
     <string name="no_mixes_found">No mixes found</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">Substituir Favoritos pelas músicas marcadas com 'Gostei' do YouTube ao fazer login</string>
+    <string name="combine_local_and_youtube_liked_songs_description">Usando apenas as marcadas com 'Gostei' do YouTube (não é possível curtir músicas offline)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">Auto</string>
+    <string name="crossfade_description">Transição suave entre músicas, diminuindo o volume da faixa atual enquanto aumenta o da próxima.</string>
+    <string name="crossfade_dj_mode">Transição estilo DJ</string>
+    <string name="crossfade_dj_mode_description">Aplica filtros passa-baixa e passa-alta durante o crossfade para uma transição mais suave, estilo DJ (semelhante ao Automix do Apple Music).</string>
+    <string name="custom_order">Manual</string>
+    <string name="desktop_webview_description">Devido às limitações do Compose Multiplataform, não posso implementar WebView no desktop. U\nLeia isso para saber mais como fazer login no desktop:\n</string>
+    <string name="download_quality">Qualidade do Download</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">Ativar rich presence</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">Manter serviço ativo</string>
+    <string name="keep_service_alive_description">Manter o serviço do player de música ativo para evitar que seja encerrado pelo sistema</string>
+    <string name="keep_your_youtube_playlist_offline">Continuar mostrando sua lista de reprodução do YouTube quando estiver offline</string>
+    <string name="keep_your_youtube_playlist_offline_description">Salvar sua lista de reprodução YT no local e manter para mostrar quando estiver offline</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">Abrir post do blog</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">Palavra por palavra</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">Qualidade do Download de Vídeo</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">Músicas curtidas do YouTube</string>
 </resources>

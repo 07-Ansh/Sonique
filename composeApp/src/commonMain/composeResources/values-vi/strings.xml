@@ -474,4 +474,27 @@
     <string name="keep_service_alive_description">Bảo vệ dịch vụ phát nhạc sống tránh khỏi bị hệ thống tắt</string>
     <string name="keep_your_youtube_playlist_offline">Giữ danh sách phát YouTube của bạn hiển thị khi offline</string>
     <string name="keep_your_youtube_playlist_offline_description">Lưu danh sách phát YT lại và hiển thị khi offline</string>
+    <string name="combine_local_and_youtube_liked_songs">Thay đổi Yêu Thích bằng đã thích ở Youtube khi đã đăng nhập</string>
+    <string name="combine_local_and_youtube_liked_songs_description">Chỉ sử dụng cho đã thích ở Youtube (không hỗ trợ như một bài hát khi đang ngoại tuyến)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">Tự động</string>
+    <string name="crossfade_description">Chuyển tiếp mượt mà giữa các bài hát bằng cách làm mờ dần bài hát hiện tại trong khi làm mờ dần bài hát tiếp theo.</string>
+    <string name="crossfade_dj_mode">Chuyển tiếp dạng DJ</string>
+    <string name="crossfade_dj_mode_description">Áp dụng các bộ lọc thông thấp và thông cao trong quá trình chuyển tiếp mượt mà hơn, tạo hiệu ứng giống DJ (tương tự như tính năng Automix của Apple Music).</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">Từng từ một</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="youtube_albums">YouTube Albums</string>
 </resources>

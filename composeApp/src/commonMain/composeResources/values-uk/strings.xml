@@ -461,4 +461,39 @@
     <string name="explicit_content_blocked">????????? ??????? ?????????????</string>
     <string name="mix_for_you">???? ??? ???</string>
     <string name="no_mixes_found">????? ?? ????????</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">Замінювати «Обране» на «Вподобане YouTube» після входу в обліковий запис</string>
+    <string name="combine_local_and_youtube_liked_songs_description">Використовує лише «Вподобане YouTube» (без підтримки вподобання пісень офлайн)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">Авто</string>
+    <string name="crossfade_description">Плавний перехід між піснями, поступово зменшуючи гучність поточного треку та посилюючи наступний.</string>
+    <string name="crossfade_dj_mode">DJ-Style Перехід</string>
+    <string name="crossfade_dj_mode_description">Застосовуйте низькочастотні та високочастотні фільтри під час кросфейду для плавнішого переходу, подібного до діджейського (подібно до Apple Music Automix).</string>
+    <string name="custom_order">Власний порядок</string>
+    <string name="desktop_webview_description">Через обмеження Compose Multiplatform, WebView на ПК недоступний.\nДокладніше про вхід на ПК\n</string>
+    <string name="download_quality">Якість завантаження</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">Увімкнути Rich Presence</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">Підтримувати службу активною</string>
+    <string name="keep_service_alive_description">Утримувати музичний плеєр активним, щоб не бути закритим системою</string>
+    <string name="keep_your_youtube_playlist_offline">Показувати ваш YouTube-плейлист офлайн</string>
+    <string name="keep_your_youtube_playlist_offline_description">Зберегти свій плейліст YouTube локально й переглядати офлайн</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">Відкрити блог</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">Слово за словом</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">Якість завантаження відео</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">Вподобана музика YouTube</string>
 </resources>

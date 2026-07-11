@@ -29,6 +29,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -107,6 +108,7 @@ import com.sonique.app.viewModel.SearchScreenState
 import com.sonique.app.viewModel.SearchType
 import com.sonique.app.viewModel.SearchViewModel
 import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.viewModel.SettingsViewModel
 import androidx.compose.ui.focus.FocusManager
 import com.sonique.app.viewModel.toStringRes
 import org.jetbrains.compose.resources.painterResource
@@ -138,9 +140,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 fun SearchScreen(
     searchViewModel: SearchViewModel = koinInject(),
     sharedViewModel: SharedViewModel = koinInject(),
+    settingsViewModel: SettingsViewModel = koinInject(),
     navController: NavController,
     onScrolling: (Boolean) -> Unit = {},
 ) {
+    val enableLiquidGlass by settingsViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val searchResultsListState = rememberLazyListState()
     val isScrollingUp by searchResultsListState.isScrollingUp()
     LaunchedEffect(searchResultsListState, isScrollingUp) {
@@ -275,19 +279,42 @@ fun SearchScreen(
                         onExpandedChange = {},
                         enabled = true,
                         placeholder = {
-                            Text(
-                                text = stringResource(Res.string.what_do_you_want_to_listen_to),
-                                style = typo().bodyLarge,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
+                            if (isFocused || searchText.isNotEmpty()) {
+                                Text(
+                                    text = stringResource(Res.string.what_do_you_want_to_listen_to),
+                                    style = typo().bodyLarge,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.baseline_search_24),
+                                        contentDescription = "Search",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                        modifier = Modifier.padding(end = 8.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(Res.string.what_do_you_want_to_listen_to),
+                                        style = typo().bodyLarge,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
+                            }
                         },
-                        leadingIcon = {
-                            Icon(
-                                painter = painterResource(Res.drawable.baseline_search_24),
-                                contentDescription = "Search",
-                            )
-                        },
+                        leadingIcon = if (isFocused || searchText.isNotEmpty()) {
+                            {
+                                Icon(
+                                    painter = painterResource(Res.drawable.baseline_search_24),
+                                    contentDescription = "Search",
+                                )
+                            }
+                        } else null,
                         trailingIcon = {
                             if (searchText.isNotEmpty()) {
                                 IconButton(
@@ -310,7 +337,7 @@ fun SearchScreen(
             expanded = false,
             onExpandedChange = {},
             colors = SearchBarDefaults.colors(
-                containerColor = Color.Transparent
+                containerColor = if (enableLiquidGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
             ),
             modifier =
                 Modifier
@@ -320,11 +347,18 @@ fun SearchScreen(
                         isFocused = it.isFocused
                     }
                     .padding(horizontal = 16.dp)
-                    .liquidGlass(
-                        backdrop = backdrop,
-                        shape = CircleShape,
-                        interactive = false
-                    ),
+                    .let {
+                        if (enableLiquidGlass) {
+                            it.liquidGlass(
+                                backdrop = backdrop,
+                                shape = CircleShape,
+                                interactive = false
+                            )
+                        } else {
+                            it.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f), CircleShape)
+                              .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                        }
+                    },
             shape = CircleShape,
             content = {},
         )

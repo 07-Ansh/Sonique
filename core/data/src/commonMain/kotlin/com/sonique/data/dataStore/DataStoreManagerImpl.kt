@@ -1086,7 +1086,7 @@ internal class DataStoreManagerImpl(
     override val enablePageTransitions: Flow<String>
         get() =
             settingsDataStore.data.map { preferences ->
-                preferences[PAGE_TRANSITIONS] ?: TRUE
+                preferences[PAGE_TRANSITIONS] ?: FALSE
             }
 
     override suspend fun setEnablePageTransitions(enable: Boolean) {

@@ -34,7 +34,7 @@ fun AppNavigationGraph(
     innerPadding: PaddingValues,
     navController: NavHostController,
     startDestination: Any = HomeDestination,
-    enablePageTransitions: Boolean = true,
+    enablePageTransitions: Boolean = false,
     hideNavBar: () -> Unit = { },
     showNavBar: (shouldShowNowPlayingSheet: Boolean) -> Unit = { },
     showNowPlayingSheet: () -> Unit = {},

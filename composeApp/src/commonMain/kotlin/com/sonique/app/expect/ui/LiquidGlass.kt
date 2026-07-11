@@ -21,3 +21,5 @@ expect fun Modifier.drawBackdropCustomShape(
 @Composable
 expect fun rememberBackdrop(): PlatformBackdrop
 
+val LocalLiquidGlassEnabled = androidx.compose.runtime.staticCompositionLocalOf { false }
+

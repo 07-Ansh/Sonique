@@ -427,20 +427,44 @@ fun MiniPlayer(
                                     )
                                 },
                             ) { target ->
-                                if (target != null) {
-                                    Column(
-                                        Modifier
-                                            .wrapContentHeight()
-                                            .align(Alignment.CenterVertically),
-                                    ) {
+                                Column(
+                                    Modifier
+                                        .wrapContentHeight()
+                                        .align(Alignment.CenterVertically),
+                                ) {
+                                    Text(
+                                        text = title,
+                                        style = typo().labelSmall,
+                                        color = textColor,
+                                        maxLines = 1,
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .wrapContentHeight(
+                                                    align = Alignment.CenterVertically,
+                                                ).basicMarquee(
+                                                    iterations = Int.MAX_VALUE,
+                                                    animationMode = MarqueeAnimationMode.Immediately,
+                                                ).focusable(),
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        androidx.compose.animation.AnimatedVisibility(visible = isExplicit) {
+                                            ExplicitBadge(
+                                                modifier =
+                                                    Modifier
+                                                        .size(20.dp)
+                                                        .padding(end = 4.dp)
+                                                        .weight(1f),
+                                            )
+                                        }
                                         Text(
-                                            text = title,
-                                            style = typo().labelSmall,
-                                            color = textColor,
+                                            text = artistName,
+                                            style = typo().bodySmall,
                                             maxLines = 1,
+                                            color = textColor,
                                             modifier =
                                                 Modifier
-                                                    .fillMaxWidth()
+                                                    .weight(1f)
                                                     .wrapContentHeight(
                                                         align = Alignment.CenterVertically,
                                                     ).basicMarquee(
@@ -448,32 +472,6 @@ fun MiniPlayer(
                                                         animationMode = MarqueeAnimationMode.Immediately,
                                                     ).focusable(),
                                         )
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            androidx.compose.animation.AnimatedVisibility(visible = isExplicit) {
-                                                ExplicitBadge(
-                                                    modifier =
-                                                        Modifier
-                                                            .size(20.dp)
-                                                            .padding(end = 4.dp)
-                                                            .weight(1f),
-                                                )
-                                            }
-                                            Text(
-                                                text = artistName,
-                                                style = typo().bodySmall,
-                                                maxLines = 1,
-                                                color = textColor,
-                                                modifier =
-                                                    Modifier
-                                                        .weight(1f)
-                                                        .wrapContentHeight(
-                                                            align = Alignment.CenterVertically,
-                                                        ).basicMarquee(
-                                                            iterations = Int.MAX_VALUE,
-                                                            animationMode = MarqueeAnimationMode.Immediately,
-                                                        ).focusable(),
-                                            )
-                                        }
                                     }
                                 }
                             }

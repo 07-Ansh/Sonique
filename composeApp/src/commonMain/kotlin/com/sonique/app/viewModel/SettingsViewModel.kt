@@ -206,7 +206,7 @@ class SettingsViewModel(
     private var _enableExpressivePlayerControls: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val enableExpressivePlayerControls: StateFlow<Boolean> = _enableExpressivePlayerControls
 
-    private var _enablePageTransitions: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    private var _enablePageTransitions: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val enablePageTransitions: StateFlow<Boolean> = _enablePageTransitions
 
     private var _liquidGlassGlassiness: MutableStateFlow<Float> = MutableStateFlow(0.5f)

@@ -25,7 +25,7 @@ import org.koin.compose.koinInject
 fun NavGraphBuilder.homeScreenGraph(
     innerPadding: PaddingValues,
     navController: NavController,
-    enablePageTransitions: Boolean = true,
+    enablePageTransitions: Boolean = false,
     hideNavBar: () -> Unit = { },
     showNavBar: () -> Unit = { },
 ) {

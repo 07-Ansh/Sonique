@@ -851,7 +851,7 @@ internal class DataStoreManagerImpl(
 
     override val blurPlayerBackground =
         settingsDataStore.data.map { preferences ->
-            preferences[BLUR_PLAYER_BACKGROUND] ?: TRUE
+            preferences[BLUR_PLAYER_BACKGROUND] ?: FALSE
         }
 
     override suspend fun setBlurPlayerBackground(blur: Boolean) {
@@ -1083,6 +1083,47 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val enablePageTransitions: Flow<String>
+        get() =
+            settingsDataStore.data.map { preferences ->
+                preferences[PAGE_TRANSITIONS] ?: TRUE
+            }
+
+    override suspend fun setEnablePageTransitions(enable: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (enable) {
+                settingsDataStore.edit { settings ->
+                    settings[PAGE_TRANSITIONS] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[PAGE_TRANSITIONS] = FALSE
+                }
+            }
+        }
+    }
+
+    override val enableExpressivePlayerControls: Flow<String>
+        get() =
+            settingsDataStore.data.map { preferences ->
+                preferences[EXPRESSIVE_PLAYER_CONTROLS] ?: FALSE
+            }
+
+    override suspend fun setEnableExpressivePlayerControls(enable: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (enable) {
+                settingsDataStore.edit { settings ->
+                    settings[EXPRESSIVE_PLAYER_CONTROLS] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[EXPRESSIVE_PLAYER_CONTROLS] = FALSE
+                }
+            }
+        }
+    }
+
+
     override val liquidGlassGlassiness: Flow<Float> =
         settingsDataStore.data.map { preferences ->
             preferences[LIQUID_GLASS_GLASSINESS] ?: 0.5f
@@ -1252,7 +1293,9 @@ internal class DataStoreManagerImpl(
         val BACKUP_DOWNLOADED = stringPreferencesKey("backup_downloaded")
 
         val LIQUID_GLASS = stringPreferencesKey("liquid_glass")
+        val PAGE_TRANSITIONS = stringPreferencesKey("page_transitions")
         val LIQUID_GLASS_GLASSINESS = floatPreferencesKey("liquid_glass_glassiness")
+        val EXPRESSIVE_PLAYER_CONTROLS = stringPreferencesKey("expressive_player_controls")
 
         val EXPLICIT_CONTENT_ENABLED = stringPreferencesKey("explicit_content_enabled")
 

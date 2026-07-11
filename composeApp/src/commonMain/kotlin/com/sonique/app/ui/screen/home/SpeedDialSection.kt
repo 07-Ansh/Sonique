@@ -137,26 +137,72 @@ fun SpeedDialSection(
                 }
             }
             "2_row" -> {
-                // Horizontal 2-Row Grid
-                LazyHorizontalGrid(
-                    rows = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxWidth().height(410.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(data.contents.filterNotNull()) { item ->
-                        SpeedDialBigItem(
-                            item = item,
-                            navController = navController,
-                            onPlayClick = onPlayClick
-                        )
+                // Horizontal pager of 2-row grids (6 items per page: 2 rows of 3 items)
+                val chunks = data.contents.filterNotNull().chunked(6).filter { it.size == 6 }
+                if (chunks.isEmpty()) return
+                val pagerState = rememberPagerState(pageCount = { chunks.size })
+
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth()
+                ) { page ->
+                    val pageItems = chunks.getOrNull(page) ?: emptyList()
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // 2 Rows of 3 Items
+                        val rows = pageItems.chunked(3)
+                        rows.forEach { rowItems ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                rowItems.forEach { item ->
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        SpeedDialBigItem(
+                                            item = item,
+                                            navController = navController,
+                                            onPlayClick = onPlayClick,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                                // Fill empty spaces if last row has < 3 items
+                                repeat(3 - rowItems.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Pager Indicator (Dots)
+                if (chunks.size > 1) {
+                    Row(
+                        modifier = Modifier
+                            .wrapContentHeight()
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        repeat(pagerState.pageCount) { iteration ->
+                            val color = if (pagerState.currentPage == iteration) Color.White else Color.White.copy(alpha = 0.3f)
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .clip(CircleShape)
+                                    .background(color)
+                                    .size(if (pagerState.currentPage == iteration) 8.dp else 6.dp)
+                            )
+                        }
                     }
                 }
             }
             "list" -> {
                 // Horizontal pager of vertical lists (4 items per page with peek)
-                val chunks = data.contents.filterNotNull().chunked(4)
+                val chunks = data.contents.filterNotNull().chunked(4).filter { it.size == 4 }
+                if (chunks.isEmpty()) return
                 val pagerState = rememberPagerState(pageCount = { chunks.size })
 
                 HorizontalPager(
@@ -251,7 +297,8 @@ fun SpeedDialSection(
             }
             else -> {
                 // Chunk items into groups of 9 (3x3 grid)
-                val chunks = data.contents.filterNotNull().chunked(9)
+                val chunks = data.contents.filterNotNull().chunked(9).filter { it.size == 9 }
+                if (chunks.isEmpty()) return
                 val pagerState = rememberPagerState(pageCount = { chunks.size })
 
                 // Pager
@@ -320,7 +367,8 @@ fun SpeedDialSection(
 fun SpeedDialBigItem(
     item: com.sonique.domain.data.model.home.Content,
     navController: NavController,
-    onPlayClick: (Any) -> Unit
+    onPlayClick: (Any) -> Unit,
+    modifier: Modifier = Modifier.width(140.dp)
 ) {
     val context = LocalPlatformContext.current
     
@@ -343,8 +391,7 @@ fun SpeedDialBigItem(
     val cardShape = RoundedCornerShape(6.dp)
 
     Column(
-        modifier = Modifier
-            .width(140.dp)
+        modifier = modifier
             .clickable(onClick = onClick),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -356,7 +403,7 @@ fun SpeedDialBigItem(
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .width(140.dp)
+                .fillMaxWidth()
                 .aspectRatio(1f)
                 .clip(cardShape),
             placeholder = painterResource(Res.drawable.holder),

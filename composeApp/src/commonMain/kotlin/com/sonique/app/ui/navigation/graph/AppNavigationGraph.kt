@@ -34,6 +34,7 @@ fun AppNavigationGraph(
     innerPadding: PaddingValues,
     navController: NavHostController,
     startDestination: Any = HomeDestination,
+    enablePageTransitions: Boolean = true,
     hideNavBar: () -> Unit = { },
     showNavBar: (shouldShowNowPlayingSheet: Boolean) -> Unit = { },
     showNowPlayingSheet: () -> Unit = {},
@@ -43,63 +44,79 @@ fun AppNavigationGraph(
         navController,
         startDestination = startDestination,
         enterTransition = {
-            val initialIndex = getTabExtensionIndex(initialState.destination.route)
-            val targetIndex = getTabExtensionIndex(targetState.destination.route)
-            if (targetIndex > initialIndex) {
-                slideInHorizontally(
-                    initialOffsetX = { it },
-                    animationSpec = tween(300)
-                ) + fadeIn(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeIn(animationSpec = tween(300))
             } else {
-                slideInHorizontally(
-                    initialOffsetX = { -it },
-                    animationSpec = tween(300)
-                ) + fadeIn(animationSpec = tween(300))
+                val initialIndex = getTabExtensionIndex(initialState.destination.route)
+                val targetIndex = getTabExtensionIndex(targetState.destination.route)
+                if (targetIndex > initialIndex) {
+                    slideInHorizontally(
+                        initialOffsetX = { it },
+                        animationSpec = tween(300)
+                    ) + fadeIn(animationSpec = tween(300))
+                } else {
+                    slideInHorizontally(
+                        initialOffsetX = { -it },
+                        animationSpec = tween(300)
+                    ) + fadeIn(animationSpec = tween(300))
+                }
             }
         },
         exitTransition = {
-            val initialIndex = getTabExtensionIndex(initialState.destination.route)
-            val targetIndex = getTabExtensionIndex(targetState.destination.route)
-            if (targetIndex > initialIndex) {
-                slideOutHorizontally(
-                    targetOffsetX = { -it },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeOut(animationSpec = tween(300))
             } else {
-                slideOutHorizontally(
-                    targetOffsetX = { it },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
+                val initialIndex = getTabExtensionIndex(initialState.destination.route)
+                val targetIndex = getTabExtensionIndex(targetState.destination.route)
+                if (targetIndex > initialIndex) {
+                    slideOutHorizontally(
+                        targetOffsetX = { -it },
+                        animationSpec = tween(300)
+                    ) + fadeOut(animationSpec = tween(300))
+                } else {
+                    slideOutHorizontally(
+                        targetOffsetX = { it },
+                        animationSpec = tween(300)
+                    ) + fadeOut(animationSpec = tween(300))
+                }
             }
         },
         popEnterTransition = {
-            val initialIndex = getTabExtensionIndex(initialState.destination.route)
-            val targetIndex = getTabExtensionIndex(targetState.destination.route)
-            if (targetIndex > initialIndex) {
-                slideInHorizontally(
-                    initialOffsetX = { it },
-                    animationSpec = tween(300)
-                ) + fadeIn(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeIn(animationSpec = tween(300))
             } else {
-                slideInHorizontally(
-                    initialOffsetX = { -it },
-                    animationSpec = tween(300)
-                ) + fadeIn(animationSpec = tween(300))
+                val initialIndex = getTabExtensionIndex(initialState.destination.route)
+                val targetIndex = getTabExtensionIndex(targetState.destination.route)
+                if (targetIndex > initialIndex) {
+                    slideInHorizontally(
+                        initialOffsetX = { it },
+                        animationSpec = tween(300)
+                    ) + fadeIn(animationSpec = tween(300))
+                } else {
+                    slideInHorizontally(
+                        initialOffsetX = { -it },
+                        animationSpec = tween(300)
+                    ) + fadeIn(animationSpec = tween(300))
+                }
             }
         },
         popExitTransition = {
-            val initialIndex = getTabExtensionIndex(initialState.destination.route)
-            val targetIndex = getTabExtensionIndex(targetState.destination.route)
-            if (targetIndex > initialIndex) {
-                slideOutHorizontally(
-                    targetOffsetX = { -it },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
+            if (!enablePageTransitions) {
+                fadeOut(animationSpec = tween(300))
             } else {
-                slideOutHorizontally(
-                    targetOffsetX = { it },
-                    animationSpec = tween(300)
-                ) + fadeOut(animationSpec = tween(300))
+                val initialIndex = getTabExtensionIndex(initialState.destination.route)
+                val targetIndex = getTabExtensionIndex(targetState.destination.route)
+                if (targetIndex > initialIndex) {
+                    slideOutHorizontally(
+                        targetOffsetX = { -it },
+                        animationSpec = tween(300)
+                    ) + fadeOut(animationSpec = tween(300))
+                } else {
+                    slideOutHorizontally(
+                        targetOffsetX = { it },
+                        animationSpec = tween(300)
+                    ) + fadeOut(animationSpec = tween(300))
+                }
             }
         },
     ) {
@@ -148,6 +165,7 @@ fun AppNavigationGraph(
         homeScreenGraph(
             innerPadding = innerPadding,
             navController = navController,
+            enablePageTransitions = enablePageTransitions,
             hideNavBar = hideNavBar,
             showNavBar = { showNavBar(true) }
         )

@@ -290,6 +290,14 @@ class SharedViewModel(
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
+    val enablePageTransitions: StateFlow<Boolean> = dataStoreManager.enablePageTransitions
+        .map { it == DataStoreManager.TRUE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
+
+    val enableExpressivePlayerControls: StateFlow<Boolean> = dataStoreManager.enableExpressivePlayerControls
+        .map { it == DataStoreManager.TRUE }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
+
     val continueListeningLayout: StateFlow<String> = dataStoreManager.getString("continue_listening_layout")
         .map { it ?: "list" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "list")
@@ -316,6 +324,10 @@ class SharedViewModel(
                 )
             }
             dataStoreManager.openApp()
+            if (dataStoreManager.getString("frosted_force_disabled_v4").first() != STATUS_DONE) {
+                dataStoreManager.setBlurPlayerBackground(false)
+                dataStoreManager.putString("frosted_force_disabled_v4", STATUS_DONE)
+            }
             dataStoreManager.getString("miniplayer_guide").first().let {
                 isFirstMiniplayer = it != STATUS_DONE
             }
@@ -389,31 +401,49 @@ class SharedViewModel(
         viewModelScope.launch {
             mediaPlayerHandler.nowPlayingState
                 .distinctUntilChangedBy {
-                    it.songEntity?.videoId
+                    Pair(it.mediaItem.mediaId, it.songEntity?.videoId)
                 }.collectLatest { state ->
                     Logger.w(tag, "NowPlayingState is $state")
                     canvasJob?.cancel()
                     _nowPlayingState.value = state
-                    state.track?.let { track ->
-                        _nowPlayingScreenData.value =
-                            NowPlayingScreenData(
-                                nowPlayingTitle = track.title,
-                                artistName =
-                                    track
-                                        .artists
-                                        .toListName()
-                                        .joinToString(", "),
-                                isVideo = false,
-                                thumbnailURL = null,
-                                canvasData = null,
-                                lyricsData = null,
-                                songInfoData = null,
-                                playlistName =
-                                    mediaPlayerHandler.queueData.value
-                                        ?.data
-                                        ?.playlistName ?: "",
-                            )
+
+                    val videoId = if (state.mediaItem.isVideo()) {
+                        state.mediaItem.mediaId.removePrefix("Video")
+                    } else {
+                        state.mediaItem.mediaId
                     }
+                    val currentSongEntity = if (state.songEntity?.videoId == videoId) {
+                        state.songEntity
+                    } else {
+                        null
+                    }
+
+                    val resolvedTitle = state.track?.title
+                        ?: currentSongEntity?.title
+                        ?: state.mediaItem.metadata.title?.toString()
+                        ?: ""
+                    val resolvedArtist = state.track?.artists?.toListName()?.joinToString(", ")
+                        ?: currentSongEntity?.artistName?.joinToString(", ")
+                        ?: state.mediaItem.metadata.artist?.toString()
+                        ?: ""
+                    val resolvedThumbnail = currentSongEntity?.thumbnails
+                        ?: state.track?.thumbnails?.lastOrNull()?.url
+                        ?: state.mediaItem.metadata.artworkUri?.toString()
+
+                    _nowPlayingScreenData.value =
+                        NowPlayingScreenData(
+                            nowPlayingTitle = resolvedTitle,
+                            artistName = resolvedArtist,
+                            isVideo = false,
+                            thumbnailURL = resolvedThumbnail,
+                            canvasData = null,
+                            lyricsData = null,
+                            songInfoData = null,
+                            playlistName =
+                                mediaPlayerHandler.queueData.value
+                                    ?.data
+                                    ?.playlistName ?: "",
+                        )
                     state.mediaItem.let { now ->
                         _canvas.value = null
                         getLikeStatus(now.mediaId)
@@ -425,7 +455,7 @@ class SharedViewModel(
                             )
                         }
                     }
-                    state.songEntity?.let { song ->
+                    currentSongEntity?.let { song ->
                         _liked.value = song.liked == true
                         _nowPlayingScreenData.update {
                             it.copy(

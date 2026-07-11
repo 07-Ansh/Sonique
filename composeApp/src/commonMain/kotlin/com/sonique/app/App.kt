@@ -162,6 +162,8 @@ fun App(
 
     val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+
 
     LaunchedEffect(reloadDestination) {
         val destination = reloadDestination
@@ -516,6 +518,7 @@ fun App(
                                         AppNavigationGraph(
                                             innerPadding = innerPadding,
                                             navController = navController,
+                                            enablePageTransitions = enablePageTransitions || enableLiquidGlass,
                                             hideNavBar = {
                                                 isNavBarVisible = false
                                             },

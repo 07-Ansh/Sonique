@@ -471,24 +471,11 @@ fun PlaylistScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .fillMaxWidth()
-                                                    .then(
-                                                        if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                            Modifier.wrapContentHeight()
-                                                        } else {
-                                                            Modifier.height((screenInfo.hDP / 2.1f).dp)
-                                                        }
-                                                    ),
+                                                    .wrapContentHeight(),
                                             ) {
-                                                // Inner Box — backdrop SOURCE (clean gradient transition from dominant color to muted palette background)
                                                 Box(
                                                     modifier = Modifier
-                                                        .then(
-                                                            if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                                Modifier.matchParentSize()
-                                                            } else {
-                                                                Modifier.fillMaxSize()
-                                                            }
-                                                        )
+                                                        .matchParentSize()
                                                         .graphicsLayer()
                                                         .layerBackdrop(artworkBackdrop)
                                                         .background(
@@ -504,13 +491,8 @@ fun PlaylistScreen(
                                                 // Column for the content overlaying the backdrop
                                                 Column(
                                                     modifier = Modifier
-                                                        .then(
-                                                            if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) {
-                                                                Modifier.fillMaxWidth().wrapContentHeight()
-                                                            } else {
-                                                                Modifier.fillMaxSize()
-                                                            }
-                                                        )
+                                                        .fillMaxWidth()
+                                                        .wrapContentHeight()
                                                         .padding(bottom = 16.dp),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {

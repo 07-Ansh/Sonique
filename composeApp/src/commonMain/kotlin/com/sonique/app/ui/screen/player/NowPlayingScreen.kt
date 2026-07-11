@@ -154,6 +154,7 @@ import com.sonique.app.ui.component.LyricsView
 import com.sonique.app.ui.component.NowPlayingBottomSheet
 import com.sonique.app.ui.component.PlayPauseButton
 import com.sonique.app.ui.component.PlayerControlLayout
+import com.sonique.app.ui.component.WavySliderTrack
 import com.sonique.app.ui.component.QueueBottomSheet
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.player.FullscreenDestination
@@ -248,6 +249,8 @@ fun NowPlayingScreenContent(
     val isInPipMode = rememberIsInPipMode()
 
     val ambienceMode by sharedViewModel.ambienceMode.collectAsStateWithLifecycle()
+    val enableExpressivePlayerControls by sharedViewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
+    val playerContentColor = if (enableExpressivePlayerControls) Color(0xFFFAF9F6) else Color.White
     val blurBg by sharedViewModel.blurBg.collectAsStateWithLifecycle()
 
     val hazeState = rememberHazeState()
@@ -688,12 +691,12 @@ fun NowPlayingScreenContent(
                             Text(
                                 text = stringResource(Res.string.now_playing_upper),
                                 style = typo().bodyMedium,
-                                color = Color.White,
+                                color = playerContentColor,
                             )
                             Text(
                                 text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
                                 style = typo().labelMedium,
-                                color = Color.White,
+                                color = playerContentColor,
                                 textAlign = TextAlign.Center,
                                 maxLines = 1,
                                 modifier =
@@ -711,7 +714,7 @@ fun NowPlayingScreenContent(
                             Icon(
                                 imageVector = dismissIcon,
                                 contentDescription = "",
-                                tint = Color.White,
+                                tint = playerContentColor,
                             )
                         }
                     },
@@ -722,7 +725,7 @@ fun NowPlayingScreenContent(
                             Icon(
                                 painter = painterResource(Res.drawable.baseline_more_vert_24),
                                 contentDescription = "",
-                                tint = Color.White,
+                                tint = playerContentColor,
                             )
                         }
                     },
@@ -929,7 +932,7 @@ fun NowPlayingScreenContent(
                                                             Icon(
                                                                 painter = painterResource(Res.drawable.baseline_fullscreen_24),
                                                                 contentDescription = "",
-                                                                tint = Color.White,
+                                                                tint = playerContentColor,
                                                             )
                                                         }
                                                         Row(
@@ -956,7 +959,7 @@ fun NowPlayingScreenContent(
                                                             ) {
                                                                 Icon(
                                                                     imageVector = Icons.Rounded.Replay5,
-                                                                    tint = Color.White,
+                                                                    tint = playerContentColor,
                                                                     contentDescription = "",
                                                                     modifier =
                                                                         Modifier
@@ -982,7 +985,7 @@ fun NowPlayingScreenContent(
                                                             ) {
                                                                 Icon(
                                                                     imageVector = Icons.Rounded.Forward5,
-                                                                    tint = Color.White,
+                                                                    tint = playerContentColor,
                                                                     contentDescription = "",
                                                                     modifier =
                                                                         Modifier
@@ -1003,7 +1006,7 @@ fun NowPlayingScreenContent(
                                                                             Icons.Filled.Subtitles
                                                                         },
                                                                     contentDescription = "",
-                                                                    tint = Color.White,
+                                                                    tint = playerContentColor,
                                                                 )
                                                             }
                                                         }
@@ -1053,7 +1056,7 @@ fun NowPlayingScreenContent(
                                                 text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
                                                 style = typo().headlineMedium,
                                                 maxLines = 1,
-                                                color = Color.White,
+                                                color = playerContentColor,
                                                 modifier =
                                                     Modifier
                                                         .fillMaxWidth()
@@ -1125,7 +1128,7 @@ fun NowPlayingScreenContent(
                                                             sharedViewModel.addToYouTubeLiked()
                                                         },
                                                     ) {
-                                                        Icon(imageVector = Icons.Rounded.CheckCircle, tint = Color.White, contentDescription = "")
+                                                        Icon(imageVector = Icons.Rounded.CheckCircle, tint = playerContentColor, contentDescription = "")
                                                     }
                                                 } else {
                                                     IconButton(
@@ -1142,7 +1145,7 @@ fun NowPlayingScreenContent(
                                                     ) {
                                                         Icon(
                                                             imageVector = Icons.Rounded.AddCircleOutline,
-                                                            tint = Color.White,
+                                                            tint = playerContentColor,
                                                             contentDescription = "",
                                                         )
                                                     }
@@ -1175,45 +1178,47 @@ fun NowPlayingScreenContent(
                                                         .height(24.dp),
                                                 contentAlignment = Alignment.Center,
                                             ) {
-                                                Crossfade(timelineState.loading) {
-                                                    if (it) {
-                                                        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                                                            LinearProgressIndicator(
-                                                                modifier =
-                                                                    Modifier
-                                                                        .fillMaxWidth()
-                                                                        .height(4.dp)
-                                                                        .padding(
-                                                                            horizontal = 3.dp,
-                                                                        ).clip(
-                                                                            RoundedCornerShape(8.dp),
+                                                if (!enableExpressivePlayerControls) {
+    Crossfade(timelineState.loading) {
+                                                        if (it) {
+                                                            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                                                                LinearProgressIndicator(
+                                                                    modifier =
+                                                                        Modifier
+                                                                            .fillMaxWidth()
+                                                                            .height(4.dp)
+                                                                            .padding(
+                                                                                horizontal = 3.dp,
+                                                                            ).clip(
+                                                                                RoundedCornerShape(8.dp),
+                                                                            ),
+                                                                    color = Color.Gray,
+                                                                    trackColor = Color.DarkGray,
+                                                                    strokeCap = StrokeCap.Round,
+                                                                )
+                                                            }
+                                                        } else {
+                                                            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                                                                LinearProgressIndicator(
+                                                                    progress = { timelineState.bufferedPercent.toFloat() / 100 },
+                                                                    modifier =
+                                                                        Modifier
+                                                                            .fillMaxWidth()
+                                                                            .height(4.dp)
+                                                                            .padding(
+                                                                                horizontal = 3.dp,
+                                                                            ).clip(
+                                                                                RoundedCornerShape(8.dp),
+                                                                            ),
+                                                                    color = Color.Gray,
+                                                                    trackColor =
+                                                                        Color.Gray.copy(
+                                                                            alpha = 0.6f,
                                                                         ),
-                                                                color = Color.Gray,
-                                                                trackColor = Color.DarkGray,
-                                                                strokeCap = StrokeCap.Round,
-                                                            )
-                                                        }
-                                                    } else {
-                                                        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                                                            LinearProgressIndicator(
-                                                                progress = { timelineState.bufferedPercent.toFloat() / 100 },
-                                                                modifier =
-                                                                    Modifier
-                                                                        .fillMaxWidth()
-                                                                        .height(4.dp)
-                                                                        .padding(
-                                                                            horizontal = 3.dp,
-                                                                        ).clip(
-                                                                            RoundedCornerShape(8.dp),
-                                                                        ),
-                                                                color = Color.Gray,
-                                                                trackColor =
-                                                                    Color.Gray.copy(
-                                                                        alpha = 0.6f,
-                                                                    ),
-                                                                strokeCap = StrokeCap.Round,
-                                                                drawStopIndicator = {},
-                                                            )
+                                                                    strokeCap = StrokeCap.Round,
+                                                                    drawStopIndicator = {},
+                                                                )
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -1240,45 +1245,63 @@ fun NowPlayingScreenContent(
                                                                 Alignment.TopCenter,
                                                             ),
                                                     track = { sliderState ->
-                                                        SliderDefaults.Track(
-                                                            modifier =
-                                                                Modifier
-                                                                    .height(5.dp),
-                                                            enabled = true,
-                                                            sliderState = sliderState,
-                                                            colors =
-                                                                SliderDefaults.colors().copy(
-                                                                    thumbColor = seed,
-                                                                    activeTrackColor = seed,
-                                                                    inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
-                                                                ),
-                                                            thumbTrackGapSize = 0.dp,
-                                                            drawTick = { _, _ -> },
-                                                            drawStopIndicator = null,
-                                                        )
-                                                    },
-                                                    thumb = {
-                                                        SliderDefaults.Thumb(
-                                                            modifier =
-                                                                Modifier
-                                                                    .height(18.dp)
-                                                                    .width(8.dp)
-                                                                    .padding(
-                                                                        vertical = 4.dp,
+                                                        if (enableExpressivePlayerControls) {
+                                                            WavySliderTrack(
+                                                                sliderState = sliderState,
+                                                                isPlaying = controllerState.isPlaying,
+                                                                activeColor = playerContentColor,
+                                                                inactiveColor = Color.DarkGray.copy(alpha = 0.5f)
+                                                            )
+                                                        } else {
+                                                            SliderDefaults.Track(
+                                                                modifier =
+                                                                    Modifier
+                                                                        .height(5.dp),
+                                                                enabled = true,
+                                                                sliderState = sliderState,
+                                                                colors =
+                                                                    SliderDefaults.colors().copy(
+                                                                        thumbColor = seed,
+                                                                        activeTrackColor = seed,
+                                                                        inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
                                                                     ),
-                                                            thumbSize = DpSize(8.dp, 8.dp),
-                                                            interactionSource =
-                                                                remember {
-                                                                    MutableInteractionSource()
-                                                                },
-                                                            colors =
-                                                                SliderDefaults.colors().copy(
-                                                                    thumbColor = seed,
-                                                                    activeTrackColor = seed,
-                                                                    inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
-                                                                ),
-                                                            enabled = true,
-                                                        )
+                                                                thumbTrackGapSize = 0.dp,
+                                                                drawTick = { _, _ -> },
+                                                                drawStopIndicator = null,
+                                                            )
+                                                        }
+                                                    },
+                                                    thumb = { sliderState ->
+                                                        if (enableExpressivePlayerControls) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .width(4.dp)
+                                                                    .height(20.dp)
+                                                                    .background(playerContentColor, RoundedCornerShape(2.dp))
+                                                            )
+                                                        } else {
+                                                            SliderDefaults.Thumb(
+                                                                modifier =
+                                                                    Modifier
+                                                                        .height(18.dp)
+                                                                        .width(8.dp)
+                                                                        .padding(
+                                                                            vertical = 4.dp,
+                                                                        ),
+                                                                thumbSize = DpSize(8.dp, 8.dp),
+                                                                interactionSource =
+                                                                    remember {
+                                                                        MutableInteractionSource()
+                                                                    },
+                                                                colors =
+                                                                    SliderDefaults.colors().copy(
+                                                                        thumbColor = seed,
+                                                                        activeTrackColor = seed,
+                                                                        inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
+                                                                    ),
+                                                                enabled = true,
+                                                            )
+                                                        }
                                                     },
                                                 )
                                             }
@@ -1311,7 +1334,8 @@ fun NowPlayingScreenContent(
                                         )
                                          
                                         PlayerControlLayout(
-                                            controllerState,
+                                            controllerState = controllerState,
+                                            enableExpressive = enableExpressivePlayerControls,
                                         ) {
                                             sharedViewModel.onUIEvent(it)
                                         }
@@ -1350,7 +1374,7 @@ fun NowPlayingScreenContent(
                                                 Text(
                                                     text = "Queue >",
                                                     style = typo().bodyMedium,
-                                                    color = Color.White
+                                                    color = playerContentColor
                                                 )
                                             }
                                              
@@ -1372,7 +1396,7 @@ fun NowPlayingScreenContent(
                                                     Text(
                                                         text = nextSong.title ?: "Unknown",
                                                         style = typo().bodyLarge,
-                                                        color = Color.White,
+                                                        color = playerContentColor,
                                                         maxLines = 1,
                                                         overflow = TextOverflow.Ellipsis
                                                     )
@@ -1445,7 +1469,7 @@ fun NowPlayingScreenContent(
                                             Text(
                                                 text = screenDataState.songInfoData?.author ?: "",
                                                 style = typo().labelMedium,
-                                                color = Color.White,
+                                                color = playerContentColor,
                                             )
                                         }
                                     }
@@ -1499,7 +1523,7 @@ fun NowPlayingScreenContent(
                                         Text(
                                             text = stringResource(Res.string.lyrics),
                                             style = typo().labelMedium,
-                                            color = Color.White,
+                                            color = playerContentColor,
                                         )
                                         if (screenDataState.lyricsData?.translatedLyrics?.second == LyricsProvider.AI) {
                                             Spacer(modifier = Modifier.width(8.dp))
@@ -1652,14 +1676,14 @@ fun NowPlayingScreenContent(
                                             Text(
                                                 text = stringResource(Res.string.artists),
                                                 style = typo().labelMedium,
-                                                color = Color.White,
+                                                color = playerContentColor,
                                             )
                                         }
                                         Column(Modifier.align(Alignment.BottomStart)) {
                                             Text(
                                                 text = screenDataState.songInfoData?.author ?: "",
                                                 style = typo().labelMedium,
-                                                color = Color.White,
+                                                color = playerContentColor,
                                             )
                                             Spacer(modifier = Modifier.height(5.dp))
                                             Text(
@@ -1692,7 +1716,7 @@ fun NowPlayingScreenContent(
                                     Text(
                                         text = stringResource(Res.string.published_at, screenDataState.songInfoData?.uploadDate ?: ""),
                                         style = typo().labelSmall,
-                                        color = Color.White,
+                                        color = playerContentColor,
                                     )
                                     Spacer(modifier = Modifier.height(10.dp))
                                     Text(
@@ -1702,7 +1726,7 @@ fun NowPlayingScreenContent(
                                                 "%,d".format(screenDataState.songInfoData?.viewCount),
                                             ),
                                         style = typo().labelMedium,
-                                        color = Color.White,
+                                        color = playerContentColor,
                                     )
                                     Spacer(modifier = Modifier.height(10.dp))
                                     Text(
@@ -1718,7 +1742,7 @@ fun NowPlayingScreenContent(
                                     Text(
                                         text = stringResource(Res.string.description),
                                         style = typo().labelSmall,
-                                        color = Color.White,
+                                        color = playerContentColor,
                                     )
                                     Spacer(modifier = Modifier.height(10.dp))
                                     DescriptionView(
@@ -1802,7 +1826,7 @@ fun NowPlayingScreenContent(
                                 Text(
                                     text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
                                     style = typo().bodyMedium,
-                                    color = Color.White,
+                                    color = playerContentColor,
                                     maxLines = 1,
                                     modifier =
                                         Modifier
@@ -1881,7 +1905,7 @@ fun NowPlayingScreenContent(
                                         color = Color.Transparent,
                                         shape = RoundedCornerShape(4.dp),
                                     ),
-                            color = Color.White,
+                            color = playerContentColor,
                             trackColor = Color.Gray.copy(alpha = 0.4f),
                             strokeCap = StrokeCap.Round,
                             drawStopIndicator = {},

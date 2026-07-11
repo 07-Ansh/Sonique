@@ -390,13 +390,20 @@ class HomeViewModel(
         // Prioritize Listen Again items at the very beginning
         val combined = (distinctPriority + remainingGeneral)
         
-        // 3. Guarantee 36 items (4 pages of 9)
-        val finalContents = if (combined.size >= 36) {
-            combined.take(36)
-        } else {
-            val allOtherContents = homeData.flatMap { it.contents }.filterNotNull().filter { it.videoId != null && it.videoId != "" }.filter { other -> combined.none { c -> c.title == other.title } }.distinctBy { it.title }.shuffled()
-            (combined + allOtherContents).take(36)
+        // 3. Gather up to 54 unique items from the feed
+        val targetSize = 54
+        val finalList = combined.toMutableList()
+        if (finalList.size < targetSize) {
+            val allOtherContents = homeData.flatMap { it.contents }
+                .filterNotNull()
+                .filter { it.videoId != null && it.videoId != "" }
+                .filter { other -> combined.none { c -> c.title == other.title } }
+                .distinctBy { it.title }
+                .shuffled()
+            finalList.addAll(allOtherContents)
         }
+
+        val finalContents = finalList.distinctBy { it.title }.take(targetSize)
 
         if (finalContents.isEmpty()) return null
 

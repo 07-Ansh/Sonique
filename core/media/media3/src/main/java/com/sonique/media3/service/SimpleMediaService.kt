@@ -156,10 +156,14 @@ internal class SimpleMediaService :
                                 ongoing: Boolean,
                             ) {
                                 fun startFg() {
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                        startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
-                                    } else {
-                                        startForeground(notificationId, notification)
+                                    try {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                            startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                                        } else {
+                                            startForeground(notificationId, notification)
+                                        }
+                                    } catch (e: Throwable) {
+                                        Logger.e("Service", "Failed to start foreground service: ${e.message}", e)
                                     }
                                 }
                                 keepAliveJob?.cancel()

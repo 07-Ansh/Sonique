@@ -203,6 +203,12 @@ class SettingsViewModel(
     private var _enableLiquidGlass: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val enableLiquidGlass: StateFlow<Boolean> = _enableLiquidGlass
 
+    private var _enableExpressivePlayerControls: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val enableExpressivePlayerControls: StateFlow<Boolean> = _enableExpressivePlayerControls
+
+    private var _enablePageTransitions: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    val enablePageTransitions: StateFlow<Boolean> = _enablePageTransitions
+
     private var _liquidGlassGlassiness: MutableStateFlow<Float> = MutableStateFlow(0.5f)
     val liquidGlassGlassiness: StateFlow<Float> = _liquidGlassGlassiness
 
@@ -269,9 +275,11 @@ class SettingsViewModel(
         getYoutubeSubtitleLanguage()
         getAmbienceMode()
         getEnableLiquidGlass()
+        getEnableExpressivePlayerControls()
         getLiquidGlassGlassiness()
         getBlurPlayerBackground()
         getContinueListeningLayout()
+        getEnablePageTransitions()
 
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
@@ -1166,6 +1174,37 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setEnableLiquidGlass(enabled)
             getEnableLiquidGlass()
+        }
+    }
+
+    fun getEnablePageTransitions() {
+        viewModelScope.launch {
+            dataStoreManager.enablePageTransitions.collect {
+                _enablePageTransitions.emit(it == DataStoreManager.TRUE)
+            }
+        }
+    }
+
+    fun setEnablePageTransitions(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setEnablePageTransitions(enabled)
+            getEnablePageTransitions()
+        }
+    }
+
+
+    fun getEnableExpressivePlayerControls() {
+        viewModelScope.launch {
+            dataStoreManager.enableExpressivePlayerControls.collect {
+                _enableExpressivePlayerControls.emit(it == DataStoreManager.TRUE)
+            }
+        }
+    }
+
+    fun setEnableExpressivePlayerControls(enabled: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setEnableExpressivePlayerControls(enabled)
+            getEnableExpressivePlayerControls()
         }
     }
 

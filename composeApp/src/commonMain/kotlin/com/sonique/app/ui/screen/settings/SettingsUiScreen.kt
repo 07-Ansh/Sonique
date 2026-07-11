@@ -84,6 +84,9 @@ fun SettingsUiScreen(
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val liquidGlassGlassiness by viewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
     val blurPlayerBackground by viewModel.blurPlayerBackground.collectAsStateWithLifecycle()
+    val enableExpressivePlayerControls by viewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
+    val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+
 
     LaunchedEffect(Unit) {
         viewModel.getData()
@@ -125,6 +128,13 @@ fun SettingsUiScreen(
                     title = "Frosted Player Background",
                     subtitle = "Blur background artwork based on album art using frosted glassmorphism",
                     switch = (blurPlayerBackground to { viewModel.setBlurPlayerBackground(it) }),
+                )
+
+                SettingsSectionHeader("Player Screen")
+                SettingItem(
+                    title = "Expressive Player Controls",
+                    subtitle = "Use Material 3 Expressive shapes (rounded squares, pill shapes) for playback buttons",
+                    switch = (enableExpressivePlayerControls to { viewModel.setEnableExpressivePlayerControls(it) }),
                 )
 
                 SettingsSectionHeader("Home Screen")
@@ -178,6 +188,13 @@ fun SettingsUiScreen(
                         subtitle = "Apple-style floating bottom bar with real-time backdrop luminance sensing",
                         switch = (enableLiquidGlass to { viewModel.setEnableLiquidGlass(it) }),
                     )
+                    if (!enableLiquidGlass) {
+                        SettingItem(
+                            title = "Page Transitions",
+                            subtitle = "Enable sliding animation when switching pages (Disabling falls back to standard fade)",
+                            switch = (enablePageTransitions to { viewModel.setEnablePageTransitions(it) }),
+                        )
+                    }
                     if (enableLiquidGlass) {
                         val backdrop = rememberBackdrop()
                         Column(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)) {

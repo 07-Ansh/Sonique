@@ -142,6 +142,7 @@ fun MiniPlayer(
 ) {
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
+    val enableExpressivePlayerControls by sharedViewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
 
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
@@ -178,10 +179,10 @@ fun MiniPlayer(
         animationSpec = tween(500),
     )
 
-    val (songEntity, setSongEntity) =
-        remember {
-            mutableStateOf<SongEntity?>(null)
-        }
+    var title by remember { mutableStateOf("") }
+    var artistName by remember { mutableStateOf("") }
+    var thumbnailURL by remember { mutableStateOf<String?>(null) }
+    var isExplicit by remember { mutableStateOf(false) }
     val (liked, setLiked) =
         remember {
             mutableStateOf(false)
@@ -243,10 +244,11 @@ fun MiniPlayer(
     LaunchedEffect(key1 = true) {
         val job1 =
             launch {
-                sharedViewModel.nowPlayingState.collect { item ->
-                    if (item != null) {
-                        setSongEntity(item.songEntity)
-                    }
+                sharedViewModel.nowPlayingScreenData.collect { data ->
+                    title = data.nowPlayingTitle
+                    artistName = data.artistName
+                    thumbnailURL = data.thumbnailURL
+                    isExplicit = data.isExplicit
                 }
             }
         val job2 =
@@ -372,7 +374,7 @@ fun MiniPlayer(
                                 model =
                                     ImageRequest
                                         .Builder(LocalPlatformContext.current)
-                                        .data(songEntity?.thumbnails)
+                                        .data(thumbnailURL)
                                         .crossfade(550)
                                         .build(),
                                 placeholder = painterResource(Res.drawable.holder),
@@ -393,7 +395,7 @@ fun MiniPlayer(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             AnimatedContent(
-                                targetState = songEntity,
+                                targetState = title,
                                 modifier = Modifier.weight(1F).fillMaxHeight(),
                                 contentAlignment = Alignment.CenterStart,
                                 transitionSpec = {
@@ -432,7 +434,7 @@ fun MiniPlayer(
                                             .align(Alignment.CenterVertically),
                                     ) {
                                         Text(
-                                            text = (songEntity?.title ?: "").toString(),
+                                            text = title,
                                             style = typo().labelSmall,
                                             color = textColor,
                                             maxLines = 1,
@@ -447,7 +449,7 @@ fun MiniPlayer(
                                                     ).focusable(),
                                         )
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            androidx.compose.animation.AnimatedVisibility(visible = songEntity?.isExplicit == true) {
+                                            androidx.compose.animation.AnimatedVisibility(visible = isExplicit) {
                                                 ExplicitBadge(
                                                     modifier =
                                                         Modifier
@@ -457,7 +459,7 @@ fun MiniPlayer(
                                                 )
                                             }
                                             Text(
-                                                text = (songEntity?.artistName?.connectArtists() ?: ""),
+                                                text = artistName,
                                                 style = typo().bodySmall,
                                                 maxLines = 1,
                                                 color = textColor,
@@ -578,7 +580,7 @@ fun MiniPlayer(
                             model =
                                 ImageRequest
                                     .Builder(LocalPlatformContext.current)
-                                    .data(songEntity?.thumbnails)
+                                    .data(thumbnailURL)
                                     .crossfade(550)
                                     .build(),
                             placeholder = painterResource(Res.drawable.holder),
@@ -601,7 +603,7 @@ fun MiniPlayer(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                text = (songEntity?.title ?: "").toString(),
+                                text = title,
                                 style = typo().labelSmall,
                                 color = textColor,
                                 maxLines = 1,
@@ -616,7 +618,7 @@ fun MiniPlayer(
                                         ).focusable(),
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                androidx.compose.animation.AnimatedVisibility(visible = songEntity?.isExplicit == true) {
+                                androidx.compose.animation.AnimatedVisibility(visible = isExplicit) {
                                     ExplicitBadge(
                                         modifier =
                                             Modifier
@@ -626,7 +628,7 @@ fun MiniPlayer(
                                     )
                                 }
                                 Text(
-                                    text = (songEntity?.artistName?.connectArtists() ?: ""),
+                                    text = artistName,
                                     style = typo().bodySmall,
                                     maxLines = 1,
                                     modifier =
@@ -650,8 +652,9 @@ fun MiniPlayer(
                             contentAlignment = Alignment.Center,
                         ) {
                             PlayerControlLayout(
-                                controllerState,
+                                controllerState = controllerState,
                                 isSmallSize = true,
+                                enableExpressive = enableExpressivePlayerControls,
                             ) {
                                 sharedViewModel.onUIEvent(it)
                             }

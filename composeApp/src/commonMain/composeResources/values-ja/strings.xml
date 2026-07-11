@@ -431,4 +431,64 @@
     <string name="set_crossfade_duration">クロスフェードの長さを秒単位で設定 (%1$ds)</string>
     <string name="youtube_subtitle_language">YouTube字幕 翻訳言語</string>
     <string name="youtube_subtitle_language_message">言語コード (例 en) (2 文字) これは、YouTube の字幕に適する翻訳言語です。</string>
+    <string name="anonymous">匿名</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="backup_downloaded">ダウンロードしたデータをバックアップする</string>
+    <string name="backup_downloaded_description">ダウンロードしたすべての曲のデータをバックアップします</string>
+    <string name="backup_in_progress">バックアップ中</string>
+    <string name="combine_local_and_youtube_liked_songs">ログイン時にお気に入りをYouTubeの高評価に置き換える</string>
+    <string name="combine_local_and_youtube_liked_songs_description">YouTubeの高評価のみを使用する (オフライン時はサポートしていません)</string>
+    <string name="contributor_email">貢献者のメールアドレス</string>
+    <string name="contributor_name">貢献者名</string>
+    <string name="copied_to_clipboard">クリップボードにコピーしました</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">Auto</string>
+    <string name="crossfade_description">現在のトラックをフェードアウトしながら次のトラックをフェードインすることで、曲間をスムーズに切り替えます。</string>
+    <string name="crossfade_dj_mode">DJスタイルのトランジション</string>
+    <string name="crossfade_dj_mode_description">クロスフェード中にローパス フィルターとハイパス フィルターのスイープを適用して、よりスムーズな DJ のようなトランジションを実現します (Apple Music Automix と同様)。</string>
+    <string name="custom_order">Custom order</string>
+    <string name="default_models">デフォルトのモデルは \"gemini-2.0-flash\" と \"gpt-4o\"</string>
+    <string name="desktop_webview_description">Compose Multiplatformの制限のため、デスクトップ上にWebViewを実装できません。\nデスクトップでのログイン方法については、こちらをご覧ください:\n</string>
+    <string name="download_quality">ダウンロード品質</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_liquid_glass_effect">Liquid Glassを有効にする (BETA)</string>
+    <string name="enable_liquid_glass_effect_description">Enable iOS's liquid glass effect in some position (Android 13+)</string>
+    <string name="enable_rich_presence">Rich Presence を有効にする</string>
+    <string name="explicit_content_blocked">明示的なコンテンツをスキップします</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="help_build_lyrics_database">Soniqueの歌詞データベースの構築を手伝う</string>
+    <string name="help_build_lyrics_database_description">保存した歌詞をSoniqueの歌詞データベースに送信します</string>
+    <string name="keep_service_alive">サービスを有効したままにする</string>
+    <string name="keep_service_alive_description">システムによって終了されるのを避けるために音楽プレイヤーのサービスを有効したままにします</string>
+    <string name="keep_your_youtube_playlist_offline">オフライン時にYouTubeプレイリストを表示する</string>
+    <string name="keep_your_youtube_playlist_offline_description">オフライン時にYouTubeプレイリストをローカルに保存して表示します</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="list_all_cookies_of_this_page">このページのすべてのクッキーを一覧表示</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="mix_for_you">あなたのミックス</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_mixes_found">ミックスが見つかりませんでした</string>
+    <string name="no_playlist_found">ローカルプレイリストが見つかりませんでした。最初に作成してください</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">ブログ記事を開く</string>
+    <string name="play_explicit_content">明示的なコンテンツを再生</string>
+    <string name="play_explicit_content_description">明示的なコンテンツの再生を有効にします</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="restore_in_progress">復元中</string>
+    <string name="rich_synced">Word by word</string>
+    <string name="sonique_lyrics">Sonique</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="time_out_check_internet_connection_or_change_piped_instance_in_settings">タイムアウトしました。インターネット接続を確認してください (%1$s)</string>
+    <string name="travel">Travel</string>
+    <string name="use_ai_translation_description">AIを使用した歌詞の翻訳を有効にします</string>
+    <string name="use_anonymous">匿名で貢献する</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">動画ダウンロード品質</string>
+    <string name="your_library">あなたのライブラリ</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">YouTubeで高く評価した音楽</string>
 </resources>

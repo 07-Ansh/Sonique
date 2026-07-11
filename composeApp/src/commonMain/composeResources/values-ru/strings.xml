@@ -461,4 +461,40 @@
     <string name="explicit_content_blocked">Неприемлемый контент пропущен</string>
     <string name="mix_for_you">Миксы для вас</string>
     <string name="no_mixes_found">Не найдено миксов</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">Заменить Избранное на Понравившиеся в YouTube при входе</string>
+    <string name="combine_local_and_youtube_liked_songs_description">Использовать только Понравившиеся на YouTube (лайки песен офлайн не поддерживаются)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">Авто</string>
+    <string name="crossfade_description">Плавный переход между песнями с затуханием текущего трека и нарастанием громкости следующего.</string>
+    <string name="crossfade_dj_mode">DJ-переход</string>
+    <string name="crossfade_dj_mode_description">Применять фильтры низких и высоких частот во время кроссфейда для более плавного перехода в стиле DJ (аналогично Automix в Apple Music).</string>
+    <string name="custom_order">Свой порядок</string>
+    <string name="desktop_webview_description">В связи с ограничениями Compose Multiplatform, WebView невозможно реализовать на настольных устройствах.\n
+Ознакомьтесь с этим руководством, чтобы узнать, как выполнить вход на настольной версии:\n</string>
+    <string name="download_quality">Качество загрузки</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">Включить Rich Presence</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">Сохранять работу сервиса</string>
+    <string name="keep_service_alive_description">Держать музыкальный плеер активным</string>
+    <string name="keep_your_youtube_playlist_offline">Показывать плейлист YouTube офлайн</string>
+    <string name="keep_your_youtube_playlist_offline_description">Сохранить плейлист YouTube и использовать офлайн</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">Читать в блоге</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">Пословно</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">Качество загрузки видео</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">Любимые треки YouTube</string>
 </resources>

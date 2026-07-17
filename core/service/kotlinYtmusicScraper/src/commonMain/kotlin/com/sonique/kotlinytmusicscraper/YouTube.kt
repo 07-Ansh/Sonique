@@ -809,13 +809,13 @@ class YouTube {
                         ?.sectionListRenderer
                         ?.contents
                         ?.firstOrNull()
-                        ?.gridRenderer
-                        ?.items
+                        ?.musicCarouselShelfRenderer
+                        ?.contents
                         ?.mapNotNull { it.musicTwoRowItemRenderer }
                         ?.mapNotNull(RelatedPage::fromMusicTwoRowItemRenderer)
                         .orEmpty()
                         .mapNotNull {
-                            if (it.type == YTItemType.PLAYLIST) it as? PlaylistItem else null
+                            if (it.type == YTItemType.ALBUM) it as? AlbumItem else null
                         },
                 musicVideo =
                     response.contents

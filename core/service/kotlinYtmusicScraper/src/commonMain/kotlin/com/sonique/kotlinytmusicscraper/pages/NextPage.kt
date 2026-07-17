@@ -23,7 +23,7 @@ data class NextResult(
 
 object NextPage {
     fun fromMusicResponsiveListItemRenderer(renderer: MusicResponsiveListItemRenderer): SongItem? {
-        val videoId = renderer.playlistItemData?.videoId ?: return null
+        val videoId = renderer.videoId ?: return null
         val artistRuns =
             renderer.flexColumns
                 .getOrNull(1)

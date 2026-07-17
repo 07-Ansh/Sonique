@@ -58,6 +58,43 @@ data class MusicResponsiveListItemRenderer(
                 ?.browseEndpointContextMusicConfig
                 ?.pageType == MUSIC_PAGE_TYPE_ARTIST
 
+    /**
+     * The song/video id. YouTube (web, 2026) dropped [playlistItemData] from search items, so we
+     * fall back to the overlay play button and then the first flex column's watch endpoint.
+     */
+    val videoId: String?
+        get() =
+            playlistItemData?.videoId
+                ?: overlay
+                    ?.musicItemThumbnailOverlayRenderer
+                    ?.content
+                    ?.musicPlayButtonRenderer
+                    ?.playNavigationEndpoint
+                    ?.watchEndpoint
+                    ?.videoId
+                ?: flexColumns
+                    .firstOrNull()
+                    ?.musicResponsiveListItemFlexColumnRenderer
+                    ?.text
+                    ?.runs
+                    ?.firstOrNull()
+                    ?.navigationEndpoint
+                    ?.watchEndpoint
+                    ?.videoId
+
+    /**
+     * The album/playlist id from the play button. The play endpoint switched from
+     * watchPlaylistEndpoint to watchEndpoint in the 2026 web response, so check both.
+     */
+    val playlistId: String?
+        get() =
+            overlay
+                ?.musicItemThumbnailOverlayRenderer
+                ?.content
+                ?.musicPlayButtonRenderer
+                ?.playNavigationEndpoint
+                ?.let { it.watchPlaylistEndpoint?.playlistId ?: it.watchEndpoint?.playlistId }
+
     @Serializable
     data class FlexColumn(
         @JsonNames("musicResponsiveListItemFixedColumnRenderer")

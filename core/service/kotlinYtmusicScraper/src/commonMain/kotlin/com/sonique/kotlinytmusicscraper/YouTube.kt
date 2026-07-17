@@ -1498,9 +1498,8 @@ class YouTube {
                         ytDlpPlayer(videoId, tempRes)
                     } else {
                         // Try newPipePlayer first (fast, no extra network calls), then fall
-                        // back to smartTubePlayer. This mirrors Sonique's approach and
-                        // avoids the PoToken WebView challenge blocking playback on physical
-                        // devices before we even attempt stream extraction.
+                        // back to smartTubePlayer to avoid the PoToken WebView challenge blocking
+                        // playback on physical devices before we even attempt stream extraction.
                         newPipePlayer(videoId, tempRes) ?: smartTubePlayer(videoId, tempRes)
                     }
                 if (response != null) {

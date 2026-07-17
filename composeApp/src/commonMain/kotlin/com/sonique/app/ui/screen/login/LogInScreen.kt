@@ -184,18 +184,6 @@ fun LoginScreen(
                     }
                 }
             },
-            actions = {
-                IconButton(
-                    onClick = {
-                        devLoginSheet = true
-                    },
-                ) {
-                    Icon(
-                        Icons.Default.LogoDev,
-                        "Developer Mode",
-                    )
-                }
-            },
             colors =
                 TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,

@@ -12,6 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import org.jetbrains.compose.resources.stringResource
+import sonique.composeapp.generated.resources.*
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.foundation.layout.Row
@@ -41,7 +43,7 @@ fun UpdateDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = "New Update Available: ${releaseInfo.version}")
+            Text(text = stringResource(Res.string.new_update_available, releaseInfo.version))
         },
         text = {
             Column(
@@ -100,7 +102,7 @@ fun UpdateDialog(
                 )
             ) {
                 Text(
-                    text = "Update",
+                    text = stringResource(Res.string.update),
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold
                     )
@@ -109,7 +111,7 @@ fun UpdateDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Later")
+                Text(stringResource(Res.string.later))
             }
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

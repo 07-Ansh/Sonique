@@ -489,4 +489,37 @@
     <string name="crossfade_auto">Auto</string>
     <string name="crossfade_dj_mode">DJ-style transition</string>
     <string name="crossfade_dj_mode_description">Apply low-pass and high-pass filter sweep during crossfade for a smoother, DJ-like transition (similar to Apple Music Automix).</string>
+
+    <string name="update_channel">Update Channel</string>
+    <string name="update_message">"Version %1$s is available\nReleased: %2$s\nChangelog: \n%3$s"</string>
+    <string name="issue_tracker">Issue Tracker</string>
+    <string name="enjoying_sonique">Enjoying Sonique?</string>
+    <string name="if_you_enjoy_using_sonique_star_sonique_on_github_or_leave_a_review_on">If you enjoy using Sonique, star Sonique on GitHub or leave a review on</string>
+    <string name="if_you_love_my_work_consider">"If you love my work, consider "</string>
+    <string name="checking">Checking...</string>
+    <string name="last_checked_at">Last checked at: %1$s</string>
+    <string name="give_a_star">Give a Star</string>
+    <string name="lyrics_provider_sonique">Lyrics provided by Sonique Lyrics</string>
+    <string name="auto_check_for_update_description">Check for update automatically when opening the app</string>
+    <string name="auto_check_for_update">Auto check for updates</string>
+    <string name="check_for_update">Check for updates</string>
+    <string name="buying_me_a_coffee">buying me a coffee.</string>
+    <string name="github">GitHub</string>
+    <string name="no_update">No updates available</string>
+    <string name="update_available">Update Available</string>
+
+    <string name="updates">Updates</string>
+    <string name="checking_for_updates">Checking for updates...</string>
+    <string name="your_app_is_up_to_date">Your app is up to date!</string>
+    <string name="changelog">Changelog</string>
+    <string name="downloading_progress">Downloading... %1$d%%</string>
+    <string name="verifying_update">Verifying update...</string>
+    <string name="install_now">Install Now</string>
+    <string name="download_and_install">Download &amp; Install</string>
+    <string name="whats_new">What\'s New</string>
+    <string name="enjoying_sonique_description">If you like using Sonique, please consider giving us a star on GitHub! It helps us a lot.</string>
+    <string name="new_update_available">New Update Available: %1$s</string>
+    <string name="star_on_github">Star on GitHub</string>
+    <string name="dont_ask_again">Don\'t ask again</string>
+    <string name="update">Update</string>
 </resources>

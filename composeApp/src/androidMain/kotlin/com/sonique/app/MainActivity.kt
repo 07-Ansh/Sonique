@@ -26,6 +26,8 @@ import com.sonique.common.STATUS_DONE
 import com.sonique.common.SUPPORTED_LANGUAGE
 import com.sonique.common.SUPPORTED_LOCATION
 import com.sonique.domain.data.model.intent.GenericIntent
+import com.sonique.domain.manager.DataStoreManager
+import kotlinx.coroutines.flow.collectLatest
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
 import com.sonique.domain.mediaservice.handler.ToastType
 import com.sonique.logger.Logger
@@ -51,6 +53,7 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
     val viewModel: SharedViewModel by inject()
     val mediaPlayerHandler by inject<MediaPlayerHandler>()
+    val dataStoreManager: DataStoreManager by inject()
 
     private var mBound = false
     private var shouldUnbind = false
@@ -135,17 +138,12 @@ class MainActivity : AppCompatActivity() {
          
         lifecycleScope.launch {
             if (getString(FIRST_TIME_MIGRATION) != STATUS_DONE) {
-                Logger.d("Locale Key", "onCreate: ${Locale.getDefault().toLanguageTag()}")
-                if (SUPPORTED_LANGUAGE.codes.contains(Locale.getDefault().toLanguageTag())) {
-                    Logger.d(
-                        "Contains",
-                        "onCreate: ${
-                            SUPPORTED_LANGUAGE.codes.contains(
-                                Locale.getDefault().toLanguageTag(),
-                            )
-                        }",
-                    )
-                    putString(SELECTED_LANGUAGE, Locale.getDefault().toLanguageTag())
+                val localeTag = Locale.getDefault().toLanguageTag()
+                Logger.d("Locale Key", "onCreate: $localeTag")
+                val matchedCode = SUPPORTED_LANGUAGE.getBestMatchingCode(localeTag)
+                if (matchedCode != null) {
+                    Logger.d("Contains", "onCreate matched: $matchedCode")
+                    putString(SELECTED_LANGUAGE, matchedCode)
                     if (SUPPORTED_LOCATION.items.contains(Locale.getDefault().country)) {
                         putString("location", Locale.getDefault().country)
                     } else {
@@ -174,6 +172,16 @@ class MainActivity : AppCompatActivity() {
                     "onCreate: ${AppCompatDelegate.getApplicationLocales().toLanguageTags()}",
                 )
                 putString(SELECTED_LANGUAGE, AppCompatDelegate.getApplicationLocales().toLanguageTags())
+            }
+        }
+
+        lifecycleScope.launch {
+            dataStoreManager.getString(SELECTED_LANGUAGE).collectLatest { language ->
+                val localeCode = language ?: "en-US"
+                val localeList = LocaleListCompat.forLanguageTags(localeCode)
+                if (AppCompatDelegate.getApplicationLocales() != localeList) {
+                    AppCompatDelegate.setApplicationLocales(localeList)
+                }
             }
         }
 

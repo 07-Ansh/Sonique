@@ -458,4 +458,39 @@
     <string name="explicit_content_blocked">?? ?? ??? ???</string>
     <string name="mix_for_you">??? ?? ??</string>
     <string name="no_mixes_found">?? ??</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">로그인 시 즐겨찾기를 YouTube 좋아요 표시한 재생목록으로 교체</string>
+    <string name="combine_local_and_youtube_liked_songs_description">YouTube 좋아요 시스템만 사용합니다 (오프라인일 때는 곡에 좋아요를 누를 수 없습니다)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">자동</string>
+    <string name="crossfade_description">현재 트랙을 페이드아웃하면서 다음 트랙을 페이드인하여 곡 간 전환을 부드럽게 합니다.</string>
+    <string name="crossfade_dj_mode">DJ 스타일 전환</string>
+    <string name="crossfade_dj_mode_description">크로스페이드 중에 로우패스 및 하이패스 필터 스윕을 적용하여 더욱 부드럽고 DJ와 같은 전환을 구현합니다(Apple Music Automix와 유사).</string>
+    <string name="custom_order">사용자 지정 순서</string>
+    <string name="desktop_webview_description">Compose Multiplatform의 제한으로 인해 데스크톱에서 WebView를 구현할 수 없습니다.\n데스크톱에 로그인하는 방법을 자세히 알아보려면 다음을 읽어보세요.\n</string>
+    <string name="download_quality">다운로드 품질</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">상태 표시 켜기</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">서비스 활성 유지</string>
+    <string name="keep_service_alive_description">시스템이 종료하지 않도록 음악 플레이어 서비스를 활성 상태로 유지합니다</string>
+    <string name="keep_your_youtube_playlist_offline">오프라인일 때도 YouTube 재생목록 표시</string>
+    <string name="keep_your_youtube_playlist_offline_description">YouTube 재생목록을 로컬에 저장한 뒤 오프라인일 때 표시합니다</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">블로그 게시물 열기</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">단어 단위 싱크</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">동영상 다운로드 품질</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">YouTube 좋아요 표시한 음악</string>
 </resources>

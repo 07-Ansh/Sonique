@@ -12,6 +12,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import org.jetbrains.compose.resources.stringResource
+import sonique.composeapp.generated.resources.*
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -42,7 +44,7 @@ fun ChangelogDialog(
             )
         },
         title = {
-            Text(text = "What's New")
+            Text(text = stringResource(Res.string.whats_new))
         },
         text = {
             val lines = changelog.split("\n").filter { it.isNotBlank() }
@@ -101,7 +103,7 @@ fun ChangelogDialog(
                 )
             ) {
                 Text(
-                    text = "Got it",
+                    text = stringResource(Res.string.ok),
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold
                     )

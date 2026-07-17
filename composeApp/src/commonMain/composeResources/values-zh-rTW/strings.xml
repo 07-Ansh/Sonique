@@ -458,4 +458,39 @@
     <string name="explicit_content_blocked">????????</string>
     <string name="mix_for_you">????</string>
     <string name="no_mixes_found">?????</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">登入後，將「收藏」替換為「YouTube 讚」</string>
+    <string name="combine_local_and_youtube_liked_songs_description">僅使用 YouTube 讚功能（不支援離線按讚歌曲）</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">自動</string>
+    <string name="crossfade_description">歌曲之間平滑過渡，當前曲目淡出，下一首曲目淡入。</string>
+    <string name="crossfade_dj_mode">DJ風格過渡</string>
+    <string name="crossfade_dj_mode_description">在交叉淡入淡出期間套用低通和高通濾波器掃描，以獲得更平滑、類似 DJ 的過渡效果（類似於 Apple Music Automix）。</string>
+    <string name="custom_order">客製訂單</string>
+    <string name="desktop_webview_description">由於 Compose Multiplatform 的限制，我無法在桌面端實作 WebView。 \n請閱讀此文以了解如何在桌面端登入：\n</string>
+    <string name="download_quality">下載音質</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">啟用豐富的臨場感</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">保持服務正常運行</string>
+    <string name="keep_service_alive_description">保持音樂播放器服務運行，避免被系統終止</string>
+    <string name="keep_your_youtube_playlist_offline">離線時繼續顯示您的 YouTube 播放清單</string>
+    <string name="keep_your_youtube_playlist_offline_description">將您的 YouTube 播放清單儲存到本地，以便在離線時查看</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">開啟部落格文章</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">逐字逐句</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">影片下載畫質</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">YouTube 喜歡的音樂</string>
 </resources>

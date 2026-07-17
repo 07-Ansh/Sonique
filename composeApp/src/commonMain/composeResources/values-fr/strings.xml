@@ -459,4 +459,39 @@
     <string name="explicit_content_blocked">Le contenu explicite est ignoré</string>
     <string name="mix_for_you">Mix pour vous</string>
     <string name="no_mixes_found">Aucun mix trouvé</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">Remplacer « Favori » par « J’aime » sur YouTube lors de la connexion</string>
+    <string name="combine_local_and_youtube_liked_songs_description">Utilisation uniquement des vidéos aimées sur YouTube (ne prend pas en charge les titres hors ligne)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">Auto</string>
+    <string name="crossfade_description">Assurez une transition fluide entre les titres en estompant progressivement le titre en cours tout en faisant apparaître progressivement le suivant.</string>
+    <string name="crossfade_dj_mode">Transition de style DJ</string>
+    <string name="crossfade_dj_mode_description">Appliquez des balayages de filtre passe-bas et passe-haut pendant le fondu enchaîné pour obtenir une transition plus fluide, semblable à celle d'un DJ (similaire à Apple Music Automix).</string>
+    <string name="custom_order">Commande personnalisée</string>
+    <string name="desktop_webview_description">En raison des limitations de Compose Multiplatform, je ne peux pas implémenter WebView sur ordinateur.\nConsultez ce document pour en savoir plus sur la connexion sur ordinateur :\n</string>
+    <string name="download_quality">Qualité de téléchargement</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">Activer une présence riche</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">Maintenir le service en vie</string>
+    <string name="keep_service_alive_description">Maintenez le service du lecteur de musique actif pour éviter qu'il ne soit arrêté par le système</string>
+    <string name="keep_your_youtube_playlist_offline">Continuez à afficher votre playlist YouTube même hors ligne</string>
+    <string name="keep_your_youtube_playlist_offline_description">Enregistrez votre playlist YouTube en local et conservez-la pour la visionner hors ligne</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">Ouvrir l'article de blog</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">Mot par mot</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">Qualité de téléchargement vidéo</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">Musique aimée par YouTube</string>
 </resources>

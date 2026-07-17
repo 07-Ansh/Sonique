@@ -458,4 +458,39 @@
     <string name="explicit_content_blocked">???????????????????????????</string>
     <string name="mix_for_you">??????????????</string>
     <string name="no_mixes_found">??????????</string>
+    <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="combine_local_and_youtube_liked_songs">ใช้เพลงที่ถูกใจบน YouTube แทนรายการโปรดเมื่อเข้าสู่ระบบ</string>
+    <string name="combine_local_and_youtube_liked_songs_description">ใช้เฉพาะรายการเพลงที่ถูกใจบน YouTube (ไม่รองรับการกดถูกใจเมื่อออฟไลน์)</string>
+    <string name="copyright" translatable="false">©2025 Sonique</string>
+    <string name="crossfade_auto">อัตโนมัติ</string>
+    <string name="crossfade_description">เปลี่ยนเพลงอย่างราบรื่นโดยค่อยๆ ลดเสียงเพลงปัจจุบันลงพร้อมกับค่อยๆ เพิ่มเสียงเพลงถัดไป</string>
+    <string name="crossfade_dj_mode">การเปลี่ยนเพลงสไตล์ DJ</string>
+    <string name="crossfade_dj_mode_description">ใช้การไล่ปรับฟิลเตอร์ Low-pass และ High-pass ระหว่างช่วง Crossfade เพื่อให้การเปลี่ยนเพลงนุ่มนวลและลื่นไหลแบบ DJ (คล้ายฟีเจอร์ Automix ของ Apple Music)</string>
+    <string name="custom_order">กำหนดลำดับเอง</string>
+    <string name="desktop_webview_description">เนื่องจากข้อจำกัดของ Compose Multiplatform ทำให้ฉันไม่สามารถใช้งาน WebView บนเดสก์ท็อปได้ \nอ่านข้อมูลนี้เพื่อเรียนรู้เพิ่มเติมเกี่ยวกับวิธีการเข้าสู่ระบบบนเดสก์ท็อป:\n</string>
+    <string name="download_quality">คุณภาพการดาวน์โหลด</string>
+    <string name="downloaded_songs">Downloads</string>
+    <string name="enable_rich_presence">เปิดใช้งาน Rich Presence</string>
+    <string name="explore_downloads">Explore downloads</string>
+    <string name="followed_artists">Followed Artists</string>
+    <string name="for_you">For you</string>
+    <string name="general">General</string>
+    <string name="keep_service_alive">คงการทำงานของบริการ</string>
+    <string name="keep_service_alive_description">รักษาการทำงานของเครื่องเล่นเพลง เพื่อหลีกเลี่ยงการถูกระบบปิดเพลง</string>
+    <string name="keep_your_youtube_playlist_offline">แสดงเพลย์ลิสต์ YouTube แม้ไม่ได้เชื่อมต่ออินเทอร์เน็ต</string>
+    <string name="keep_your_youtube_playlist_offline_description">จัดเก็บเพลย์ลิสต์ YouTube ในเครื่องเพื่อใช้งานแบบออฟไลน์</string>
+    <string name="liked_songs">Liked Songs</string>
+    <string name="lrclib" translatable="false">LRCLIB</string>
+    <string name="no_artist_found">No artist found</string>
+    <string name="no_youtube_albums">No YouTube Albums</string>
+    <string name="notification_channel_name" translatable="false">Sonique Playback Notification</string>
+    <string name="open_blog_post">เปิดบล็อกโพสต์</string>
+    <string name="podcasts" translatable="false">Podcasts</string>
+    <string name="rich_synced">คำ ต่อ คำ</string>
+    <string name="the_device_is_offline">The device is offline</string>
+    <string name="travel">Travel</string>
+    <string name="version_format" translatable="false">v%1$s</string>
+    <string name="video_download_quality">คุณภาพการดาวน์โหลดวิดีโอ</string>
+    <string name="youtube_albums">YouTube Albums</string>
+    <string name="youtube_liked_music">เพลงที่ถูกใจบน YouTube</string>
 </resources>

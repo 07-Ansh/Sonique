@@ -1396,7 +1396,11 @@ internal class CrossfadeExoPlayerAdapter(
                     // ERROR_CODE_IO_NETWORK_CONNECTION_FAILED (2001) = connection refused
                     val isRetryableSourceError =
                         error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED ||
-                            error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ||
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED ||
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ||
+                            error.errorCode == PlaybackException.ERROR_CODE_TIMEOUT ||
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED
 
                     val currentVideoId = playlist.getOrNull(localCurrentMediaItemIndex)?.mediaId
                     if (isRetryableSourceError && currentVideoId != null) {

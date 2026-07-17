@@ -2,6 +2,8 @@ package com.sonique.app.ui.screen.settings
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -377,10 +379,10 @@ fun SettingsGeneralScreen(
     if (showYouTubeAccountDialog) {
         BasicAlertDialog(
             onDismissRequest = { showYouTubeAccountDialog = false },
-            modifier = Modifier.wrapContentSize(),
+            modifier = Modifier.widthIn(min = 360.dp, max = 560.dp).fillMaxWidth().padding(horizontal = 16.dp),
         ) {
             Surface(
-                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = AlertDialogDefaults.TonalElevation,

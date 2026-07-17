@@ -1,6 +1,7 @@
 package com.sonique.media3.di
 
 import android.app.Activity
+import java.util.concurrent.TimeUnit
 import android.content.Context
 import android.content.Context.BIND_AUTO_CREATE
 import android.content.Intent
@@ -451,6 +452,8 @@ private fun provideCacheDataSource(
                             OkHttpDataSource.Factory(
                                 OkHttpClient
                                     .Builder()
+                                    .connectTimeout(30, TimeUnit.SECONDS)
+                                    .readTimeout(30, TimeUnit.SECONDS)
                                     .proxy(
                                         proxy,
                                     ).addInterceptor(

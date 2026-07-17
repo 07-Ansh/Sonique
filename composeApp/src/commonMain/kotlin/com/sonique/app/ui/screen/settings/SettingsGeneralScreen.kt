@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Error
@@ -375,127 +376,224 @@ fun SettingsGeneralScreen(
     // Copying the Dialog logic from SettingScreen.kt
     if (showYouTubeAccountDialog) {
         BasicAlertDialog(
-            onDismissRequest = { },
+            onDismissRequest = { showYouTubeAccountDialog = false },
             modifier = Modifier.wrapContentSize(),
         ) {
             Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 tonalElevation = AlertDialogDefaults.TonalElevation,
-                shadowElevation = 1.dp,
             ) {
                 val googleAccounts by viewModel.googleAccounts.collectAsStateWithLifecycle(
                     minActiveState = Lifecycle.State.RESUMED,
                 )
-                LaunchedEffect(googleAccounts) {
-                   // Logger logic omitted for brevity
-                }
-                LazyColumn(modifier = Modifier.padding(8.dp)) {
-                    item {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                
+                Column(
+                    modifier = Modifier.padding(24.dp).fillMaxWidth()
+                ) {
+                    // Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            stringResource(Res.string.youtube_account),
+                            style = typo().titleLarge,
+                            color = white
+                        )
+                        IconButton(
+                            onClick = { showYouTubeAccountDialog = false },
+                            colors = IconButtonDefaults.iconButtonColors().copy(contentColor = white),
                         ) {
-                            IconButton(
-                                onClick = { showYouTubeAccountDialog = false },
-                                colors = IconButtonDefaults.iconButtonColors().copy(contentColor = Color.White),
-                                modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(),
-                            ) {
-                                Icon(Icons.Outlined.Close, null, tint = Color.White)
-                            }
-                            Text(
-                                stringResource(Res.string.youtube_account),
-                                style = typo().titleMedium,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
+                            Icon(Icons.Outlined.Close, null)
                         }
                     }
+                    
+                    Spacer(Modifier.height(16.dp))
+                    
+                    // Accounts List / Active Profile
                     if (googleAccounts is LocalResource.Success) {
                         val data = googleAccounts.data
                         if (data.isNullOrEmpty()) {
-                            item {
-                                Text(
-                                    stringResource(Res.string.no_account),
-                                    style = typo().bodyMedium,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                                )
-                            }
+                            Text(
+                                stringResource(Res.string.no_account),
+                                style = typo().bodyMedium,
+                                color = white.copy(0.6f),
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 24.dp).fillMaxWidth(),
+                            )
                         } else {
-                            items(data!!) {
-                                Row(
-                                    modifier = Modifier.padding(vertical = 8.dp).clickable { viewModel.setUsedAccount(it) },
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Spacer(Modifier.width(24.dp))
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalPlatformContext.current)
-                                            .data(it.thumbnailUrl)
-                                            .crossfade(550)
-                                            .build(),
-                                        placeholder = painterResource(Res.drawable.baseline_people_alt_24),
-                                        error = painterResource(Res.drawable.baseline_people_alt_24),
-                                        contentDescription = it.name,
-                                        modifier = Modifier.size(48.dp).clip(CircleShape),
-                                    )
-                                    Spacer(Modifier.width(12.dp))
-                                    Column(Modifier.weight(1f)) {
-                                        Text(it.name, style = typo().labelMedium, color = white)
-                                        Text(it.email, style = typo().bodySmall)
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                data.forEach { account ->
+                                    val isSelected = account.isUsed
+                                    val cardBg = if (isSelected) {
+                                        MaterialTheme.colorScheme.primaryContainer.copy(0.15f)
+                                    } else {
+                                        backgroundCard
                                     }
-                                    Spacer(Modifier.width(12.dp))
-                                    AnimatedVisibility(it.isUsed) {
-                                        Text(
-                                            stringResource(Res.string.signed_in),
-                                            style = typo().bodySmall,
-                                            maxLines = 2,
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.widthIn(0.dp, 64.dp),
-                                        )
+                                    val cardBorderColor = if (isSelected) {
+                                        MaterialTheme.colorScheme.primary.copy(0.5f)
+                                    } else {
+                                        white.copy(0.08f)
                                     }
-                                    Spacer(Modifier.width(24.dp))
+                                    
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(16.dp))
+                                            .background(cardBg)
+                                            .border(1.dp, cardBorderColor, RoundedCornerShape(16.dp))
+                                            .clickable { viewModel.setUsedAccount(account) }
+                                            .padding(16.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Box(modifier = Modifier.size(48.dp)) {
+                                            AsyncImage(
+                                                model = ImageRequest.Builder(LocalPlatformContext.current)
+                                                    .data(account.thumbnailUrl)
+                                                    .crossfade(550)
+                                                    .build(),
+                                                placeholder = painterResource(Res.drawable.baseline_people_alt_24),
+                                                error = painterResource(Res.drawable.baseline_people_alt_24),
+                                                contentDescription = account.name,
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(CircleShape)
+                                                    .border(1.dp, white.copy(0.15f), CircleShape),
+                                            )
+                                        }
+                                        Spacer(Modifier.width(16.dp))
+                                        Column(Modifier.weight(1f)) {
+                                            Text(
+                                                account.name,
+                                                style = typo().labelLarge,
+                                                color = white
+                                            )
+                                            Spacer(Modifier.height(2.dp))
+                                            Text(
+                                                account.email,
+                                                style = typo().bodySmall,
+                                                color = white.copy(0.6f)
+                                            )
+                                        }
+                                        if (isSelected) {
+                                            Spacer(Modifier.width(8.dp))
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(MaterialTheme.colorScheme.primary.copy(0.2f))
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(
+                                                    stringResource(Res.string.signed_in),
+                                                    style = typo().labelSmall,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     } else {
-                        item {
-                            CenterLoadingBox(Modifier.fillMaxWidth().height(80.dp))
-                        }
+                        CenterLoadingBox(Modifier.fillMaxWidth().height(80.dp))
                     }
-                    item {
-                        Column {
-                            ActionButton(
-                                icon = painterResource(Res.drawable.baseline_people_alt_24),
-                                text = Res.string.guest,
-                            ) {
-                                viewModel.setUsedAccount(null)
-                                showYouTubeAccountDialog = false
-                            }
-                            ActionButton(
-                                icon = painterResource(Res.drawable.baseline_close_24),
-                                text = Res.string.log_out,
-                            ) {
-                                coroutineScope.launch {
-                                    viewModel.setBasicAlertData(
-                                        SettingBasicAlertState(
-                                            title = getString(Res.string.warning),
-                                            message = getString(Res.string.log_out_warning),
-                                            confirm = getString(Res.string.log_out) to {
-                                                viewModel.logOutAllYouTube()
-                                                showYouTubeAccountDialog = false
-                                            },
-                                            dismiss = getString(Res.string.cancel),
-                                        ),
-                                    )
+                    
+                    Spacer(Modifier.height(24.dp))
+                    HorizontalDivider(color = white.copy(0.08f))
+                    Spacer(Modifier.height(12.dp))
+                    
+                    // Actions Menu (Guest, Log out, Add account)
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        // Guest Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    viewModel.setUsedAccount(null)
+                                    showYouTubeAccountDialog = false
                                 }
-                            }
-                            ActionButton(
-                                icon = painterResource(Res.drawable.baseline_playlist_add_24),
-                                text = Res.string.add_an_account,
-                            ) {
-                                showYouTubeAccountDialog = false
-                                navController.navigate(LoginDestination)
-                            }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.baseline_people_alt_24),
+                                contentDescription = null,
+                                tint = white.copy(0.7f),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Text(
+                                stringResource(Res.string.guest),
+                                style = typo().bodyMedium,
+                                color = white.copy(0.85f)
+                            )
+                        }
+                        
+                        // Add an Account Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    showYouTubeAccountDialog = false
+                                    navController.navigate(LoginDestination)
+                                }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.baseline_playlist_add_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Text(
+                                stringResource(Res.string.add_an_account),
+                                style = typo().bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        // Log out Button
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    coroutineScope.launch {
+                                        viewModel.setBasicAlertData(
+                                            SettingBasicAlertState(
+                                                title = getString(Res.string.warning),
+                                                message = getString(Res.string.log_out_warning),
+                                                confirm = getString(Res.string.log_out) to {
+                                                    viewModel.logOutAllYouTube()
+                                                    showYouTubeAccountDialog = false
+                                                },
+                                                dismiss = getString(Res.string.cancel),
+                                            ),
+                                        )
+                                    }
+                                }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.baseline_close_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(Modifier.width(16.dp))
+                            Text(
+                                stringResource(Res.string.log_out),
+                                style = typo().bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
                         }
                     }
                 }

@@ -20,6 +20,9 @@ import com.sonique.app.ui.component.liquidGlass
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import com.mikepenz.markdown.m3.Markdown
+import androidx.compose.ui.graphics.Color
+import org.jetbrains.compose.resources.stringResource
+import sonique.composeapp.generated.resources.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,14 +32,16 @@ fun SettingsUpdateScreen(
     sharedViewModel: SharedViewModel = koinViewModel(),
 ) {
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
+    val latestReleaseInfo by updateViewModel.latestReleaseInfo.collectAsStateWithLifecycle()
+    val currentVersion = updateViewModel.currentVersion
     val downloadStatus by sharedViewModel.downloadStatus.collectAsStateWithLifecycle()
     val isChecking by updateViewModel.isChecking.collectAsStateWithLifecycle()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
-            title = { Text("App Updates") },
+        CenterAlignedTopAppBar(
+            title = { Text(stringResource(Res.string.updates), style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(
                     onClick = onBack,
@@ -81,23 +86,44 @@ fun SettingsUpdateScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = if (isChecking) "Checking for updates..." else "Your app is up to date!",
+                        text = if (isChecking) stringResource(Res.string.checking_for_updates) else stringResource(Res.string.your_app_is_up_to_date),
                         style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Current Version: v$currentVersion",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = { updateViewModel.manualCheckForUpdate() },
-                        enabled = !isChecking
+                        enabled = !isChecking,
+                        colors = ButtonDefaults.buttonColors(contentColor = Color.White)
                     ) {
                         if (isChecking) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
-                        Text(if (isChecking) "Checking..." else "Check for Updates")
+                        Text(if (isChecking) stringResource(Res.string.checking) else stringResource(Res.string.check_for_update))
+                    }
+
+                    latestReleaseInfo?.let { release ->
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Changelog for v${release.version}",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Markdown(content = release.changelog)
+                            }
+                        }
                     }
                 }
             }
@@ -116,18 +142,18 @@ fun UpdateAvailableContent(
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = "New Version Available: ${releaseInfo.version}",
+                text = stringResource(Res.string.new_update_available, releaseInfo.version),
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = "Changelog", style = MaterialTheme.typography.labelLarge)
+            Text(text = stringResource(Res.string.changelog), style = MaterialTheme.typography.labelLarge)
             Spacer(modifier = Modifier.height(8.dp))
             Markdown(content = releaseInfo.changelog)
             Spacer(modifier = Modifier.height(16.dp))
             
             when (status) {
                 is SharedViewModel.DownloadStatus.Downloading -> {
-                    Text("Downloading... ${(status.progress * 100).toInt()}%")
+                    Text(stringResource(Res.string.downloading_progress, (status.progress * 100).toInt()))
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
                         progress = { status.progress },
@@ -138,11 +164,11 @@ fun UpdateAvailableContent(
                         onClick = onCancel,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(Res.string.cancel))
                     }
                 }
                 is SharedViewModel.DownloadStatus.Verifying -> {
-                    Text("Verifying update...")
+                    Text(stringResource(Res.string.verifying_update))
                     Spacer(modifier = Modifier.height(8.dp))
                     LinearProgressIndicator(
                         modifier = Modifier.fillMaxWidth(),
@@ -153,7 +179,7 @@ fun UpdateAvailableContent(
                         onClick = { onInstall(status.path) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Install Now")
+                        Text(stringResource(Res.string.install_now))
                     }
                 }
                 is SharedViewModel.DownloadStatus.Idle -> {
@@ -161,7 +187,7 @@ fun UpdateAvailableContent(
                         onClick = { onUpdate(releaseInfo) },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Download & Install")
+                        Text(stringResource(Res.string.download_and_install))
                     }
                 }
             }

@@ -167,11 +167,11 @@ object SUPPORTED_LANGUAGE {
             "Português",
             "Français",
             "Español",
-            "简体中文",
+            "简体中文 (Simplified Chinese)",
             "Bahasa Indonesia",
             "اللغة العربية",
             "日本語",
-            "繁體中文",
+            "繁體中文 (Traditional Chinese)",
             "Українська",
             "עברית",
             "Azerbaijani",
@@ -213,13 +213,57 @@ object SUPPORTED_LANGUAGE {
             "bg-BG",
         )
 
+    fun getBestMatchingCode(code: String?): String? {
+        if (code == null) return null
+        val cleanCode = code.replace("_", "-")
+        if (codes.contains(cleanCode)) return cleanCode
+
+        val normalized = when (cleanCode.lowercase()) {
+            "he-il", "he" -> "iw-IL"
+            "in-id", "in" -> "id-ID"
+            "id" -> "id-ID"
+            "zh-tw", "zh-hk", "zh-rtw", "zh-rhk" -> "zh-Hant-TW"
+            "zh-cn", "zh-sg", "zh-rcn" -> "zh-CN"
+            "zh" -> "zh-CN"
+            "vi" -> "vi-VN"
+            "it" -> "it-IT"
+            "de" -> "de-DE"
+            "ru" -> "ru-RU"
+            "tr" -> "tr-TR"
+            "fi" -> "fi-FI"
+            "pl" -> "pl-PL"
+            "pt" -> "pt-PT"
+            "fr" -> "fr-FR"
+            "es" -> "es-ES"
+            "ar" -> "ar-SA"
+            "ja" -> "ja-JP"
+            "uk" -> "uk-UA"
+            "az" -> "az-AZ"
+            "hi" -> "hi-IN"
+            "th" -> "th-TH"
+            "nl" -> "nl-NL"
+            "ko" -> "ko-KR"
+            "ca" -> "ca-ES"
+            "fa" -> "fa-AF"
+            "bg" -> "bg-BG"
+            else -> null
+        }
+        if (normalized != null && codes.contains(normalized)) return normalized
+
+        val baseLang = cleanCode.split("-").first().lowercase()
+        val baseMatch = codes.firstOrNull { it.split("-").first().lowercase() == baseLang }
+        if (baseMatch != null) return baseMatch
+
+        return null
+    }
+
     fun getLanguageFromCode(code: String?): String {
-        val index = codes.indexOf(code)
-        Logger.d("Config", "getLanguageFromCode: $index")
+        val matchedCode = getBestMatchingCode(code)
+        val index = codes.indexOf(matchedCode)
+        Logger.d("Config", "getLanguageFromCode: $code -> $matchedCode (index: $index)")
         if (index == -1) {
             return "English"
         }
-        Logger.w("Config", "getLanguageFromCode: ${items.get(index)}")
         return (items.getOrNull(index) ?: "English").toString()
     }
 

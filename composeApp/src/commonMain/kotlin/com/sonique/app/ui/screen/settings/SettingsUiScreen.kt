@@ -184,8 +184,8 @@ fun SettingsUiScreen(
                 if (getPlatform() == Platform.Android) {
                     SettingsSectionHeader("Liquid Glass")
                     SettingItem(
-                        title = "Apple Liquid Glass Bar",
-                        subtitle = "Apple-style floating bottom bar with real-time backdrop luminance sensing",
+                        title = "Apple Liquid Glass",
+                        subtitle = "Apple-style floating bottom layout with real-time backdrop luminance sensing",
                         switch = (enableLiquidGlass to { viewModel.setEnableLiquidGlass(it) }),
                     )
                     if (!enableLiquidGlass) {

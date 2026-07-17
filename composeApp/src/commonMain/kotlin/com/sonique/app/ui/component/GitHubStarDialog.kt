@@ -12,6 +12,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import org.jetbrains.compose.resources.stringResource
+import sonique.composeapp.generated.resources.*
 
 @Composable
 fun GitHubStarDialog(
@@ -28,10 +30,10 @@ fun GitHubStarDialog(
             Icon(Icons.Rounded.Star, contentDescription = null)
         },
         title = {
-            Text(text = "Enjoying Sonique?")
+            Text(text = stringResource(Res.string.enjoying_sonique))
         },
         text = {
-            Text(text = "If you like using Sonique, please consider giving us a star on GitHub! It helps us a lot.")
+            Text(text = stringResource(Res.string.enjoying_sonique_description))
         },
         confirmButton = {
             Button(
@@ -45,7 +47,7 @@ fun GitHubStarDialog(
                 )
             ) {
                 Text(
-                    text = "Star on GitHub",
+                    text = stringResource(Res.string.star_on_github),
                     style = MaterialTheme.typography.labelLarge.copy(
                         fontWeight = FontWeight.Bold
                     )
@@ -54,7 +56,7 @@ fun GitHubStarDialog(
         },
         dismissButton = {
             TextButton(onClick = onNeverShowAgain) {
-                Text("Don't ask again")
+                Text(stringResource(Res.string.dont_ask_again))
             }
         },
         containerColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceContainerHigh,

@@ -19,6 +19,11 @@ class UpdateViewModel(
     private val _updateAvailable = MutableStateFlow<ReleaseInfo?>(null)
     val updateAvailable: StateFlow<ReleaseInfo?> = _updateAvailable.asStateFlow()
 
+    private val _latestReleaseInfo = MutableStateFlow<ReleaseInfo?>(null)
+    val latestReleaseInfo: StateFlow<ReleaseInfo?> = _latestReleaseInfo.asStateFlow()
+
+    val currentVersion: String = BuildKonfig.versionName
+
     private val _isChecking = MutableStateFlow(false)
     val isChecking: StateFlow<Boolean> = _isChecking.asStateFlow()
 
@@ -42,6 +47,7 @@ class UpdateViewModel(
         viewModelScope.launch {
             updateRepository.checkForUpdate().collectLatest { status ->
                 if (status is UpdateStatus.Available) {
+                    _latestReleaseInfo.value = status.release
                     val remoteVersion = status.release.version.removePrefix("v")
                     val localVersion = BuildKonfig.versionName
                     

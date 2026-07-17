@@ -20,6 +20,7 @@ import com.sonique.app.ui.component.liquidGlass
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import com.mikepenz.markdown.m3.Markdown
+import androidx.compose.ui.graphics.Color
 import org.jetbrains.compose.resources.stringResource
 import sonique.composeapp.generated.resources.*
 
@@ -31,6 +32,8 @@ fun SettingsUpdateScreen(
     sharedViewModel: SharedViewModel = koinViewModel(),
 ) {
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
+    val latestReleaseInfo by updateViewModel.latestReleaseInfo.collectAsStateWithLifecycle()
+    val currentVersion = updateViewModel.currentVersion
     val downloadStatus by sharedViewModel.downloadStatus.collectAsStateWithLifecycle()
     val isChecking by updateViewModel.isChecking.collectAsStateWithLifecycle()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
@@ -86,20 +89,41 @@ fun SettingsUpdateScreen(
                         text = if (isChecking) stringResource(Res.string.checking_for_updates) else stringResource(Res.string.your_app_is_up_to_date),
                         style = MaterialTheme.typography.titleMedium
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Current Version: v$currentVersion",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = { updateViewModel.manualCheckForUpdate() },
-                        enabled = !isChecking
+                        enabled = !isChecking,
+                        colors = ButtonDefaults.buttonColors(contentColor = Color.White)
                     ) {
                         if (isChecking) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         Text(if (isChecking) stringResource(Res.string.checking) else stringResource(Res.string.check_for_update))
+                    }
+
+                    latestReleaseInfo?.let { release ->
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Card(modifier = Modifier.fillMaxWidth()) {
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Text(
+                                    text = "Changelog for v${release.version}",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Markdown(content = release.changelog)
+                            }
+                        }
                     }
                 }
             }

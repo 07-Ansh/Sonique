@@ -37,7 +37,7 @@ fun SettingsUpdateScreen(
     val backdrop = rememberBackdrop()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = { Text(stringResource(Res.string.updates), style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(

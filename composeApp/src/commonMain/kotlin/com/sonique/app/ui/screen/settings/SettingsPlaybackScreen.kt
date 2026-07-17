@@ -72,7 +72,7 @@ fun SettingsPlaybackScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = { Text("Playback", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(

@@ -94,7 +94,7 @@ fun SettingsUiScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         val backdrop = rememberBackdrop()
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = { Text("Appearance (New)", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(

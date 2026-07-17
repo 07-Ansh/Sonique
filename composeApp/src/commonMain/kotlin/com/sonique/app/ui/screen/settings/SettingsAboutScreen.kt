@@ -50,7 +50,7 @@ fun SettingsAboutScreen(
     val uriHandler = LocalUriHandler.current
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = { Text("About", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(

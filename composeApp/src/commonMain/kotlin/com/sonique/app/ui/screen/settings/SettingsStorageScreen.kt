@@ -90,7 +90,7 @@ fun SettingsStorageScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = { Text("Storage", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(

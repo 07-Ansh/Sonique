@@ -123,7 +123,7 @@ fun SettingsGeneralScreen(
     val backdrop = rememberBackdrop()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        TopAppBar(
+        CenterAlignedTopAppBar(
             title = { Text("General", style = MaterialTheme.typography.titleSmall) },
             navigationIcon = {
                 IconButton(

@@ -24,8 +24,9 @@ out/
 # Local configuration file (sdk.dir is shared by Android Studio)
 local.properties
 
-# Log Files
+# Log and Text Files
 *.log
+*.txt
 
 # Android Studio Navigation editor temp files
 .navigation/
@@ -53,4 +54,3 @@ google-services.json
 
 # AI Agent Context
 .agent
-

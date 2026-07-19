@@ -82,6 +82,7 @@ fun LibraryDynamicPlaylistScreen(
     viewModel: LibraryDynamicPlaylistViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel = koinInject(),
     onScrolling: (Boolean) -> Unit = {},
+    onBack: () -> Unit = {},
 ) {
     val state = rememberLazyListState()
     val isScrollingUp by state.isScrollingUp()
@@ -242,7 +243,7 @@ fun LibraryDynamicPlaylistScreen(
                             .size(32.dp),
                         true,
                     ) {
-                        navController.navigateUp()
+                        onBack()
                     }
                 }
             },

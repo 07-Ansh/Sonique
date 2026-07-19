@@ -84,6 +84,10 @@ internal inline fun <reified T> GridLibraryPlaylist(
     noinline onBack: (() -> Unit)? = null,
     noinline onScrolling: (onTop: Boolean) -> Unit = { _ -> },
     noinline createNewPlaylist: (() -> Unit)? = null,
+    noinline onLocalPlaylistClick: (Long) -> Unit = {},
+    noinline onAlbumClick: ((String) -> Unit)? = null,
+    noinline onArtistClick: ((String) -> Unit)? = null,
+    noinline onPlaylistClick: ((String, Boolean) -> Unit)? = null,
     noinline onReload: () -> Unit,
 ) {
     Logger.w("GridLibraryPlaylist", "Generic Type: ${T::class.java}")
@@ -218,23 +222,19 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                     onClickListener = {
                                         when (item) {
                                             is LocalPlaylistEntity -> {
-                                                navController.navigate(
-                                                    LocalPlaylistDestination(
-                                                        item.id,
-                                                    ),
-                                                )
+                                                onLocalPlaylistClick(item.id)
                                             }
 
                                             is PlaylistsResult -> {
                                                 if (item.browseId.startsWith("MPRE")) {
                                                     // This is an album browseId — route to AlbumScreen
-                                                    navController.navigate(
+                                                    onAlbumClick?.invoke(item.browseId) ?: navController.navigate(
                                                         AlbumDestination(
                                                             item.browseId,
                                                         ),
                                                     )
                                                 } else {
-                                                    navController.navigate(
+                                                    onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(
                                                         PlaylistDestination(
                                                             item.browseId,
                                                             isYourYouTubePlaylist = true,
@@ -244,7 +244,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                             }
 
                                             is AlbumEntity -> {
-                                                navController.navigate(
+                                                onAlbumClick?.invoke(item.browseId) ?: navController.navigate(
                                                     AlbumDestination(
                                                         item.browseId,
                                                     ),
@@ -252,7 +252,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                             }
 
                                             is PlaylistEntity -> {
-                                                navController.navigate(
+                                                onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(
                                                     PlaylistDestination(
                                                         item.id,
                                                     ),
@@ -274,7 +274,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                 com.sonique.app.ui.component.ArtistFullWidthItems(
                                     data = item,
                                     onClickListener = {
-                                        navController.navigate(
+                                        onArtistClick?.invoke(item.channelId) ?: navController.navigate(
                                             com.sonique.app.ui.navigation.destination.list.ArtistDestination(
                                                 channelId = item.channelId,
                                             )

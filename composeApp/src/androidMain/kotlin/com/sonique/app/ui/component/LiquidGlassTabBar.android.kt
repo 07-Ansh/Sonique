@@ -72,7 +72,7 @@ private val TabWidth = 96.dp
 private val BarHeight = 64.dp
 private val BlobHeight = 56.dp
 
-private val bottomBarSeedDark = Color(0xFFFF3B30)
+private val bottomBarSeedDark = Color(0xFFFFFFFF)
 private val white = Color(0xFFFFFFFF)
 
 /**

@@ -131,6 +131,7 @@ fun AlbumScreen(
     viewModel: AlbumViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel = koinInject(),
     onScrolling: (Boolean) -> Unit = {},
+    onBack: (() -> Unit)? = null,
 ) {
     val uriHandler = LocalUriHandler.current
 
@@ -298,7 +299,7 @@ fun AlbumScreen(
                                     RippleIconButton(
                                         resId = Res.drawable.baseline_arrow_back_ios_new_24,
                                     ) {
-                                        navController.navigateUp()
+                                        onBack?.invoke() ?: navController.navigateUp()
                                     }
                                 }
                                 Column(

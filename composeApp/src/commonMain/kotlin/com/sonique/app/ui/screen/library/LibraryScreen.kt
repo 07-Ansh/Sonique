@@ -8,6 +8,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,6 +48,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -75,6 +77,9 @@ import com.sonique.app.ui.component.LibraryItemState
 import com.sonique.app.ui.component.LibraryItemType
 import com.sonique.app.ui.component.LibraryTilingBox
 import com.sonique.app.ui.component.RippleIconButton
+import com.sonique.app.ui.screen.other.AlbumScreen
+import com.sonique.app.ui.screen.other.ArtistScreen
+import com.sonique.app.ui.screen.other.PlaylistScreen
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.transparent
 import com.sonique.app.ui.theme.typo
@@ -115,7 +120,16 @@ import sonique.composeapp.generated.resources.no_youtube_albums
 import sonique.composeapp.generated.resources.followed
 import sonique.composeapp.generated.resources.no_artist_found
 
-@OptIn(ExperimentalMaterial3Api::class)
+enum class LibrarySubScreen {
+    MAIN,
+    DYNAMIC_PLAYLIST,
+    LOCAL_PLAYLIST_DETAILS,
+    ALBUM_DETAILS,
+    ARTIST_DETAILS,
+    PLAYLIST_DETAILS
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun LibraryScreen(
     innerPadding: PaddingValues,
@@ -128,6 +142,14 @@ fun LibraryScreen(
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val showMostPlayed by sharedViewModel.showMostPlayed.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
+
+    var activeSubScreen by rememberSaveable { mutableStateOf(LibrarySubScreen.MAIN) }
+    var activeDynamicType by rememberSaveable { mutableStateOf("") }
+    var activeLocalPlaylistId by rememberSaveable { mutableStateOf(-1L) }
+    var activeBrowseId by rememberSaveable { mutableStateOf("") }
+    var activeChannelId by rememberSaveable { mutableStateOf("") }
+    var activePlaylistId by rememberSaveable { mutableStateOf("") }
+    var activeIsYourYouTubePlaylist by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(openDownloads) {
         if (openDownloads) {
@@ -153,16 +175,6 @@ fun LibraryScreen(
 
     var showAddSheet by remember { mutableStateOf(false) }
     var isScrollingUp by remember { mutableStateOf(true) }
-
-     
-    LaunchedEffect(Unit) {
-         
-    }
-
-    LaunchedEffect(nowPlaying) {
-        Logger.w("LibraryScreen", "Check nowPlaying: $nowPlaying")
-        viewModel.getRecentlyAdded()
-    }
 
     val currentFilter by viewModel.currentScreen.collectAsStateWithLifecycle()
 
@@ -218,9 +230,12 @@ fun LibraryScreen(
         }
     }
 
-     
-    BackHandler(enabled = currentFilter != LibraryChipType.YOUR_LIBRARY) {
-        viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY)
+    BackHandler(enabled = activeSubScreen != LibrarySubScreen.MAIN || currentFilter != LibraryChipType.YOUR_LIBRARY) {
+        if (activeSubScreen != LibrarySubScreen.MAIN) {
+            activeSubScreen = LibrarySubScreen.MAIN
+        } else {
+            viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY)
+        }
     }
 
     val handleScrolling: (Boolean) -> Unit = { scrollingUp ->
@@ -231,241 +246,341 @@ fun LibraryScreen(
     Box(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
         Crossfade(
             modifier = Modifier.fillMaxSize(),
-            targetState = currentFilter,
-        ) { filter ->
-            when (filter) {
-                LibraryChipType.YOUR_LIBRARY -> {
-                    val state = rememberLazyListState()
-                    val scrollingUp by state.isScrollingUp()
-                    LaunchedEffect(state, scrollingUp) {
-                        snapshotFlow { state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0 }
-                            .collect { isAtTop ->
-                                val shouldBeVisible = if (isAtTop) true else scrollingUp
-                                handleScrolling(shouldBeVisible)
-                            }
-                    }
-                    LazyColumn(
-                        contentPadding =
-                            innerPadding.copy(
-                                top = 25.dp,
-                            ),
-                        state = state,
-                    ) {
-                        item {
-                            LibraryTilingBox(
-                                navController = navController,
-                                onNavigate = { type ->
-                                    viewModel.setCurrentScreen(type)
+            targetState = activeSubScreen,
+        ) { subScreen ->
+            when (subScreen) {
+                LibrarySubScreen.MAIN -> {
+                    Crossfade(
+                        modifier = Modifier.fillMaxSize(),
+                        targetState = currentFilter,
+                    ) { filter ->
+                        when (filter) {
+                            LibraryChipType.YOUR_LIBRARY -> {
+                                val state = rememberLazyListState()
+                                val scrollingUp by state.isScrollingUp()
+                                LaunchedEffect(state, scrollingUp) {
+                                    snapshotFlow { state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0 }
+                                        .collect { isAtTop ->
+                                            val shouldBeVisible = if (isAtTop) true else scrollingUp
+                                            handleScrolling(shouldBeVisible)
+                                        }
                                 }
-                            )
-                        }
-
-                        if (showMostPlayed && !listCanvasSong.data.isNullOrEmpty()) {
-                            item {
-                                LibraryItem(
-                                    state =
-                                        LibraryItemState(
-                                            type = LibraryItemType.CanvasSong,
-                                            data = listCanvasSong.data ?: emptyList(),
-                                            isLoading = listCanvasSong is LocalResource.Loading,
+                                LazyColumn(
+                                    contentPadding =
+                                        innerPadding.copy(
+                                            top = 25.dp,
                                         ),
-                                    navController = navController,
-                                )
-                            }
-                        }
-
-
-
-
-                        if (activeDownloads > 0) {
-                            item {
-                                val cardModifier = if (enableLiquidGlass) {
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 20.dp, vertical = 8.dp)
-                                        .clip(RoundedCornerShape(28.dp))
-                                        .background(Color.White.copy(alpha = 0.06f))
-                                        .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(28.dp))
-                                        .liquidGlass(backdrop, shape = RoundedCornerShape(28.dp), interactive = true)
-                                } else {
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 20.dp, vertical = 8.dp)
-                                }
-                                Card(
-                                    modifier = cardModifier,
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (enableLiquidGlass) Color.Transparent else backgroundCard
-                                    ),
-                                    onClick = {
-                                        viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)
-                                    },
-                                    shape = if (enableLiquidGlass) RoundedCornerShape(28.dp) else RoundedCornerShape(12.dp)
+                                    state = state,
                                 ) {
-                                    Row(
-                                        modifier = Modifier.padding(16.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(24.dp),
-                                            color = Color.White,
-                                            strokeWidth = 2.dp
-                                        )
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                        Text(
-                                            text = "Downloading $activeDownloads items...",
-                                            style = typo().bodyMedium,
-                                            color = Color.White
-                                        )
-                                        Spacer(modifier = Modifier.weight(1f))
-                                        TextButton(
-                                            onClick = {
-                                                viewModel.cancelActiveDownloads()
+                                    item {
+                                        LibraryTilingBox(
+                                            navController = navController,
+                                            onNavigate = { type ->
+                                                viewModel.setCurrentScreen(type)
+                                            },
+                                            onDynamicPlaylistClick = { type ->
+                                                activeDynamicType = type
+                                                activeSubScreen = LibrarySubScreen.DYNAMIC_PLAYLIST
                                             }
-                                        ) {
-                                            Text(
-                                                text = stringResource(Res.string.cancel),
-                                                style = typo().bodyMedium,
-                                                color = Color.Red
+                                        )
+                                    }
+
+                                    if (showMostPlayed && !listCanvasSong.data.isNullOrEmpty()) {
+                                        item {
+                                            LibraryItem(
+                                                state =
+                                                    LibraryItemState(
+                                                        type = LibraryItemType.CanvasSong,
+                                                        data = listCanvasSong.data ?: emptyList(),
+                                                        isLoading = listCanvasSong is LocalResource.Loading,
+                                                    ),
+                                                navController = navController,
+                                                onLocalPlaylistClick = { id ->
+                                                    activeLocalPlaylistId = id
+                                                    activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
+                                                },
+                                                onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                                onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                                onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
                                             )
                                         }
                                     }
+
+                                    if (activeDownloads > 0) {
+                                        item {
+                                            val cardModifier = if (enableLiquidGlass) {
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                                                    .clip(RoundedCornerShape(28.dp))
+                                                    .background(Color.White.copy(alpha = 0.06f))
+                                                    .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(28.dp))
+                                                    .liquidGlass(backdrop, shape = RoundedCornerShape(28.dp), interactive = true)
+                                            } else {
+                                                Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                                            }
+                                            Card(
+                                                modifier = cardModifier,
+                                                colors = CardDefaults.cardColors(
+                                                    containerColor = if (enableLiquidGlass) Color.Transparent else backgroundCard
+                                                ),
+                                                onClick = {
+                                                    viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)
+                                                },
+                                                shape = if (enableLiquidGlass) RoundedCornerShape(28.dp) else RoundedCornerShape(12.dp)
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.padding(16.dp),
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    CircularProgressIndicator(
+                                                        modifier = Modifier.size(24.dp),
+                                                        color = Color.White,
+                                                        strokeWidth = 2.dp
+                                                    )
+                                                    Spacer(modifier = Modifier.width(16.dp))
+                                                    Text(
+                                                        text = "Downloading $activeDownloads items...",
+                                                        style = typo().bodyMedium,
+                                                        color = Color.White
+                                                    )
+                                                    Spacer(modifier = Modifier.weight(1f))
+                                                    TextButton(
+                                                        onClick = {
+                                                            viewModel.cancelActiveDownloads()
+                                                        }
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(Res.string.cancel),
+                                                            style = typo().bodyMedium,
+                                                            color = Color.Red
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    item {
+                                        LibraryItem(
+                                            state =
+                                                LibraryItemState(
+                                                    type =
+                                                        LibraryItemType.RecentlyAdded(
+                                                            playingVideoId = nowPlaying,
+                                                        ),
+                                                    data = recentlyAdded.data ?: emptyList(),
+                                                    isLoading = recentlyAdded is LocalResource.Loading,
+                                                ),
+                                            navController = navController,
+                                            onLocalPlaylistClick = { id ->
+                                                activeLocalPlaylistId = id
+                                                activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
+                                            },
+                                            onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                            onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                            onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                        )
+                                    }
+                                    item {
+                                        EndOfPage()
+                                    }
+                                }
+                            }
+
+                            LibraryChipType.YOUTUBE_MUSIC_PLAYLIST -> {
+                                GridLibraryPlaylist(
+                                    navController,
+                                    innerPadding.copy(top = 30.dp),
+                                    youTubePlaylist,
+                                    emptyText = Res.string.no_YouTube_playlists,
+                                    title = Res.string.your_youtube_playlists,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    onScrolling = handleScrolling,
+                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                ) {
+                                    viewModel.getYouTubePlaylist()
+                                }
+                            }
+
+                            LibraryChipType.YOUTUBE_MIX_FOR_YOU -> {
+                                GridLibraryPlaylist(
+                                    navController,
+                                    innerPadding.copy(top = 30.dp),
+                                    youTubeMixForYou,
+                                    emptyText = Res.string.no_mixes_found,
+                                    title = Res.string.mix_for_you,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    onScrolling = handleScrolling,
+                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                ) {
+                                    viewModel.getYouTubeMixedForYou()
+                                }
+                            }
+
+                            LibraryChipType.LOCAL_PLAYLIST -> {
+                                GridLibraryPlaylist(
+                                    navController,
+                                    innerPadding.copy(top = 30.dp),
+                                    yourLocalPlaylist,
+                                    onScrolling = handleScrolling,
+                                    emptyText = Res.string.no_playlists_added,
+                                    title = Res.string.your_playlists,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    createNewPlaylist = {
+                                        showAddSheet = true
+                                    },
+                                    onLocalPlaylistClick = { id ->
+                                        activeLocalPlaylistId = id
+                                        activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
+                                    },
+                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                ) {
+                                    viewModel.getLocalPlaylist()
+                                }
+                            }
+
+                            LibraryChipType.FOLLOWED_ARTISTS -> {
+                                GridLibraryPlaylist(
+                                    navController,
+                                    innerPadding.copy(top = 30.dp),
+                                    followedArtists,
+                                    onScrolling = handleScrolling,
+                                    emptyText = Res.string.no_artist_found,
+                                    title = Res.string.followed,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                ) {
+                                    viewModel.syncFollowedArtists()
+                                }
+                            }
+
+                            LibraryChipType.FAVORITE_PLAYLIST -> {
+                                FavoriteCompositeScreen(
+                                    navController = navController,
+                                    contentPadding = innerPadding.copy(top = 30.dp),
+                                    favoritePlaylistData = favoritePlaylist,
+                                    onScrolling = handleScrolling,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    onReload = {
+                                        viewModel.getPlaylistFavorite()
+                                    },
+                                )
+                            }
+
+                            LibraryChipType.DOWNLOADED_PLAYLIST -> {
+                                GridLibraryPlaylist(
+                                    navController,
+                                    innerPadding.copy(top = 30.dp),
+                                    downloadedPlaylist,
+                                    emptyText = Res.string.no_playlists_downloaded,
+                                    title = Res.string.downloaded_playlists,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    onScrolling = handleScrolling,
+                                    onLocalPlaylistClick = { id ->
+                                        activeLocalPlaylistId = id
+                                        activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
+                                    },
+                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                ) {
+                                    viewModel.getDownloadedPlaylist()
+                                }
+                            }
+
+                            LibraryChipType.FAVORITE_PODCAST -> {
+                                GridLibraryPlaylist(
+                                    navController,
+                                    innerPadding.copy(top = 30.dp),
+                                    favoritePodcasts,
+                                    emptyText = Res.string.no_favorite_podcasts,
+                                    title = Res.string.favorite_podcasts,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    onScrolling = handleScrolling,
+                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                ) {
+                                    viewModel.getFavoritePodcasts()
+                                }
+                            }
+
+                            LibraryChipType.YOUTUBE_ALBUMS -> {
+                                GridLibraryPlaylist(
+                                    navController,
+                                    innerPadding.copy(top = 30.dp),
+                                    youTubeAlbums,
+                                    emptyText = Res.string.no_youtube_albums,
+                                    title = Res.string.youtube_albums,
+                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                    onScrolling = handleScrolling,
+                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                ) {
+                                    viewModel.getYouTubeAlbums()
                                 }
                             }
                         }
-
-                        item {
-                            LibraryItem(
-                                state =
-                                    LibraryItemState(
-                                        type =
-                                            LibraryItemType.RecentlyAdded(
-                                                playingVideoId = nowPlaying,
-                                            ),
-                                        data = recentlyAdded.data ?: emptyList(),
-                                        isLoading = recentlyAdded is LocalResource.Loading,
-                                    ),
-                                navController = navController,
-                            )
-                        }
-                        item {
-                            EndOfPage()
-                        }
                     }
                 }
 
-                LibraryChipType.YOUTUBE_MUSIC_PLAYLIST -> {
-                    GridLibraryPlaylist(
-                        navController,
-                        innerPadding.copy(top = 30.dp),
-                        youTubePlaylist,
-                        emptyText = Res.string.no_YouTube_playlists,
-                        title = Res.string.your_youtube_playlists,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
-                        onScrolling = handleScrolling,
-                    ) {
-                        viewModel.getYouTubePlaylist()
-                    }
-                }
-
-                LibraryChipType.YOUTUBE_MIX_FOR_YOU -> {
-                    GridLibraryPlaylist(
-                        navController,
-                        innerPadding.copy(top = 30.dp),
-                        youTubeMixForYou,
-                        emptyText = Res.string.no_mixes_found,
-                        title = Res.string.mix_for_you,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
-                        onScrolling = handleScrolling,
-                    ) {
-                        viewModel.getYouTubeMixedForYou()
-                    }
-                }
-
-                LibraryChipType.LOCAL_PLAYLIST -> {
-                    GridLibraryPlaylist(
-                        navController,
-                        innerPadding.copy(top = 30.dp),
-                        yourLocalPlaylist,
-                        onScrolling = handleScrolling,
-                        emptyText = Res.string.no_playlists_added,
-                        title = Res.string.your_playlists,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
-                        createNewPlaylist = {
-                            showAddSheet = true
-                        },
-                    ) {
-                        viewModel.getLocalPlaylist()
-                    }
-                }
-
-                LibraryChipType.FOLLOWED_ARTISTS -> {
-                    GridLibraryPlaylist(
-                        navController,
-                        innerPadding.copy(top = 30.dp),
-                        followedArtists,
-                        onScrolling = handleScrolling,
-                        emptyText = Res.string.no_artist_found,
-                        title = Res.string.followed,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) }
-                    ) {
-                        viewModel.syncFollowedArtists()
-                    }
-                }
-
-                LibraryChipType.FAVORITE_PLAYLIST -> {
-                    FavoriteCompositeScreen(
+                LibrarySubScreen.DYNAMIC_PLAYLIST -> {
+                    LibraryDynamicPlaylistScreen(
+                        innerPadding = innerPadding,
                         navController = navController,
-                        contentPadding = innerPadding.copy(top = 30.dp),
-                        favoritePlaylistData = favoritePlaylist,
+                        type = activeDynamicType,
                         onScrolling = handleScrolling,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
-                        onReload = {
-                            viewModel.getPlaylistFavorite()
-                        },
+                        onBack = { activeSubScreen = LibrarySubScreen.MAIN }
                     )
                 }
 
-                LibraryChipType.DOWNLOADED_PLAYLIST -> {
-                    GridLibraryPlaylist(
-                        navController,
-                        innerPadding.copy(top = 30.dp),
-                        downloadedPlaylist,
-                        emptyText = Res.string.no_playlists_downloaded,
-                        title = Res.string.downloaded_playlists,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                LibrarySubScreen.LOCAL_PLAYLIST_DETAILS -> {
+                    LocalPlaylistScreen(
+                        id = activeLocalPlaylistId,
+                        navController = navController,
                         onScrolling = handleScrolling,
-                    ) {
-                        viewModel.getDownloadedPlaylist()
-                    }
+                        onBack = { activeSubScreen = LibrarySubScreen.MAIN }
+                    )
                 }
 
-                LibraryChipType.FAVORITE_PODCAST -> {
-                    GridLibraryPlaylist(
-                        navController,
-                        innerPadding.copy(top = 30.dp),
-                        favoritePodcasts,
-                        emptyText = Res.string.no_favorite_podcasts,
-                        title = Res.string.favorite_podcasts,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                LibrarySubScreen.ALBUM_DETAILS -> {
+                    AlbumScreen(
+                        browseId = activeBrowseId,
+                        navController = navController,
                         onScrolling = handleScrolling,
-                    ) {
-                        viewModel.getFavoritePodcasts()
-                    }
+                        onBack = { activeSubScreen = LibrarySubScreen.MAIN }
+                    )
                 }
 
-                LibraryChipType.YOUTUBE_ALBUMS -> {
-                    GridLibraryPlaylist(
-                        navController,
-                        innerPadding.copy(top = 30.dp),
-                        youTubeAlbums,
-                        emptyText = Res.string.no_youtube_albums,
-                        title = Res.string.youtube_albums,
-                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                LibrarySubScreen.ARTIST_DETAILS -> {
+                    ArtistScreen(
+                        channelId = activeChannelId,
+                        navController = navController,
                         onScrolling = handleScrolling,
-                    ) {
-                        viewModel.getYouTubeAlbums()
-                    }
+                        onBack = { activeSubScreen = LibrarySubScreen.MAIN }
+                    )
+                }
+
+                LibrarySubScreen.PLAYLIST_DETAILS -> {
+                    PlaylistScreen(
+                        playlistId = activePlaylistId,
+                        isYourYouTubePlaylist = activeIsYourYouTubePlaylist,
+                        navController = navController,
+                        onScrolling = handleScrolling,
+                        onBack = { activeSubScreen = LibrarySubScreen.MAIN }
+                    )
                 }
             }
         }
@@ -550,4 +665,3 @@ fun LibraryScreen(
         }
     }
 }
-

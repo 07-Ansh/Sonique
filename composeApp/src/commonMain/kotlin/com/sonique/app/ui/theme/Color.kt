@@ -6,7 +6,7 @@ import androidx.compose.ui.graphics.Color
 // Base Palette
 // ============================================
 
-val musica_accent = Color(0xFFFF3B30)  // Red accent - vibrant, premium
+val musica_accent = Color(0xFFFFFFFF)  // White accent - modern, clean
 val musica_black = Color(0xFF000000)
 val musica_dark_grey = Color(0xFF1C1C1E)
 val musica_light_grey = Color(0xFF2C2C2E)

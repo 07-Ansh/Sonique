@@ -54,7 +54,7 @@ fun NavGraphBuilder.listScreenGraph(
         val data = entry.toRoute<LocalPlaylistDestination>()
         DetailContentScreen(
             type = DetailType.LOCAL_PLAYLIST,
-            id = data.id,
+            id = data.id.toString(),
             navController = navController,
             onScrolling = onScrolling,
             innerPadding = innerPadding

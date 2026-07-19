@@ -238,286 +238,98 @@ fun AlbumScreen(
                 )
                 }
 
-                LazyColumn(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .background(md_theme_dark_background),
-                    state = lazyState,
-                ) {
-                    item(contentType = "header") {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
-                                    .background(Color.Transparent),
-                        ) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth(),
-                            ) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(260.dp)
-                                            .clip(
-                                                RoundedCornerShape(8.dp),
-                                            ).angledGradientBackground(uiState.colors, 25f),
-                                )
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(180.dp)
-                                            .align(Alignment.BottomCenter)
-                                            .background(
-                                                brush =
-                                                    Brush.verticalGradient(
-                                                        listOf(
-                                                            Color.Transparent,
-                                                            overlayMedium,
-                                                            md_theme_dark_background,
-                                                        ),
-                                                    ),
-                                            ),
-                                )
-                            }
-                            Column(
-                                Modifier
-                                    .background(Color.Transparent),
-                            ) {
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .wrapContentWidth()
-                                            .padding(16.dp)
-                                            .windowInsetsPadding(WindowInsets.statusBars),
+                SharedDetailTemplate(
+                    title = uiState.title,
+                    subtitle = uiState.artist.name + " • " + uiState.year + " • Album",
+                    description = uiState.description,
+                    thumbnailUrl = uiState.thumbnail,
+                    listColors = uiState.colors,
+                    onBack = { onBack?.invoke() ?: navController.navigateUp() },
+                    playButtonContent = {
+                        Crossfade(
+                            playingVideoId.isNotEmpty() &&
+                                    playingPlaylistId == browseId.replaceFirst("VL", ""),
+                        ) { isThisPlaying ->
+                            if (isThisPlaying) {
+                                RippleIconButton(
+                                    resId = Res.drawable.baseline_pause_circle_24,
+                                    fillMaxSize = true,
+                                    tint = seed,
+                                    modifier = Modifier.size(48.dp),
                                 ) {
-                                    RippleIconButton(
-                                        resId = Res.drawable.baseline_arrow_back_ios_new_24,
+                                    sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                }
+                            } else {
+                                RippleIconButton(
+                                    resId = Res.drawable.baseline_play_circle_24,
+                                    fillMaxSize = true,
+                                    tint = seed,
+                                    modifier = Modifier.size(48.dp),
+                                ) {
+                                    viewModel.playTrack(uiState.listTrack.firstOrNull() ?: return@RippleIconButton)
+                                }
+                            }
+                        }
+                    },
+                    downloadButtonContent = {
+                        Crossfade(targetState = uiState.downloadState) { state ->
+                            when (state) {
+                                DownloadState.STATE_DOWNLOADED -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .clickable { showCancelDownloadDialog = true },
                                     ) {
-                                        onBack?.invoke() ?: navController.navigateUp()
+                                        Icon(
+                                            painter = painterResource(Res.drawable.baseline_downloaded),
+                                            tint = Color(0xFF00A0CB),
+                                            contentDescription = "",
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .padding(2.dp),
+                                        )
                                     }
                                 }
-                                Column(
-                                    horizontalAlignment = Alignment.Start,
-                                ) {
-                                    AsyncImage(
-                                        model =
-                                            ImageRequest
-                                                .Builder(LocalPlatformContext.current)
-                                                .data(uiState.thumbnail)
-                                                .diskCachePolicy(CachePolicy.ENABLED)
-                                                .diskCacheKey(uiState.thumbnail)
-                                                .crossfade(true)
-                                                .build(),
-                                        placeholder = painterResource(Res.drawable.holder),
-                                        error = painterResource(Res.drawable.holder),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.FillHeight,
-                                        onSuccess = {
-                                            bitmap =
-                                                it.result.image
-                                                    .toBitmap()
-                                                    .asImageBitmap()
-                                        },
-                                        modifier =
-                                            Modifier
-                                                .height(250.dp)
-                                                .wrapContentWidth()
-                                                .align(Alignment.CenterHorizontally)
-                                                .clip(
-                                                    RoundedCornerShape(8.dp),
-                                                ),
-                                    )
+                                DownloadState.STATE_DOWNLOADING -> {
                                     Box(
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .wrapContentHeight(),
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .clickable { showCancelDownloadDialog = true },
                                     ) {
-                                        Column(Modifier.padding(horizontal = 32.dp)) {
-                                            Spacer(modifier = Modifier.size(25.dp))
-                                            Text(
-                                                text = uiState.title,
-                                                style = typo().titleLarge,
-                                                color = Color.White,
-                                                maxLines = 2,
-                                            )
-                                            Column(
-                                                modifier = Modifier.padding(vertical = 8.dp),
-                                            ) {
-                                                 
-                                                Text(
-                                                    text = uiState.artist.name,
-                                                    style = typo().titleSmall,
-                                                    color = Color.White,
-                                                    modifier =
-                                                        Modifier.clickable {
-                                                            uiState.artist.id?.let { channelId ->
-                                                                navController.navigate(
-                                                                    ArtistDestination(
-                                                                        channelId = channelId,
-                                                                    ),
-                                                                )
-                                                            }
-                                                        },
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
-                                                Text(
-                                                    text =
-                                                        stringResource(
-                                                            Res.string.year_and_category,
-                                                            uiState.year,
-                                                            stringResource(Res.string.album),
-                                                        ),
-                                                    style = typo().bodyMedium,
-                                                    color = textHighEmphasis,
-                                                )
-                                            }
-                                            Row(
-                                                modifier =
-                                                    Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                            ) {
-                                                Crossfade(
-                                                    playingVideoId.isNotEmpty() &&
-                                                        playingPlaylistId == browseId.replaceFirst("VL", ""),
-                                                ) { isThisPlaying ->
-                                                    if (isThisPlaying) {
-                                                        RippleIconButton(
-                                                            resId = Res.drawable.baseline_pause_circle_24,
-                                                            fillMaxSize = true,
-                                                            tint = seed,
-                                                            modifier = Modifier.size(48.dp),
-                                                        ) {
-                                                            sharedViewModel.onUIEvent(UIEvent.PlayPause)
-                                                        }
-                                                    } else {
-                                                        RippleIconButton(
-                                                            resId = Res.drawable.baseline_play_circle_24,
-                                                            fillMaxSize = true,
-                                                            tint = seed,
-                                                            modifier = Modifier.size(48.dp),
-                                                        ) {
-                                                            viewModel.playTrack(uiState.listTrack.firstOrNull() ?: return@RippleIconButton)
-                                                        }
-                                                    }
-                                                }
-                                                Spacer(modifier = Modifier.size(5.dp))
-                                                Crossfade(targetState = uiState.downloadState) {
-                                                    when (it) {
-                                                        DownloadState.STATE_DOWNLOADED -> {
-                                                            Box(
-                                                                modifier =
-                                                                    Modifier
-                                                                        .size(36.dp)
-                                                                        .clip(
-                                                                            CircleShape,
-                                                                        ).clickable {
-                                                                            showCancelDownloadDialog = true
-                                                                        },
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(Res.drawable.baseline_downloaded),
-                                                                    tint = Color(0xFF00A0CB),
-                                                                    contentDescription = "",
-                                                                    modifier =
-                                                                        Modifier
-                                                                            .size(36.dp)
-                                                                            .padding(2.dp),
-                                                                )
-                                                            }
-                                                        }
-
-                                                        DownloadState.STATE_DOWNLOADING -> {
-                                                            Box(
-                                                                modifier =
-                                                                    Modifier
-                                                                        .size(36.dp)
-                                                                        .clip(
-                                                                            CircleShape,
-                                                                        ).clickable {
-                                                                            showCancelDownloadDialog = true
-                                                                        },
-                                                            ) {
-                                                                Image(
-                                                                    painter =
-                                                                        rememberLottiePainter(
-                                                                            composition = composition,
-                                                                            iterations = Compottie.IterateForever,
-                                                                        ),
-                                                                    contentDescription = "Lottie animation",
-                                                                    modifier = Modifier.fillMaxSize(),
-                                                                )
-                                                            }
-                                                        }
-
-                                                        else -> {
-                                                            RippleIconButton(
-                                                                fillMaxSize = true,
-                                                                resId = Res.drawable.download_button,
-                                                                modifier = Modifier.size(36.dp),
-                                                            ) {
-                                                                viewModel.downloadFullAlbum()
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                Spacer(modifier = Modifier.size(5.dp))
-                                                HeartCheckBox(
-                                                    size = 36,
-                                                    checked = uiState.liked,
-                                                    onStateChange = {
-                                                        viewModel.setAlbumLike()
-                                                    },
-                                                )
-                                                Spacer(Modifier.weight(1f))
-                                                Spacer(Modifier.size(5.dp))
-                                                RippleIconButton(
-                                                    modifier =
-                                                        Modifier.size(36.dp),
-                                                    resId = Res.drawable.baseline_shuffle_24,
-                                                    fillMaxSize = true,
-                                                ) {
-                                                    viewModel.shuffle()
-                                                }
-                                            }
-                                            DescriptionView(
-                                                text =
-                                                    uiState.description?.let {
-                                                        it.ifEmpty { null }
-                                                    } ?: stringResource(Res.string.no_description),
-                                                onTimeClicked = { raw ->
-                                                     
-                                                },
-                                                onURLClicked = { url ->
-                                                    uriHandler.openUri(
-                                                        url,
-                                                    )
-                                                },
-                                                modifier = Modifier.padding(vertical = 8.dp),
-                                            )
-                                            Text(
-                                                text =
-                                                    stringResource(
-                                                        Res.string.album_length,
-                                                        (uiState.trackCount).toString(),
-                                                        uiState.length,
-                                                    ),
-                                                color = Color.White,
-                                                style = typo().bodyMedium,
-                                                modifier = Modifier.padding(vertical = 8.dp),
-                                            )
-                                        }
+                                        Image(
+                                            painter = rememberLottiePainter(composition = composition),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(36.dp)
+                                        )
+                                    }
+                                }
+                                else -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .clickable { viewModel.downloadFullAlbum() },
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.download_button),
+                                            tint = Color.LightGray,
+                                            contentDescription = "",
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .padding(2.dp),
+                                        )
                                     }
                                 }
                             }
                         }
-                    }
+                    },
+                    onPaletteGenerated = { colors ->
+                        viewModel.setBrush(colors)
+                    },
+                    lazyState = lazyState
+                ) {
                     items(count = uiState.trackCount, key = { index ->
                         val item = uiState.listTrack.getOrNull(index)
                         item?.videoId + "item_$index"
@@ -549,11 +361,7 @@ fun AlbumScreen(
                                 Text(
                                     text = stringResource(Res.string.other_version),
                                     style = typo().labelMedium,
-                                    modifier =
-                                        Modifier.padding(
-                                            horizontal = 24.dp,
-                                            vertical = 8.dp,
-                                        ),
+                                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
                                 )
                                 LazyRow(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -563,9 +371,7 @@ fun AlbumScreen(
                                         HomeItemContentPlaylist(
                                             onClick = {
                                                 navController.navigate(
-                                                    AlbumDestination(
-                                                        browseId = album.browseId,
-                                                    ),
+                                                    AlbumDestination(browseId = album.browseId)
                                                 )
                                             },
                                             data = album,
@@ -580,47 +386,7 @@ fun AlbumScreen(
                         EndOfPage()
                     }
                 }
-                AnimatedVisibility(
-                    visible = shouldHideTopBar,
-                    enter = fadeIn() + slideInVertically(),
-                    exit = fadeOut() + slideOutVertically(),
-                ) {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = uiState.title,
-                                style = typo().titleMedium,
-                                maxLines = 1,
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentHeight(
-                                            align = Alignment.CenterVertically,
-                                        ).basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
-                            )
-                        },
-                        navigationIcon = {
-                            Box(Modifier.padding(horizontal = 5.dp)) {
-                                RippleIconButton(
-                                    Res.drawable.baseline_arrow_back_ios_new_24,
-                                    Modifier
-                                        .size(32.dp),
-                                    true,
-                                ) {
-                                    navController.navigateUp()
-                                }
-                            }
-                        },
-                        colors =
-                            TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                            ),
-                        modifier = Modifier.angledGradientBackground(uiState.colors, 90f),
-                    )
-                }
+
                 if (showBottomSheet) {
                     NowPlayingBottomSheet(
                         onDismiss = {

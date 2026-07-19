@@ -110,6 +110,7 @@ fun ArtistScreen(
     sharedViewModel: SharedViewModel = koinInject(),
     navController: NavController,
     onScrolling: (Boolean) -> Unit = {},
+    onBack: (() -> Unit)? = null,
 ) {
     val artistScreenState by viewModel.artistScreenState.collectAsStateWithLifecycle()
     val isFollowed by viewModel.followed.collectAsStateWithLifecycle()
@@ -148,7 +149,7 @@ fun ArtistScreen(
                     title = state.data.title ?: "",
                     imageUrl = state.data.imageUrl,
                     onBack = {
-                        navController.navigateUp()
+                        onBack?.invoke() ?: navController.navigateUp()
                     },
                     onScrolling = onScrolling,
                 ) { color ->
@@ -764,7 +765,7 @@ fun ArtistScreen(
 
             is ArtistScreenState.Error -> {
                 viewModel.makeToast(state.message ?: stringResource(Res.string.error))
-                navController.navigateUp()
+                onBack?.invoke() ?: navController.navigateUp()
             }
         }
     }

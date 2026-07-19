@@ -56,7 +56,8 @@ import sonique.composeapp.generated.resources.youtube_albums
 @Composable
 fun LibraryTilingBox(
     navController: NavController,
-    onNavigate: (LibraryChipType) -> Unit
+    onNavigate: (LibraryChipType) -> Unit,
+    onDynamicPlaylistClick: (String) -> Unit = {}
 ) {
     val listItem =
         listOf(
@@ -104,11 +105,7 @@ fun LibraryTilingBox(
                         }
 
                         LibraryTilingState.Downloaded -> {
-                            navController.navigate(
-                                LibraryDynamicPlaylistDestination(
-                                    type = LibraryDynamicPlaylistType.Downloaded.toStringParams(),
-                                ),
-                            )
+                            onDynamicPlaylistClick(LibraryDynamicPlaylistType.Downloaded.toStringParams())
                         }
                     }
                 },

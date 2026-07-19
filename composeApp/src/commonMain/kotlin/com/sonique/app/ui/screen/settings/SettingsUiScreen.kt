@@ -323,7 +323,7 @@ fun SettingsUiScreen(
                                             .height(4.dp)
                                             .clip(RoundedCornerShape(2.dp))
                                             .background(
-                                                if (enableLiquidGlass) Color(0xFFFF3B30)
+                                                if (enableLiquidGlass) Color.White
                                                 else MaterialTheme.colorScheme.primary
                                             )
                                     )

@@ -84,6 +84,10 @@ fun LibraryItem(
     viewModel: LibraryViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel = koinInject(),
     navController: NavController,
+    onLocalPlaylistClick: (Long) -> Unit = {},
+    onAlbumClick: ((String) -> Unit)? = null,
+    onArtistClick: ((String) -> Unit)? = null,
+    onPlaylistClick: ((String, Boolean) -> Unit)? = null,
 ) {
     var showBottomSheet by remember { mutableStateOf(false) }
     var songEntity by remember { mutableStateOf<SongEntity?>(null) }
@@ -195,7 +199,7 @@ fun LibraryItem(
                                                 onClickListener = {
                                                     when (item) {
                                                         is AlbumEntity -> {
-                                                            navController.navigate(
+                                                            onAlbumClick?.invoke(item.browseId) ?: navController.navigate(
                                                                 AlbumDestination(
                                                                     item.browseId,
                                                                 ),
@@ -208,7 +212,7 @@ fun LibraryItem(
                                                                 Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
                                                                 Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
                                                                 else -> {
-                                                                    navController.navigate(
+                                                                    onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(
                                                                         PlaylistDestination(
                                                                             item.id,
                                                                         ),
@@ -243,7 +247,7 @@ fun LibraryItem(
                                 ArtistCircularItem(
                                     artist = artist,
                                     onClick = {
-                                        navController.navigate(
+                                        onArtistClick?.invoke(artist.channelId) ?: navController.navigate(
                                             ArtistDestination(
                                                 channelId = artist.channelId,
                                             ),
@@ -358,11 +362,7 @@ fun LibraryItem(
                                             onClick = {
                                                 when (item) {
                                                     is LocalPlaylistEntity -> {
-                                                        navController.navigate(
-                                                            LocalPlaylistDestination(
-                                                                item.id,
-                                                            ),
-                                                        )
+                                                        onLocalPlaylistClick(item.id)
                                                     }
 
                                                     is PlaylistsResult -> {

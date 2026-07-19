@@ -192,6 +192,7 @@ fun LocalPlaylistScreen(
     viewModel: LocalPlaylistViewModel = koinViewModel(),
     navController: NavController,
     onScrolling: (Boolean) -> Unit = {},
+    onBack: () -> Unit = {},
 ) {
     val composition by rememberLottieComposition {
         LottieCompositionSpec.JsonString(
@@ -494,7 +495,7 @@ fun LocalPlaylistScreen(
                         RippleIconButton(
                             resId = Res.drawable.baseline_arrow_back_ios_new_24,
                         ) {
-                            navController.navigateUp()
+                            onBack()
                         }
                     }
                     Column(
@@ -973,7 +974,7 @@ fun LocalPlaylistScreen(
             },
             onDelete = {
                 viewModel.deletePlaylist(uiState.id)
-                navController.navigateUp()
+                onBack()
             },
         )
     }
@@ -1061,7 +1062,7 @@ fun LocalPlaylistScreen(
                             .size(32.dp),
                         true,
                     ) {
-                        navController.navigateUp()
+                        onBack()
                     }
                 }
             },

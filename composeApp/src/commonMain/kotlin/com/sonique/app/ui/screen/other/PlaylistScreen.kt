@@ -179,6 +179,7 @@ fun PlaylistScreen(
     isYourYouTubePlaylist: Boolean,
     navController: NavController,
     onScrolling: (Boolean) -> Unit = {},
+    onBack: (() -> Unit)? = null,
 ) {
     val tag = "PlaylistScreen"
 
@@ -509,7 +510,7 @@ fun PlaylistScreen(
                                                             resId = Res.drawable.baseline_arrow_back_ios_new_24,
                                                             modifier = Modifier.size(48.dp),
                                                         ) {
-                                                            navController.navigateUp()
+                                                            onBack?.invoke() ?: navController.navigateUp()
                                                         }
                                                         Spacer(Modifier.weight(1f))
                                                         Row(
@@ -1176,7 +1177,7 @@ fun PlaylistScreen(
                             RippleIconButton(
                                 resId = Res.drawable.baseline_arrow_back_ios_new_24,
                             ) {
-                                navController.navigateUp()
+                                onBack?.invoke() ?: navController.navigateUp()
                             }
                             SearchBar(
                                 modifier =
@@ -1291,7 +1292,7 @@ fun PlaylistScreen(
                                         .size(32.dp),
                                     true,
                                 ) {
-                                    navController.navigateUp()
+                                    onBack?.invoke() ?: navController.navigateUp()
                                 }
                             }
                         },
@@ -1336,7 +1337,7 @@ fun PlaylistScreen(
 
             is PlaylistUIState.Error -> {
                 viewModel.makeToast("Error: ${state.message}")
-                navController.navigateUp()
+                onBack?.invoke() ?: navController.navigateUp()
             }
         }
     }

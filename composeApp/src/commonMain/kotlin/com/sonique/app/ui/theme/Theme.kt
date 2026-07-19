@@ -72,7 +72,7 @@ fun AppTheme(
             surfaceContainerHigh = backgroundCard,
             surfaceContainerHighest = Color.Black,
             surfaceDim = Color.Black,
-            primaryContainer = Color(0xFFFF3B30).copy(alpha = 0.25f),
+            primaryContainer = Color.White.copy(alpha = 0.25f),
             secondaryContainer = Color.White.copy(alpha = 0.12f),
             onPrimaryContainer = Color.White,
             onSecondaryContainer = Color.White,

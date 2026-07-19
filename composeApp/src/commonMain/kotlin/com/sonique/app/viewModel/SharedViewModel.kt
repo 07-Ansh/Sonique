@@ -227,8 +227,6 @@ class SharedViewModel(
 
 
 
-    private val _showGitHubPopup = MutableStateFlow(false)
-    val showGitHubPopup: StateFlow<Boolean> = _showGitHubPopup.asStateFlow()
 
     private val _intent: MutableStateFlow<GenericIntent?> = MutableStateFlow(null)
     val intent: StateFlow<GenericIntent?> = _intent

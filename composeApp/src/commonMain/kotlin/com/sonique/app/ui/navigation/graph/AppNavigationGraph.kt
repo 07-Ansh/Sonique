@@ -13,6 +13,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
+import com.sonique.app.ui.navigation.destination.home.SettingsDestination
+import com.sonique.app.ui.screen.home.SettingScreen
+
 import androidx.navigation.toRoute
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.player.FullscreenDestination
@@ -159,6 +162,12 @@ fun AppNavigationGraph(
                     showNavBar.invoke(true)
                     showNowPlayingSheet.invoke()
                 },
+            )
+        }
+        composable<SettingsDestination> {
+            SettingScreen(
+                innerPadding = innerPadding,
+                navController = navController,
             )
         }
          

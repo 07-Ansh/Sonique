@@ -180,7 +180,7 @@ fun SettingItem(
                     val stretch = (distance * 0.008f).coerceIn(0f, 0.5f)
                     val thumbWidth = 22.dp * (1f + stretch)
                     val thumbHeight = 22.dp * (1f - stretch * 0.4f)
-                    val trackBg = if (switch.first) Color(0xFFFF3B30).copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f)
+                    val trackBg = if (switch.first) Color.White.copy(alpha = 0.5f) else Color.White.copy(alpha = 0.1f)
                     val borderAlpha = if (switch.first) 0.3f else 0.15f
                     val thumbColor = if (switch.first) Color.White else Color(0xFFE0E0E0)
                     

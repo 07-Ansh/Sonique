@@ -90,7 +90,7 @@ fun DetailContentScreen(
         }
         DetailType.LOCAL_PLAYLIST -> {
             com.sonique.app.ui.screen.library.LocalPlaylistScreen(
-                id = id,
+                id = id.toLongOrNull() ?: 0L,
                 navController = navController,
                 onScrolling = onScrolling
             )
@@ -143,6 +143,8 @@ fun SharedDetailTemplate(
     downloadButtonContent: (@Composable () -> Unit)? = null,
     onPaletteGenerated: (List<Color>) -> Unit = {},
     lazyState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
+    listModifier: Modifier = Modifier,
+    additionalActions: @Composable RowScope.() -> Unit = {},
     content: LazyListScope.() -> Unit
 ) {
     val uriHandler = LocalUriHandler.current ?: androidx.compose.ui.platform.LocalUriHandler.current
@@ -187,7 +189,7 @@ fun SharedDetailTemplate(
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().then(listModifier),
             state = lazyState,
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
@@ -290,6 +292,8 @@ fun SharedDetailTemplate(
                         if (downloadButtonContent != null) {
                             downloadButtonContent()
                         }
+
+                        additionalActions()
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))

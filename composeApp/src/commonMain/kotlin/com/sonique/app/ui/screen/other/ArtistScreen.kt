@@ -144,315 +144,71 @@ fun ArtistScreen(
             }
 
             is ArtistScreenState.Success -> {
-                CollapsingToolbarParallaxEffect(
-                    modifier = Modifier.fillMaxSize(),
+                SharedDetailTemplate(
                     title = state.data.title ?: "",
-                    imageUrl = state.data.imageUrl,
-                    onBack = {
-                        onBack?.invoke() ?: navController.navigateUp()
+                    subtitle = state.data.subscribers ?: "",
+                    description = state.data.description ?: "",
+                    thumbnailUrl = state.data.imageUrl,
+                    isCircleImage = true,
+                    listColors = listColors,
+                    onBack = { onBack?.invoke() ?: navController.navigateUp() },
+                    playButtonContent = {
+                        val firstQueue = state.data.canvas.firstOrNull()?.second?.toTrack()
+                        RippleIconButton(
+                            resId = Res.drawable.baseline_play_circle_24,
+                            fillMaxSize = true,
+                            tint = seed,
+                            modifier = Modifier.size(48.dp),
+                        ) {
+                            if (firstQueue != null) {
+                                viewModel.playTrack(firstQueue)
+                            }
+                        }
                     },
-                    onScrolling = onScrolling,
-                ) { color ->
-                    Column {
-                        Column(
-                            Modifier
-                                .background(
-                                    Brush.verticalGradient(
-                                        colors =
-                                            listOf(
-                                                color.rgbFactor(0.5f),
-                                                md_theme_dark_background,
-                                            ),
-                                    ),
-                                ).padding(horizontal = 20.dp)
-                                .padding(top = 16.dp)
-                                .padding(bottom = 8.dp),
-                        ) {
-                            Row {
-                                Text(
-                                    text = state.data.subscribers ?: stringResource(Res.string.unknown),
-                                    style = typo().bodySmall,
-                                    color = Color.White,
-                                    textAlign = TextAlign.Start,
-                                    modifier = Modifier.weight(1f),
-                                )
-                                Text(
-                                    text = state.data.playCount ?: stringResource(Res.string.unknown),
-                                    style = typo().bodySmall,
-                                    color = Color.White,
-                                    textAlign = TextAlign.End,
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-                            Spacer(Modifier.height(8.dp))
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                AnimatedVisibility(canvasUrl != null) {
-                                    Row {
-                                        val canvas = canvasUrl ?: return@Row
-                                        LimitedBorderAnimationView(
-                                            isAnimated = true,
-                                            brush = Brush.sweepGradient(listOf(Color.Transparent, Color.White)),
-                                            backgroundColor = Color.Transparent,
-                                            contentPadding = 2.dp,
-                                            borderWidth = 1.dp,
-                                            shape = RoundedCornerShape(4.dp),
-                                            oneCircleDurationMillis = 3000,
-                                            interactionNumber = 1,
-                                        ) {
-                                            MediaPlayerView(
-                                                url = canvas.first,
-                                                modifier =
-                                                    Modifier
-                                                        .width(28.dp)
-                                                        .height(ButtonDefaults.MinHeight)
-                                                        .align(Alignment.CenterVertically)
-                                                        .border(
-                                                            width = 0.5.dp,
-                                                            color =
-                                                                Color.White.copy(
-                                                                    alpha = 0.8f,
-                                                                ),
-                                                            shape = RoundedCornerShape(4.dp),
-                                                        ).clip(RoundedCornerShape(4.dp))
-                                                        .clickable {
-                                                            val firstQueue: Track = canvas.second.toTrack()
-                                                            viewModel.setQueueData(
-                                                                QueueData.Data(
-                                                                    listTracks = arrayListOf(firstQueue),
-                                                                    firstPlayedTrack = firstQueue,
-                                                                    playlistId = "RDAMVM${firstQueue.videoId}",
-                                                                    playlistName = "\"${(state.data.title ?: "")}\" ${
-                                                                        getStringBlocking(
-                                                                            Res.string.popular,
-                                                                        )
-                                                                    }",
-                                                                    playlistType = PlaylistType.RADIO,
-                                                                    continuation = null,
-                                                                ),
-                                                            )
-                                                            viewModel.loadMediaItem(
-                                                                firstQueue,
-                                                                type = Config.SONG_CLICK,
-                                                            )
-                                                        },
-                                            )
-                                        }
-                                        Spacer(Modifier.width(12.dp))
-                                    }
-                                }
-                                LimitedBorderAnimationView(
-                                    isAnimated = !isFollowed,
-                                    brush = Brush.sweepGradient(listOf(Color.Gray, Color.White)),
-                                    backgroundColor = Color.Transparent,
-                                    contentPadding = 0.dp,
-                                    borderWidth = 2.dp,
-                                    shape = ButtonDefaults.outlinedShape,
-                                    oneCircleDurationMillis = 3000,
-                                    interactionNumber = 1,
-                                ) {
-                                    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                                        OutlinedButton(
-                                            onClick = {
-                                                viewModel.updateFollowed(
-                                                    if (isFollowed) 0 else 1,
-                                                    state.data.channelId ?: return@OutlinedButton,
-                                                )
-                                            },
-                                            colors =
-                                                ButtonDefaults.outlinedButtonColors().copy(
-                                                    contentColor = Color.White,
-                                                    containerColor = Color.Transparent,
-                                                ),
-                                        ) {
-                                            if (isFollowed) {
-                                                Text(text = stringResource(Res.string.followed), color = Color.White)
-                                            } else {
-                                                Text(text = stringResource(Res.string.follow), color = Color.White)
-                                            }
-                                        }
-                                    }
-                                }
-                                Spacer(Modifier.width(4.dp))
-                                IconButton(
-                                    onClick = {
-                                        if (state.data.shuffleParam != null) {
-                                            viewModel.onShuffleClick(state.data.shuffleParam)
-                                        } else {
-                                            viewModel.makeToast(runBlocking { getString(Res.string.error) })
-                                        }
-                                    },
-                                ) {
-                                    Icon(Icons.Outlined.Shuffle, "Shuffle")
-                                }
-                                Spacer(Modifier.weight(1f))
-                                TextButton(
-                                    onClick = {
-                                        if (state.data.radioParam != null) {
-                                            viewModel.onRadioClick(state.data.radioParam)
-                                        } else {
-                                            viewModel.makeToast(runBlocking { getString(Res.string.error) })
-                                        }
-                                    },
-                                    colors =
-                                        ButtonDefaults
-                                            .textButtonColors()
-                                            .copy(
-                                                contentColor = Color.White,
-                                            ),
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        Icon(Icons.Outlined.Sensors, "")
-                                        if (canvasUrl == null) {
-                                            Spacer(Modifier.width(6.dp))
-                                            Text(text = stringResource(Res.string.start_radio))
-                                        }
-                                    }
-                                }
-                            }
+                    onPaletteGenerated = { colors ->
+                        viewModel.setBrush(colors)
+                    },
+                    lazyState = lazyState
+                ) {
+                    // Popular Tracks section
+                    item {
+                        if (state.data.canvas.isNotEmpty()) {
+                            Text(
+                                text = stringResource(Res.string.popular_tracks),
+                                style = typo().labelMedium,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                            )
                         }
+                    }
 
-                         
-                        AnimatedVisibility(state.data.popularSongs.isNotEmpty()) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(horizontal = 20.dp),
-                                ) {
-                                    Text(
-                                        text = stringResource(Res.string.popular),
-                                        style = typo().labelMedium,
-                                        color = Color.White,
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                    TextButton(
-                                        onClick = {
-                                            val id = state.data.listSongParam
-                                            if (id != null) {
-                                                navController.navigate(PlaylistDestination(id))
-                                            } else {
-                                                viewModel.makeToast(runBlocking { getString(Res.string.error) })
-                                            }
-                                        },
-                                        colors =
-                                            ButtonDefaults
-                                                .textButtonColors()
-                                                .copy(
-                                                    contentColor = Color.White,
-                                                ),
-                                    ) {
-                                        Text(stringResource(Res.string.more), style = typo().bodySmall)
-                                    }
-                                }
-                                state.data.popularSongs.forEach { song ->
-                                    SongFullWidthItems(
-                                        track = song,
-                                        isPlaying = song.videoId == playingTrack,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onMoreClickListener = {
-                                            choosingTrack = song
-                                            showBottomSheet = true
-                                        },
-                                        onClickListener = {
-                                            val firstQueue: Track = song
-                                            viewModel.setQueueData(
-                                                QueueData.Data(
-                                                    listTracks = arrayListOf(firstQueue),
-                                                    firstPlayedTrack = firstQueue,
-                                                    playlistId = "RDAMVM${song.videoId}",
-                                                    playlistName = "\"${state.data.title ?: ""}\" ${getStringBlocking(Res.string.popular)}",
-                                                    playlistType = PlaylistType.RADIO,
-                                                    continuation = null,
-                                                ),
-                                            )
-                                            viewModel.loadMediaItem(
-                                                firstQueue,
-                                                type = Config.SONG_CLICK,
-                                            )
-                                        },
-                                        onAddToQueue = {
-                                            sharedViewModel.playNext(song)
-                                        },
-                                    )
-                                }
-                            }
-                        }
+                    items(count = state.data.canvas.size, key = { index ->
+                        state.data.canvas[index].first + "canvas_$index"
+                    }) { index ->
+                        val item = state.data.canvas[index]
+                        val track = item.second.toTrack()
+                        SongFullWidthItems(
+                            isPlaying = track.videoId == playingVideoId,
+                            index = index,
+                            track = track,
+                            onMoreClickListener = {
+                                choosingTrack = track
+                                showBottomSheet = true
+                            },
+                            onClickListener = {
+                                viewModel.playTrack(track)
+                            },
+                            onAddToQueue = {
+                                sharedViewModel.playNext(track)
+                            },
+                            modifier = Modifier.animateItem()
+                        )
+                    }
 
-                         
+                    // Albums section
+                    item {
                         AnimatedVisibility(
-                            state.data.singles != null &&
-                                state.data.singles.results
-                                    .isNotEmpty(),
-                        ) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(horizontal = 20.dp),
-                                ) {
-                                    Text(
-                                        text = stringResource(Res.string.singles),
-                                        style = typo().labelMedium,
-                                        color = Color.White,
-                                        modifier = Modifier.weight(1f),
-                                    )
-                                    TextButton(
-                                        onClick = {
-                                            if (state.data.channelId != null) {
-                                                val id = "MPAD${state.data.channelId}"
-                                                navController.navigate(
-                                                    MoreAlbumsDestination(
-                                                        id = id,
-                                                        type = MoreAlbumsDestination.SINGLE_TYPE,
-                                                    ),
-                                                )
-                                            } else {
-                                                viewModel.makeToast(getStringBlocking(Res.string.error))
-                                            }
-                                        },
-                                        colors =
-                                            ButtonDefaults
-                                                .textButtonColors()
-                                                .copy(
-                                                    contentColor = Color.White,
-                                                ),
-                                    ) {
-                                        Text(stringResource(Res.string.more), style = typo().bodySmall)
-                                    }
-                                }
-                                LazyRow(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
-                                    items(state.data.singles?.results ?: emptyList()) { single ->
-                                        HomeItemContentPlaylist(
-                                            onClick = {
-                                                navController.navigate(
-                                                    AlbumDestination(
-                                                        single.browseId,
-                                                    ),
-                                                )
-                                            },
-                                            data = single,
-                                            thumbSize = 180.dp,
-                                        )
-                                    }
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
-                                }
-                            }
-                        }
-
-                         
-                        AnimatedVisibility(
-                            state.data.albums != null &&
-                                state.data.albums.results
-                                    .isNotEmpty(),
+                            state.data.albums != null && state.data.albums.results.isNotEmpty()
                         ) {
                             Column {
                                 Row(
@@ -479,12 +235,7 @@ fun ArtistScreen(
                                                 viewModel.makeToast(getStringBlocking(Res.string.error))
                                             }
                                         },
-                                        colors =
-                                            ButtonDefaults
-                                                .textButtonColors()
-                                                .copy(
-                                                    contentColor = Color.White,
-                                                ),
+                                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                                     ) {
                                         Text(stringResource(Res.string.more), style = typo().bodySmall)
                                     }
@@ -492,34 +243,84 @@ fun ArtistScreen(
                                 LazyRow(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
                                     items(state.data.albums?.results ?: emptyList()) { album ->
                                         HomeItemContentPlaylist(
                                             onClick = {
                                                 navController.navigate(
-                                                    AlbumDestination(
-                                                        browseId = album.browseId,
-                                                    ),
+                                                    AlbumDestination(browseId = album.browseId)
                                                 )
                                             },
                                             data = album,
                                             thumbSize = 180.dp,
                                         )
                                     }
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
                                 }
                             }
                         }
+                    }
 
-                         
+                    // Singles section
+                    item {
                         AnimatedVisibility(
-                            state.data.video != null &&
-                                state.data.video.video
-                                    .isNotEmpty(),
+                            state.data.singles != null && state.data.singles.results.isNotEmpty()
+                        ) {
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 20.dp),
+                                ) {
+                                    Text(
+                                        text = stringResource(Res.string.singles),
+                                        style = typo().labelMedium,
+                                        color = Color.White,
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                    TextButton(
+                                        onClick = {
+                                            if (state.data.channelId != null) {
+                                                val id = "MPAD${state.data.channelId}"
+                                                navController.navigate(
+                                                    MoreAlbumsDestination(
+                                                        id = id,
+                                                        type = MoreAlbumsDestination.SINGLE_TYPE,
+                                                    ),
+                                                )
+                                            } else {
+                                                viewModel.makeToast(getStringBlocking(Res.string.error))
+                                            }
+                                        },
+                                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                                    ) {
+                                        Text(stringResource(Res.string.more), style = typo().bodySmall)
+                                    }
+                                }
+                                LazyRow(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    item { Spacer(Modifier.size(10.dp)) }
+                                    items(state.data.singles?.results ?: emptyList()) { album ->
+                                        HomeItemContentPlaylist(
+                                            onClick = {
+                                                navController.navigate(
+                                                    AlbumDestination(browseId = album.browseId)
+                                                )
+                                            },
+                                            data = album,
+                                            thumbSize = 180.dp,
+                                        )
+                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
+                                }
+                            }
+                        }
+                    }
+
+                    // Videos section
+                    item {
+                        AnimatedVisibility(
+                            state.data.video != null && state.data.video.video.isNotEmpty()
                         ) {
                             Column {
                                 Row(
@@ -536,21 +337,12 @@ fun ArtistScreen(
                                         onClick = {
                                             val videoListParam = state.data.video?.videoListParam
                                             if (videoListParam != null) {
-                                                navController.navigate(
-                                                    PlaylistDestination(
-                                                        videoListParam,
-                                                    ),
-                                                )
+                                                navController.navigate(PlaylistDestination(videoListParam))
                                             } else {
                                                 viewModel.makeToast(getStringBlocking(Res.string.error))
                                             }
                                         },
-                                        colors =
-                                            ButtonDefaults
-                                                .textButtonColors()
-                                                .copy(
-                                                    contentColor = Color.White,
-                                                ),
+                                        colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
                                     ) {
                                         Text(stringResource(Res.string.more), style = typo().bodySmall)
                                     }
@@ -558,9 +350,7 @@ fun ArtistScreen(
                                 LazyRow(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
                                     items(state.data.video?.video ?: emptyList()) { video ->
                                         HomeItemVideo(
                                             onClick = {
@@ -575,52 +365,12 @@ fun ArtistScreen(
                                                         continuation = null,
                                                     ),
                                                 )
-                                                viewModel.loadMediaItem(
-                                                    firstQueue,
-                                                    type = Config.VIDEO_CLICK,
-                                                )
+                                                viewModel.loadMediaItem(firstQueue, type = Config.VIDEO_CLICK)
                                             },
                                             onLongClick = {
                                                 choosingTrack = video
                                                 showBottomSheet = true
                                             },
-                                            data =
-                                                Content(
-                                                    album = null,
-                                                    artists = video.artists,
-                                                    description = null,
-                                                    isExplicit = video.isExplicit,
-                                                    playlistId = null,
-                                                    browseId = null,
-                                                    thumbnails = video.thumbnails ?: emptyList(),
-                                                    title = video.title,
-                                                    videoId = video.videoId,
-                                                    views = video.videoType,
-                                                ),
-                                        )
-                                    }
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
-                                }
-                            }
-                        }
-
-                         
-                        AnimatedVisibility(state.data.featuredOn.isNotEmpty()) {
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.padding(horizontal = 20.dp),
-                                ) {
-                                    Text(
-                                        text = stringResource(Res.string.featured_inArtist),
-                                        style = typo().labelMedium,
-                                        color = Color.White,
-                                        modifier =
-                                            Modifier
-                                                .weight(1f)
-                                                .padding(vertical = 10.dp),
                                     )
                                 }
                                 LazyRow(

@@ -174,250 +174,49 @@ fun PodcastScreen(
             is PodcastUIState.Success -> {
                 val data = state.data
                 val id = state.id
-                LazyColumn(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .background(md_theme_dark_background),
-                    state = lazyState,
-                ) {
-                    item(contentType = "header") {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .wrapContentHeight()
-                                    .background(Color.Transparent),
+                SharedDetailTemplate(
+                    title = data.title,
+                    subtitle = data.author.name + " • " + stringResource(Res.string.podcasts),
+                    description = data.description,
+                    thumbnailUrl = data.thumbnail.lastOrNull()?.url,
+                    listColors = gradientColors,
+                    onBack = { navController.navigateUp() },
+                    playButtonContent = {
+                        RippleIconButton(
+                            resId = Res.drawable.baseline_play_circle_24,
+                            fillMaxSize = true,
+                            tint = seed,
+                            modifier = Modifier.size(48.dp),
                         ) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth(),
-                            ) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(260.dp)
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .angledGradientBackground(gradientColors, 25f),
-                                )
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .height(180.dp)
-                                            .align(Alignment.BottomCenter)
-                                            .background(
-                                                brush =
-                                                    Brush.verticalGradient(
-                                                        listOf(
-                                                            Color.Transparent,
-                                                            overlayMedium,
-                                                            md_theme_dark_background,
-                                                        ),
-                                                    ),
-                                            ),
-                                )
-                            }
-                            Column(
-                                Modifier.background(Color.Transparent),
-                            ) {
-                                Row(
-                                    modifier =
-                                        Modifier
-                                            .wrapContentWidth()
-                                            .padding(16.dp)
-                                            .windowInsetsPadding(WindowInsets.statusBars),
-                                ) {
-                                    RippleIconButton(
-                                        resId = Res.drawable.baseline_arrow_back_ios_new_24,
-                                    ) {
-                                        navController.navigateUp()
-                                    }
-                                }
-                                Column(
-                                    horizontalAlignment = Alignment.Start,
-                                ) {
-                                    AsyncImage(
-                                        model =
-                                            ImageRequest
-                                                .Builder(LocalPlatformContext.current)
-                                                .data(data.thumbnail.lastOrNull()?.url)
-                                                .diskCachePolicy(CachePolicy.ENABLED)
-                                                .diskCacheKey(data.thumbnail.lastOrNull()?.url)
-                                                .crossfade(true)
-                                                .build(),
-                                        placeholder = painterResource(Res.drawable.holder),
-                                        error = painterResource(Res.drawable.holder),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.FillHeight,
-                                        onSuccess = {
-                                            bitmap =
-                                                it.result.image
-                                                    .toBitmap()
-                                                    .asImageBitmap()
-                                        },
-                                        modifier =
-                                            Modifier
-                                                .height(250.dp)
-                                                .wrapContentWidth()
-                                                .align(Alignment.CenterHorizontally)
-                                                .clip(RoundedCornerShape(8.dp)),
-                                    )
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .fillMaxWidth()
-                                                .wrapContentHeight(),
-                                    ) {
-                                        Column(Modifier.padding(horizontal = 32.dp)) {
-                                            Spacer(modifier = Modifier.size(25.dp))
-                                            Text(
-                                                text = data.title,
-                                                style = typo().titleLarge,
-                                                color = Color.White,
-                                                maxLines = 2,
-                                            )
-                                            Column(
-                                                modifier = Modifier.padding(vertical = 8.dp),
-                                            ) {
-                                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                                    AsyncImage(
-                                                        model =
-                                                            ImageRequest
-                                                                .Builder(LocalPlatformContext.current)
-                                                                .data(data.authorThumbnail)
-                                                                .diskCachePolicy(CachePolicy.ENABLED)
-                                                                .diskCacheKey(data.authorThumbnail)
-                                                                .crossfade(true)
-                                                                .build(),
-                                                        placeholder = painterResource(Res.drawable.holder),
-                                                        error = painterResource(Res.drawable.holder),
-                                                        contentDescription = null,
-                                                        modifier =
-                                                            Modifier
-                                                                .size(25.dp)
-                                                                .clip(
-                                                                    CircleShape,
-                                                                ),
-                                                    )
-                                                    Spacer(modifier = Modifier.size(8.dp))
-                                                    CompositionLocalProvider(
-                                                        LocalMinimumInteractiveComponentSize provides Dp.Unspecified,
-                                                    ) {
-                                                        TextButton(
-                                                            modifier =
-                                                                Modifier
-                                                                    .wrapContentHeight()
-                                                                    .defaultMinSize(minHeight = 1.dp, minWidth = 1.dp),
-                                                            contentPadding = PaddingValues(vertical = 1.dp),
-                                                            onClick = {
-                                                                val authorId = data.author.id
-                                                                if (authorId.isNullOrEmpty().not()) {
-                                                                    navController.navigate(
-                                                                        ArtistDestination(
-                                                                            authorId,
-                                                                        ),
-                                                                    )
-                                                                }
-                                                            },
-                                                        ) {
-                                                            Text(
-                                                                text = data.author.name,
-                                                                style = typo().labelSmall,
-                                                                color = Color.White,
-                                                            )
-                                                        }
-                                                    }
-                                                }
-                                                Spacer(modifier = Modifier.size(8.dp))
-                                                Text(
-                                                    text = stringResource(Res.string.podcasts),
-                                                    style = typo().bodyMedium,
-                                                )
-                                            }
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                            ) {
-                                                 
-                                                RippleIconButton(
-                                                    resId = Res.drawable.baseline_play_circle_24,
-                                                    fillMaxSize = true,
-                                                    modifier = Modifier.size(36.dp),
-                                                ) {
-                                                    viewModel.onUIEvent(PodcastUIEvent.PlayAll(id))
-                                                }
-
-                                                 
-                                                HeartCheckBox(
-                                                    size = 32,
-                                                    checked = isFavorite,
-                                                    onStateChange = {
-                                                        viewModel.onUIEvent(
-                                                            PodcastUIEvent.ToggleFavorite(
-                                                                id,
-                                                                !isFavorite,
-                                                            ),
-                                                        )
-                                                    },
-                                                )
-
-                                                Spacer(Modifier.weight(1f))
-
-                                                 
-                                                RippleIconButton(
-                                                    modifier = Modifier.size(36.dp),
-                                                    resId = Res.drawable.baseline_shuffle_24,
-                                                    fillMaxSize = true,
-                                                ) {
-                                                    viewModel.onUIEvent(PodcastUIEvent.Shuffle(id))
-                                                }
-
-                                                Spacer(Modifier.size(5.dp))
-
-                                                 
-                                                RippleIconButton(
-                                                    modifier = Modifier.size(36.dp),
-                                                    resId = Res.drawable.baseline_share_24,
-                                                    fillMaxSize = true,
-                                                ) {
-                                                    viewModel.onUIEvent(PodcastUIEvent.Share(id))
-                                                }
-                                            }
-
-                                             
-                                            val uriHandler = LocalUriHandler.current
-                                            DescriptionView(
-                                                modifier = Modifier.padding(top = 8.dp),
-                                                text = data.description ?: stringResource(Res.string.no_description),
-                                                limitLine = 3,
-                                                onTimeClicked = {},
-                                                onURLClicked = { url ->
-                                                    uriHandler.openUri(url)
-                                                },
-                                            )
-
-                                            Text(
-                                                text =
-                                                    stringResource(
-                                                        Res.string.album_length,
-                                                        data.listEpisode.size.toString(),
-                                                        "",
-                                                    ),
-                                                color = Color.White,
-                                                style = typo().bodyMedium,
-                                                modifier = Modifier.padding(vertical = 8.dp),
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                            viewModel.onUIEvent(PodcastUIEvent.PlayAll(id))
                         }
-                    }
-
-                     
+                    },
+                    onShuffleClick = {
+                        viewModel.onUIEvent(PodcastUIEvent.Shuffle(id))
+                    },
+                    onHeartClick = {
+                        HeartCheckBox(
+                            size = 32,
+                            checked = isFavorite,
+                            onStateChange = {
+                                viewModel.onUIEvent(PodcastUIEvent.ToggleFavorite(id, !isFavorite))
+                            },
+                        )
+                    },
+                    additionalActions = {
+                        RippleIconButton(
+                            modifier = Modifier.size(36.dp),
+                            resId = Res.drawable.baseline_share_24,
+                            fillMaxSize = true,
+                        ) {
+                            viewModel.onUIEvent(PodcastUIEvent.Share(id))
+                        }
+                    },
+                    onPaletteGenerated = { colors ->
+                        gradientColors = colors
+                    },
+                    lazyState = lazyState
+                ) {
                     items(count = data.listEpisode.size, key = { index ->
                         val item = data.listEpisode.getOrNull(index)
                         (item?.videoId ?: "") + "item_$index"
@@ -427,12 +226,7 @@ fun PodcastScreen(
                             PodcastEpisodeFullWidthItem(
                                 episode = episode,
                                 onClick = {
-                                    viewModel.onUIEvent(
-                                        PodcastUIEvent.EpisodeClick(
-                                            episode.videoId,
-                                            id,
-                                        ),
-                                    )
+                                    viewModel.onUIEvent(PodcastUIEvent.EpisodeClick(episode.videoId, id))
                                 },
                                 onMoreClickListener = {
                                     currentTrack = episode.toTrack()
@@ -445,46 +239,6 @@ fun PodcastScreen(
                     item {
                         EndOfPage()
                     }
-                }
-                 
-                AnimatedVisibility(
-                    visible = shouldHideTopBar,
-                    enter = fadeIn() + slideInVertically(),
-                    exit = fadeOut() + slideOutVertically(),
-                ) {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                text = data.title,
-                                style = typo().titleMedium,
-                                maxLines = 1,
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentHeight(align = Alignment.CenterVertically)
-                                        .basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            animationMode = MarqueeAnimationMode.Immediately,
-                                        ).focusable(),
-                            )
-                        },
-                        navigationIcon = {
-                            Box(Modifier.padding(horizontal = 5.dp)) {
-                                RippleIconButton(
-                                    Res.drawable.baseline_arrow_back_ios_new_24,
-                                    Modifier.size(32.dp),
-                                    true,
-                                ) {
-                                    navController.navigateUp()
-                                }
-                            }
-                        },
-                        colors =
-                            TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                            ),
-                        modifier = Modifier.angledGradientBackground(gradientColors, 90f),
-                    )
                 }
 
                 if (shouldShowMoreBottomSheet) {

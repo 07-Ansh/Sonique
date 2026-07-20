@@ -87,7 +87,7 @@ import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
 import sonique.composeapp.generated.resources.baseline_share_24
-import sonique.composeapp.generated.resources.fullscreen
+import sonique.composeapp.generated.resources.baseline_repeat_one_24
 import sonique.composeapp.generated.resources.lyrics
 import sonique.composeapp.generated.resources.more_horiz
 import sonique.composeapp.generated.resources.pause
@@ -101,6 +101,7 @@ import sonique.composeapp.generated.resources.shuffle_on
 import sonique.composeapp.generated.resources.skip_next
 import sonique.composeapp.generated.resources.skip_previous
 import sonique.composeapp.generated.resources.timer
+import com.sonique.app.ui.component.NowPlayingBottomSheet
 import kotlin.math.roundToLong
 
 // Matches Metrolist constants
@@ -117,6 +118,7 @@ fun NewPlayerScreen(
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
+    val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val trackTitle = currentSongData?.nowPlayingTitle ?: ""
@@ -127,6 +129,7 @@ fun NewPlayerScreen(
     var showQueueSheet by remember { mutableStateOf(false) }
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
+    var showMoreOptions by remember { mutableStateOf(false) }
 
     // ── Colors — matching Metrolist BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
@@ -629,10 +632,10 @@ fun NewPlayerScreen(
                     onClick = { showSleepTimerDialog = true }
                 )
 
-                // Shuffle button
+                // Shuffle button — use transparent shuffle drawable always to prevent black background box
                 val isShuffle = controllerState.isShuffle
                 PlayerQueueButton(
-                    icon = if (isShuffle) Res.drawable.shuffle_on else Res.drawable.shuffle,
+                    icon = Res.drawable.shuffle,
                     isActive = isShuffle,
                     shape = middleShape,
                     modifier = Modifier.size(buttonSize),
@@ -656,15 +659,11 @@ fun NewPlayerScreen(
                     onClick = { if (hasLyrics) showInlineLyrics = !showInlineLyrics }
                 )
 
-                // Repeat button
+                // Repeat button — use transparent repeat/repeat_one drawables always
                 val isRepeat = controllerState.repeatState != RepeatState.None
                 val isRepeatOne = controllerState.repeatState == RepeatState.One
                 PlayerQueueButton(
-                    icon = if (isRepeat) {
-                        if (isRepeatOne) Res.drawable.repeat_one_on else Res.drawable.repeat_on
-                    } else {
-                        Res.drawable.repeat
-                    },
+                    icon = if (isRepeatOne) Res.drawable.baseline_repeat_one_24 else Res.drawable.repeat,
                     isActive = isRepeat,
                     shape = repeatShape,
                     modifier = Modifier.size(buttonSize),
@@ -676,13 +675,13 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // More button — navigate to full NowPlayingScreen
+                // More button — shows NowPlayingBottomSheet instead of crashing with navigation
                 Box(
                     modifier = Modifier
                         .size(buttonSize)
                         .clip(CircleShape)
                         .background(textButtonColor)
-                        .clickable { navController.navigate("nowPlaying") },
+                        .clickable { showMoreOptions = true },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -692,6 +691,17 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(iconSize)
                     )
                 }
+            }
+
+            // ── More options bottom sheet ────────────────────────────────────
+            if (showMoreOptions) {
+                NowPlayingBottomSheet(
+                    onDismiss = { showMoreOptions = false },
+                    navController = navController,
+                    onNavigateToOtherScreen = { showMoreOptions = false },
+                    song = nowPlayingState?.songEntity,
+                    setSleepTimerEnable = true
+                )
             }
 
             // ── Sleep timer info dialog ──────────────────────────────────────

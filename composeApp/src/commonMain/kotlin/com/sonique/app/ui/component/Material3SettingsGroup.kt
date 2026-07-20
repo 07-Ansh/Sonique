@@ -42,6 +42,7 @@ import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.ui.component.liquidGlass
 import com.sonique.app.viewModel.SharedViewModel
 import org.koin.compose.koinInject
+import androidx.compose.material3.Switch
 
 /**
  * A Material 3 Expressive style settings group component
@@ -127,12 +128,18 @@ fun Material3SettingsGroup(
 private fun Material3SettingsItemRow(
     item: Material3SettingsItem
 ) {
+    val rowOnClick = if (item.isSwitch && item.onCheckedChange != null) {
+        { item.onCheckedChange.invoke(!item.checked) }
+    } else {
+        item.onClick
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
-                enabled = item.enabled && item.onClick != null,
-                onClick = { item.onClick?.invoke() }
+                enabled = item.enabled && (rowOnClick != null),
+                onClick = { rowOnClick?.invoke() }
             )
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -224,7 +231,19 @@ private fun Material3SettingsItemRow(
         }
 
         // Trailing content
-        item.trailingContent?.let { trailing ->
+        val trailingContent = item.trailingContent ?: if (item.isSwitch && item.onCheckedChange != null) {
+            @Composable {
+                Switch(
+                    checked = item.checked,
+                    onCheckedChange = item.onCheckedChange,
+                    enabled = item.enabled
+                )
+            }
+        } else {
+            null
+        }
+
+        trailingContent?.let { trailing ->
             Spacer(modifier = Modifier.width(8.dp))
             trailing()
         }
@@ -243,5 +262,8 @@ data class Material3SettingsItem(
     val showBadge: Boolean = false,
     val isHighlighted: Boolean = false,
     val enabled: Boolean = true,
-    val onClick: (() -> Unit)? = null
+    val onClick: (() -> Unit)? = null,
+    val isSwitch: Boolean = false,
+    val checked: Boolean = false,
+    val onCheckedChange: ((Boolean) -> Unit)? = null
 )

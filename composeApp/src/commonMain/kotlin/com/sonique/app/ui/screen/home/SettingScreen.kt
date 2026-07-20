@@ -476,6 +476,7 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                             Material3SettingsItem(
                                 title = { Text("Apple Liquid Glass") },
                                 description = { Text("Apple-style floating bottom layout with real-time backdrop luminance sensing") },
+                                onClick = { viewModel.setEnableLiquidGlass(!enableLiquidGlass) },
                                 trailingContent = {
                                     Switch(
                                         checked = enableLiquidGlass,
@@ -489,6 +490,7 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                                 Material3SettingsItem(
                                     title = { Text("Page Transitions") },
                                     description = { Text("Enable sliding animation when switching pages") },
+                                    onClick = { viewModel.setEnablePageTransitions(!enablePageTransitions) },
                                     trailingContent = {
                                         Switch(
                                             checked = enablePageTransitions,

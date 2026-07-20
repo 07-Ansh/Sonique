@@ -118,12 +118,21 @@
     <string name="save_all_your_playlist_data">Save all your playlist data</string>
     <string name="restore_your_data">Restore Your Data</string>
     <string name="restore_your_saved_data">Restore your saved data</string>
-    <string name="about_us">About us</string>
+    <string name="about_us">About</string>
     <string name="version">Version</string>
 
     <string name="maxrave_dev">Developer</string>
     <string name="ansh_sharma">Ansh Sharma</string>
+    <string name="credits_lead_developer">Lead Developer</string>
+    <string name="wanna_play_favorite_song">Want to play the developer\'s favorite song?</string>
+    <string name="yeah">Yeah!</string>
+    <string name="credits_source_code">Source Code</string>
+    <string name="credits_view_repo">View Repository</string>
+    <string name="credits_license_name">License</string>
+    <string name="credits_license_desc">GNU General Public License v3.0</string>
+    <string name="community_and_info">Community &amp; Info</string>
     <string name="buy_me_a_coffee">Buy me a coffee</string>
+    <string name="buy_ansh_a_coffee">Buy Ansh a coffee ☕</string>
     <string name="paypal">PayPal</string>
     <string name="title">Title</string>
     <string name="custom_order">Custom order</string>

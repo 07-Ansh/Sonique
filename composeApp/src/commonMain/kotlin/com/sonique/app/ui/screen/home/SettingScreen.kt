@@ -1162,111 +1162,397 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
 @Composable
 private fun AboutSettingsContent(navController: NavController) {
     val uriHandler = LocalUriHandler.current
+    val sharedViewModel: SharedViewModel = koinInject()
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = 140.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // ── Hero Section ───────────────────────────────────────────
-        item {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Minimal App Icon
-            Image(
-                painter = painterResource(Res.drawable.app_icon),
-                contentDescription = "Sonique",
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(18.dp))
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // App Name
-            Text(
-                text = "Sonique",
-                style = MaterialTheme.typography.headlineLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = (-0.5).sp
-                ),
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Version string
-            Text(
-                text = "Version v${VersionManager.getVersionName()}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // ── Info List ──────────────────────────────────────────────
-        item {
-            MinimalLinkRow(
-                icon = Icons.Outlined.Person,
-                title = "Developer",
-                subtitle = stringResource(Res.string.ansh_sharma),
-                onClick = { }
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-        }
-
-        item {
-            MinimalLinkRow(
-                icon = Icons.Outlined.Code,
-                title = "Source Code",
-                subtitle = "github.com/07-Ansh/Sonique",
-                onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") }
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-        }
-
-        item {
-            MinimalLinkRow(
-                icon = Icons.Outlined.Info,
-                title = "Build Information",
-                subtitle = "Build code ${VersionManager.getVersionCode()}",
-                onClick = { }
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-        }
-
-        item {
-            MinimalLinkRow(
-                icon = Icons.Outlined.Favorite,
-                title = "Support",
-                subtitle = "Buy me a coffee ☕",
-                onClick = { uriHandler.openUri("https://buymeacoffee.com/07ansh") }
-            )
-            Spacer(modifier = Modifier.height(48.dp))
-        }
-
-        // ── Footer ────────────────────────────────────────────────
-        item {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Made with ❤️ and Kotlin",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "© 2024 Sonique",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
-                )
+    // Cookie/blob polygon shape — mirrors Metrolist's MaterialShapes.Cookie9Sided
+    val cookieBlobShape = remember {
+        androidx.compose.foundation.shape.GenericShape { size, _ ->
+            val cx = size.width / 2f
+            val cy = size.height / 2f
+            val outerR = size.width / 2f
+            var first = true
+            val points = 360
+            for (i in 0..points) {
+                val angle = (i * 2.0 * Math.PI / points).toFloat()
+                // Polar equation for a 9-lobed cookie splat
+                // Base radius is 80%, lobes push out by 15% and bites go in by 15%
+                val r = outerR * (0.8f + 0.15f * kotlin.math.sin(9f * angle))
+                
+                val px = cx + r * kotlin.math.cos(angle)
+                val py = cy + r * kotlin.math.sin(angle)
+                
+                if (first) {
+                    moveTo(px, py)
+                    first = false
+                } else {
+                    lineTo(px, py)
+                }
             }
+            close()
         }
     }
+
+    // Developer info
+    val devName = "Ansh Sharma"
+    val devGitHub = "07-Ansh"
+    val devAvatarUrl = "https://github.com/$devGitHub.png"
+    val devFavSongVideoId = "dQw4w9WgXcQ"
+
+    // Strings
+    val wannaPlay = stringResource(Res.string.wanna_play_favorite_song)
+    val yeah = stringResource(Res.string.yeah)
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 140.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item { Spacer(Modifier.height(16.dp)) }
+
+            // ── App Header Card ───────────────────────────────────────────
+            item {
+                ElevatedCard(
+                    shape = RoundedCornerShape(32.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.app_icon),
+                            contentDescription = "Sonique",
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(20.dp)),
+                        )
+                        Spacer(Modifier.width(20.dp))
+                        Column {
+                            Text(
+                                text = "Sonique",
+                                style = MaterialTheme.typography.headlineLarge,
+                                fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                letterSpacing = (-0.5).sp,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                ) {
+                                    Text(
+                                        text = "v${VersionManager.getVersionName()}",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f),
+                                ) {
+                                    Text(
+                                        text = "Open Source",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(24.dp))
+            }
+
+            // ── Lead Developer Hero Card ──────────────────────────────────
+            item {
+                var leadClickCount by remember { mutableIntStateOf(0) }
+                val fallback = painterResource(Res.drawable.app_icon)
+
+                ElevatedCard(
+                    shape = RoundedCornerShape(32.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            // Developer avatar with easter egg tap
+                            Surface(
+                                onClick = {
+                                    val newCount = leadClickCount + 1
+                                    leadClickCount = newCount
+                                    if (newCount >= 3) {
+                                        leadClickCount = 0
+                                        coroutineScope.launch {
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = wannaPlay,
+                                                actionLabel = yeah,
+                                                duration = SnackbarDuration.Short,
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                sharedViewModel.loadSharedMediaItem(devFavSongVideoId)
+                                            }
+                                        }
+                                    }
+                                },
+                                modifier = Modifier.size(110.dp),
+                                shape = cookieBlobShape,
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                tonalElevation = 4.dp,
+                            ) {
+                                AsyncImage(
+                                    model = devAvatarUrl,
+                                    contentDescription = devName,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                    placeholder = fallback,
+                                    fallback = fallback,
+                                    error = fallback,
+                                )
+                            }
+
+                            Column(verticalArrangement = Arrangement.Center) {
+                                Text(
+                                    text = devName,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Black,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    lineHeight = 34.sp,
+                                    letterSpacing = (-0.5).sp,
+                                )
+                                Text(
+                                    text = stringResource(Res.string.credits_lead_developer),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        // Social buttons row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            FilledTonalButton(
+                                onClick = { uriHandler.openUri("https://github.com/$devGitHub") },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.baseline_arrow_outward_24),
+                                    contentDescription = "GitHub",
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("GitHub", style = MaterialTheme.typography.labelMedium)
+                            }
+                            FilledTonalButton(
+                                onClick = { uriHandler.openUri("https://github.com/$devGitHub/Sonique") },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.metro_link),
+                                    contentDescription = "Repo",
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("Repo", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Buy coffee full-width button
+                        Button(
+                            onClick = { uriHandler.openUri("https://buymeacoffee.com/07ansh") },
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            shape = CircleShape,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.buymeacoffee),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = "Buy me a coffee",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 15.sp,
+                            )
+                        }
+                    }
+                }
+                Spacer(Modifier.height(32.dp))
+            }
+
+            // ── Community & Info Group ────────────────────────────────────
+            item {
+                Text(
+                    text = stringResource(Res.string.community_and_info).uppercase(),
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, bottom = 8.dp),
+                )
+                ElevatedCard(
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    ),
+                ) {
+                    // View Repo
+                    Surface(
+                        onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") },
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.baseline_arrow_outward_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Text(
+                                text = stringResource(Res.string.credits_view_repo),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+
+                    // Source Code
+                    Surface(
+                        onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") },
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.metro_link),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Text(
+                                text = stringResource(Res.string.credits_source_code),
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                    HorizontalDivider(modifier = Modifier.padding(start = 56.dp))
+
+                    // License
+                    Surface(
+                        onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique/blob/main/LICENSE") },
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.baseline_info_24),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(Res.string.credits_license_name),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(Res.string.credits_license_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+                Spacer(Modifier.height(48.dp))
+            }
+
+            // ── Footer ────────────────────────────────────────────────────
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Made with ❤️ and Kotlin",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = "© 2025 Sonique",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    )
+                }
+            }
+        }
+
+        // Snackbar overlay for easter egg
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
 }
+
 
 @Composable
 private fun MinimalLinkRow(

@@ -5,19 +5,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import com.sonique.app.expect.ui.rememberBackdrop
-import com.sonique.app.ui.component.SettingItem
-import com.sonique.app.ui.component.SettingsSectionHeader
+import com.sonique.app.ui.component.Material3SettingsGroup
+import com.sonique.app.ui.component.Material3SettingsItem
 import com.sonique.app.ui.component.liquidGlass
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UpdateViewModel
@@ -40,7 +42,6 @@ fun SettingsUpdateScreen(
     val autoCheckForUpdates = autoCheckForUpdatesString == "TRUE"
     val coroutineScope = rememberCoroutineScope()
     var updateNotifications by remember { mutableStateOf(true) }
-    var showChangelog by remember { mutableStateOf(false) }
 
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
     val latestReleaseInfo by updateViewModel.latestReleaseInfo.collectAsStateWithLifecycle()
@@ -50,6 +51,7 @@ fun SettingsUpdateScreen(
 
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
+    var showChangelog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -85,45 +87,61 @@ fun SettingsUpdateScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(bottom = 80.dp)
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                SettingsSectionHeader(stringResource(Res.string.current_version))
-            }
-            item {
-                SettingItem(
-                    title = stringResource(Res.string.version_format, currentVersion),
-                    subtitle = "OpenSource"
+                Material3SettingsGroup(
+                    title = stringResource(Res.string.current_version),
+                    items = listOf(
+                        Material3SettingsItem(
+                            title = { Text(stringResource(Res.string.version_format, currentVersion)) },
+                            description = { Text("OpenSource") }
+                        )
+                    )
                 )
             }
 
             item {
-                SettingsSectionHeader(stringResource(Res.string.update_settings))
-            }
-            item {
-                SettingItem(
-                    title = stringResource(Res.string.auto_check_for_update),
-                    subtitle = "Check for updates automatically when opening the app",
-                    switch = autoCheckForUpdates to { checked ->
-                        coroutineScope.launch {
-                            dataStoreManager.setAutoCheckForUpdates(checked)
+                val updateSettingsItems = mutableListOf<Material3SettingsItem>()
+                updateSettingsItems.add(
+                    Material3SettingsItem(
+                        title = { Text(stringResource(Res.string.auto_check_for_update)) },
+                        description = { Text("Check for updates automatically when opening the app") },
+                        trailingContent = {
+                            Switch(
+                                checked = autoCheckForUpdates,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        dataStoreManager.setAutoCheckForUpdates(checked)
+                                    }
+                                }
+                            )
                         }
-                    }
+                    )
                 )
-            }
-            if (autoCheckForUpdates) {
-                item {
-                    SettingItem(
-                        title = stringResource(Res.string.update_notifications),
-                        switch = updateNotifications to { updateNotifications = it }
+                if (autoCheckForUpdates) {
+                    updateSettingsItems.add(
+                        Material3SettingsItem(
+                            title = { Text(stringResource(Res.string.update_notifications)) },
+                            trailingContent = {
+                                Switch(
+                                    checked = updateNotifications,
+                                    onCheckedChange = { updateNotifications = it }
+                                )
+                            }
+                        )
                     )
                 }
+
+                Material3SettingsGroup(
+                    title = stringResource(Res.string.update_settings),
+                    items = updateSettingsItems
+                )
             }
 
-            item {
-                SettingsSectionHeader(stringResource(Res.string.check_for_updates_title))
-            }
             item {
                 val titleText = when {
                     isChecking -> stringResource(Res.string.checking_for_updates)
@@ -131,78 +149,97 @@ fun SettingsUpdateScreen(
                     latestReleaseInfo != null -> stringResource(Res.string.latest_version_format, latestReleaseInfo!!.version)
                     else -> stringResource(Res.string.check_for_updates_button)
                 }
-                SettingItem(
-                    title = titleText,
-                    onClick = {
-                        if (!isChecking) {
-                            updateViewModel.manualCheckForUpdate()
-                        }
-                    },
-                    loading = isChecking
+                Material3SettingsGroup(
+                    title = stringResource(Res.string.check_for_updates_title),
+                    items = listOf(
+                        Material3SettingsItem(
+                            icon = rememberVectorPainter(Icons.Default.Refresh),
+                            title = { Text(titleText) },
+                            onClick = {
+                                if (!isChecking) {
+                                    updateViewModel.manualCheckForUpdate()
+                                }
+                            },
+                            enabled = !isChecking
+                        )
+                    )
                 )
             }
 
             // Downloader controls / status
             if (updateAvailable != null) {
                 item {
-                    SettingsSectionHeader("Installation")
-                }
-                item {
+                    val installationItems = mutableListOf<Material3SettingsItem>()
                     when (downloadStatus) {
                         is SharedViewModel.DownloadStatus.Idle -> {
-                            SettingItem(
-                                title = "Download Update",
-                                subtitle = "Click to start downloading the new version.",
-                                onClick = {
-                                    val release = updateAvailable!!
-                                    sharedViewModel.downloadAppUpdate(release.downloadUrl, release.title)
-                                }
+                            installationItems.add(
+                                Material3SettingsItem(
+                                    title = { Text("Download Update") },
+                                    description = { Text("Click to start downloading the new version.") },
+                                    onClick = {
+                                        val release = updateAvailable!!
+                                        sharedViewModel.downloadAppUpdate(release.downloadUrl, release.title)
+                                    }
+                                )
                             )
                         }
                         is SharedViewModel.DownloadStatus.Downloading -> {
                             val progress = (downloadStatus as SharedViewModel.DownloadStatus.Downloading).progress
-                            SettingItem(
-                                title = "Downloading... ${(progress * 100).toInt()}%",
-                                otherView = {
-                                    LinearProgressIndicator(
-                                        progress = { progress },
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                                    )
-                                },
-                                onClick = { sharedViewModel.cancelDownload() }
+                            installationItems.add(
+                                Material3SettingsItem(
+                                    title = { Text("Downloading... ${(progress * 100).toInt()}%") },
+                                    description = {
+                                        LinearProgressIndicator(
+                                            progress = { progress },
+                                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                        )
+                                    },
+                                    onClick = { sharedViewModel.cancelDownload() }
+                                )
                             )
                         }
                         is SharedViewModel.DownloadStatus.Verifying -> {
-                            SettingItem(
-                                title = "Verifying update...",
-                                otherView = {
-                                    LinearProgressIndicator(
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
-                                    )
-                                }
+                            installationItems.add(
+                                Material3SettingsItem(
+                                    title = { Text("Verifying update...") },
+                                    description = {
+                                        LinearProgressIndicator(
+                                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                                        )
+                                    }
+                                )
                             )
                         }
                         is SharedViewModel.DownloadStatus.Downloaded -> {
                             val path = (downloadStatus as SharedViewModel.DownloadStatus.Downloaded).path
-                            SettingItem(
-                                title = "Install Update",
-                                subtitle = "Ready to install. Click to open installer.",
-                                onClick = { sharedViewModel.installUpdate(path) }
+                            installationItems.add(
+                                Material3SettingsItem(
+                                    title = { Text("Install Update") },
+                                    description = { Text("Ready to install. Click to open installer.") },
+                                    onClick = { sharedViewModel.installUpdate(path) }
+                                )
                             )
                         }
                     }
+
+                    Material3SettingsGroup(
+                        title = "Installation",
+                        items = installationItems
+                    )
                 }
 
                 // Changelog
                 val releaseToDisplay = updateAvailable ?: latestReleaseInfo
                 if (releaseToDisplay != null) {
                     item {
-                        SettingsSectionHeader("Release Notes")
-                    }
-                    item {
-                        SettingItem(
-                            title = if (showChangelog) "Hide Changelog" else "View Changelog",
-                            onClick = { showChangelog = !showChangelog }
+                        Material3SettingsGroup(
+                            title = "Release Notes",
+                            items = listOf(
+                                Material3SettingsItem(
+                                    title = { Text(if (showChangelog) "Hide Changelog" else "View Changelog") },
+                                    onClick = { showChangelog = !showChangelog }
+                                )
+                            )
                         )
                     }
                     if (showChangelog) {
@@ -210,7 +247,7 @@ fun SettingsUpdateScreen(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .padding(vertical = 8.dp)
                             ) {
                                 Markdown(
                                     content = releaseToDisplay.changelog,

@@ -58,21 +58,13 @@ fun SettingsUpdateScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(Res.string.updater)
+                        text = stringResource(Res.string.update)
                     )
                 },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .then(
-                                if (enableLiquidGlass) {
-                                    Modifier.liquidGlass(backdrop, shape = CircleShape, interactive = true)
-                                } else {
-                                    Modifier
-                                }
-                            )
+                        modifier = Modifier.clip(CircleShape)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,

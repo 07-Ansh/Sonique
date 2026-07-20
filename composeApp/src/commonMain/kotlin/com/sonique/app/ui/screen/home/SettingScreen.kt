@@ -1419,11 +1419,6 @@ private fun AboutSettingsContent(navController: NavController) {
                     items = listOf(
                         Material3SettingsItem(
                             iconPainter = painterResource(Res.drawable.ic_github),
-                            title = { Text(stringResource(Res.string.credits_view_repo)) },
-                            onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") }
-                        ),
-                        Material3SettingsItem(
-                            iconPainter = painterResource(Res.drawable.ic_github),
                             title = { Text(stringResource(Res.string.credits_source_code)) },
                             onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") }
                         ),

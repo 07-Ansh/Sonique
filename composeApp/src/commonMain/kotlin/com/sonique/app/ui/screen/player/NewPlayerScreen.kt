@@ -63,6 +63,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -105,6 +108,20 @@ import sonique.composeapp.generated.resources.baseline_access_alarm_24
 import sonique.composeapp.generated.resources.baseline_fullscreen_24
 import sonique.composeapp.generated.resources.more_horiz
 import sonique.composeapp.generated.resources.fullscreen
+import sonique.composeapp.generated.resources.timer
+import sonique.composeapp.generated.resources.shuffle_on
+import sonique.composeapp.generated.resources.shuffle
+import sonique.composeapp.generated.resources.lyrics
+import sonique.composeapp.generated.resources.repeat_one_on
+import sonique.composeapp.generated.resources.repeat_on
+import sonique.composeapp.generated.resources.repeat
+import sonique.composeapp.generated.resources.skip_previous
+import sonique.composeapp.generated.resources.skip_next
+import sonique.composeapp.generated.resources.favorite
+import sonique.composeapp.generated.resources.favorite_border
+import sonique.composeapp.generated.resources.play
+import sonique.composeapp.generated.resources.pause
+import sonique.composeapp.generated.resources.queue_music
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToLong
 
@@ -120,136 +137,119 @@ fun NewPlayerScreen(
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
 
-    var showInlineLyrics by remember { mutableStateOf(false) }
-
     val trackTitle = currentSongData?.nowPlayingTitle ?: ""
     val trackArtist = currentSongData?.artistName ?: ""
     val trackArtwork = currentSongData?.thumbnailURL ?: ""
 
-    // Setup active/inactive colors & backgrounds matching Metrolist Blur Style
+    // Spacings and Colors matching Metrolist code perfectly
     val TextBackgroundColor = Color.White
-    val buttonBgColor = Color.White
-    val buttonIconColor = Color.Black
+    val textButtonColor = Color.White
+    val iconButtonColor = Color.Black
     val sideButtonContainerColor = Color.White.copy(alpha = 0.2f)
     val sideButtonContentColor = Color.White
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(Color(0xFF1C1B1F)) // OuterTune / Metrolist Default Background
     ) {
-        // Metrolist-style Album Art Blur Backdrop
+        // Blur Background
         if (trackArtwork.isNotEmpty()) {
-            AsyncImage(
-                model = trackArtwork,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .blur(120.dp)
-                    .alpha(0.35f)
-            )
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = trackArtwork,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .blur(150.dp)
+                        .alpha(0.35f)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                )
+            }
         }
 
         Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-                .padding(bottom = 30.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(bottom = 24.dp)
+                .animateContentSize()
         ) {
-            // NewPlayerContent: Top Segment Navigation & Actions
-            Row(
+            // Metrolist TitleHeader Block
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                IconButtonWithCustomShape(
-                    icon = Icons.Rounded.KeyboardArrowDown,
-                    shape = RoundedCornerShape(24.dp),
-                    onClick = onDismiss
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(horizontal = 48.dp)
                 ) {
-                    IconButtonWithCustomShape(
-                        painterResource = painterResource(Res.drawable.fullscreen),
-                        shape = RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp, topEnd = 3.dp, bottomEnd = 3.dp),
-                        onClick = { }
+                    Text(
+                        text = "Now Playing",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextBackgroundColor
                     )
-                    IconButtonWithCustomShape(
-                        painterResource = painterResource(Res.drawable.more_horiz),
-                        shape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp, topEnd = 50.dp, bottomEnd = 50.dp),
-                        onClick = { }
+                    Text(
+                        text = "Your Queue",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = TextBackgroundColor.copy(alpha = 0.8f),
+                        maxLines = 1,
+                        modifier = Modifier.basicMarquee()
                     )
                 }
             }
 
-            // NewPlayerArtwork
+            // Thumbnail container
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.weight(1f)
             ) {
-                AnimatedContent(
-                    targetState = showInlineLyrics,
-                    label = "LyricsToggle"
-                ) { showLyrics ->
-                    if (showLyrics && currentSongData.lyricsData != null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            LyricsView(
-                                lyricsData = currentSongData.lyricsData!!,
-                                timeLine = sharedViewModel.timeline,
-                                onLineClick = { sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it)) }
-                            )
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(310.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(Color.DarkGray),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            if (trackArtwork.isNotEmpty()) {
-                                AsyncImage(
-                                    model = trackArtwork,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-                        }
+                Box(
+                    modifier = Modifier
+                        .size(310.dp)
+                        .clip(RoundedCornerShape(6.dp)) // ThumbnailCornerRadius (3.dp * 2 = 6.dp)
+                ) {
+                    if (trackArtwork.isNotEmpty()) {
+                        AsyncImage(
+                            model = trackArtwork,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // controlsContent body
+            val playPauseRoundness by animateDpAsState(
+                targetValue = if (controllerState.isPlaying) 24.dp else 36.dp,
+                animationSpec = tween(durationMillis = 90, easing = LinearEasing),
+                label = "playPauseRoundness"
+            )
 
-            // NewPlayerSongInfo
+            // Song Info layout Block
             Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 32.dp) // PlayerHorizontalPadding = 32.dp
             ) {
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = trackTitle,
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         color = TextBackgroundColor,
@@ -257,24 +257,66 @@ fun NewPlayerScreen(
                     )
                     Text(
                         text = trackArtist,
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, color = TextBackgroundColor.copy(alpha = 0.7f)),
+                        style = MaterialTheme.typography.titleMedium.copy(color = TextBackgroundColor),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.basicMarquee()
                     )
                 }
-                IconButtonWithCustomShape(
-                    icon = Icons.Rounded.Share,
-                    shape = RoundedCornerShape(24.dp),
-                    onClick = { }
-                )
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Action segment pill shapes (Share / Favorite)
+                val shareShape = RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp, topEnd = 3.dp, bottomEnd = 3.dp)
+                val favShape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp, topEnd = 50.dp, bottomEnd = 50.dp)
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilledIconButton(
+                        onClick = { },
+                        shape = shareShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = textButtonColor,
+                            contentColor = iconButtonColor
+                        ),
+                        modifier = Modifier.size(42.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.fullscreen),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    val isLiked = controllerState.isLiked
+                    FilledIconButton(
+                        onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
+                        shape = favShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = textButtonColor,
+                            contentColor = if (isLiked) MaterialTheme.colorScheme.error else iconButtonColor
+                        ),
+                        modifier = Modifier.size(42.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (isLiked) Res.drawable.favorite else Res.drawable.favorite_border
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // NewPlayerProgressSlider
+            // Progress Slider
             val progressFactor = if (timelineState.total > 0) timelineState.current.toFloat() / timelineState.total else 0f
             var sliderValue by remember(progressFactor) { mutableFloatStateOf(progressFactor * 100f) }
+            val inactiveTrackColor = Color.White.copy(alpha = 0.4f)
             Slider(
                 value = sliderValue,
                 onValueChange = { sliderValue = it },
@@ -283,276 +325,252 @@ fun NewPlayerScreen(
                     sharedViewModel.onUIEvent(UIEvent.UpdateProgress(targetMs.toFloat()))
                 },
                 valueRange = 0f..100f,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                thumb = { Spacer(modifier = Modifier.size(0.dp)) }
+                colors = SliderDefaults.colors(
+                    activeTrackColor = textButtonColor,
+                    activeTickColor = textButtonColor,
+                    thumbColor = textButtonColor,
+                    inactiveTrackColor = inactiveTrackColor,
+                    disabledActiveTrackColor = textButtonColor,
+                    disabledInactiveTrackColor = inactiveTrackColor,
+                    disabledThumbColor = textButtonColor
+                ),
+                thumb = { Spacer(modifier = Modifier.size(0.dp)) },
+                modifier = Modifier.padding(horizontal = 32.dp) // PlayerHorizontalPadding = 32.dp
             )
 
+            Spacer(Modifier.height(4.dp))
+
             Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 36.dp) // PlayerHorizontalPadding + 4.dp = 36.dp
             ) {
                 Text(
                     text = formatDuration((timelineState.total * (sliderValue / 100f)).roundToLong()),
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextBackgroundColor.copy(alpha = 0.6f))
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextBackgroundColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = formatDuration(timelineState.total),
-                    style = MaterialTheme.typography.bodyMedium.copy(color = TextBackgroundColor.copy(alpha = 0.6f))
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextBackgroundColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(Modifier.height(24.dp))
 
-            // NewPlayerControls
-            NewPlayerControls(
-                controllerState = controllerState,
-                buttonBgColor = buttonBgColor,
-                buttonIconColor = buttonIconColor,
-                sideButtonContainerColor = sideButtonContainerColor,
-                sideButtonContentColor = sideButtonContentColor,
-                onUIEvent = { sharedViewModel.onUIEvent(it) }
-            )
+            // Playback controls Row (SkipPrevious, PlayPause, SkipNext)
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp) // PlayerHorizontalPadding
+            ) {
+                val backInteractionSource = remember { MutableInteractionSource() }
+                val nextInteractionSource = remember { MutableInteractionSource() }
+                val playPauseInteractionSource = remember { MutableInteractionSource() }
 
-            Spacer(modifier = Modifier.height(30.dp))
+                val isPlayPausePressed by playPauseInteractionSource.collectIsPressedAsState()
+                val isBackPressed by backInteractionSource.collectIsPressedAsState()
+                val isNextPressed by nextInteractionSource.collectIsPressedAsState()
 
-            // NewPlayerBottomActions
-            NewPlayerBottomActions(
-                controllerState = controllerState,
-                showLyrics = showInlineLyrics,
-                onToggleLyrics = { showInlineLyrics = !showInlineLyrics },
-                onUIEvent = { sharedViewModel.onUIEvent(it) }
-            )
-        }
-    }
-}
+                val playPauseWeight by animateFloatAsState(
+                    targetValue = if (isPlayPausePressed) 1.9f else if (isBackPressed || isNextPressed) 1.1f else 1.3f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
+                    label = "playPauseWeight"
+                )
+                val backButtonWeight by animateFloatAsState(
+                    targetValue = if (isBackPressed) 0.65f else if (isPlayPausePressed) 0.35f else 0.45f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
+                    label = "backButtonWeight"
+                )
+                val nextButtonWeight by animateFloatAsState(
+                    targetValue = if (isNextPressed) 0.65f else if (isPlayPausePressed) 0.35f else 0.45f,
+                    animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
+                    label = "nextButtonWeight"
+                )
 
-@Composable
-fun NewPlayerControls(
-    controllerState: ControlState,
-    buttonBgColor: Color,
-    buttonIconColor: Color,
-    sideButtonContainerColor: Color,
-    sideButtonContentColor: Color,
-    onUIEvent: (UIEvent) -> Unit,
-) {
-    val prevInteractionSource = remember { MutableInteractionSource() }
-    val playPauseInteractionSource = remember { MutableInteractionSource() }
-    val nextInteractionSource = remember { MutableInteractionSource() }
+                FilledIconButton(
+                    onClick = { sharedViewModel.onUIEvent(UIEvent.Previous) },
+                    shape = RoundedCornerShape(50),
+                    interactionSource = backInteractionSource,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = sideButtonContainerColor,
+                        contentColor = sideButtonContentColor
+                    ),
+                    modifier = Modifier
+                        .height(68.dp)
+                        .weight(backButtonWeight)
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.skip_previous),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
 
-    val isPrevPressed by prevInteractionSource.collectIsPressedAsState()
-    val isPlayPausePressed by playPauseInteractionSource.collectIsPressedAsState()
-    val isNextPressed by nextInteractionSource.collectIsPressedAsState()
+                Spacer(modifier = Modifier.width(8.dp))
 
-    val backButtonWeight by animateFloatAsState(
-        targetValue = if (isPrevPressed) 0.65f else if (isPlayPausePressed || isNextPressed) 0.35f else 0.45f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
-        label = "backWeight"
-    )
-    val playPauseWeight by animateFloatAsState(
-        targetValue = if (isPlayPausePressed) 1.9f else if (isPrevPressed || isNextPressed) 1.1f else 1.5f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
-        label = "playPauseWeight"
-    )
-    val nextButtonWeight by animateFloatAsState(
-        targetValue = if (isNextPressed) 0.65f else if (isPrevPressed || isPlayPausePressed) 0.35f else 0.45f,
-        animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
-        label = "nextWeight"
-    )
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Previous
-        Box(
-            modifier = Modifier
-                .height(68.dp)
-                .weight(backButtonWeight)
-                .clip(RoundedCornerShape(50))
-                .background(sideButtonContainerColor)
-                .clickable(
-                    interactionSource = prevInteractionSource,
-                    indication = androidx.compose.material3.ripple(bounded = true),
-                    onClick = { onUIEvent(UIEvent.Previous) }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.SkipPrevious,
-                tint = sideButtonContentColor,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Play Pause
-        val roundness by animateDpAsState(
-            targetValue = if (controllerState.isPlaying) 24.dp else 36.dp,
-            animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
-            label = "playPauseRoundness"
-        )
-        Box(
-            modifier = Modifier
-                .height(68.dp)
-                .weight(playPauseWeight)
-                .clip(RoundedCornerShape(roundness))
-                .background(buttonBgColor)
-                .clickable(
+                FilledIconButton(
+                    onClick = { sharedViewModel.onUIEvent(UIEvent.PlayPause) },
+                    shape = RoundedCornerShape(50),
                     interactionSource = playPauseInteractionSource,
-                    indication = androidx.compose.material3.ripple(bounded = true),
-                    onClick = { onUIEvent(UIEvent.PlayPause) }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = if (controllerState.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                tint = buttonIconColor,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp)
-            )
-        }
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = textButtonColor,
+                        contentColor = iconButtonColor
+                    ),
+                    modifier = Modifier
+                        .height(68.dp)
+                        .weight(playPauseWeight)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (controllerState.isPlaying) Res.drawable.pause else Res.drawable.play
+                            ),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (controllerState.isPlaying) "Pause" else "Play",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
 
-        Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-        // Next
-        Box(
-            modifier = Modifier
-                .height(68.dp)
-                .weight(nextButtonWeight)
-                .clip(RoundedCornerShape(50))
-                .background(sideButtonContainerColor)
-                .clickable(
+                FilledIconButton(
+                    onClick = { sharedViewModel.onUIEvent(UIEvent.Next) },
+                    shape = RoundedCornerShape(50),
                     interactionSource = nextInteractionSource,
-                    indication = androidx.compose.material3.ripple(bounded = true),
-                    onClick = { onUIEvent(UIEvent.Next) }
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Rounded.SkipNext,
-                tint = sideButtonContentColor,
-                contentDescription = null,
-                modifier = Modifier.size(32.dp)
-            )
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = sideButtonContainerColor,
+                        contentColor = sideButtonContentColor
+                    ),
+                    modifier = Modifier
+                        .height(68.dp)
+                        .weight(nextButtonWeight)
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.skip_next),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(30.dp))
+
+            // Bottom action icons row (Queue, Sleep Timer, Shuffle, Lyrics, Repeat, More Options)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp) // PlayerHorizontalPadding
+            ) {
+                var showQueueSheet by remember { mutableStateOf(false) }
+
+                ResizableIconButton(
+                    icon = Res.drawable.queue_music,
+                    color = TextBackgroundColor,
+                    modifier = Modifier.size(32.dp),
+                    onClick = { showQueueSheet = true }
+                )
+
+                ResizableIconButton(
+                    icon = Res.drawable.timer,
+                    color = TextBackgroundColor,
+                    modifier = Modifier.size(32.dp),
+                    onClick = { }
+                )
+
+                val isShuffle = controllerState.isShuffle
+                ResizableIconButton(
+                    icon = if (isShuffle) Res.drawable.shuffle_on else Res.drawable.shuffle,
+                    color = if (isShuffle) MaterialTheme.colorScheme.primary else TextBackgroundColor,
+                    modifier = Modifier.size(32.dp),
+                    onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
+                )
+
+                ResizableIconButton(
+                    icon = Res.drawable.lyrics,
+                    color = TextBackgroundColor,
+                    modifier = Modifier.size(32.dp),
+                    onClick = { }
+                )
+
+                val isRepeat = controllerState.repeatState != RepeatState.None
+                val isRepeatOne = controllerState.repeatState == RepeatState.One
+                val repeatIcon = if (isRepeat) {
+                    if (isRepeatOne) Res.drawable.repeat_one_on else Res.drawable.repeat_on
+                } else {
+                    Res.drawable.repeat
+                }
+                ResizableIconButton(
+                    icon = repeatIcon,
+                    color = if (isRepeat) MaterialTheme.colorScheme.primary else TextBackgroundColor,
+                    modifier = Modifier.size(32.dp),
+                    onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
+                )
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(textButtonColor)
+                        .clickable { }
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.more_horiz),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(iconButtonColor),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                if (showQueueSheet) {
+                    QueueBottomSheet(
+                        onDismiss = { showQueueSheet = false }
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-fun NewPlayerBottomActions(
-    controllerState: ControlState,
-    showLyrics: Boolean,
-    onToggleLyrics: () -> Unit,
-    onUIEvent: (UIEvent) -> Unit,
+fun ResizableIconButton(
+    icon: org.jetbrains.compose.resources.DrawableResource,
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.onSurface,
+    enabled: Boolean = true,
+    onClick: () -> Unit = {},
 ) {
-    var showQueueSheet by remember { mutableStateOf(false) }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 30.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Queue
-        IconButtonWithCustomShape(
-            icon = Icons.AutoMirrored.Outlined.QueueMusic,
-            shape = RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp, topEnd = 3.dp, bottomEnd = 3.dp),
-            onClick = { showQueueSheet = true }
-        )
-
-        // Sleep Timer
-        IconButtonWithCustomShape(
-            painterResource = painterResource(Res.drawable.baseline_access_alarm_24),
-            shape = RoundedCornerShape(3.dp),
-            onClick = { /* Sleep Timer Action */ }
-        )
-
-        // Shuffle
-        IconButtonWithCustomShape(
-            icon = Icons.Rounded.Shuffle,
-            shape = RoundedCornerShape(3.dp),
-            onClick = { onUIEvent(UIEvent.Shuffle) },
-            active = controllerState.isShuffle
-        )
-
-        // Lyrics
-        IconButtonWithCustomShape(
-            painterResource = painterResource(Res.drawable.more_horiz),
-            shape = RoundedCornerShape(3.dp),
-            onClick = onToggleLyrics,
-            active = showLyrics
-        )
-
-        // Repeat
-        val repeatIcon = when (controllerState.repeatState) {
-            RepeatState.One -> Icons.Rounded.RepeatOne
-            else -> Icons.Rounded.Repeat
-        }
-        IconButtonWithCustomShape(
-            icon = repeatIcon,
-            shape = RoundedCornerShape(3.dp),
-            onClick = { onUIEvent(UIEvent.Repeat) },
-            active = controllerState.repeatState != RepeatState.None
-        )
-
-        // Like / Favorite
-        val favoriteIcon = if (controllerState.isLiked) Icons.Rounded.Favorite else Icons.Rounded.FavoriteBorder
-        IconButtonWithCustomShape(
-            icon = favoriteIcon,
-            shape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp, topEnd = 50.dp, bottomEnd = 50.dp),
-            onClick = { onUIEvent(UIEvent.ToggleLike) }
-        )
-    }
-
-    if (showQueueSheet) {
-        QueueBottomSheet(
-            onDismiss = { showQueueSheet = false }
-        )
-    }
-}
-
-@Composable
-fun IconButtonWithCustomShape(
-    icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
-    painterResource: androidx.compose.ui.graphics.painter.Painter? = null,
-    shape: androidx.compose.ui.graphics.Shape,
-    onClick: () -> Unit,
-    active: Boolean = false,
-) {
-    val bgColor = if (active) Color.White else Color.White.copy(alpha = 0.2f)
-    val contentColor = if (active) Color.Black else Color.White
-
-    Box(
-        modifier = Modifier
-            .size(42.dp)
-            .clip(shape)
-            .background(bgColor)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                tint = contentColor,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
+    Image(
+        painter = painterResource(icon),
+        contentDescription = null,
+        colorFilter = ColorFilter.tint(color),
+        modifier = modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = androidx.compose.material3.ripple(bounded = false),
+                enabled = enabled,
+                onClick = onClick,
             )
-        } else if (painterResource != null) {
-            Icon(
-                painter = painterResource,
-                tint = contentColor,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
+            .alpha(if (enabled) 1f else 0.5f),
+    )
 }

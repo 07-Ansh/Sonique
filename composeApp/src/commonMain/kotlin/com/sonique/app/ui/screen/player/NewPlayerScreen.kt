@@ -74,7 +74,6 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.ui.component.LyricsView
-import com.sonique.app.ui.component.PlayerSliderTrack
 import com.sonique.app.ui.component.QueueBottomSheet
 import com.sonique.app.viewModel.NowPlayingScreenData
 import com.sonique.app.viewModel.SharedViewModel
@@ -86,7 +85,7 @@ import org.koin.compose.koinInject
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
-import sonique.composeapp.generated.resources.baseline_share_24
+import sonique.composeapp.generated.resources.fullscreen
 import sonique.composeapp.generated.resources.lyrics
 import sonique.composeapp.generated.resources.more_horiz
 import sonique.composeapp.generated.resources.pause
@@ -124,7 +123,7 @@ fun NewPlayerScreen(
 
     // Sheet/dialog visibility state
     var showQueueSheet by remember { mutableStateOf(false) }
-    var showInlineLyrics by remember { mutableStateOf(false) }
+    var showLyricsSheet by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
 
     // ── Colors — matching Metrolist BLUR background mode defaults ────────────
@@ -213,52 +212,26 @@ fun NewPlayerScreen(
                         }
                     }
 
-                    // Album artwork or Lyrics - toggles inline where album art is
-                    AnimatedContent(
-                        targetState = showInlineLyrics,
-                        transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
-                        label = "thumbnailOrLyrics"
-                    ) { showLyrics ->
-                        if (showLyrics && currentSongData?.lyricsData != null) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = PlayerHorizontalPadding)
-                                    .fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                LyricsView(
-                                    lyricsData = currentSongData!!.lyricsData!!,
-                                    timeLine = sharedViewModel.timeline,
-                                    onLineClick = { progress ->
-                                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
-                                    },
-                                    backgroundColor = Color.Transparent,
-                                    playerContentColor = Color.White,
+                    // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
+                    // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
+                    BoxWithConstraints(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        val thumbnailSize = maxWidth - (PlayerHorizontalPadding * 2)
+                        Box(
+                            modifier = Modifier
+                                .size(thumbnailSize)
+                                .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            if (trackArtwork.isNotEmpty()) {
+                                AsyncImage(
+                                    model = trackArtwork,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
                                 )
-                            }
-                        } else {
-                            // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
-                            // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
-                            BoxWithConstraints(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                val thumbnailSize = maxWidth - (PlayerHorizontalPadding * 2)
-                                Box(
-                                    modifier = Modifier
-                                        .size(thumbnailSize)
-                                        .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
-                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    if (trackArtwork.isNotEmpty()) {
-                                        AsyncImage(
-                                            model = trackArtwork,
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                    }
-                                }
                             }
                         }
                     }
@@ -358,7 +331,7 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(42.dp)
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.baseline_share_24),
+                            painter = painterResource(Res.drawable.fullscreen),
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
@@ -419,16 +392,6 @@ fun NewPlayerScreen(
                     sliderPosition = null
                 },
                 colors = sliderColors,
-                // Zero-size thumb: exactly Metrolist SliderStyle.SLIM line 1473
-                thumb = { Spacer(modifier = Modifier.size(0.dp)) },
-                // Canvas-drawn 10dp round-capped track: Metrolist PlayerSliderTrack
-                track = { sliderState ->
-                    PlayerSliderTrack(
-                        sliderState = sliderState,
-                        colors = sliderColors,
-                        trackHeight = 10.dp,
-                    )
-                },
                 modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
             )
 
@@ -646,14 +609,14 @@ fun NewPlayerScreen(
                 val hasLyrics = currentSongData?.lyricsData != null
                 PlayerQueueButton(
                     icon = Res.drawable.lyrics,
-                    isActive = showInlineLyrics,
+                    isActive = showLyricsSheet,
                     shape = middleShape,
                     modifier = Modifier.size(buttonSize),
                     textButtonColor = textButtonColor,
                     iconButtonColor = iconButtonColor,
                     iconSize = iconSize,
                     enabled = hasLyrics,
-                    onClick = { if (hasLyrics) showInlineLyrics = !showInlineLyrics }
+                    onClick = { if (hasLyrics) showLyricsSheet = !showLyricsSheet }
                 )
 
                 // Repeat button
@@ -691,6 +654,37 @@ fun NewPlayerScreen(
                         tint = iconButtonColor,
                         modifier = Modifier.size(iconSize)
                     )
+                }
+            }
+
+            // ── Lyrics sheet overlay ─────────────────────────────────────────
+            if (showLyricsSheet) {
+                val lyricsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                ModalBottomSheet(
+                    onDismissRequest = { showLyricsSheet = false },
+                    sheetState = lyricsSheetState,
+                    containerColor = Color(0xFF1C1B1F),
+                ) {
+                    currentSongData?.lyricsData?.let { lyricsData ->
+                        LyricsView(
+                            lyricsData = lyricsData,
+                            timeLine = sharedViewModel.timeline,
+                            onLineClick = { progress ->
+                                sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
+                            },
+                            backgroundColor = Color(0xFF1C1B1F),
+                            playerContentColor = Color.White,
+                        )
+                    } ?: run {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No lyrics available", color = Color.White)
+                        }
+                    }
                 }
             }
 

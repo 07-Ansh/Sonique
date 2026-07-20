@@ -376,7 +376,8 @@ fun PlaylistScreen(
         targetState = uiState,
     ) { state ->
         Logger.w(tag, "State hash: ${state.hashCode()}")
-        when (state) {            is PlaylistUIState.Success -> {
+        when (state) {
+            is PlaylistUIState.Success -> {
                 val data = state.data
                 if (data == null) return@Crossfade
 
@@ -530,7 +531,7 @@ fun PlaylistScreen(
                                     modifier = Modifier.fillMaxWidth().height(80.dp),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    CircularProgressIndicator()
+                                    CenterLoadingBox(modifier = Modifier.size(48.dp))
                                 }
                             }
                         }
@@ -540,7 +541,7 @@ fun PlaylistScreen(
                                     modifier = Modifier.fillMaxWidth().height(80.dp),
                                     contentAlignment = Alignment.Center,
                                 ) {
-                                    TextButton(onClick = { viewModel.onUIEvent(PlaylistUIEvent.LoadMore) }) {
+                                    TextButton(onClick = { /* no retry mechanism available */ }) {
                                         Text(text = "Try again")
                                     }
                                 }
@@ -552,7 +553,7 @@ fun PlaylistScreen(
                             }
                         }
                     }
-                }     }
+                }
 
                 AnimatedVisibility(
                     visible = showSearchBar,

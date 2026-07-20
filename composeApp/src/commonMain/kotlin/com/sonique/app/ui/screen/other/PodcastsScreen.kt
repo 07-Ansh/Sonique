@@ -81,6 +81,7 @@ import com.sonique.app.ui.component.PodcastEpisodeFullWidthItem
 import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
+import com.sonique.app.ui.theme.seed
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.PodcastUIEvent
 import com.sonique.app.viewModel.PodcastUIState

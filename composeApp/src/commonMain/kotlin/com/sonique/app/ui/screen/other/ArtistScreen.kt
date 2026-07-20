@@ -63,6 +63,7 @@ import com.sonique.app.extension.getStringBlocking
 import com.sonique.app.extension.rgbFactor
 import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.CollapsingToolbarParallaxEffect
+import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.component.DescriptionView
 import com.sonique.app.ui.component.EndOfPage
 import com.sonique.app.ui.component.HomeItemArtist
@@ -76,7 +77,9 @@ import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.list.MoreAlbumsDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
+import com.sonique.app.ui.theme.seed
 import com.sonique.app.ui.theme.typo
+import androidx.compose.foundation.lazy.rememberLazyListState
 import com.sonique.app.viewModel.ArtistScreenState
 import com.sonique.app.viewModel.ArtistViewModel
 import com.sonique.app.viewModel.SharedViewModel
@@ -95,6 +98,7 @@ import sonique.composeapp.generated.resources.follow
 import sonique.composeapp.generated.resources.followed
 import sonique.composeapp.generated.resources.more
 import sonique.composeapp.generated.resources.no_description
+import sonique.composeapp.generated.resources.baseline_play_circle_24
 import sonique.composeapp.generated.resources.popular
 import sonique.composeapp.generated.resources.related_artists
 import sonique.composeapp.generated.resources.singles
@@ -117,6 +121,8 @@ fun ArtistScreen(
     val canvasUrl by viewModel.canvasUrl.collectAsStateWithLifecycle()
 
     val playingTrack by sharedViewModel.nowPlayingState.map { it?.track?.videoId }.collectAsState(null)
+    val lazyState = rememberLazyListState()
+    var gradientColors by remember { mutableStateOf(listOf(md_theme_dark_background, md_theme_dark_background)) }
 
      
     var choosingTrack by remember {
@@ -150,10 +156,10 @@ fun ArtistScreen(
                     description = state.data.description ?: "",
                     thumbnailUrl = state.data.imageUrl,
                     isCircleImage = true,
-                    listColors = listColors,
+                    listColors = gradientColors,
                     onBack = { onBack?.invoke() ?: navController.navigateUp() },
                     playButtonContent = {
-                        val firstQueue = state.data.canvas.firstOrNull()?.second?.toTrack()
+                        val firstQueue = state.data.popularSongs.firstOrNull()
                         RippleIconButton(
                             resId = Res.drawable.baseline_play_circle_24,
                             fillMaxSize = true,
@@ -161,20 +167,30 @@ fun ArtistScreen(
                             modifier = Modifier.size(48.dp),
                         ) {
                             if (firstQueue != null) {
-                                viewModel.playTrack(firstQueue)
+                                viewModel.setQueueData(
+                                    QueueData.Data(
+                                        listTracks = ArrayList(state.data.popularSongs),
+                                        firstPlayedTrack = firstQueue,
+                                        playlistId = "RDAMVM${firstQueue.videoId}",
+                                        playlistName = "${state.data.title.orEmpty()} - ${getStringBlocking(Res.string.popular)}",
+                                        playlistType = PlaylistType.RADIO,
+                                        continuation = null,
+                                    ),
+                                )
+                                viewModel.loadMediaItem(firstQueue, type = Config.SONG_CLICK)
                             }
                         }
                     },
                     onPaletteGenerated = { colors ->
-                        viewModel.setBrush(colors)
+                        gradientColors = colors
                     },
                     lazyState = lazyState
                 ) {
-                    // Popular Tracks section
+                    // Popular Tracks header
                     item {
-                        if (state.data.canvas.isNotEmpty()) {
+                        if (state.data.popularSongs.isNotEmpty()) {
                             Text(
-                                text = stringResource(Res.string.popular_tracks),
+                                text = stringResource(Res.string.popular),
                                 style = typo().labelMedium,
                                 color = Color.White,
                                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
@@ -182,13 +198,13 @@ fun ArtistScreen(
                         }
                     }
 
-                    items(count = state.data.canvas.size, key = { index ->
-                        state.data.canvas[index].first + "canvas_$index"
+                    // Popular Tracks list
+                    items(count = state.data.popularSongs.size, key = { index ->
+                        state.data.popularSongs[index].videoId + "popular_$index"
                     }) { index ->
-                        val item = state.data.canvas[index]
-                        val track = item.second.toTrack()
+                        val track = state.data.popularSongs[index]
                         SongFullWidthItems(
-                            isPlaying = track.videoId == playingVideoId,
+                            isPlaying = track.videoId == playingTrack,
                             index = index,
                             track = track,
                             onMoreClickListener = {
@@ -196,7 +212,17 @@ fun ArtistScreen(
                                 showBottomSheet = true
                             },
                             onClickListener = {
-                                viewModel.playTrack(track)
+                                viewModel.setQueueData(
+                                    QueueData.Data(
+                                        listTracks = ArrayList(state.data.popularSongs),
+                                        firstPlayedTrack = track,
+                                        playlistId = "RDAMVM${track.videoId}",
+                                        playlistName = "\"${(state.data.title ?: "")}\" ${getStringBlocking(Res.string.popular)}",
+                                        playlistType = PlaylistType.RADIO,
+                                        continuation = null,
+                                    ),
+                                )
+                                viewModel.loadMediaItem(track, type = Config.SONG_CLICK)
                             },
                             onAddToQueue = {
                                 sharedViewModel.playNext(track)
@@ -371,39 +397,64 @@ fun ArtistScreen(
                                                 choosingTrack = video
                                                 showBottomSheet = true
                                             },
+                                            data = Content(
+                                                album = null,
+                                                artists = video.artists,
+                                                description = null,
+                                                isExplicit = video.isExplicit,
+                                                playlistId = null,
+                                                browseId = null,
+                                                thumbnails = video.thumbnails ?: emptyList(),
+                                                title = video.title,
+                                                videoId = video.videoId,
+                                                views = video.videoType,
+                                            )
+                                        )
+                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
+                                }
+                            }
+                        }
+                    }
+
+                    // Featured On section
+                    item {
+                        AnimatedVisibility(state.data.featuredOn.isNotEmpty()) {
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 20.dp),
+                                ) {
+                                    Text(
+                                        text = stringResource(Res.string.featured_inArtist),
+                                        style = typo().labelMedium,
+                                        color = Color.White,
+                                        modifier = Modifier.weight(1f).padding(vertical = 10.dp),
                                     )
                                 }
                                 LazyRow(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
                                     items(state.data.featuredOn) { feature ->
                                         HomeItemContentPlaylist(
                                             onClick = {
-                                                navController.navigate(
-                                                    PlaylistDestination(
-                                                        feature.id,
-                                                    ),
-                                                )
+                                                navController.navigate(PlaylistDestination(feature.id))
                                             },
                                             data = feature,
                                             thumbSize = 180.dp,
                                         )
                                     }
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
                                 }
                             }
                         }
+                    }
 
-                         
+                    // Related Artists section
+                    item {
                         AnimatedVisibility(
-                            state.data.related != null &&
-                                state.data.related.results
-                                    .isNotEmpty(),
+                            state.data.related != null && state.data.related.results.isNotEmpty(),
                         ) {
                             Column {
                                 Row(
@@ -414,79 +465,49 @@ fun ArtistScreen(
                                         text = stringResource(Res.string.related_artists),
                                         style = typo().labelMedium,
                                         color = Color.White,
-                                        modifier =
-                                            Modifier
-                                                .weight(1f)
-                                                .padding(vertical = 10.dp),
+                                        modifier = Modifier.weight(1f).padding(vertical = 10.dp),
                                     )
                                 }
                                 LazyRow(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
                                     items(state.data.related?.results ?: emptyList()) { related ->
                                         HomeItemArtist(
                                             onClick = {
                                                 navController.navigate(
-                                                    ArtistDestination(
-                                                        channelId = related.browseId,
-                                                    ),
+                                                    ArtistDestination(channelId = related.browseId)
                                                 )
                                             },
-                                            data =
-                                                Content(
-                                                    album = null,
-                                                    artists =
-                                                        listOf(
-                                                            Artist(
-                                                                id = related.browseId,
-                                                                name = related.title,
-                                                            ),
-                                                        ),
-                                                    description = related.subscribers,
-                                                    isExplicit = null,
-                                                    playlistId = null,
-                                                    browseId = related.browseId,
-                                                    thumbnails = related.thumbnails,
-                                                    title = related.title,
-                                                    videoId = null,
-                                                    views = null,
-                                                    durationSeconds = null,
-                                                    radio = null,
-                                                ),
+                                            data = Content(
+                                                album = null,
+                                                artists = null,
+                                                description = null,
+                                                isExplicit = false,
+                                                playlistId = null,
+                                                browseId = related.browseId,
+                                                thumbnails = related.thumbnails ?: emptyList(),
+                                                title = related.title,
+                                                videoId = null,
+                                                views = null,
+                                            )
                                         )
                                     }
-                                    item {
-                                        Spacer(Modifier.size(10.dp))
-                                    }
+                                    item { Spacer(Modifier.size(10.dp)) }
                                 }
                             }
                         }
-                        Spacer(Modifier.height(10.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 20.dp),
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.description),
-                                style = typo().labelMedium,
-                                color = Color.White,
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .padding(vertical = 12.dp),
-                            )
-                        }
+                    }
+
+                    // Description and end of page
+                    item {
                         val urlHandler = LocalUriHandler.current
                         ElevatedCard(
                             modifier = Modifier.padding(horizontal = 20.dp),
                             shape = RoundedCornerShape(8.dp),
-                            colors =
-                                CardDefaults.elevatedCardColors().copy(
-                                    containerColor = color.rgbFactor(0.5f),
-                                ),
+                            colors = CardDefaults.elevatedCardColors().copy(
+                                containerColor = gradientColors.firstOrNull()?.rgbFactor(0.5f) ?: md_theme_dark_background
+                            ),
                         ) {
                             DescriptionView(
                                 modifier = Modifier.padding(16.dp),
@@ -500,16 +521,17 @@ fun ArtistScreen(
                         }
                         EndOfPage()
                     }
-                    if (showBottomSheet && choosingTrack != null) {
-                        NowPlayingBottomSheet(
-                            onDismiss = {
-                                showBottomSheet = false
-                                choosingTrack = null
-                            },
-                            navController = navController,
-                            song = choosingTrack?.toSongEntity(),
-                        )
-                    }
+                }
+
+                if (showBottomSheet && choosingTrack != null) {
+                    NowPlayingBottomSheet(
+                        onDismiss = {
+                            showBottomSheet = false
+                            choosingTrack = null
+                        },
+                        navController = navController,
+                        song = choosingTrack?.toSongEntity(),
+                    )
                 }
             }
 

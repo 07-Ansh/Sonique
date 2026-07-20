@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
@@ -61,7 +63,7 @@ enum class DetailType {
     PODCAST
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DetailContentScreen(
     type: DetailType,
@@ -139,7 +141,7 @@ fun SharedDetailTemplate(
     onBack: () -> Unit,
     playButtonContent: @Composable () -> Unit,
     onShuffleClick: (() -> Unit)? = null,
-    onHeartClick: (() -> Unit)? = null,
+    onHeartClick: (@Composable () -> Unit)? = null,
     downloadButtonContent: (@Composable () -> Unit)? = null,
     onPaletteGenerated: (List<Color>) -> Unit = {},
     lazyState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
@@ -264,8 +266,12 @@ fun SharedDetailTemplate(
                         description
                     }
                     DescriptionView(
-                        description = desc,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        text = desc,
+                        onTimeClicked = {},
+                        onURLClicked = { url ->
+                            uriHandler.openUri(url)
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -306,7 +312,7 @@ fun SharedDetailTemplate(
                         modifier = Modifier.fillMaxWidth().height(200.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CenterLoadingBox()
+                        CenterLoadingBox(modifier = Modifier)
                     }
                 }
             } else {

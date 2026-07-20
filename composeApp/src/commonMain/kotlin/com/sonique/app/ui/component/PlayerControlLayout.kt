@@ -130,26 +130,7 @@ fun PlayerControlLayout(
             val sideButtonContainerColor = Color.White.copy(alpha = 0.2f)
             val sideButtonContentColor = Color.White
 
-            // 1. Shuffle
-            Box(
-                Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .border(BorderStroke(1.dp, buttonBgColor.copy(alpha = 0.3f)), CircleShape)
-                    .clickable { onUIEvent(UIEvent.Shuffle) },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Shuffle,
-                    tint = if (controllerState.isShuffle) seed else Color.Gray,
-                    contentDescription = "",
-                    modifier = Modifier.size(24.dp),
-                )
-            }
-
-            Spacer(modifier = Modifier.size(12.dp))
-
-            // 2. Skip Previous
+            // 1. Skip Previous
             Box(
                 Modifier
                     .height(68.dp)
@@ -174,7 +155,7 @@ fun PlayerControlLayout(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // 3. Play/Pause
+            // 2. Play/Pause
             Box(
                 Modifier
                     .height(68.dp)
@@ -200,7 +181,7 @@ fun PlayerControlLayout(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // 4. Skip Next
+            // 3. Skip Next
             Box(
                 Modifier
                     .height(68.dp)
@@ -221,35 +202,6 @@ fun PlayerControlLayout(
                     contentDescription = "",
                     modifier = Modifier.size(32.dp),
                 )
-            }
-
-            Spacer(modifier = Modifier.size(12.dp))
-
-            // 5. Repeat
-            Box(
-                Modifier
-                    .size(42.dp)
-                    .clip(CircleShape)
-                    .border(BorderStroke(1.dp, buttonBgColor.copy(alpha = 0.3f)), CircleShape)
-                    .clickable { onUIEvent(UIEvent.Repeat) },
-                contentAlignment = Alignment.Center
-            ) {
-                Crossfade(targetState = controllerState.repeatState) { rs ->
-                    val icon = when (rs) {
-                        RepeatState.One -> Icons.Rounded.RepeatOne
-                        else -> Icons.Rounded.Repeat
-                    }
-                    val tint = when (rs) {
-                        RepeatState.None -> Color.Gray
-                        else -> seed
-                    }
-                    Icon(
-                        imageVector = icon,
-                        tint = tint,
-                        contentDescription = "",
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
             }
         } else {
             val smallIcon = if (isSmallSize) 20.dp to 28.dp else 32.dp to 42.dp

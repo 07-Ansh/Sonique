@@ -1433,7 +1433,7 @@ fun NowPlayingScreenContent(
                                          
                                         PlayerControlLayout(
                                             controllerState = controllerState,
-                                            enableExpressive = enableExpressivePlayerControls,
+                                            enableExpressive = true,
                                         ) {
                                             sharedViewModel.onUIEvent(it)
                                         }

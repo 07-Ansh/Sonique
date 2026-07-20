@@ -135,6 +135,12 @@ fun SettingScreen(
         )
     }
 
+    com.sonique.app.expect.ui.BackHandler(
+        enabled = activeSubCategory != null
+    ) {
+        activeSubCategory = null
+    }
+
     // Dialog state handlers (shared across all sections)
     val alertData by viewModel.alertData.collectAsStateWithLifecycle()
     val basicAlertData by viewModel.basicAlertData.collectAsStateWithLifecycle()

@@ -28,11 +28,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.liquidGlass
+import com.sonique.app.viewModel.SharedViewModel
+import org.koin.compose.koinInject
 
 /**
  * A Material 3 Expressive style settings group component
@@ -45,6 +54,10 @@ fun Material3SettingsGroup(
     items: List<Material3SettingsItem>,
     useLowContrast: Boolean = false
 ) {
+    val sharedViewModel: SharedViewModel = koinInject()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,13 +85,27 @@ fun Material3SettingsGroup(
                     else -> RoundedCornerShape(6.dp)
                 }
 
-                Card(
-                    modifier = Modifier
+                val cardModifier = if (enableLiquidGlass) {
+                    Modifier
                         .fillMaxWidth()
-                        .animateContentSize(),
+                        .animateContentSize()
+                        .clip(shape)
+                        .background(Color.White.copy(alpha = 0.06f))
+                        .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), shape)
+                        .liquidGlass(backdrop, shape = shape, interactive = false)
+                } else {
+                    Modifier
+                        .fillMaxWidth()
+                        .animateContentSize()
+                }
+
+                Card(
+                    modifier = cardModifier,
                     shape = shape,
                     colors = CardDefaults.cardColors(
-                        containerColor = if (!useLowContrast) {
+                        containerColor = if (enableLiquidGlass) {
+                            Color.Transparent
+                        } else if (!useLowContrast) {
                             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         } else {
                             MaterialTheme.colorScheme.surfaceContainerLow

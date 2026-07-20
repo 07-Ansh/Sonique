@@ -102,6 +102,9 @@ import com.sonique.domain.mediaservice.handler.ControlState
 import com.sonique.domain.data.model.streams.TimeLine
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.baseline_access_alarm_24
+import sonique.composeapp.generated.resources.baseline_fullscreen_24
+import sonique.composeapp.generated.resources.more_horiz
+import sonique.composeapp.generated.resources.fullscreen
 import org.jetbrains.compose.resources.painterResource
 import kotlin.math.roundToLong
 
@@ -174,12 +177,12 @@ fun NewPlayerScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButtonWithCustomShape(
-                        icon = Icons.Rounded.Fullscreen,
+                        painterResource = painterResource(Res.drawable.fullscreen),
                         shape = RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp, topEnd = 3.dp, bottomEnd = 3.dp),
                         onClick = { }
                     )
                     IconButtonWithCustomShape(
-                        icon = Icons.Rounded.MoreHoriz,
+                        painterResource = painterResource(Res.drawable.more_horiz),
                         shape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp, topEnd = 50.dp, bottomEnd = 50.dp),
                         onClick = { }
                     )
@@ -483,7 +486,7 @@ fun NewPlayerBottomActions(
 
         // Lyrics
         IconButtonWithCustomShape(
-            icon = Icons.Rounded.MoreHoriz,
+            painterResource = painterResource(Res.drawable.more_horiz),
             shape = RoundedCornerShape(3.dp),
             onClick = onToggleLyrics,
             active = showLyrics

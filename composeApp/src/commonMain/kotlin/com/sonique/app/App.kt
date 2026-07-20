@@ -76,6 +76,7 @@ import com.sonique.app.ui.navigation.graph.AppNavigationGraph
 import com.sonique.app.ui.screen.MiniPlayer
 import com.sonique.app.ui.screen.player.NowPlayingScreen
 import com.sonique.app.ui.screen.player.NowPlayingScreenContent
+import com.sonique.app.ui.screen.player.NewPlayerScreen
 import com.sonique.app.ui.theme.AppTheme
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.SharedViewModel
@@ -677,7 +678,7 @@ fun App(
                             .fillMaxSize()
                             .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt()) }
                     ) {
-                        NowPlayingScreen(
+                        NewPlayerScreen(
                             navController = navController,
                         ) {
                             isShowNowPlaylistScreen = false

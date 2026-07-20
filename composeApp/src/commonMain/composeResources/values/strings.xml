@@ -537,6 +537,7 @@
     <string name="latest_version_format">Latest version: %1$s</string>
     <string name="check_for_updates_button">Check for updates</string>
     <string name="update_available_title">Update available</string>
+    <string name="update_notifications">Update notifications</string>
     <string name="hide_changelog">Hide changelog</string>
     <string name="view_changelog">View changelog</string>
     <string name="updater">Updater</string>

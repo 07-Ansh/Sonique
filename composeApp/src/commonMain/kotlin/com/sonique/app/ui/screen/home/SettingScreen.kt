@@ -57,6 +57,7 @@ import com.sonique.app.expect.ui.openEqResult
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.SettingBasicDialog
+import com.sonique.app.ui.screen.settings.SettingsUpdateScreen
 import com.sonique.app.ui.component.SettingDialog
 import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.navigation.destination.login.SpotifyLoginDestination
@@ -154,32 +155,36 @@ fun SettingScreen(
                 onCategoryClick = { activeSubCategory = it }
             )
         } else {
-            SubSettingsContainer(
-                title = when (category) {
-                    SettingsSubCategory.APPEARANCE -> "Appearance"
-                    SettingsSubCategory.GENERAL -> stringResource(Res.string.general)
-                    SettingsSubCategory.UPDATES -> "App Updates"
-                    SettingsSubCategory.AUDIO -> stringResource(Res.string.audio)
-                    SettingsSubCategory.PLAYBACK -> stringResource(Res.string.playback)
-                    SettingsSubCategory.SPOTIFY -> stringResource(Res.string.spotify)
-                    SettingsSubCategory.SPONSORBLOCK -> stringResource(Res.string.sponsorBlock)
-                    SettingsSubCategory.BACKUP -> stringResource(Res.string.backup)
-                    SettingsSubCategory.ABOUT -> stringResource(Res.string.about_us)
-                    SettingsSubCategory.STORAGE -> stringResource(Res.string.storage)
-                },
-                onBack = { activeSubCategory = null }
-            ) {
-                when (category) {
-                    SettingsSubCategory.APPEARANCE -> AppearanceSettingsContent(viewModel)
-                    SettingsSubCategory.GENERAL -> GeneralSettingsContent(viewModel, sharedViewModel, navController)
-                    SettingsSubCategory.UPDATES -> UpdatesSettingsContent(updateViewModel, sharedViewModel)
-                    SettingsSubCategory.AUDIO -> AudioSettingsContent(viewModel)
-                    SettingsSubCategory.PLAYBACK -> PlaybackSettingsContent(viewModel)
-                    SettingsSubCategory.SPOTIFY -> SpotifySettingsContent(viewModel, navController)
-                    SettingsSubCategory.SPONSORBLOCK -> SponsorBlockSettingsContent(viewModel)
-                    SettingsSubCategory.BACKUP -> BackupSettingsContent(viewModel)
-                    SettingsSubCategory.ABOUT -> AboutSettingsContent(navController)
-                    SettingsSubCategory.STORAGE -> StorageSettingsContent(viewModel)
+            if (category == SettingsSubCategory.UPDATES) {
+                SettingsUpdateScreen(onBack = { activeSubCategory = null })
+            } else {
+                SubSettingsContainer(
+                    title = when (category) {
+                        SettingsSubCategory.APPEARANCE -> "Appearance"
+                        SettingsSubCategory.GENERAL -> stringResource(Res.string.general)
+                        SettingsSubCategory.UPDATES -> "App Updates"
+                        SettingsSubCategory.AUDIO -> stringResource(Res.string.audio)
+                        SettingsSubCategory.PLAYBACK -> stringResource(Res.string.playback)
+                        SettingsSubCategory.SPOTIFY -> stringResource(Res.string.spotify)
+                        SettingsSubCategory.SPONSORBLOCK -> stringResource(Res.string.sponsorBlock)
+                        SettingsSubCategory.BACKUP -> stringResource(Res.string.backup)
+                        SettingsSubCategory.ABOUT -> stringResource(Res.string.about_us)
+                        SettingsSubCategory.STORAGE -> stringResource(Res.string.storage)
+                    },
+                    onBack = { activeSubCategory = null }
+                ) {
+                    when (category) {
+                        SettingsSubCategory.APPEARANCE -> AppearanceSettingsContent(viewModel)
+                        SettingsSubCategory.GENERAL -> GeneralSettingsContent(viewModel, sharedViewModel, navController)
+                        SettingsSubCategory.AUDIO -> AudioSettingsContent(viewModel)
+                        SettingsSubCategory.PLAYBACK -> PlaybackSettingsContent(viewModel)
+                        SettingsSubCategory.SPOTIFY -> SpotifySettingsContent(viewModel, navController)
+                        SettingsSubCategory.SPONSORBLOCK -> SponsorBlockSettingsContent(viewModel)
+                        SettingsSubCategory.BACKUP -> BackupSettingsContent(viewModel)
+                        SettingsSubCategory.ABOUT -> AboutSettingsContent(navController)
+                        SettingsSubCategory.STORAGE -> StorageSettingsContent(viewModel)
+                        SettingsSubCategory.UPDATES -> {}
+                    }
                 }
             }
         }
@@ -1176,9 +1181,8 @@ private fun AboutSettingsContent(navController: NavController) {
             val points = 360
             for (i in 0..points) {
                 val angle = (i * 2.0 * Math.PI / points).toFloat()
-                // Polar equation for a 9-lobed cookie splat
-                // Base radius is 80%, lobes push out by 15% and bites go in by 15%
-                val r = outerR * (0.8f + 0.15f * kotlin.math.sin(9f * angle))
+                // Polar equation for a 12-lobed smooth scalloped shape
+                val r = outerR * (0.95f + 0.05f * kotlin.math.cos(12f * angle))
                 
                 val px = cx + r * kotlin.math.cos(angle)
                 val py = cy + r * kotlin.math.sin(angle)
@@ -1971,148 +1975,7 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
     }
 }
 
-@Composable
-private fun UpdatesSettingsContent(updateViewModel: UpdateViewModel, sharedViewModel: SharedViewModel) {
-    val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
-    val latestReleaseInfo by updateViewModel.latestReleaseInfo.collectAsStateWithLifecycle()
-    val currentVersion = updateViewModel.currentVersion
-    val downloadStatus by sharedViewModel.downloadStatus.collectAsStateWithLifecycle()
-    val isChecking by updateViewModel.isChecking.collectAsStateWithLifecycle()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (updateAvailable != null) {
-            UpdateAvailableContent(
-                releaseInfo = updateAvailable!!,
-                status = downloadStatus,
-                onUpdate = {
-                    sharedViewModel.downloadAppUpdate(it.downloadUrl, it.title)
-                },
-                onCancel = {
-                    sharedViewModel.cancelDownload()
-                },
-                onInstall = {
-                    sharedViewModel.installUpdate(it)
-                }
-            )
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = if (isChecking) stringResource(Res.string.checking_for_updates) else stringResource(Res.string.your_app_is_up_to_date),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Current Version: v$currentVersion",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { updateViewModel.manualCheckForUpdate() },
-                    enabled = !isChecking,
-                    colors = ButtonDefaults.buttonColors(contentColor = Color.White)
-                ) {
-                    if (isChecking) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                    }
-                    Text(if (isChecking) stringResource(Res.string.checking) else stringResource(Res.string.check_for_update))
-                }
-
-                latestReleaseInfo?.let { release ->
-                    Spacer(modifier = Modifier.height(32.dp))
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text(
-                                text = "Changelog for v${release.version}",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Markdown(content = release.changelog)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun UpdateAvailableContent(
-    releaseInfo: ReleaseInfo,
-    status: SharedViewModel.DownloadStatus,
-    onUpdate: (ReleaseInfo) -> Unit,
-    onCancel: () -> Unit,
-    onInstall: (String) -> Unit
-) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(Res.string.new_update_available, releaseInfo.version),
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(text = stringResource(Res.string.changelog), style = MaterialTheme.typography.labelLarge)
-            Spacer(modifier = Modifier.height(8.dp))
-            Markdown(content = releaseInfo.changelog)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            when (status) {
-                is SharedViewModel.DownloadStatus.Downloading -> {
-                    Text(stringResource(Res.string.downloading_progress, (status.progress * 100).toInt()))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        progress = { status.progress },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedButton(
-                        onClick = onCancel,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(Res.string.cancel))
-                    }
-                }
-                is SharedViewModel.DownloadStatus.Verifying -> {
-                    Text(stringResource(Res.string.verifying_update))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    LinearProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-                is SharedViewModel.DownloadStatus.Downloaded -> {
-                    Button(
-                        onClick = { onInstall(status.path) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(Res.string.install_now))
-                    }
-                }
-                is SharedViewModel.DownloadStatus.Idle -> {
-                    Button(
-                        onClick = { onUpdate(releaseInfo) },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(Res.string.download_and_install))
-                    }
-                }
-            }
-        }
-    }
-}
+// UpdatesSettingsContent has been moved to SettingsUpdateScreen.kt
 
 @OptIn(coil3.annotation.ExperimentalCoilApi::class)
 @Composable

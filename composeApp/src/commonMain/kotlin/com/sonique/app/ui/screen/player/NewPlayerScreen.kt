@@ -64,6 +64,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -85,6 +86,7 @@ import org.koin.compose.koinInject
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
+import sonique.composeapp.generated.resources.baseline_share_24
 import sonique.composeapp.generated.resources.fullscreen
 import sonique.composeapp.generated.resources.lyrics
 import sonique.composeapp.generated.resources.more_horiz
@@ -123,7 +125,7 @@ fun NewPlayerScreen(
 
     // Sheet/dialog visibility state
     var showQueueSheet by remember { mutableStateOf(false) }
-    var showLyricsSheet by remember { mutableStateOf(false) }
+    var showInlineLyrics by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
 
     // ── Colors — matching Metrolist BLUR background mode defaults ────────────
@@ -136,6 +138,7 @@ fun NewPlayerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .pointerInput(Unit) {} // Consume all touches to prevent leakage triggering home page pull-refresh
             .background(Color(0xFF1C1B1F)) // Metrolist surfaceContainer default dark
     ) {
         // ── Blur background — matches Metrolist PlayerBackgroundStyle.BLUR ──
@@ -212,26 +215,53 @@ fun NewPlayerScreen(
                         }
                     }
 
-                    // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
-                    // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
-                    BoxWithConstraints(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        val thumbnailSize = maxWidth - (PlayerHorizontalPadding * 2)
-                        Box(
-                            modifier = Modifier
-                                .size(thumbnailSize)
-                                .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                        ) {
-                            if (trackArtwork.isNotEmpty()) {
-                                AsyncImage(
-                                    model = trackArtwork,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
+                    // Album artwork or Lyrics - toggles inline where album art is
+                    AnimatedContent(
+                        targetState = showInlineLyrics,
+                        transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                        label = "thumbnailOrLyrics"
+                    ) { showLyrics ->
+                        if (showLyrics && currentSongData?.lyricsData != null) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = PlayerHorizontalPadding)
+                                    .fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                LyricsView(
+                                    lyricsData = currentSongData!!.lyricsData!!,
+                                    timeLine = sharedViewModel.timeline,
+                                    onLineClick = { progress ->
+                                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
+                                    },
+                                    backgroundColor = Color.Transparent,
+                                    playerContentColor = Color.White,
                                 )
+                            }
+                        } else {
+                            // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
+                            // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
+                            BoxWithConstraints(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                val thumbnailSize = maxWidth - (PlayerHorizontalPadding * 2)
+                                Box(
+                                    modifier = Modifier
+                                        .size(thumbnailSize)
+                                        .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
+                                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                                        .clickable { showInlineLyrics = !showInlineLyrics }
+                                ) {
+                                    if (trackArtwork.isNotEmpty()) {
+                                        AsyncImage(
+                                            model = trackArtwork,
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -331,7 +361,7 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(42.dp)
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.fullscreen),
+                            painter = painterResource(Res.drawable.baseline_share_24),
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
@@ -362,15 +392,12 @@ fun NewPlayerScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Slider — SliderStyle.SLIM from Player.kt lines 1449-1482 ──────
-            // Custom Canvas-drawn track (PlayerSliderTrack), no thumb, 10dp height.
+            // ── Slider ──────
             var sliderPosition by remember { mutableStateOf<Long?>(null) }
             val displayPosition = sliderPosition?.toFloat()
                 ?: if (timelineState.total > 0) timelineState.current.toFloat() else 0f
             val duration = timelineState.total.toFloat()
 
-            // Colors match PlayerSliderColors.getSliderColors() for BLUR background:
-            // activeColor = White, inactiveColor = White@40%
             val sliderColors = SliderDefaults.colors(
                 activeTrackColor = textButtonColor,
                 activeTickColor = textButtonColor,
@@ -484,12 +511,12 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Play/Pause — white pill with icon + text label
-                FilledIconButton(
+                // Play/Pause — white pill with icon + text label (uses Button to keep color rendering correct)
+                androidx.compose.material3.Button(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.PlayPause) },
                     shape = RoundedCornerShape(50),
                     interactionSource = ppSource,
-                    colors = IconButtonDefaults.filledIconButtonColors(
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                         containerColor = textButtonColor,
                         contentColor = iconButtonColor
                     ),
@@ -504,6 +531,7 @@ fun NewPlayerScreen(
                                 if (controllerState.isPlaying) Res.drawable.pause else Res.drawable.play
                             ),
                             contentDescription = null,
+                            tint = iconButtonColor,
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -609,14 +637,14 @@ fun NewPlayerScreen(
                 val hasLyrics = currentSongData?.lyricsData != null
                 PlayerQueueButton(
                     icon = Res.drawable.lyrics,
-                    isActive = showLyricsSheet,
+                    isActive = showInlineLyrics,
                     shape = middleShape,
                     modifier = Modifier.size(buttonSize),
                     textButtonColor = textButtonColor,
                     iconButtonColor = iconButtonColor,
                     iconSize = iconSize,
                     enabled = hasLyrics,
-                    onClick = { if (hasLyrics) showLyricsSheet = !showLyricsSheet }
+                    onClick = { if (hasLyrics) showInlineLyrics = !showInlineLyrics }
                 )
 
                 // Repeat button
@@ -654,37 +682,6 @@ fun NewPlayerScreen(
                         tint = iconButtonColor,
                         modifier = Modifier.size(iconSize)
                     )
-                }
-            }
-
-            // ── Lyrics sheet overlay ─────────────────────────────────────────
-            if (showLyricsSheet) {
-                val lyricsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-                ModalBottomSheet(
-                    onDismissRequest = { showLyricsSheet = false },
-                    sheetState = lyricsSheetState,
-                    containerColor = Color(0xFF1C1B1F),
-                ) {
-                    currentSongData?.lyricsData?.let { lyricsData ->
-                        LyricsView(
-                            lyricsData = lyricsData,
-                            timeLine = sharedViewModel.timeline,
-                            onLineClick = { progress ->
-                                sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
-                            },
-                            backgroundColor = Color(0xFF1C1B1F),
-                            playerContentColor = Color.White,
-                        )
-                    } ?: run {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No lyrics available", color = Color.White)
-                        }
-                    }
                 }
             }
 

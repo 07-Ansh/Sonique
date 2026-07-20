@@ -1,7 +1,6 @@
 package com.sonique.app.ui.screen.player
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -18,60 +17,40 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material.icons.rounded.RepeatOne
-import androidx.compose.material.icons.rounded.Shuffle
-import androidx.compose.material.icons.rounded.SkipNext
-import androidx.compose.material.icons.rounded.SkipPrevious
-import androidx.compose.material.icons.rounded.KeyboardArrowDown
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.Fullscreen
-import androidx.compose.material.icons.rounded.MoreHoriz
-import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.rounded.FavoriteBorder
-import androidx.compose.material.icons.automirrored.outlined.QueueMusic
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Text
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -80,50 +59,45 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-import org.koin.compose.koinInject
-import com.sonique.app.ui.component.LyricsView
+import com.sonique.app.extension.formatDuration
 import com.sonique.app.ui.component.QueueBottomSheet
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
-import com.sonique.app.extension.formatDuration
 import com.sonique.domain.mediaservice.handler.RepeatState
-import com.sonique.domain.mediaservice.handler.ControlState
-import com.sonique.domain.data.model.streams.TimeLine
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 import sonique.composeapp.generated.resources.Res
-import sonique.composeapp.generated.resources.baseline_access_alarm_24
-import sonique.composeapp.generated.resources.baseline_fullscreen_24
-import sonique.composeapp.generated.resources.more_horiz
-import sonique.composeapp.generated.resources.fullscreen
-import sonique.composeapp.generated.resources.timer
-import sonique.composeapp.generated.resources.shuffle_on
-import sonique.composeapp.generated.resources.shuffle
-import sonique.composeapp.generated.resources.lyrics
-import sonique.composeapp.generated.resources.repeat_one_on
-import sonique.composeapp.generated.resources.repeat_on
-import sonique.composeapp.generated.resources.repeat
-import sonique.composeapp.generated.resources.skip_previous
-import sonique.composeapp.generated.resources.skip_next
 import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
-import sonique.composeapp.generated.resources.play
+import sonique.composeapp.generated.resources.fullscreen
+import sonique.composeapp.generated.resources.lyrics
+import sonique.composeapp.generated.resources.more_horiz
 import sonique.composeapp.generated.resources.pause
+import sonique.composeapp.generated.resources.play
 import sonique.composeapp.generated.resources.queue_music
-import org.jetbrains.compose.resources.painterResource
+import sonique.composeapp.generated.resources.repeat
+import sonique.composeapp.generated.resources.repeat_on
+import sonique.composeapp.generated.resources.repeat_one_on
+import sonique.composeapp.generated.resources.shuffle
+import sonique.composeapp.generated.resources.shuffle_on
+import sonique.composeapp.generated.resources.skip_next
+import sonique.composeapp.generated.resources.skip_previous
+import sonique.composeapp.generated.resources.timer
 import kotlin.math.roundToLong
+
+// Matches Metrolist constants
+private val PlayerHorizontalPadding = 32.dp
+private val ThumbnailCornerRadius = 3.dp  // cornerRadius * 2 = 6.dp applied in UI
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -132,7 +106,6 @@ fun NewPlayerScreen(
     navController: NavController,
     onDismiss: () -> Unit = {},
 ) {
-    val context = LocalContext.current
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
@@ -141,7 +114,7 @@ fun NewPlayerScreen(
     val trackArtist = currentSongData?.artistName ?: ""
     val trackArtwork = currentSongData?.thumbnailURL ?: ""
 
-    // Spacings and Colors matching Metrolist code perfectly
+    // ── Colors — matching Metrolist BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
     val textButtonColor = Color.White
     val iconButtonColor = Color.Black
@@ -151,129 +124,178 @@ fun NewPlayerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1C1B1F)) // OuterTune / Metrolist Default Background
+            .background(Color(0xFF1C1B1F)) // Metrolist surfaceContainer default dark
     ) {
-        // Blur Background
-        if (trackArtwork.isNotEmpty()) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                AsyncImage(
-                    model = trackArtwork,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .blur(150.dp)
-                        .alpha(0.35f)
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f))
-                )
+        // ── Blur background — matches Metrolist PlayerBackgroundStyle.BLUR ──
+        AnimatedContent(
+            targetState = trackArtwork,
+            transitionSpec = { fadeIn(tween(800)).togetherWith(fadeOut(tween(800))) },
+            label = "blurBackground"
+        ) { url ->
+            if (url.isNotEmpty()) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    AsyncImage(
+                        model = url,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .blur(150.dp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.3f))
+                    )
+                }
             }
         }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
+                .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-                .padding(bottom = 24.dp)
                 .animateContentSize()
         ) {
-            // Metrolist TitleHeader Block
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 48.dp)
-                ) {
-                    Text(
-                        text = "Now Playing",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextBackgroundColor
-                    )
-                    Text(
-                        text = "Your Queue",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = TextBackgroundColor.copy(alpha = 0.8f),
-                        maxLines = 1,
-                        modifier = Modifier.basicMarquee()
-                    )
-                }
-            }
-
-            // Thumbnail container
+            // ── Thumbnail section (header + artwork) ─────────────────────────
+            // Mirrors Metrolist Thumbnail.kt: statusBarsPadding + Column with ThumbnailHeader
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.weight(1f)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(310.dp)
-                        .clip(RoundedCornerShape(6.dp)) // ThumbnailCornerRadius (3.dp * 2 = 6.dp)
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
                 ) {
-                    if (trackArtwork.isNotEmpty()) {
-                        AsyncImage(
-                            model = trackArtwork,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                    // statusBarsPadding matches Thumbnail.kt line 329
+                    Spacer(modifier = Modifier.statusBarsPadding())
+
+                    // ThumbnailHeader — matches Thumbnail.kt ThumbnailHeader composable
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .padding(horizontal = 48.dp)
+                        ) {
+                            Text(
+                                text = "Now Playing",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextBackgroundColor
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Your Queue",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = TextBackgroundColor.copy(alpha = 0.8f),
+                                maxLines = 1,
+                                modifier = Modifier.basicMarquee()
+                            )
+                        }
+                    }
+
+                    // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
+                    // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
+                    BoxWithConstraints(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        val thumbnailSize = maxWidth - (PlayerHorizontalPadding * 2)
+                        Box(
+                            modifier = Modifier
+                                .size(thumbnailSize)
+                                .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            if (trackArtwork.isNotEmpty()) {
+                                AsyncImage(
+                                    model = trackArtwork,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            // controlsContent body
+            // ── controlsContent — mirrors Player.kt controlsContent lambda ───
             val playPauseRoundness by animateDpAsState(
                 targetValue = if (controllerState.isPlaying) 24.dp else 36.dp,
                 animationSpec = tween(durationMillis = 90, easing = LinearEasing),
                 label = "playPauseRoundness"
             )
 
-            // Song Info layout Block
+            // Song info + action buttons row
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp) // PlayerHorizontalPadding = 32.dp
+                    .padding(horizontal = PlayerHorizontalPadding)
             ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = trackTitle,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = TextBackgroundColor,
-                        modifier = Modifier.basicMarquee()
-                    )
-                    Text(
-                        text = trackArtist,
-                        style = MaterialTheme.typography.titleMedium.copy(color = TextBackgroundColor),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.basicMarquee()
-                    )
+                Column(modifier = Modifier.weight(1f)) {
+                    // Title with AnimatedContent + basicMarquee
+                    AnimatedContent(
+                        targetState = trackTitle,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        label = "title"
+                    ) { title ->
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = TextBackgroundColor,
+                            modifier = Modifier.basicMarquee(
+                                iterations = 1, initialDelayMillis = 3000, velocity = 30.dp
+                            )
+                        )
+                    }
+
+                    // Artist
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .basicMarquee(
+                                iterations = 1, initialDelayMillis = 3000, velocity = 30.dp
+                            )
+                            .padding(end = 12.dp)
+                    ) {
+                        Text(
+                            text = trackArtist,
+                            style = MaterialTheme.typography.titleMedium.copy(color = TextBackgroundColor),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Action segment pill shapes (Share / Favorite)
-                val shareShape = RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp, topEnd = 3.dp, bottomEnd = 3.dp)
-                val favShape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp, topEnd = 50.dp, bottomEnd = 50.dp)
+                // Pill-shaped Share + Favourite buttons — exact shapes from Player.kt lines 1126-1140
+                val shareShape = RoundedCornerShape(
+                    topStart = 50.dp, bottomStart = 50.dp,
+                    topEnd = 3.dp, bottomEnd = 3.dp
+                )
+                val favShape = RoundedCornerShape(
+                    topStart = 3.dp, bottomStart = 3.dp,
+                    topEnd = 50.dp, bottomEnd = 50.dp
+                )
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Share button (fullscreen icon when not showing lyrics)
                     FilledIconButton(
                         onClick = { },
                         shape = shareShape,
@@ -290,13 +312,14 @@ fun NewPlayerScreen(
                         )
                     }
 
+                    // Like button
                     val isLiked = controllerState.isLiked
                     FilledIconButton(
                         onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
                         shape = favShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = textButtonColor,
-                            contentColor = if (isLiked) MaterialTheme.colorScheme.error else iconButtonColor
+                            contentColor = iconButtonColor
                         ),
                         modifier = Modifier.size(42.dp)
                     ) {
@@ -305,6 +328,7 @@ fun NewPlayerScreen(
                                 if (isLiked) Res.drawable.favorite else Res.drawable.favorite_border
                             ),
                             contentDescription = null,
+                            tint = if (isLiked) MaterialTheme.colorScheme.error else iconButtonColor,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -313,49 +337,55 @@ fun NewPlayerScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Progress Slider
-            val progressFactor = if (timelineState.total > 0) timelineState.current.toFloat() / timelineState.total else 0f
-            var sliderValue by remember(progressFactor) { mutableFloatStateOf(progressFactor * 100f) }
-            val inactiveTrackColor = Color.White.copy(alpha = 0.4f)
+            // ── Slider — matches SliderStyle.SLIM from Player.kt lines 1449-1482 ─
+            var sliderPosition by remember { mutableStateOf<Long?>(null) }
+            val displayPosition = sliderPosition?.toFloat()
+                ?: if (timelineState.total > 0) timelineState.current.toFloat() else 0f
+            val duration = timelineState.total.toFloat()
+            val inactiveColor = Color.White.copy(alpha = 0.4f)
+
             Slider(
-                value = sliderValue,
-                onValueChange = { sliderValue = it },
+                value = displayPosition,
+                valueRange = 0f..(if (duration > 0f) duration else 0f),
+                onValueChange = { sliderPosition = it.toLong() },
                 onValueChangeFinished = {
-                    val targetMs = (timelineState.total * (sliderValue / 100f)).roundToLong()
-                    sharedViewModel.onUIEvent(UIEvent.UpdateProgress(targetMs.toFloat()))
+                    sliderPosition?.let {
+                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it.toFloat()))
+                    }
+                    sliderPosition = null
                 },
-                valueRange = 0f..100f,
                 colors = SliderDefaults.colors(
                     activeTrackColor = textButtonColor,
                     activeTickColor = textButtonColor,
                     thumbColor = textButtonColor,
-                    inactiveTrackColor = inactiveTrackColor,
+                    inactiveTrackColor = inactiveColor,
                     disabledActiveTrackColor = textButtonColor,
-                    disabledInactiveTrackColor = inactiveTrackColor,
+                    disabledInactiveTrackColor = inactiveColor,
                     disabledThumbColor = textButtonColor
                 ),
                 thumb = { Spacer(modifier = Modifier.size(0.dp)) },
-                modifier = Modifier.padding(horizontal = 32.dp) // PlayerHorizontalPadding = 32.dp
+                modifier = Modifier.padding(horizontal = PlayerHorizontalPadding)
             )
 
             Spacer(Modifier.height(4.dp))
 
+            // Duration labels — matches Player.kt lines 1487-1510
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 36.dp) // PlayerHorizontalPadding + 4.dp = 36.dp
+                    .padding(horizontal = PlayerHorizontalPadding + 4.dp)
             ) {
                 Text(
-                    text = formatDuration((timelineState.total * (sliderValue / 100f)).roundToLong()),
+                    text = formatDuration((sliderPosition ?: timelineState.current).coerceAtLeast(0L)),
                     style = MaterialTheme.typography.labelMedium,
                     color = TextBackgroundColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = formatDuration(timelineState.total),
+                    text = if (timelineState.total > 0) formatDuration(timelineState.total) else "",
                     style = MaterialTheme.typography.labelMedium,
                     color = TextBackgroundColor,
                     maxLines = 1,
@@ -365,49 +395,54 @@ fun NewPlayerScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // Playback controls Row (SkipPrevious, PlayPause, SkipNext)
+            // ── New design playback controls — Player.kt lines 1520-1701 ─────
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp) // PlayerHorizontalPadding
+                    .padding(horizontal = PlayerHorizontalPadding)
             ) {
-                val backInteractionSource = remember { MutableInteractionSource() }
-                val nextInteractionSource = remember { MutableInteractionSource() }
-                val playPauseInteractionSource = remember { MutableInteractionSource() }
+                val backSource = remember { MutableInteractionSource() }
+                val nextSource = remember { MutableInteractionSource() }
+                val ppSource = remember { MutableInteractionSource() }
 
-                val isPlayPausePressed by playPauseInteractionSource.collectIsPressedAsState()
-                val isBackPressed by backInteractionSource.collectIsPressedAsState()
-                val isNextPressed by nextInteractionSource.collectIsPressedAsState()
+                val isPPPressed by ppSource.collectIsPressedAsState()
+                val isBackPressed by backSource.collectIsPressedAsState()
+                val isNextPressed by nextSource.collectIsPressedAsState()
 
-                val playPauseWeight by animateFloatAsState(
-                    targetValue = if (isPlayPausePressed) 1.9f else if (isBackPressed || isNextPressed) 1.1f else 1.3f,
+                val ppWeight by animateFloatAsState(
+                    targetValue = if (isPPPressed) 1.9f
+                    else if (isBackPressed || isNextPressed) 1.1f
+                    else 1.3f,
                     animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
                     label = "playPauseWeight"
                 )
-                val backButtonWeight by animateFloatAsState(
-                    targetValue = if (isBackPressed) 0.65f else if (isPlayPausePressed) 0.35f else 0.45f,
+                val backWeight by animateFloatAsState(
+                    targetValue = if (isBackPressed) 0.65f
+                    else if (isPPPressed) 0.35f
+                    else 0.45f,
                     animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
                     label = "backButtonWeight"
                 )
-                val nextButtonWeight by animateFloatAsState(
-                    targetValue = if (isNextPressed) 0.65f else if (isPlayPausePressed) 0.35f else 0.45f,
+                val nextWeight by animateFloatAsState(
+                    targetValue = if (isNextPressed) 0.65f
+                    else if (isPPPressed) 0.35f
+                    else 0.45f,
                     animationSpec = spring(dampingRatio = 0.6f, stiffness = 500f),
                     label = "nextButtonWeight"
                 )
 
+                // Previous
                 FilledIconButton(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Previous) },
                     shape = RoundedCornerShape(50),
-                    interactionSource = backInteractionSource,
+                    interactionSource = backSource,
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = sideButtonContainerColor,
                         contentColor = sideButtonContentColor
                     ),
-                    modifier = Modifier
-                        .height(68.dp)
-                        .weight(backButtonWeight)
+                    modifier = Modifier.height(68.dp).weight(backWeight)
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.skip_previous),
@@ -418,17 +453,16 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
+                // Play/Pause — white pill with icon + text label
                 FilledIconButton(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.PlayPause) },
                     shape = RoundedCornerShape(50),
-                    interactionSource = playPauseInteractionSource,
+                    interactionSource = ppSource,
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = textButtonColor,
                         contentColor = iconButtonColor
                     ),
-                    modifier = Modifier
-                        .height(68.dp)
-                        .weight(playPauseWeight)
+                    modifier = Modifier.height(68.dp).weight(ppWeight)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -444,24 +478,24 @@ fun NewPlayerScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (controllerState.isPlaying) "Pause" else "Play",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
+                            color = iconButtonColor
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
+                // Next
                 FilledIconButton(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Next) },
                     shape = RoundedCornerShape(50),
-                    interactionSource = nextInteractionSource,
+                    interactionSource = nextSource,
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = sideButtonContainerColor,
                         contentColor = sideButtonContentColor
                     ),
-                    modifier = Modifier
-                        .height(68.dp)
-                        .weight(nextButtonWeight)
+                    modifier = Modifier.height(68.dp).weight(nextWeight)
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.skip_next),
@@ -473,88 +507,177 @@ fun NewPlayerScreen(
 
             Spacer(Modifier.height(30.dp))
 
-            // Bottom action icons row (Queue, Sleep Timer, Shuffle, Lyrics, Repeat, More Options)
+            // ── Bottom action row — matches Queue.kt new design (lines 266-417) ─
+            // Queue · Sleep Timer · Shuffle · Lyrics · Repeat · More (circle)
+            var showQueueSheet by remember { mutableStateOf(false) }
+
             Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp) // PlayerHorizontalPadding
+                    .padding(horizontal = 30.dp, vertical = 12.dp)
+                    .windowInsetsPadding(
+                        WindowInsets.systemBars.only(
+                            WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal
+                        )
+                    )
             ) {
-                var showQueueSheet by remember { mutableStateOf(false) }
+                val buttonSize = 42.dp
+                val iconSize = 24.dp
+                val queueShape = RoundedCornerShape(
+                    topStart = 50.dp, bottomStart = 50.dp,
+                    topEnd = 3.dp, bottomEnd = 3.dp
+                )
+                val middleShape = RoundedCornerShape(3.dp)
+                val repeatShape = RoundedCornerShape(
+                    topStart = 3.dp, bottomStart = 3.dp,
+                    topEnd = 50.dp, bottomEnd = 50.dp
+                )
 
-                ResizableIconButton(
+                // Queue button
+                PlayerQueueButton(
                     icon = Res.drawable.queue_music,
-                    color = TextBackgroundColor,
-                    modifier = Modifier.size(32.dp),
+                    isActive = false,
+                    shape = queueShape,
+                    modifier = Modifier.size(buttonSize),
+                    textButtonColor = textButtonColor,
+                    iconButtonColor = iconButtonColor,
+                    iconSize = iconSize,
                     onClick = { showQueueSheet = true }
                 )
 
-                ResizableIconButton(
+                // Sleep Timer button
+                PlayerQueueButton(
                     icon = Res.drawable.timer,
-                    color = TextBackgroundColor,
-                    modifier = Modifier.size(32.dp),
+                    isActive = false,
+                    shape = middleShape,
+                    modifier = Modifier.size(buttonSize),
+                    textButtonColor = textButtonColor,
+                    iconButtonColor = iconButtonColor,
+                    iconSize = iconSize,
                     onClick = { }
                 )
 
+                // Shuffle button
                 val isShuffle = controllerState.isShuffle
-                ResizableIconButton(
+                PlayerQueueButton(
                     icon = if (isShuffle) Res.drawable.shuffle_on else Res.drawable.shuffle,
-                    color = if (isShuffle) MaterialTheme.colorScheme.primary else TextBackgroundColor,
-                    modifier = Modifier.size(32.dp),
+                    isActive = isShuffle,
+                    shape = middleShape,
+                    modifier = Modifier.size(buttonSize),
+                    textButtonColor = textButtonColor,
+                    iconButtonColor = iconButtonColor,
+                    iconSize = iconSize,
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
                 )
 
-                ResizableIconButton(
+                // Lyrics button
+                PlayerQueueButton(
                     icon = Res.drawable.lyrics,
-                    color = TextBackgroundColor,
-                    modifier = Modifier.size(32.dp),
+                    isActive = false,
+                    shape = middleShape,
+                    modifier = Modifier.size(buttonSize),
+                    textButtonColor = textButtonColor,
+                    iconButtonColor = iconButtonColor,
+                    iconSize = iconSize,
                     onClick = { }
                 )
 
+                // Repeat button
                 val isRepeat = controllerState.repeatState != RepeatState.None
                 val isRepeatOne = controllerState.repeatState == RepeatState.One
-                val repeatIcon = if (isRepeat) {
-                    if (isRepeatOne) Res.drawable.repeat_one_on else Res.drawable.repeat_on
-                } else {
-                    Res.drawable.repeat
-                }
-                ResizableIconButton(
-                    icon = repeatIcon,
-                    color = if (isRepeat) MaterialTheme.colorScheme.primary else TextBackgroundColor,
-                    modifier = Modifier.size(32.dp),
+                PlayerQueueButton(
+                    icon = if (isRepeat) {
+                        if (isRepeatOne) Res.drawable.repeat_one_on else Res.drawable.repeat_on
+                    } else {
+                        Res.drawable.repeat
+                    },
+                    isActive = isRepeat,
+                    shape = repeatShape,
+                    modifier = Modifier.size(buttonSize),
+                    textButtonColor = textButtonColor,
+                    iconButtonColor = iconButtonColor,
+                    iconSize = iconSize,
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
                 )
 
+                Spacer(modifier = Modifier.weight(1f))
+
+                // More button — circle, matches Queue.kt lines 386-416
                 Box(
-                    contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(RoundedCornerShape(24.dp))
+                        .size(buttonSize)
+                        .clip(CircleShape)
                         .background(textButtonColor)
-                        .clickable { }
+                        .clickable { },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Image(
+                    Icon(
                         painter = painterResource(Res.drawable.more_horiz),
                         contentDescription = null,
-                        colorFilter = ColorFilter.tint(iconButtonColor),
-                        modifier = Modifier.size(24.dp)
+                        tint = iconButtonColor,
+                        modifier = Modifier.size(iconSize)
                     )
                 }
+            }
 
-                if (showQueueSheet) {
-                    QueueBottomSheet(
-                        onDismiss = { showQueueSheet = false }
-                    )
-                }
+            if (showQueueSheet) {
+                QueueBottomSheet(onDismiss = { showQueueSheet = false })
             }
         }
     }
 }
 
+/**
+ * Pill-shaped action button used in the bottom bar of the player.
+ * Matches Metrolist Queue.kt PlayerQueueButton composable.
+ * Active state = filled with textButtonColor; inactive = semi-transparent outline.
+ */
+@Composable
+fun PlayerQueueButton(
+    icon: DrawableResource,
+    isActive: Boolean,
+    shape: androidx.compose.ui.graphics.Shape,
+    modifier: Modifier = Modifier,
+    textButtonColor: Color = Color.White,
+    iconButtonColor: Color = Color.Black,
+    iconSize: androidx.compose.ui.unit.Dp = 24.dp,
+    enabled: Boolean = true,
+    onClick: () -> Unit = {},
+) {
+    val containerColor by animateColorAsState(
+        targetValue = if (isActive) textButtonColor else Color.White.copy(alpha = 0.15f),
+        label = "queueButtonContainer"
+    )
+    val contentColor by animateColorAsState(
+        targetValue = if (isActive) iconButtonColor else Color.White,
+        label = "queueButtonContent"
+    )
+    Box(
+        modifier = modifier
+            .clip(shape)
+            .background(containerColor)
+            .clickable(enabled = enabled, onClick = onClick)
+            .alpha(if (enabled) 1f else 0.5f),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = contentColor,
+            modifier = Modifier.size(iconSize)
+        )
+    }
+}
+
+/**
+ * Resizable icon button using a painter resource.
+ * Matches Metrolist ResizableIconButton used in the old-style controls row.
+ */
 @Composable
 fun ResizableIconButton(
-    icon: org.jetbrains.compose.resources.DrawableResource,
+    icon: DrawableResource,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.onSurface,
     enabled: Boolean = true,

@@ -387,22 +387,16 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                     Material3SettingsItem(
                         title = { Text("Ambience Mode") },
                         description = { Text("Show gradient background based on album art colors") },
-                        trailingContent = {
-                            Switch(
-                                checked = ambienceMode,
-                                onCheckedChange = { viewModel.setAmbienceMode(it) }
-                            )
-                        }
+                        isSwitch = true,
+                        checked = ambienceMode,
+                        onCheckedChange = { viewModel.setAmbienceMode(it) }
                     ),
                     Material3SettingsItem(
                         title = { Text("Frosted Player Background") },
                         description = { Text("Blur background artwork based on album art using frosted glassmorphism") },
-                        trailingContent = {
-                            Switch(
-                                checked = blurPlayerBackground,
-                                onCheckedChange = { viewModel.setBlurPlayerBackground(it) }
-                            )
-                        }
+                        isSwitch = true,
+                        checked = blurPlayerBackground,
+                        onCheckedChange = { viewModel.setBlurPlayerBackground(it) }
                     )
                 )
             )
@@ -415,12 +409,9 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                     Material3SettingsItem(
                         title = { Text("Expressive Player Controls") },
                         description = { Text("Use Material 3 Expressive shapes for playback buttons") },
-                        trailingContent = {
-                            Switch(
-                                checked = enableExpressivePlayerControls,
-                                onCheckedChange = { viewModel.setEnableExpressivePlayerControls(it) }
-                            )
-                        }
+                        isSwitch = true,
+                        checked = enableExpressivePlayerControls,
+                        onCheckedChange = { viewModel.setEnableExpressivePlayerControls(it) }
                     )
                 )
             )
@@ -476,13 +467,9 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                             Material3SettingsItem(
                                 title = { Text("Apple Liquid Glass") },
                                 description = { Text("Apple-style floating bottom layout with real-time backdrop luminance sensing") },
-                                onClick = { viewModel.setEnableLiquidGlass(!enableLiquidGlass) },
-                                trailingContent = {
-                                    Switch(
-                                        checked = enableLiquidGlass,
-                                        onCheckedChange = { viewModel.setEnableLiquidGlass(it) }
-                                    )
-                                }
+                                isSwitch = true,
+                                checked = enableLiquidGlass,
+                                onCheckedChange = { viewModel.setEnableLiquidGlass(it) }
                             )
                         )
                         if (!enableLiquidGlass) {
@@ -490,13 +477,9 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                                 Material3SettingsItem(
                                     title = { Text("Page Transitions") },
                                     description = { Text("Enable sliding animation when switching pages") },
-                                    onClick = { viewModel.setEnablePageTransitions(!enablePageTransitions) },
-                                    trailingContent = {
-                                        Switch(
-                                            checked = enablePageTransitions,
-                                            onCheckedChange = { viewModel.setEnablePageTransitions(it) }
-                                        )
-                                    }
+                                    isSwitch = true,
+                                    checked = enablePageTransitions,
+                                    onCheckedChange = { viewModel.setEnablePageTransitions(it) }
                                 )
                             )
                         }
@@ -724,24 +707,18 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.normalize_volume)) },
                             description = { Text(stringResource(Res.string.balance_media_loudness)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = normalizeVolume,
-                                    onCheckedChange = { viewModel.setNormalizeVolume(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = normalizeVolume,
+                            onCheckedChange = { viewModel.setNormalizeVolume(it) }
                         )
                     )
                     add(
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.skip_silent)) },
                             description = { Text(stringResource(Res.string.skip_no_music_part)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = skipSilent,
-                                    onCheckedChange = { viewModel.setSkipSilent(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = skipSilent,
+                            onCheckedChange = { viewModel.setSkipSilent(it) }
                         )
                     )
                     if (getPlatform() == Platform.Android) {
@@ -797,22 +774,16 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.save_playback_state)) },
                         description = { Text(stringResource(Res.string.save_shuffle_and_repeat_mode)) },
-                        trailingContent = {
-                            Switch(
-                                checked = savePlaybackState,
-                                onCheckedChange = { viewModel.setSavedPlaybackState(it) }
-                            )
-                        }
+                        isSwitch = true,
+                        checked = savePlaybackState,
+                        onCheckedChange = { viewModel.setSavedPlaybackState(it) }
                     ),
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.save_last_played)) },
                         description = { Text(stringResource(Res.string.save_last_played_track_and_queue)) },
-                        trailingContent = {
-                            Switch(
-                                checked = saveLastPlayed,
-                                onCheckedChange = { viewModel.setSaveLastPlayed(it) }
-                            )
-                        }
+                        isSwitch = true,
+                        checked = saveLastPlayed,
+                        onCheckedChange = { viewModel.setSaveLastPlayed(it) }
                     )
                 )
             )
@@ -826,22 +797,16 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.kill_service_on_exit)) },
                             description = { Text(stringResource(Res.string.kill_service_on_exit_description)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = killServiceOnExit,
-                                    onCheckedChange = { viewModel.setKillServiceOnExit(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = killServiceOnExit,
+                            onCheckedChange = { viewModel.setKillServiceOnExit(it) }
                         ),
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.keep_service_alive)) },
                             description = { Text(stringResource(Res.string.keep_service_alive_description)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = keepServiceAlive,
-                                    onCheckedChange = { viewModel.setKeepServiceAlive(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = keepServiceAlive,
+                            onCheckedChange = { viewModel.setKeepServiceAlive(it) }
                         )
                     )
                 )
@@ -856,12 +821,9 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.crossfade)) },
                             description = { Text(stringResource(Res.string.crossfade_description)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = crossfadeEnabled,
-                                    onCheckedChange = { viewModel.setCrossfadeEnabled(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = crossfadeEnabled,
+                            onCheckedChange = { viewModel.setCrossfadeEnabled(it) }
                         )
                     )
                     if (crossfadeEnabled) {
@@ -925,12 +887,9 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
                                 Material3SettingsItem(
                                     title = { Text(stringResource(Res.string.crossfade_dj_mode)) },
                                     description = { Text(stringResource(Res.string.crossfade_dj_mode_description)) },
-                                    trailingContent = {
-                                        Switch(
-                                            checked = crossfadeDjMode,
-                                            onCheckedChange = { viewModel.setCrossfadeDjMode(it) }
-                                        )
-                                    }
+                                    isSwitch = true,
+                                    checked = crossfadeDjMode,
+                                    onCheckedChange = { viewModel.setCrossfadeDjMode(it) }
                                 )
                             )
                         }
@@ -984,25 +943,17 @@ private fun SpotifySettingsContent(viewModel: SettingsViewModel, navController: 
                         title = { Text(stringResource(Res.string.enable_spotify_lyrics)) },
                         description = { Text(stringResource(Res.string.spotify_lyrics_info)) },
                         enabled = spotifyLoggedIn,
-                        trailingContent = {
-                            Switch(
-                                checked = spotifyLyrics && spotifyLoggedIn,
-                                onCheckedChange = { viewModel.setSpotifyLyrics(it) },
-                                enabled = spotifyLoggedIn
-                            )
-                        }
+                        isSwitch = true,
+                        checked = spotifyLyrics && spotifyLoggedIn,
+                        onCheckedChange = { viewModel.setSpotifyLyrics(it) }
                     ),
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.enable_canvas)) },
                         description = { Text(stringResource(Res.string.canvas_info)) },
                         enabled = spotifyLoggedIn,
-                        trailingContent = {
-                            Switch(
-                                checked = spotifyCanvas && spotifyLoggedIn,
-                                onCheckedChange = { viewModel.setSpotifyCanvas(it) },
-                                enabled = spotifyLoggedIn
-                            )
-                        }
+                        isSwitch = true,
+                        checked = spotifyCanvas && spotifyLoggedIn,
+                        onCheckedChange = { viewModel.setSpotifyCanvas(it) }
                     )
                 )
             )
@@ -1032,12 +983,9 @@ private fun SponsorBlockSettingsContent(viewModel: SettingsViewModel) {
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.enable_sponsor_block)) },
                             description = { Text(stringResource(Res.string.skip_sponsor_part_of_video)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = enableSponsorBlock,
-                                    onCheckedChange = { viewModel.setSponsorBlockEnabled(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = enableSponsorBlock,
+                            onCheckedChange = { viewModel.setSponsorBlockEnabled(it) }
                         )
                     )
                     if (enableSponsorBlock) {
@@ -1119,12 +1067,9 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.backup_downloaded)) },
                         description = { Text(stringResource(Res.string.backup_downloaded_description)) },
-                        trailingContent = {
-                            Switch(
-                                checked = backupDownloaded,
-                                onCheckedChange = { viewModel.setBackupDownloaded(it) }
-                            )
-                        }
+                        isSwitch = true,
+                        checked = backupDownloaded,
+                        onCheckedChange = { viewModel.setBackupDownloaded(it) }
                     )
                 )
             )
@@ -1615,42 +1560,30 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.play_explicit_content)) },
                             description = { Text(stringResource(Res.string.play_explicit_content_description)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = explicitContentEnabled,
-                                    onCheckedChange = { viewModel.setExplicitContentEnabled(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = explicitContentEnabled,
+                            onCheckedChange = { viewModel.setExplicitContentEnabled(it) }
                         ),
                         Material3SettingsItem(
                             title = { Text("Offline Playlist Cache") },
                             description = { Text("Keep your YouTube playlists synchronized offline") },
-                            trailingContent = {
-                                Switch(
-                                    checked = keepYoutubePlaylistOffline,
-                                    onCheckedChange = { viewModel.setKeepYouTubePlaylistOffline(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = keepYoutubePlaylistOffline,
+                            onCheckedChange = { viewModel.setKeepYouTubePlaylistOffline(it) }
                         ),
                         Material3SettingsItem(
                             title = { Text("Show Most Played") },
                             description = { Text("Show most played tracks under library suggestions") },
-                            trailingContent = {
-                                Switch(
-                                    checked = showMostPlayed,
-                                    onCheckedChange = { sharedViewModel.setShowMostPlayed(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = showMostPlayed,
+                            onCheckedChange = { sharedViewModel.setShowMostPlayed(it) }
                         ),
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.send_back_listening_data_to_google)) },
                             description = { Text(stringResource(Res.string.upload_your_listening_history_to_youtube_music_server_it_will_make_yt_music_recommendation_system_better_working_only_if_logged_in)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = sendData,
-                                    onCheckedChange = { viewModel.setSendBackToGoogle(it) }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = sendData,
+                            onCheckedChange = { viewModel.setSendBackToGoogle(it) }
                         )
                     )
                 )

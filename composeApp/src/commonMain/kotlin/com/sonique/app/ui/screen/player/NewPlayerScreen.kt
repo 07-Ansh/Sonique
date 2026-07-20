@@ -40,17 +40,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -62,6 +65,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -69,7 +73,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.sonique.app.extension.formatDuration
+import com.sonique.app.ui.component.LyricsView
+import com.sonique.app.ui.component.PlayerSliderTrack
 import com.sonique.app.ui.component.QueueBottomSheet
+import com.sonique.app.viewModel.NowPlayingScreenData
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
 import com.sonique.domain.mediaservice.handler.RepeatState
@@ -109,10 +116,16 @@ fun NewPlayerScreen(
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     val trackTitle = currentSongData?.nowPlayingTitle ?: ""
     val trackArtist = currentSongData?.artistName ?: ""
     val trackArtwork = currentSongData?.thumbnailURL ?: ""
+
+    // Sheet/dialog visibility state
+    var showQueueSheet by remember { mutableStateOf(false) }
+    var showLyricsSheet by remember { mutableStateOf(false) }
+    var showSleepTimerDialog by remember { mutableStateOf(false) }
 
     // ── Colors — matching Metrolist BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
@@ -295,9 +308,22 @@ fun NewPlayerScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Share button (fullscreen icon when not showing lyrics)
+                    // Share button — shares current track link
                     FilledIconButton(
-                        onClick = { },
+                        onClick = {
+                            val songId = currentSongData?.songInfoData?.videoId ?: ""
+                            if (songId.isNotEmpty()) {
+                                val intent = android.content.Intent().apply {
+                                    action = android.content.Intent.ACTION_SEND
+                                    type = "text/plain"
+                                    putExtra(
+                                        android.content.Intent.EXTRA_TEXT,
+                                        "https://music.youtube.com/watch?v=$songId"
+                                    )
+                                }
+                                context.startActivity(android.content.Intent.createChooser(intent, null))
+                            }
+                        },
                         shape = shareShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = textButtonColor,
@@ -337,12 +363,24 @@ fun NewPlayerScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            // ── Slider — matches SliderStyle.SLIM from Player.kt lines 1449-1482 ─
+            // ── Slider — SliderStyle.SLIM from Player.kt lines 1449-1482 ──────
+            // Custom Canvas-drawn track (PlayerSliderTrack), no thumb, 10dp height.
             var sliderPosition by remember { mutableStateOf<Long?>(null) }
             val displayPosition = sliderPosition?.toFloat()
                 ?: if (timelineState.total > 0) timelineState.current.toFloat() else 0f
             val duration = timelineState.total.toFloat()
-            val inactiveColor = Color.White.copy(alpha = 0.4f)
+
+            // Colors match PlayerSliderColors.getSliderColors() for BLUR background:
+            // activeColor = White, inactiveColor = White@40%
+            val sliderColors = SliderDefaults.colors(
+                activeTrackColor = textButtonColor,
+                activeTickColor = textButtonColor,
+                thumbColor = textButtonColor,
+                inactiveTrackColor = Color.White.copy(alpha = 0.4f),
+                disabledActiveTrackColor = textButtonColor,
+                disabledInactiveTrackColor = Color.White.copy(alpha = 0.4f),
+                disabledThumbColor = textButtonColor,
+            )
 
             Slider(
                 value = displayPosition,
@@ -354,17 +392,18 @@ fun NewPlayerScreen(
                     }
                     sliderPosition = null
                 },
-                colors = SliderDefaults.colors(
-                    activeTrackColor = textButtonColor,
-                    activeTickColor = textButtonColor,
-                    thumbColor = textButtonColor,
-                    inactiveTrackColor = inactiveColor,
-                    disabledActiveTrackColor = textButtonColor,
-                    disabledInactiveTrackColor = inactiveColor,
-                    disabledThumbColor = textButtonColor
-                ),
+                colors = sliderColors,
+                // Zero-size thumb: exactly Metrolist SliderStyle.SLIM line 1473
                 thumb = { Spacer(modifier = Modifier.size(0.dp)) },
-                modifier = Modifier.padding(horizontal = PlayerHorizontalPadding)
+                // Canvas-drawn 10dp round-capped track: Metrolist PlayerSliderTrack
+                track = { sliderState ->
+                    PlayerSliderTrack(
+                        sliderState = sliderState,
+                        colors = sliderColors,
+                        trackHeight = 10.dp,
+                    )
+                },
+                modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
             )
 
             Spacer(Modifier.height(4.dp))
@@ -436,11 +475,14 @@ fun NewPlayerScreen(
                 // Previous
                 FilledIconButton(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Previous) },
+                    enabled = controllerState.isPreviousAvailable,
                     shape = RoundedCornerShape(50),
                     interactionSource = backSource,
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = sideButtonContainerColor,
-                        contentColor = sideButtonContentColor
+                        contentColor = sideButtonContentColor,
+                        disabledContainerColor = sideButtonContainerColor.copy(alpha = 0.4f),
+                        disabledContentColor = sideButtonContentColor.copy(alpha = 0.4f),
                     ),
                     modifier = Modifier.height(68.dp).weight(backWeight)
                 ) {
@@ -489,11 +531,14 @@ fun NewPlayerScreen(
                 // Next
                 FilledIconButton(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Next) },
+                    enabled = controllerState.isNextAvailable,
                     shape = RoundedCornerShape(50),
                     interactionSource = nextSource,
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = sideButtonContainerColor,
-                        contentColor = sideButtonContentColor
+                        contentColor = sideButtonContentColor,
+                        disabledContainerColor = sideButtonContainerColor.copy(alpha = 0.4f),
+                        disabledContentColor = sideButtonContentColor.copy(alpha = 0.4f),
                     ),
                     modifier = Modifier.height(68.dp).weight(nextWeight)
                 ) {
@@ -509,7 +554,6 @@ fun NewPlayerScreen(
 
             // ── Bottom action row — matches Queue.kt new design (lines 266-417) ─
             // Queue · Sleep Timer · Shuffle · Lyrics · Repeat · More (circle)
-            var showQueueSheet by remember { mutableStateOf(false) }
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -547,7 +591,7 @@ fun NewPlayerScreen(
                     onClick = { showQueueSheet = true }
                 )
 
-                // Sleep Timer button
+                // Sleep Timer button — shows a simple info dialog (no timer service in Sonique)
                 PlayerQueueButton(
                     icon = Res.drawable.timer,
                     isActive = false,
@@ -556,7 +600,7 @@ fun NewPlayerScreen(
                     textButtonColor = textButtonColor,
                     iconButtonColor = iconButtonColor,
                     iconSize = iconSize,
-                    onClick = { }
+                    onClick = { showSleepTimerDialog = true }
                 )
 
                 // Shuffle button
@@ -572,16 +616,18 @@ fun NewPlayerScreen(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
                 )
 
-                // Lyrics button
+                // Lyrics button — toggles inline lyrics overlay
+                val hasLyrics = currentSongData?.lyricsData != null
                 PlayerQueueButton(
                     icon = Res.drawable.lyrics,
-                    isActive = false,
+                    isActive = showLyricsSheet,
                     shape = middleShape,
                     modifier = Modifier.size(buttonSize),
                     textButtonColor = textButtonColor,
                     iconButtonColor = iconButtonColor,
                     iconSize = iconSize,
-                    onClick = { }
+                    enabled = hasLyrics,
+                    onClick = { if (hasLyrics) showLyricsSheet = !showLyricsSheet }
                 )
 
                 // Repeat button
@@ -604,13 +650,13 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // More button — circle, matches Queue.kt lines 386-416
+                // More button — navigate to full NowPlayingScreen
                 Box(
                     modifier = Modifier
                         .size(buttonSize)
                         .clip(CircleShape)
                         .background(textButtonColor)
-                        .clickable { },
+                        .clickable { navController.navigate("nowPlaying") },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -622,6 +668,52 @@ fun NewPlayerScreen(
                 }
             }
 
+            // ── Lyrics sheet overlay ─────────────────────────────────────────
+            if (showLyricsSheet) {
+                val lyricsSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+                ModalBottomSheet(
+                    onDismissRequest = { showLyricsSheet = false },
+                    sheetState = lyricsSheetState,
+                    containerColor = Color(0xFF1C1B1F),
+                ) {
+                    currentSongData?.lyricsData?.let { lyricsData ->
+                        LyricsView(
+                            lyricsData = lyricsData,
+                            timeLine = sharedViewModel.timeline,
+                            onLineClick = { progress ->
+                                sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
+                            },
+                            backgroundColor = Color(0xFF1C1B1F),
+                            playerContentColor = Color.White,
+                        )
+                    } ?: run {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("No lyrics available", color = Color.White)
+                        }
+                    }
+                }
+            }
+
+            // ── Sleep timer info dialog ──────────────────────────────────────
+            if (showSleepTimerDialog) {
+                AlertDialog(
+                    onDismissRequest = { showSleepTimerDialog = false },
+                    title = { Text("Sleep Timer") },
+                    text = { Text("Sleep timer is not available in this version.") },
+                    confirmButton = {
+                        TextButton(onClick = { showSleepTimerDialog = false }) {
+                            Text("OK")
+                        }
+                    }
+                )
+            }
+
+            // ── Queue sheet ──────────────────────────────────────────────────
             if (showQueueSheet) {
                 QueueBottomSheet(onDismiss = { showQueueSheet = false })
             }

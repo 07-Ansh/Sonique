@@ -1,6 +1,7 @@
 package com.sonique.app.ui.screen.player
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
@@ -8,14 +9,18 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -47,14 +52,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import org.koin.compose.viewmodel.koinViewModel
+import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
+import kotlin.math.roundToInt
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -88,6 +100,7 @@ import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
 import sonique.composeapp.generated.resources.baseline_share_24
 import sonique.composeapp.generated.resources.baseline_repeat_one_24
+import sonique.composeapp.generated.resources.fullscreen
 import sonique.composeapp.generated.resources.lyrics
 import sonique.composeapp.generated.resources.more_horiz
 import sonique.composeapp.generated.resources.pause
@@ -100,25 +113,28 @@ import sonique.composeapp.generated.resources.shuffle
 import sonique.composeapp.generated.resources.shuffle_on
 import sonique.composeapp.generated.resources.skip_next
 import sonique.composeapp.generated.resources.skip_previous
-import sonique.composeapp.generated.resources.timer
+import sonique.composeapp.generated.resources.bedtime
 import com.sonique.app.ui.component.NowPlayingBottomSheet
+import com.sonique.app.ui.component.FullscreenLyricsSheet
 import kotlin.math.roundToLong
 
-// Matches Metrolist constants
+// Matches Sonique constants
 private val PlayerHorizontalPadding = 32.dp
 private val ThumbnailCornerRadius = 3.dp  // cornerRadius * 2 = 6.dp applied in UI
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun NewPlayerScreen(
     sharedViewModel: SharedViewModel = koinInject(),
     navController: NavController,
     onDismiss: () -> Unit = {},
 ) {
+    val nowPlayingBottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
     val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
+    val sleepTimerState by sharedViewModel.sleepTimerState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val trackTitle = currentSongData?.nowPlayingTitle ?: ""
@@ -130,21 +146,22 @@ fun NewPlayerScreen(
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showMoreOptions by remember { mutableStateOf(false) }
+    var showFullscreenLyrics by remember { mutableStateOf(false) }
 
-    // ── Colors — matching Metrolist BLUR background mode defaults ────────────
+    // ── Colors — matching Sonique BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
     val textButtonColor = Color.White
     val iconButtonColor = Color.Black
-    val sideButtonContainerColor = Color.White.copy(alpha = 0.2f)
+    val sideButtonContainerColor = Color.White.copy(alpha = 0.12f)
     val sideButtonContentColor = Color.White
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) {} // Consume all touches to prevent leakage triggering home page pull-refresh
-            .background(Color(0xFF1C1B1F)) // Metrolist surfaceContainer default dark
+            .background(Color(0xFF1C1B1F)) // Sonique surfaceContainer default dark
     ) {
-        // ── Blur background — matches Metrolist PlayerBackgroundStyle.BLUR ──
+        // ── Blur background — matches Sonique PlayerBackgroundStyle.BLUR ──
         AnimatedContent(
             targetState = trackArtwork,
             transitionSpec = { fadeIn(tween(800)).togetherWith(fadeOut(tween(800))) },
@@ -177,7 +194,7 @@ fun NewPlayerScreen(
                 .animateContentSize()
         ) {
             // ── Thumbnail section (header + artwork) ─────────────────────────
-            // Mirrors Metrolist Thumbnail.kt: statusBarsPadding + Column with ThumbnailHeader
+            // Mirrors Sonique Thumbnail.kt: statusBarsPadding + Column with ThumbnailHeader
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.weight(1f)
@@ -191,30 +208,36 @@ fun NewPlayerScreen(
                     Spacer(modifier = Modifier.statusBarsPadding())
 
                     // ThumbnailHeader — matches Thumbnail.kt ThumbnailHeader composable
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    AnimatedVisibility(
+                        visible = !showInlineLyrics,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                        Box(
                             modifier = Modifier
-                                .align(Alignment.Center)
-                                .padding(horizontal = 48.dp)
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
-                            Text(
-                                text = "Now Playing",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextBackgroundColor
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Your Queue",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = TextBackgroundColor.copy(alpha = 0.8f),
-                                maxLines = 1,
-                                modifier = Modifier.basicMarquee()
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .padding(horizontal = 48.dp)
+                            ) {
+                                Text(
+                                    text = "Now Playing",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = TextBackgroundColor
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Your Queue",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = TextBackgroundColor.copy(alpha = 0.8f),
+                                    maxLines = 1,
+                                    modifier = Modifier.basicMarquee()
+                                )
+                            }
                         }
                     }
 
@@ -254,7 +277,22 @@ fun NewPlayerScreen(
                                         .size(thumbnailSize)
                                         .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
                                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                                        .clickable { showInlineLyrics = !showInlineLyrics }
+                                        .pointerInput(Unit) {
+                                            var accumulatedDragY = 0f
+                                            detectVerticalDragGestures(
+                                                onDragStart = { accumulatedDragY = 0f },
+                                                onDragEnd = {
+                                                    if (accumulatedDragY > 150f) {
+                                                        onDismiss()
+                                                    }
+                                                },
+                                                onDragCancel = { accumulatedDragY = 0f },
+                                                onVerticalDrag = { change, dragAmount ->
+                                                    change.consume()
+                                                    accumulatedDragY += dragAmount
+                                                }
+                                            )
+                                        }
                                 ) {
                                     if (trackArtwork.isNotEmpty()) {
                                         AsyncImage(
@@ -286,6 +324,33 @@ fun NewPlayerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = PlayerHorizontalPadding)
             ) {
+                // Conditional small artwork thumbnail next to details (only shown when lyrics are open)
+                AnimatedContent(
+                    targetState = showInlineLyrics,
+                    label = "ThumbnailAnimation"
+                ) { showLyrics ->
+                    if (showLyrics) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(ThumbnailCornerRadius * 2))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                if (trackArtwork.isNotEmpty()) {
+                                    AsyncImage(
+                                        model = trackArtwork,
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                        }
+                    }
+                }
+
                 Column(modifier = Modifier.weight(1f)) {
                     // Title with AnimatedContent + basicMarquee
                     AnimatedContent(
@@ -326,7 +391,7 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Pill-shaped Share + Favourite buttons — exact shapes from Player.kt lines 1126-1140
+                // Pill-shaped buttons — exact shapes from Player.kt lines 1126-1140
                 val shareShape = RoundedCornerShape(
                     topStart = 50.dp, bottomStart = 50.dp,
                     topEnd = 3.dp, bottomEnd = 3.dp
@@ -336,59 +401,97 @@ fun NewPlayerScreen(
                     topEnd = 50.dp, bottomEnd = 50.dp
                 )
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Share button — shares current track link
-                    FilledIconButton(
-                        onClick = {
-                            val songId = currentSongData?.songInfoData?.videoId ?: ""
-                            if (songId.isNotEmpty()) {
-                                val intent = android.content.Intent().apply {
-                                    action = android.content.Intent.ACTION_SEND
-                                    type = "text/plain"
-                                    putExtra(
-                                        android.content.Intent.EXTRA_TEXT,
-                                        "https://music.youtube.com/watch?v=$songId"
-                                    )
-                                }
-                                context.startActivity(android.content.Intent.createChooser(intent, null))
+                AnimatedContent(targetState = showInlineLyrics, label = "actionButtons") { showLyrics ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (showLyrics) {
+                            // Fullscreen / Collapse lyrics button
+                            FilledIconButton(
+                                onClick = { showFullscreenLyrics = true },
+                                shape = shareShape,
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = textButtonColor,
+                                    contentColor = iconButtonColor
+                                ),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.fullscreen),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
-                        },
-                        shape = shareShape,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = textButtonColor,
-                            contentColor = iconButtonColor
-                        ),
-                        modifier = Modifier.size(42.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.baseline_share_24),
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
 
-                    // Like button
-                    val isLiked = controllerState.isLiked
-                    FilledIconButton(
-                        onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
-                        shape = favShape,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = textButtonColor,
-                            contentColor = iconButtonColor
-                        ),
-                        modifier = Modifier.size(42.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(
-                                if (isLiked) Res.drawable.favorite else Res.drawable.favorite_border
-                            ),
-                            contentDescription = null,
-                            tint = if (isLiked) MaterialTheme.colorScheme.error else iconButtonColor,
-                            modifier = Modifier.size(24.dp)
-                        )
+                            // More options button (opens track options menu)
+                            FilledIconButton(
+                                onClick = { showMoreOptions = true },
+                                shape = favShape,
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = textButtonColor,
+                                    contentColor = iconButtonColor
+                                ),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.more_horiz),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        } else {
+                            // Share button
+                            FilledIconButton(
+                                onClick = {
+                                    val songId = currentSongData?.songInfoData?.videoId ?: ""
+                                    if (songId.isNotEmpty()) {
+                                        val intent = android.content.Intent().apply {
+                                            action = android.content.Intent.ACTION_SEND
+                                            type = "text/plain"
+                                            putExtra(
+                                                android.content.Intent.EXTRA_TEXT,
+                                                "https://music.youtube.com/watch?v=$songId"
+                                            )
+                                        }
+                                        context.startActivity(android.content.Intent.createChooser(intent, null))
+                                    }
+                                },
+                                shape = shareShape,
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = textButtonColor,
+                                    contentColor = iconButtonColor
+                                ),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.baseline_share_24),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            // Like button
+                            val isLiked = controllerState.isLiked
+                            FilledIconButton(
+                                onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
+                                shape = favShape,
+                                colors = IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = textButtonColor,
+                                    contentColor = iconButtonColor
+                                ),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        if (isLiked) Res.drawable.favorite else Res.drawable.favorite_border
+                                    ),
+                                    contentDescription = null,
+                                    tint = if (isLiked) MaterialTheme.colorScheme.error else iconButtonColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -620,10 +723,11 @@ fun NewPlayerScreen(
                     onClick = { showQueueSheet = true }
                 )
 
-                // Sleep Timer button — shows a simple info dialog (no timer service in Sonique)
+                // Sleep Timer button
+                val isSleepTimerActive = sleepTimerState.timeRemaining > 0
                 PlayerQueueButton(
-                    icon = Res.drawable.timer,
-                    isActive = false,
+                    icon = Res.drawable.bedtime,
+                    isActive = isSleepTimerActive,
                     shape = middleShape,
                     modifier = Modifier.size(buttonSize),
                     textButtonColor = textButtonColor,
@@ -700,21 +804,135 @@ fun NewPlayerScreen(
                     navController = navController,
                     onNavigateToOtherScreen = { showMoreOptions = false },
                     song = nowPlayingState?.songEntity,
+                    viewModel = nowPlayingBottomSheetViewModel,
                     setSleepTimerEnable = true
                 )
             }
 
             // ── Sleep timer info dialog ──────────────────────────────────────
             if (showSleepTimerDialog) {
+                val activeRemaining = sleepTimerState.timeRemaining
+                var sleepTimerDefault by remember { mutableFloatStateOf(30f) }
+                var sleepTimerValue by remember(activeRemaining) {
+                    mutableFloatStateOf(if (activeRemaining > 0) activeRemaining.toFloat() else sleepTimerDefault)
+                }
+                val isAtDefault = sleepTimerValue.roundToInt() == sleepTimerDefault.roundToInt()
+
                 AlertDialog(
                     onDismissRequest = { showSleepTimerDialog = false },
-                    title = { Text("Sleep Timer") },
-                    text = { Text("Sleep timer is not available in this version.") },
-                    confirmButton = {
-                        TextButton(onClick = { showSleepTimerDialog = false }) {
-                            Text("OK")
+                    icon = {
+                        Icon(
+                            painter = painterResource(Res.drawable.bedtime),
+                            contentDescription = null
+                        )
+                    },
+                    title = { Text("Sleep timer") },
+                    text = {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = if (activeRemaining > 0) {
+                                    "Remaining: ${activeRemaining} minutes"
+                                } else {
+                                    "${sleepTimerValue.roundToInt()} minutes"
+                                },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Slider(
+                                value = sleepTimerValue,
+                                onValueChange = { sleepTimerValue = it },
+                                valueRange = 5f..120f,
+                                steps = (120 - 5) / 5 - 1
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (isAtDefault) {
+                                    Button(
+                                        onClick = {
+                                            sleepTimerDefault = sleepTimerValue
+                                        },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    ) {
+                                        Text("Set as default")
+                                    }
+                                } else {
+                                    OutlinedButton(
+                                        onClick = {
+                                            sleepTimerDefault = sleepTimerValue
+                                        }
+                                    ) {
+                                        Text("Set as default")
+                                    }
+                                }
+
+                                OutlinedButton(
+                                    onClick = {
+                                        showSleepTimerDialog = false
+                                        sharedViewModel.stopSleepTimer()
+                                    }
+                                ) {
+                                    Text("End of song")
+                                }
+                            }
                         }
-                    }
+                    },
+                    confirmButton = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = {
+                                    showSleepTimerDialog = false
+                                    sharedViewModel.stopSleepTimer()
+                                }
+                            ) {
+                                Text("Reset")
+                            }
+
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TextButton(
+                                    onClick = { showSleepTimerDialog = false }
+                                ) {
+                                    Text("Cancel")
+                                }
+                                TextButton(
+                                    onClick = {
+                                        showSleepTimerDialog = false
+                                        sharedViewModel.setSleepTimer(sleepTimerValue.roundToInt())
+                                    }
+                                ) {
+                                    Text("OK")
+                                }
+                            }
+                        }
+                    },
+                    dismissButton = null
+                )
+            }
+
+            // ── Fullscreen lyrics sheet ──────────────────────────────────────
+            if (showFullscreenLyrics) {
+                FullscreenLyricsSheet(
+                    sharedViewModel = sharedViewModel,
+                    onDismiss = { showFullscreenLyrics = false }
                 )
             }
 
@@ -728,7 +946,7 @@ fun NewPlayerScreen(
 
 /**
  * Pill-shaped action button used in the bottom bar of the player.
- * Matches Metrolist Queue.kt PlayerQueueButton composable.
+ * Matches Sonique Queue.kt PlayerQueueButton composable.
  * Active state = filled with textButtonColor; inactive = semi-transparent outline.
  */
 @Composable
@@ -744,25 +962,30 @@ fun PlayerQueueButton(
     onClick: () -> Unit = {},
 ) {
     val containerColor by animateColorAsState(
-        targetValue = if (isActive) textButtonColor else Color.White.copy(alpha = 0.15f),
+        targetValue = if (isActive) textButtonColor else Color.Transparent,
         label = "queueButtonContainer"
     )
     val contentColor by animateColorAsState(
         targetValue = if (isActive) iconButtonColor else Color.White,
         label = "queueButtonContent"
     )
+    val borderModifier = if (isActive) Modifier else Modifier.border(
+        width = 1.dp,
+        color = Color.White.copy(alpha = 0.3f),
+        shape = shape
+    )
     Box(
         modifier = modifier
             .clip(shape)
             .background(containerColor)
-            .clickable(enabled = enabled, onClick = onClick)
-            .alpha(if (enabled) 1f else 0.5f),
+            .then(borderModifier)
+            .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
-            tint = contentColor,
+            tint = contentColor.copy(alpha = if (enabled) 1f else 0.4f),
             modifier = Modifier.size(iconSize)
         )
     }
@@ -770,7 +993,7 @@ fun PlayerQueueButton(
 
 /**
  * Resizable icon button using a painter resource.
- * Matches Metrolist ResizableIconButton used in the old-style controls row.
+ * Matches Sonique ResizableIconButton used in the old-style controls row.
  */
 @Composable
 fun ResizableIconButton(

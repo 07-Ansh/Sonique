@@ -14,6 +14,7 @@ import com.sonique.domain.data.model.browse.artist.ResultVideo
 import com.sonique.domain.data.model.browse.playlist.PlaylistBrowse
 import com.sonique.domain.data.model.home.Content
 import com.sonique.domain.data.model.metadata.Lyrics
+import com.sonique.domain.data.model.metadata.Line
 import com.sonique.domain.data.model.podcast.PodcastBrowse
 import com.sonique.domain.data.model.searchResult.songs.Album
 import com.sonique.domain.data.model.searchResult.songs.Artist
@@ -305,20 +306,41 @@ fun Track.addThumbnails(): Track =
         year = this.year,
     )
 
-fun LyricsEntity.toLyrics(): Lyrics =
-    Lyrics(
-        error = this.error,
-        lines = this.lines,
-        syncType = this.syncType,
-    )
+fun LyricsEntity.toLyrics(): Lyrics {
+    val firstLine = this.lines?.firstOrNull()
+    val isRawLrc = firstLine?.words?.startsWith("SONIQUE_LRC:") == true
+    return if (isRawLrc) {
+        val rawLrc = firstLine!!.words.removePrefix("SONIQUE_LRC:")
+        Lyrics(
+            error = this.error,
+            lines = emptyList(),
+            syncType = this.syncType,
+            SoniqueLyricsId = rawLrc
+        )
+    } else {
+        Lyrics(
+            error = this.error,
+            lines = this.lines,
+            syncType = this.syncType,
+            SoniqueLyricsId = null
+        )
+    }
+}
 
-fun Lyrics.toLyricsEntity(videoId: String): LyricsEntity =
-    LyricsEntity(
+fun Lyrics.toLyricsEntity(videoId: String): LyricsEntity {
+    val rawLrc = this.SoniqueLyricsId
+    val finalLines = if (!rawLrc.isNullOrBlank()) {
+        listOf(Line(startTimeMs = "0", endTimeMs = "0", words = "SONIQUE_LRC:$rawLrc"))
+    } else {
+        this.lines
+    }
+    return LyricsEntity(
         videoId = videoId,
         error = this.error,
-        lines = this.lines,
+        lines = finalLines,
         syncType = this.syncType,
     )
+}
 
 fun Collection<SongEntity>.toVideoIdList(): List<String> {
     val list = mutableListOf<String>()

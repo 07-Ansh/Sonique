@@ -86,6 +86,9 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.domain.data.model.streams.TimeLine
+import com.sonique.domain.lyrics.LyricsUtils
+import com.sonique.domain.data.model.metadata.LyricsEntry
+import com.sonique.domain.data.model.metadata.WordTimestamp
 import com.sonique.logger.Logger
 import com.sonique.app.extension.KeepScreenOn
 import com.sonique.app.extension.ParsedRichSyncLine
@@ -127,9 +130,6 @@ fun LyricsView(
     }
     val listState = rememberLazyListState()
     val current by timeLine.collectAsStateWithLifecycle()
-    var currentLineIndex by rememberSaveable {
-        mutableIntStateOf(-1)
-    }
 
     val showTopShadow by remember {
         derivedStateOf {
@@ -149,73 +149,79 @@ fun LyricsView(
         }
     }
 
-    LaunchedEffect(key1 = current) {
-        val lines = lyricsData.lyrics.lines
-        if (current.current > 0L) {
-            lines?.indices?.forEach { i ->
-                val sentence = lines[i]
-                val startTimeMs = sentence.startTimeMs.toLong()
-
-                 
-                val endTimeMs =
-                    if (i < lines.size - 1) {
-                        lines[i + 1].startTimeMs.toLong()
-                    } else {
-                         
-                        startTimeMs + 60000
-                    }
-                if (current.current in startTimeMs..endTimeMs) {
-                    currentLineIndex = i
-                }
-            }
-            if (!lines.isNullOrEmpty() &&
-                (
-                    current.current in (
-                        0..(
-                            lines.getOrNull(0)?.startTimeMs
-                                ?: "0"
-                        ).toLong()
-                    )
-                )
-            ) {
-                currentLineIndex = -1
-            }
+    val parsedEntries: List<LyricsEntry> = remember(lyricsData.lyrics) {
+        val rawLrc = lyricsData.lyrics.SoniqueLyricsId
+        if (!rawLrc.isNullOrBlank()) {
+            LyricsUtils.parseLyrics(rawLrc)
         } else {
-            currentLineIndex = -1
+            val lines = lyricsData.lyrics.lines ?: emptyList()
+            lines.map { line ->
+                val time = line.startTimeMs.toLongOrNull() ?: 0L
+                val text = line.words
+                LyricsEntry(
+                    time = time,
+                    text = text,
+                    words = null,
+                    agent = null,
+                    isBackground = false
+                )
+            }
         }
     }
-    LaunchedEffect(key1 = currentLineIndex, key2 = currentLineHeight) {
-        if (currentLineIndex > -1 && currentLineHeight > 0 &&
-            (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED")) {
-            val boxEnd = listState.layoutInfo.viewportEndOffset
-            val boxStart = listState.layoutInfo.viewportStartOffset
-            val viewPort = boxEnd - boxStart
-            val offset = viewPort / 2 - currentLineHeight / 2
-            Logger.w(TAG, "Offset: $offset")
+
+    val mergedList: List<LyricsListItem> = remember(parsedEntries) {
+        val result = mutableListOf<LyricsListItem>()
+        if (parsedEntries.isNotEmpty()) {
+            val linesWithHead = listOf(LyricsEntry.HEAD_LYRICS_ENTRY) + parsedEntries
+
+            linesWithHead.forEachIndexed { i, entry ->
+                if (entry.text.isNotBlank() || entry == LyricsEntry.HEAD_LYRICS_ENTRY) {
+                    result.add(LyricsListItem.Line(i, entry))
+                }
+                if (i < linesWithHead.size - 1) {
+                    val nextStart = linesWithHead[i + 1].time
+                    val entryWords = entry.words
+                    val currentEnd = if (!entryWords.isNullOrEmpty()) {
+                        (entryWords.last().endTime * 1000).toLong()
+                    } else if (entry.text.isBlank()) {
+                        entry.time
+                    } else {
+                        null
+                    }
+
+                    if (currentEnd != null) {
+                        val endVal = currentEnd.toLong()
+                        if (endVal < nextStart) {
+                            val gap = nextStart - endVal
+                            if (gap > 4000L) {
+                                result.add(LyricsListItem.Indicator(i, gap, endVal, nextStart, linesWithHead[i + 1].agent))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        result
+    }
+
+    val currentLineIndex = remember(parsedEntries, current.current) {
+        LyricsUtils.findCurrentLineIndex(parsedEntries, current.current)
+    }
+
+    val activeListItemIndex = remember(mergedList, currentLineIndex) {
+        val targetEntry = parsedEntries.getOrNull(currentLineIndex) ?: LyricsEntry.HEAD_LYRICS_ENTRY
+        mergedList.indexOfFirst { item ->
+            item is LyricsListItem.Line && item.entry.time == targetEntry.time
+        }
+    }
+
+    LaunchedEffect(key1 = activeListItemIndex, key2 = currentLineHeight) {
+        if (activeListItemIndex > -1 && currentLineHeight > 0) {
             listState.animateScrollAndCentralizeItem(
-                index = currentLineIndex,
+                index = activeListItemIndex,
                 this,
             )
         }
-    }
-
-    fun findClosestTranslatedLine(originalTimeMs: String): String? {
-        val translatedLines = lyricsData.translatedLyrics?.first?.lines ?: return null
-        if (translatedLines.isEmpty()) return null
-
-        val originalTime = originalTimeMs.toLongOrNull() ?: return null
-
-        return translatedLines
-            .minByOrNull {
-                abs((it.startTimeMs.toLongOrNull() ?: 0L) - originalTime)
-            }?.let {
-                val abs = abs((it.startTimeMs.toLongOrNull() ?: 0L) - originalTime)
-                if (abs < 1000L) {
-                    it
-                } else {
-                    null
-                }
-            }?.words
     }
 
     Box(modifier = modifier) {
@@ -226,10 +232,7 @@ fun LyricsView(
                     .fillMaxSize()
                     .drawWithContent {
                         drawContent()
-
-                         
                         if (showScrollShadows) {
-                             
                             if (showTopShadow) {
                                 drawRect(
                                     brush =
@@ -248,8 +251,6 @@ fun LyricsView(
                                     size = Size(size.width, 80.dp.toPx()),
                                 )
                             }
-
-                             
                             if (showBottomShadow) {
                                 drawRect(
                                     brush =
@@ -271,228 +272,59 @@ fun LyricsView(
                         }
                     },
         ) {
-            items(lyricsData.lyrics.lines?.size ?: 0) { index ->
-                val line = lyricsData.lyrics.lines?.getOrNull(index)
-                 
-                val translatedWords =
-                    if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
-                        line?.startTimeMs?.let { findClosestTranslatedLine(it) }
-                    } else {
-                        lyricsData.translatedLyrics
-                            ?.first
-                            ?.lines
-                            ?.getOrNull(index)
-                            ?.words
-                    }
-                Logger.d(TAG, "Line $index: ${line?.words}, Translated: $translatedWords")
-
-                line?.words?.let { words ->
-                    Logger.d(TAG, "SyncType: ${lyricsData.lyrics.syncType}, Line $index content preview: ${words.take(50)}")
-                    when {
-                         
-                        lyricsData.lyrics.syncType == "RICH_SYNCED" -> {
-                            val parsedLine =
-                                remember(words, line.startTimeMs, line.endTimeMs) {
-                                    val result = parseRichSyncWords(words, line.startTimeMs, line.endTimeMs)
-                                    Logger.d(TAG, "Line $index parseRichSyncWords result: ${if (result != null) "${result.words.size} words" else "null"}")
-                                    result
+            items(mergedList.size) { index ->
+                when (val listItem = mergedList[index]) {
+                    is LyricsListItem.Line -> {
+                        val entry = listItem.entry
+                        val isActive = entry.time == parsedEntries.getOrNull(currentLineIndex)?.time
+                        
+                        LyricsLine(
+                            index = index,
+                            item = entry,
+                            isSynced = lyricsData.lyrics.syncType != null,
+                            isActiveLine = isActive,
+                            bgVisible = true,
+                            isSelected = false,
+                            isSelectionModeActive = false,
+                            currentPositionState = current.current,
+                            isPlaying = true, 
+                            lyricsOffset = 0L,
+                            lyricsTextSize = 24f,
+                            lyricsLineSpacing = 1.3f,
+                            expressiveAccent = playerContentColor,
+                            lyricsTextPosition = LyricsPosition.CENTER,
+                            respectAgentPositioning = true,
+                            isAutoScrollEnabled = true,
+                            displayedCurrentLineIndex = activeListItemIndex,
+                            romanizeAsMain = false,
+                            romanizeLyrics = false,
+                            onSizeChanged = { height ->
+                                if (isActive) {
+                                    currentLineHeight = height
                                 }
-
-                            if (parsedLine != null) {
-                                RichSyncLyricsLineItem(
-                                    parsedLine = parsedLine,
-                                    translatedWords = translatedWords,
-                                    currentTimeMs = current.current,
-                                    isCurrent = index == currentLineIndex,
-                                    playerContentColor = playerContentColor,
-                                    modifier =
-                                        Modifier
-                                            .clickable {
-                                                onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
-                                            }.onGloballyPositioned { c ->
-                                                currentLineHeight = c.size.height
-                                            },
-                                )
-                            } else {
-                                 
-                                LyricsLineItem(
-                                    originalWords = words,
-                                    translatedWords = translatedWords,
-                                    isBold = index <= currentLineIndex,
-                                    isCurrent = index == currentLineIndex,
-                                    playerContentColor = playerContentColor,
-                                    modifier =
-                                        Modifier
-                                            .clickable {
-                                                onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
-                                            }.onGloballyPositioned { c ->
-                                                currentLineHeight = c.size.height
-                                            },
-                                )
-                            }
-                        }
-
-                         
-                        else -> {
-                            LyricsLineItem(
-                                originalWords = words,
-                                translatedWords = translatedWords,
-                                isBold = index <= currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
-                                isCurrent = index == currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
-                                playerContentColor = playerContentColor,
-                                modifier =
-                                    Modifier
-                                        .clickable(enabled = lyricsData.lyrics.syncType == "LINE_SYNCED") {
-                                            onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
-                                        }.onGloballyPositioned { c ->
-                                            currentLineHeight = c.size.height
-                                        },
-                            )
-                        }
+                            },
+                            onClick = {
+                                if (entry.time > 0L && timeLine.value.total > 0L) {
+                                    onLineClick(entry.time.toFloat() * 100 / timeLine.value.total)
+                                }
+                            },
+                            onLongClick = {}
+                        )
+                    }
+                    is LyricsListItem.Indicator -> {
+                        IntervalIndicator(
+                            gapStartMs = listItem.gapStartMs,
+                            gapEndMs = listItem.gapEndMs - 650L,
+                            currentPositionMs = current.current,
+                            visible = current.current in listItem.gapStartMs..(listItem.gapEndMs - 650L),
+                            color = playerContentColor,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
         }
     }
-}
-
-@Composable
-fun LyricsLineItem(
-    originalWords: String,
-    translatedWords: String?,
-    isBold: Boolean,
-    isCurrent: Boolean = false,
-    modifier: Modifier = Modifier,
-    playerContentColor: Color = Color.White,
-) {
-    val alphaAnim by animateFloatAsState(
-        targetValue = if (isCurrent) 1.0f else 0.25f,
-        animationSpec = tween(durationMillis = 250),
-        label = "lineAlpha"
-    )
-
-    Column(
-        modifier = modifier.padding(vertical = 12.dp, horizontal = 24.dp),
-    ) {
-        Text(
-            text = originalWords,
-            style = if (isCurrent) typo().headlineLarge.copy(fontSize = 28.sp) else typo().headlineMedium.copy(fontSize = 22.sp),
-            color = playerContentColor.copy(alpha = alphaAnim),
-        )
-        if (translatedWords != null) {
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = translatedWords,
-                style = typo().bodyMedium,
-                color = musica_accent.copy(alpha = if (isCurrent) 0.8f else 0.25f),
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun RichSyncLyricsLineItem(
-    parsedLine: ParsedRichSyncLine,
-    translatedWords: String?,
-    currentTimeMs: Long,
-    isCurrent: Boolean,
-    modifier: Modifier = Modifier,
-    playerContentColor: Color = Color.White,
-) {
-     
-    val currentWordIndex by remember(currentTimeMs, parsedLine.words) {
-        derivedStateOf {
-            if (!isCurrent) return@derivedStateOf -1
-
-             
-            parsedLine.words.indexOfLast { it.startTimeMs <= currentTimeMs }
-        }
-    }
-
-    Column(
-        modifier = modifier,
-    ) {
-        Spacer(modifier = Modifier.height(12.dp))
-
-         
-        FlowRow(
-            modifier =
-                Modifier.then(
-                    if (isCurrent) {
-                        Modifier
-                    } else {
-                        Modifier.blur(1.dp)
-                    },
-                ),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.Center,
-        ) {
-            parsedLine.words.forEachIndexed { index, wordTiming ->
-                AnimatedWord(
-                    word = wordTiming.text,
-                    isActive = isCurrent && index == currentWordIndex,
-                    isPast = isCurrent && index < currentWordIndex,
-                    isCurrent = isCurrent,
-                    playerContentColor = playerContentColor,
-                )
-            }
-        }
-
-         
-        if (translatedWords != null) {
-            Text(
-                modifier =
-                    Modifier.then(
-                        if (isCurrent) {
-                            Modifier
-                        } else {
-                            Modifier.blur(1.dp)
-                        },
-                    ),
-                text = translatedWords,
-                style = typo().bodyMedium,
-                color =
-                    if (isCurrent) {
-                        musica_accent
-                    } else {
-                        musica_accent.copy(
-                            alpha = 0.3f,
-                        )
-                    },
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-    }
-}
-
-@Composable
-private fun AnimatedWord(
-    word: String,
-    isActive: Boolean,
-    isPast: Boolean,
-    isCurrent: Boolean,
-    playerContentColor: Color = Color.White,
-) {
-     
-    val color by animateColorAsState(
-        targetValue =
-            when {
-                !isCurrent -> Color.LightGray.copy(alpha = 0.35f)  
-                isPast -> playerContentColor.copy(alpha = 0.7f)  
-                isActive -> playerContentColor  
-                else -> Color.LightGray.copy(alpha = 0.5f)  
-            },
-        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-        label = "wordColor",
-    )
-
-    Text(
-        text = word,
-        style = typo().headlineLarge,
-        color = color,
-    )
 }
 
 @OptIn(ExperimentalHazeMaterialsApi::class)

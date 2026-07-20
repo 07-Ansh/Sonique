@@ -57,7 +57,7 @@ fun ProfileHeader(
 }
 
 /**
- * A beautiful, rounded-corner settings group container matching Metrolist style.
+ * A beautiful, rounded-corner settings group container matching Sonique style.
  */
 @Composable
 fun Material3SettingsGroup(

@@ -1439,7 +1439,7 @@ fun NowPlayingScreenContent(
                                         }
                                         Spacer(modifier = Modifier.height(16.dp))
 
-                                        // Metrolist-style Bottom Action Bar Row
+                                         // Sonique-style Bottom Action Bar Row
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()

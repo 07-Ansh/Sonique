@@ -182,6 +182,18 @@ fun App(
         val hasMedia = !(nowPlayingData?.mediaItem == null || nowPlayingData?.mediaItem == GenericMediaItem.EMPTY)
         val isSettings = navBackStackEntry?.destination?.route?.contains("Settings") == true
         isShowMiniPlayer = hasMedia && !isSettings
+        if (isSettings) {
+            isNavBarVisible = false
+        } else {
+            val route = navBackStackEntry?.destination?.route
+            val isMainRoute = route?.contains("Home") == true || 
+                             route?.contains("Search") == true || 
+                             route?.contains("Library") == true || 
+                             route?.contains("Downloads") == true
+            if (isMainRoute) {
+                isNavBarVisible = true
+            }
+        }
     }
 
     LaunchedEffect(intent) {

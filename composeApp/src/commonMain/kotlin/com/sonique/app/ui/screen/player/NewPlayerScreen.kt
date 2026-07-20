@@ -152,98 +152,122 @@ fun NewPlayerScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-                .padding(bottom = 80.dp),
+                .padding(bottom = 30.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // NewPlayerContent: Top Segment Navigation & Actions
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButtonWithCustomShape(
                     icon = Icons.Rounded.KeyboardArrowDown,
-                    shape = RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp, topEnd = 3.dp, bottomEnd = 3.dp),
+                    shape = RoundedCornerShape(24.dp),
                     onClick = onDismiss
                 )
 
-                IconButtonWithCustomShape(
-                    icon = Icons.Rounded.Share,
-                    shape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp, topEnd = 50.dp, bottomEnd = 50.dp),
-                    onClick = { /* Share Action */ }
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButtonWithCustomShape(
+                        icon = Icons.Rounded.Fullscreen,
+                        shape = RoundedCornerShape(topStart = 50.dp, bottomStart = 50.dp, topEnd = 3.dp, bottomEnd = 3.dp),
+                        onClick = { }
+                    )
+                    IconButtonWithCustomShape(
+                        icon = Icons.Rounded.MoreHoriz,
+                        shape = RoundedCornerShape(topStart = 3.dp, bottomStart = 3.dp, topEnd = 50.dp, bottomEnd = 50.dp),
+                        onClick = { }
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.weight(0.1f))
-
             // NewPlayerArtwork
-            AnimatedContent(
-                targetState = showInlineLyrics,
-                label = "LyricsToggle"
-            ) { showLyrics ->
-                if (showLyrics && currentSongData.lyricsData != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .padding(horizontal = 20.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        LyricsView(
-                            lyricsData = currentSongData.lyricsData!!,
-                            timeLine = sharedViewModel.timeline,
-                            onLineClick = { sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it)) }
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(310.dp)
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(Color.DarkGray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (trackArtwork.isNotEmpty()) {
-                            AsyncImage(
-                                model = trackArtwork,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                AnimatedContent(
+                    targetState = showInlineLyrics,
+                    label = "LyricsToggle"
+                ) { showLyrics ->
+                    if (showLyrics && currentSongData.lyricsData != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LyricsView(
+                                lyricsData = currentSongData.lyricsData!!,
+                                timeLine = sharedViewModel.timeline,
+                                onLineClick = { sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it)) }
                             )
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(310.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.DarkGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (trackArtwork.isNotEmpty()) {
+                                AsyncImage(
+                                    model = trackArtwork,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.weight(0.1f))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // NewPlayerSongInfo
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.Start
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = trackTitle,
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = TextBackgroundColor,
-                    modifier = Modifier.basicMarquee()
-                )
-                Text(
-                    text = trackArtist,
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, color = TextBackgroundColor.copy(alpha = 0.7f)),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.basicMarquee()
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = trackTitle,
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 24.sp, fontWeight = FontWeight.Bold),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = TextBackgroundColor,
+                        modifier = Modifier.basicMarquee()
+                    )
+                    Text(
+                        text = trackArtist,
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, color = TextBackgroundColor.copy(alpha = 0.7f)),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.basicMarquee()
+                    )
+                }
+                IconButtonWithCustomShape(
+                    icon = Icons.Rounded.Share,
+                    shape = RoundedCornerShape(24.dp),
+                    onClick = { }
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // NewPlayerProgressSlider
             val progressFactor = if (timelineState.total > 0) timelineState.current.toFloat() / timelineState.total else 0f
@@ -258,14 +282,14 @@ fun NewPlayerScreen(
                 valueRange = 0f..100f,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = 24.dp),
                 thumb = { Spacer(modifier = Modifier.size(0.dp)) }
             )
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
@@ -290,7 +314,7 @@ fun NewPlayerScreen(
                 onUIEvent = { sharedViewModel.onUIEvent(it) }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // NewPlayerBottomActions
             NewPlayerBottomActions(

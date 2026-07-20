@@ -241,40 +241,34 @@ fun MiniPlayer(
             }
     }
 
-    LaunchedEffect(key1 = true) {
-        val job1 =
-            launch {
-                sharedViewModel.nowPlayingScreenData.collect { data ->
-                    title = data.nowPlayingTitle
-                    artistName = data.artistName
-                    thumbnailURL = data.thumbnailURL
-                    isExplicit = data.isExplicit
-                }
+    LaunchedEffect(Unit) {
+        launch {
+            sharedViewModel.nowPlayingScreenData.collect { data ->
+                title = data.nowPlayingTitle
+                artistName = data.artistName
+                thumbnailURL = data.thumbnailURL
+                isExplicit = data.isExplicit
             }
-        val job2 =
-            launch {
-                sharedViewModel.controllerState.collectLatest { state ->
-                    setLiked(state.isLiked)
-                    setIsPlaying(state.isPlaying)
-                    setIsCrossfading(state.isCrossfading)
-                }
+        }
+        launch {
+            sharedViewModel.controllerState.collectLatest { state ->
+                setLiked(state.isLiked)
+                setIsPlaying(state.isPlaying)
+                setIsCrossfading(state.isCrossfading)
             }
-        val job4 =
-            launch {
-                sharedViewModel.timeline.collect { timeline ->
-                    loading = timeline.loading
-                    val prog =
-                        if (timeline.total > 0L && timeline.current >= 0L) {
-                            timeline.current.toFloat() / timeline.total
-                        } else {
-                            0f
-                        }
-                    setProgress(prog)
-                }
+        }
+        launch {
+            sharedViewModel.timeline.collect { timeline ->
+                loading = timeline.loading
+                val prog =
+                    if (timeline.total > 0L && timeline.current >= 0L) {
+                        timeline.current.toFloat() / timeline.total
+                    } else {
+                        0f
+                    }
+                setProgress(prog)
             }
-        job1.join()
-        job2.join()
-        job4.join()
+        }
     }
 
     if (getPlatform() == Platform.Android) {

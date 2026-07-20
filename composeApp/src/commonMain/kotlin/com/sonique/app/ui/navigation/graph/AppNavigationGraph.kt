@@ -29,6 +29,7 @@ import com.sonique.app.ui.screen.other.PlaylistScreen
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
 import com.sonique.app.ui.screen.player.FullscreenPlayer
+import com.sonique.app.ui.screen.settings.SettingsUpdateScreen
 
 @Composable
 @ExperimentalMaterial3Api
@@ -168,6 +169,11 @@ fun AppNavigationGraph(
             SettingScreen(
                 innerPadding = innerPadding,
                 navController = navController,
+            )
+        }
+        composable<com.sonique.app.ui.navigation.destination.home.SettingsUpdateDestination> {
+            SettingsUpdateScreen(
+                onBack = { navController.popBackStack() }
             )
         }
          

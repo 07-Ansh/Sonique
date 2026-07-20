@@ -393,10 +393,13 @@ fun NewPlayerScreen(
             Spacer(Modifier.height(24.dp))
 
             // ── Slider ──────
-            var sliderPosition by remember { mutableStateOf<Long?>(null) }
-            val displayPosition = sliderPosition?.toFloat()
-                ?: if (timelineState.total > 0) timelineState.current.toFloat() else 0f
-            val duration = timelineState.total.toFloat()
+            var sliderPosition by remember { mutableStateOf<Float?>(null) }
+            val displayPosition = sliderPosition
+                ?: if (timelineState.total > 0) {
+                    (timelineState.current.toFloat() / timelineState.total.toFloat()) * 100f
+                } else {
+                    0f
+                }
 
             val sliderColors = SliderDefaults.colors(
                 activeTrackColor = textButtonColor,
@@ -409,12 +412,12 @@ fun NewPlayerScreen(
             )
 
             Slider(
-                value = displayPosition,
-                valueRange = 0f..(if (duration > 0f) duration else 0f),
-                onValueChange = { sliderPosition = it.toLong() },
+                value = displayPosition.coerceIn(0f, 100f),
+                valueRange = 0f..100f,
+                onValueChange = { sliderPosition = it },
                 onValueChangeFinished = {
                     sliderPosition?.let {
-                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it.toFloat()))
+                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it))
                     }
                     sliderPosition = null
                 },
@@ -433,7 +436,13 @@ fun NewPlayerScreen(
                     .padding(horizontal = PlayerHorizontalPadding + 4.dp)
             ) {
                 Text(
-                    text = formatDuration((sliderPosition ?: timelineState.current).coerceAtLeast(0L)),
+                    text = formatDuration(
+                        if (sliderPosition != null) {
+                            (timelineState.total * (sliderPosition!! / 100f)).roundToLong()
+                        } else {
+                            timelineState.current.coerceAtLeast(0L)
+                        }
+                    ),
                     style = MaterialTheme.typography.labelMedium,
                     color = TextBackgroundColor,
                     maxLines = 1,

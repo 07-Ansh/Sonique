@@ -800,7 +800,7 @@ internal class DataStoreManagerImpl(
 
     override val autoCheckForUpdates =
         settingsDataStore.data.map { preferences ->
-            preferences[AUTO_CHECK_FOR_UPDATES] ?: FALSE
+            preferences[AUTO_CHECK_FOR_UPDATES] ?: TRUE
         }
 
     override suspend fun setAutoCheckForUpdates(autoCheck: Boolean) {

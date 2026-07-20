@@ -7,6 +7,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -85,7 +87,7 @@ fun SettingsUpdateScreen(
                                 Text(stringResource(Res.string.version_format, currentVersion))
                             },
                             description = {
-                                Text("Build ${com.sonique.app.utils.VersionManager.getVersionCode()}")
+                                Text("OpenSource")
                             }
                         )
                     )
@@ -142,6 +144,7 @@ fun SettingsUpdateScreen(
                     title = stringResource(Res.string.check_for_updates_title),
                     items = listOf(
                         Material3SettingsItem(
+                            icon = rememberVectorPainter(Icons.Default.Refresh),
                             title = {
                                 when {
                                     isChecking -> Text(stringResource(Res.string.checking_for_updates))

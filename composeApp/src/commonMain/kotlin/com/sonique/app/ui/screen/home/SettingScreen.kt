@@ -1209,6 +1209,22 @@ private fun AboutSettingsContent(navController: NavController) {
     val yeah = stringResource(Res.string.yeah)
 
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
+    val cardModifier = if (enableLiquidGlass) {
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(32.dp))
+            .liquidGlass(backdrop, shape = RoundedCornerShape(32.dp), interactive = false)
+    } else {
+        Modifier.fillMaxWidth()
+    }
+
+    val cardColors = CardDefaults.elevatedCardColors(
+        containerColor = if (enableLiquidGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer
+    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
@@ -1277,53 +1293,58 @@ private fun AboutSettingsContent(navController: NavController) {
                 var leadClickCount by remember { mutableIntStateOf(0) }
                 val fallback = painterResource(Res.drawable.app_icon)
 
-                Material3SettingsGroup(
-                    items = listOf(
-                        Material3SettingsItem(
-                            leadingContent = {
-                                Surface(
-                                    onClick = {
-                                        val newCount = leadClickCount + 1
-                                        leadClickCount = newCount
-                                        if (newCount >= 3) {
-                                            leadClickCount = 0
-                                            coroutineScope.launch {
-                                                val result = snackbarHostState.showSnackbar(
-                                                    message = wannaPlay,
-                                                    actionLabel = yeah,
-                                                    duration = SnackbarDuration.Short,
-                                                )
-                                                if (result == SnackbarResult.ActionPerformed) {
-                                                    sharedViewModel.loadSharedMediaItem(devFavSongVideoId)
-                                                }
+                ElevatedCard(
+                    shape = RoundedCornerShape(32.dp),
+                    modifier = cardModifier,
+                    colors = cardColors,
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Surface(
+                                onClick = {
+                                    val newCount = leadClickCount + 1
+                                    leadClickCount = newCount
+                                    if (newCount >= 3) {
+                                        leadClickCount = 0
+                                        coroutineScope.launch {
+                                            val result = snackbarHostState.showSnackbar(
+                                                message = wannaPlay,
+                                                actionLabel = yeah,
+                                                duration = SnackbarDuration.Short,
+                                            )
+                                            if (result == SnackbarResult.ActionPerformed) {
+                                                sharedViewModel.loadSharedMediaItem(devFavSongVideoId)
                                             }
                                         }
-                                    },
-                                    modifier = Modifier.size(72.dp),
-                                    shape = cookieBlobShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    tonalElevation = 4.dp,
-                                ) {
-                                    AsyncImage(
-                                        model = devAvatarUrl,
-                                        contentDescription = devName,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize(),
-                                        placeholder = fallback,
-                                        fallback = fallback,
-                                        error = fallback,
-                                    )
-                                }
-                            },
-                            title = {
+                                    }
+                                },
+                                modifier = Modifier.size(72.dp),
+                                shape = cookieBlobShape,
+                                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                tonalElevation = 4.dp,
+                            ) {
+                                AsyncImage(
+                                    model = devAvatarUrl,
+                                    contentDescription = devName,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                    placeholder = fallback,
+                                    fallback = fallback,
+                                    error = fallback,
+                                )
+                            }
+
+                            Column(verticalArrangement = Arrangement.Center) {
                                 Text(
                                     text = devName,
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
                                 )
-                            },
-                            description = {
                                 Text(
                                     text = stringResource(Res.string.credits_lead_developer),
                                     style = MaterialTheme.typography.bodyMedium,
@@ -1331,24 +1352,65 @@ private fun AboutSettingsContent(navController: NavController) {
                                     fontWeight = FontWeight.SemiBold,
                                 )
                             }
-                        ),
-                        Material3SettingsItem(
-                            iconPainter = painterResource(Res.drawable.baseline_arrow_outward_24),
-                            title = { Text("GitHub Profile") },
-                            onClick = { uriHandler.openUri("https://github.com/$devGitHub") }
-                        ),
-                        Material3SettingsItem(
-                            iconPainter = painterResource(Res.drawable.metro_link),
-                            title = { Text("GitHub Repository") },
-                            onClick = { uriHandler.openUri("https://github.com/$devGitHub/Sonique") }
-                        ),
-                        Material3SettingsItem(
-                            iconPainter = painterResource(Res.drawable.buymeacoffee),
-                            title = { Text("Buy me a coffee") },
-                            onClick = { uriHandler.openUri("https://buymeacoffee.com/07ansh") }
-                        )
-                    )
-                )
+                        }
+
+                        Spacer(Modifier.height(24.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            FilledTonalButton(
+                                onClick = { uriHandler.openUri("https://github.com/$devGitHub") },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.ic_github),
+                                    contentDescription = "GitHub",
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("GitHub", style = MaterialTheme.typography.labelMedium)
+                            }
+                            FilledTonalButton(
+                                onClick = { uriHandler.openUri("https://github.com/$devGitHub/Sonique") },
+                                modifier = Modifier.weight(1f).height(48.dp),
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.ic_github),
+                                    contentDescription = "Repo",
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Spacer(Modifier.width(6.dp))
+                                Text("Repo", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { uriHandler.openUri("https://buymeacoffee.com/07ansh") },
+                            modifier = Modifier.fillMaxWidth().height(52.dp),
+                            shape = CircleShape,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
+                        ) {
+                            Icon(
+                                painter = painterResource(Res.drawable.buymeacoffee),
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Text(
+                                text = "Buy me a coffee",
+                                fontWeight = FontWeight.ExtraBold,
+                                fontSize = 15.sp,
+                            )
+                        }
+                    }
+                }
             }
 
             item {
@@ -1356,12 +1418,12 @@ private fun AboutSettingsContent(navController: NavController) {
                     title = stringResource(Res.string.community_and_info),
                     items = listOf(
                         Material3SettingsItem(
-                            iconPainter = painterResource(Res.drawable.baseline_arrow_outward_24),
+                            iconPainter = painterResource(Res.drawable.ic_github),
                             title = { Text(stringResource(Res.string.credits_view_repo)) },
                             onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") }
                         ),
                         Material3SettingsItem(
-                            iconPainter = painterResource(Res.drawable.metro_link),
+                            iconPainter = painterResource(Res.drawable.ic_github),
                             title = { Text(stringResource(Res.string.credits_source_code)) },
                             onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") }
                         ),

@@ -58,7 +58,7 @@ fun SettingsUpdateScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(Res.string.update)
+                        text = stringResource(Res.string.app_updates)
                     )
                 },
                 navigationIcon = {

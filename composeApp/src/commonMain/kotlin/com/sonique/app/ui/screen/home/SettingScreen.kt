@@ -59,6 +59,10 @@ import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.SettingBasicDialog
 import com.sonique.app.ui.screen.settings.SettingsUpdateScreen
 import com.sonique.app.ui.component.SettingDialog
+import com.sonique.app.ui.component.liquidGlass
+import com.sonique.app.expect.ui.rememberBackdrop
+import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.navigation.destination.login.SpotifyLoginDestination
 import com.sonique.domain.utils.LocalResource
@@ -1171,6 +1175,39 @@ private fun AboutSettingsContent(navController: NavController) {
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
+    val cardModifier = if (enableLiquidGlass) {
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(32.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(32.dp))
+            .liquidGlass(backdrop, shape = RoundedCornerShape(32.dp), interactive = false)
+    } else {
+        Modifier.fillMaxWidth()
+    }
+
+    val cardColors = CardDefaults.elevatedCardColors(
+        containerColor = if (enableLiquidGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer
+    )
+
+    val communityCardModifier = if (enableLiquidGlass) {
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(20.dp))
+            .liquidGlass(backdrop, shape = RoundedCornerShape(20.dp), interactive = false)
+    } else {
+        Modifier.fillMaxWidth()
+    }
+
+    val communityCardColors = CardDefaults.elevatedCardColors(
+        containerColor = if (enableLiquidGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainer
+    )
+
     // Cookie/blob polygon shape — mirrors Metrolist's MaterialShapes.Cookie9Sided
     val cookieBlobShape = remember {
         androidx.compose.foundation.shape.GenericShape { size, _ ->
@@ -1220,10 +1257,8 @@ private fun AboutSettingsContent(navController: NavController) {
             item {
                 ElevatedCard(
                     shape = RoundedCornerShape(32.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ),
+                    modifier = cardModifier,
+                    colors = cardColors,
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -1287,10 +1322,8 @@ private fun AboutSettingsContent(navController: NavController) {
 
                 ElevatedCard(
                     shape = RoundedCornerShape(32.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ),
+                    modifier = cardModifier,
+                    colors = cardColors,
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Row(
@@ -1426,10 +1459,8 @@ private fun AboutSettingsContent(navController: NavController) {
                 )
                 ElevatedCard(
                     shape = RoundedCornerShape(20.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    ),
+                    modifier = communityCardModifier,
+                    colors = communityCardColors,
                 ) {
                     // View Repo
                     Surface(

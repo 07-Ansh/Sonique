@@ -98,19 +98,16 @@ fun SettingsUpdateScreen(
 
             item {
                 val updateSettingsItems = mutableListOf<Material3SettingsItem>()
-                updateSettingsItems.add(
+                 updateSettingsItems.add(
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.auto_check_for_update)) },
                         description = { Text("Check for updates automatically when opening the app") },
-                        trailingContent = {
-                            Switch(
-                                checked = autoCheckForUpdates,
-                                onCheckedChange = { checked ->
-                                    coroutineScope.launch {
-                                        dataStoreManager.setAutoCheckForUpdates(checked)
-                                    }
-                                }
-                            )
+                        isSwitch = true,
+                        checked = autoCheckForUpdates,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                dataStoreManager.setAutoCheckForUpdates(checked)
+                            }
                         }
                     )
                 )
@@ -118,12 +115,9 @@ fun SettingsUpdateScreen(
                     updateSettingsItems.add(
                         Material3SettingsItem(
                             title = { Text(stringResource(Res.string.update_notifications)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = updateNotifications,
-                                    onCheckedChange = { updateNotifications = it }
-                                )
-                            }
+                            isSwitch = true,
+                            checked = updateNotifications,
+                            onCheckedChange = { updateNotifications = it }
                         )
                     )
                 }

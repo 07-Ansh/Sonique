@@ -540,5 +540,5 @@
     <string name="update_notifications">Update notifications</string>
     <string name="hide_changelog">Hide changelog</string>
     <string name="view_changelog">View changelog</string>
-    <string name="updater">Updater</string>
+    <string name="app_updates">App Updates</string>
 </resources>

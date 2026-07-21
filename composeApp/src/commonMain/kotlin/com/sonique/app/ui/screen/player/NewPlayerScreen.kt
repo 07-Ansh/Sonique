@@ -196,6 +196,11 @@ fun NewPlayerScreen(
     val velocityTracker = remember { VelocityTracker() }
     val scope = rememberCoroutineScope()
 
+    // Reset translation to 0f whenever screen is opened
+    LaunchedEffect(Unit) {
+        offsetYAnimatable.snapTo(0f)
+    }
+
     // ── Colors — matching Sonique BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
     val textButtonColor = Color.White
@@ -239,6 +244,7 @@ fun NewPlayerScreen(
                                     animationSpec = tween(durationMillis = 200)
                                 )
                                 onDismiss()
+                                offsetYAnimatable.snapTo(0f)
                             } else {
                                 offsetYAnimatable.animateTo(
                                     targetValue = 0f,

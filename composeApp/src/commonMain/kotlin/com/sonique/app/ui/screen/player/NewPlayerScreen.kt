@@ -197,8 +197,9 @@ fun NewPlayerScreen(
             .fillMaxSize()
             .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt().coerceAtLeast(0)) }
             .pointerInput(Unit) {
+                var totalDragY = 0f
                 detectVerticalDragGestures(
-                    onDragStart = {},
+                    onDragStart = { totalDragY = 0f },
                     onDragEnd = {
                         scope.launch {
                             if (playerOffsetY.value > 180f) {
@@ -212,6 +213,9 @@ fun NewPlayerScreen(
                                     targetValue = 0f,
                                     animationSpec = spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)
                                 )
+                                if (totalDragY < -80f) {
+                                    showQueueSheet = true
+                                }
                             }
                         }
                     },
@@ -222,9 +226,12 @@ fun NewPlayerScreen(
                     },
                     onVerticalDrag = { change, dragAmount ->
                         change.consume()
-                        scope.launch {
-                            val nextVal = (playerOffsetY.value + dragAmount).coerceAtLeast(0f)
-                            playerOffsetY.snapTo(nextVal)
+                        totalDragY += dragAmount
+                        if (dragAmount > 0 || playerOffsetY.value > 0f) {
+                            scope.launch {
+                                val nextVal = (playerOffsetY.value + dragAmount).coerceAtLeast(0f)
+                                playerOffsetY.snapTo(nextVal)
+                            }
                         }
                     }
                 )

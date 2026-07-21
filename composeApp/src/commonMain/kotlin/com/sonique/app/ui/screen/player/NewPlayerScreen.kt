@@ -1,7 +1,12 @@
 package com.sonique.app.ui.screen.player
 
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import com.sonique.app.extension.getColorFromPalette
 import com.sonique.app.ui.component.GoogleCircularProgressIndicator
 import com.sonique.app.ui.component.LyricsShimmer
+import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -176,7 +181,7 @@ fun NewPlayerScreen(
 
     LaunchedEffect(paletteState.palette) {
         paletteState.palette?.let { palette ->
-            startColor.animateTo(com.sonique.app.extension.getColorFromPalette(palette))
+            startColor.animateTo(palette.getColorFromPalette())
         }
     }
 

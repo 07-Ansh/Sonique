@@ -164,7 +164,7 @@ fun FreshPlayerMenuSheet(
                 }
             }
 
-            // Quick Actions Grid (MetroList style with translucent dynamic artwork cards)
+            // Quick Actions Grid (translucent dynamic artwork cards)
             item {
                 Spacer(modifier = Modifier.height(12.dp))
                 NewActionGrid(

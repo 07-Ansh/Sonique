@@ -1,5 +1,10 @@
 package com.sonique.app.ui.screen.player
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
@@ -186,6 +191,11 @@ fun NewPlayerScreen(
     }
 
 
+    // ── GPU Hardware-Accelerated Motion Engine ──────────────────────
+    val offsetYAnimatable = remember { Animatable(0f) }
+    val velocityTracker = remember { VelocityTracker() }
+    val scope = rememberCoroutineScope()
+
     // ── Colors — matching Sonique BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
     val textButtonColor = Color.White
@@ -196,7 +206,49 @@ fun NewPlayerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {} // Consume touch events from passing through to background
+            .graphicsLayer {
+                // GPU-accelerated hardware translation — 120Hz zero-recomposition lag
+                translationY = offsetYAnimatable.value.coerceAtLeast(0f)
+                alpha = (1f - (offsetYAnimatable.value / 1200f)).coerceIn(0f, 1f)
+            }
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onVerticalDrag = { change, dragAmount ->
+                        velocityTracker.addPointerInputChange(change)
+                        val newY = (offsetYAnimatable.value + dragAmount).coerceAtLeast(0f)
+                        scope.launch {
+                            offsetYAnimatable.snapTo(newY)
+                        }
+                    },
+                    onDragCancel = {
+                        velocityTracker.resetTracking()
+                        scope.launch {
+                            offsetYAnimatable.animateTo(
+                                targetValue = 0f,
+                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                            )
+                        }
+                    },
+                    onDragEnd = {
+                        val velocityY = velocityTracker.calculateVelocity().y
+                        velocityTracker.resetTracking()
+                        scope.launch {
+                            if (offsetYAnimatable.value > 180f || velocityY > 1200f) {
+                                offsetYAnimatable.animateTo(
+                                    targetValue = 1800f,
+                                    animationSpec = tween(durationMillis = 200)
+                                )
+                                onDismiss()
+                            } else {
+                                offsetYAnimatable.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                )
+                            }
+                        }
+                    }
+                )
+            }
             .background(Color(0xFF1C1B1F)) // Sonique surfaceContainer default dark
     ) {
         // ── Blur background — links to player artwork when Ambience Mode is enabled, solid background when disabled ──

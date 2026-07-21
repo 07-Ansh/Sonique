@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Custom Canvas-drawn slider track.
- * Matches Metrolist PlayerSlider.kt exactly:
+ * PlayerSliderTrack component:
  *  - 10.dp track height, StrokeCap.Round on both active and inactive lines
  *  - No thumb (caller passes thumb = { Spacer(size(0.dp)) })
  *  - Active portion drawn on top of inactive full-width line

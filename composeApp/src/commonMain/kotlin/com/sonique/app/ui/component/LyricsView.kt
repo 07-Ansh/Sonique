@@ -216,7 +216,7 @@ fun LyricsView(
         val constraintLineHeightPx = with(density) { 120.dp.toPx() }
         val gapPx = with(density) { 16.dp.toPx() }
 
-        // Compute relative Y positions centered at activeListItemIndex = anchorY (Metrolist exact algorithm)
+        // Compute relative Y positions centered at activeListItemIndex = anchorY
         val positions = remember(itemHeights.toMap(), activeListItemIndex, mergedList) {
             val map = mutableMapOf<Int, Float>()
             if (activeListItemIndex == -1 || mergedList.isEmpty()) return@remember map
@@ -322,7 +322,7 @@ fun LyricsView(
                     }
                 }
         ) {
-            // Render each item (Metrolist exact stagger + offset animation per line)
+            // Render each item (exact stagger + offset animation per line)
             mergedList.forEachIndexed { index, listItem ->
 
 

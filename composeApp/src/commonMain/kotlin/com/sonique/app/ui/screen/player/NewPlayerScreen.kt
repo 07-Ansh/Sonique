@@ -186,10 +186,6 @@ fun NewPlayerScreen(
     }
 
 
-    // Smooth swipe-down-to-dismiss gesture state
-    val playerOffsetY = remember { androidx.compose.animation.core.Animatable(0f) }
-    val scope = rememberCoroutineScope()
-
     // ── Colors — matching Sonique BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
     val textButtonColor = Color.White
@@ -200,47 +196,7 @@ fun NewPlayerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt().coerceAtLeast(0)) }
-            .pointerInput(Unit) {
-                var totalDragY = 0f
-                detectVerticalDragGestures(
-                    onDragStart = { totalDragY = 0f },
-                    onDragEnd = {
-                        scope.launch {
-                            if (playerOffsetY.value > 180f) {
-                                playerOffsetY.animateTo(
-                                    targetValue = 1600f,
-                                    animationSpec = tween(220)
-                                )
-                                onDismiss()
-                            } else {
-                                playerOffsetY.animateTo(
-                                    targetValue = 0f,
-                                    animationSpec = spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)
-                                )
-                                if (totalDragY < -80f) {
-                                    showQueueSheet = true
-                                }
-                            }
-                        }
-                    },
-                    onDragCancel = {
-                        scope.launch {
-                            playerOffsetY.animateTo(0f)
-                        }
-                    },
-                    onVerticalDrag = { change, dragAmount ->
-                        change.consume()
-                        totalDragY += dragAmount
-                        if (dragAmount > 0 || playerOffsetY.value > 0f) {
-                            scope.launch {
-                                val nextVal = (playerOffsetY.value + dragAmount).coerceAtLeast(0f)
-                                playerOffsetY.snapTo(nextVal)
-                            }
-                        }
-                    }
-                )
-            }
+            .pointerInput(Unit) {} // Consume touch events from passing through to background
             .background(Color(0xFF1C1B1F)) // Sonique surfaceContainer default dark
     ) {
         // ── Blur background — links to player artwork when Ambience Mode is enabled, solid background when disabled ──
@@ -730,6 +686,21 @@ fun NewPlayerScreen(
                             WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal
                         )
                     )
+                    .pointerInput(Unit) {
+                        var totalY = 0f
+                        detectVerticalDragGestures(
+                            onDragStart = { totalY = 0f },
+                            onDragEnd = {
+                                if (totalY < -50f) {
+                                    showQueueSheet = true
+                                }
+                            },
+                            onDragCancel = { totalY = 0f },
+                            onVerticalDrag = { _, dragAmount ->
+                                totalY += dragAmount
+                            }
+                        )
+                    }
             ) {
                 val buttonSize = 42.dp
                 val iconSize = 24.dp

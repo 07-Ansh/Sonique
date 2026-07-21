@@ -119,7 +119,7 @@ fun LyricsView(
         }
         initialList.map { entry ->
             if (entry.text.isBlank()) entry
-            else entry.copy(text = formatMax3WordsPerRow(entry.text))
+            else entry.copy(text = formatMeaningfulLine(entry.text))
         }
     }
 
@@ -138,7 +138,7 @@ fun LyricsView(
                     }
                 }
                 if (!transliterated.isNullOrBlank() && transliterated != entry.text) {
-                    entry.romanizedTextFlow.value = formatMax3WordsPerRow(transliterated)
+                    entry.romanizedTextFlow.value = formatMeaningfulLine(transliterated)
                 }
             }
         }
@@ -586,14 +586,16 @@ fun FullscreenLyricsSheet(
     }
 }
 
-private fun formatMax3WordsPerRow(text: String): String {
+private fun formatMeaningfulLine(text: String): String {
     if (text.isBlank()) return text
     return text.lines().joinToString("\n") { line ->
-        val words = line.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
-        if (words.size <= 3) {
-            line.trim()
+        val trimmed = line.trim()
+        val words = trimmed.split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (words.size <= 6) {
+            trimmed
         } else {
-            words.chunked(3).joinToString("\n") { chunk -> chunk.joinToString(" ") }
+            val chunkSize = if (words.size <= 8) 4 else 5
+            words.chunked(chunkSize).joinToString("\n") { chunk -> chunk.joinToString(" ") }
         }
     }
 }

@@ -181,6 +181,10 @@ fun NewPlayerScreen(
     }
 
 
+    // Smooth swipe-down-to-dismiss gesture state
+    val playerOffsetY = remember { androidx.compose.animation.core.Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
     // ── Colors — matching Sonique BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
     val textButtonColor = Color.White
@@ -191,7 +195,40 @@ fun NewPlayerScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .pointerInput(Unit) {} // Consume all touches to prevent leakage triggering home page pull-refresh
+            .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt().coerceAtLeast(0)) }
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onDragStart = {},
+                    onDragEnd = {
+                        scope.launch {
+                            if (playerOffsetY.value > 180f) {
+                                playerOffsetY.animateTo(
+                                    targetValue = 1600f,
+                                    animationSpec = tween(220)
+                                )
+                                onDismiss()
+                            } else {
+                                playerOffsetY.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = spring(stiffness = androidx.compose.animation.core.Spring.StiffnessMediumLow)
+                                )
+                            }
+                        }
+                    },
+                    onDragCancel = {
+                        scope.launch {
+                            playerOffsetY.animateTo(0f)
+                        }
+                    },
+                    onVerticalDrag = { change, dragAmount ->
+                        change.consume()
+                        scope.launch {
+                            val nextVal = (playerOffsetY.value + dragAmount).coerceAtLeast(0f)
+                            playerOffsetY.snapTo(nextVal)
+                        }
+                    }
+                )
+            }
             .background(Color(0xFF1C1B1F)) // Sonique surfaceContainer default dark
     ) {
         // ── Blur background — links to player artwork when Ambience Mode is enabled, solid background when disabled ──
@@ -322,22 +359,6 @@ fun NewPlayerScreen(
                                         .size(thumbnailSize)
                                         .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
                                         .background(MaterialTheme.colorScheme.surfaceVariant)
-                                        .pointerInput(Unit) {
-                                            var accumulatedDragY = 0f
-                                            detectVerticalDragGestures(
-                                                onDragStart = { accumulatedDragY = 0f },
-                                                onDragEnd = {
-                                                    if (accumulatedDragY > 150f) {
-                                                        onDismiss()
-                                                    }
-                                                },
-                                                onDragCancel = { accumulatedDragY = 0f },
-                                                onVerticalDrag = { change, dragAmount ->
-                                                    change.consume()
-                                                    accumulatedDragY += dragAmount
-                                                }
-                                            )
-                                        }
                                 ) {
                                     if (trackArtwork.isNotEmpty()) {
                                         AsyncImage(

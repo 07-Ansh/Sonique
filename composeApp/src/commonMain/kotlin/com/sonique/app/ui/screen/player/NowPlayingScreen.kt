@@ -147,6 +147,8 @@ import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.AIBadge
 import com.sonique.app.ui.component.DescriptionView
 import com.sonique.app.ui.component.ExplicitBadge
+import com.sonique.app.ui.component.FreshPlayerMenuSheet
+import com.sonique.app.ui.component.FreshQueueSheet
 import com.sonique.app.ui.component.FullscreenLyricsSheet
 import com.sonique.app.ui.component.HeartCheckBox
 import com.sonique.app.ui.component.InfoPlayerBottomSheet
@@ -156,6 +158,8 @@ import com.sonique.app.ui.component.PlayPauseButton
 import com.sonique.app.ui.component.PlayerControlLayout
 import com.sonique.app.ui.component.WavySliderTrack
 import com.sonique.app.ui.component.QueueBottomSheet
+import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.player.FullscreenDestination
 import com.sonique.app.ui.theme.blackMoreOverlay
@@ -235,7 +239,7 @@ fun NowPlayingScreenContent(
     val localDensity = LocalDensity.current
     val uriHandler = LocalUriHandler.current
 
-     
+    val nowPlayingBottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
@@ -468,17 +472,13 @@ fun NowPlayingScreenContent(
     }
 
     if (showSheet) {
-        NowPlayingBottomSheet(
-            onDismiss = {
-                showSheet = false
-            },
+        FreshPlayerMenuSheet(
+            onDismiss = { showSheet = false },
             navController = navController,
-            onNavigateToOtherScreen = {
-                onDismiss()
-            },
-            song = null,  
-            setSleepTimerEnable = true,
-
+            song = nowPlayingState?.songEntity,
+            viewModel = nowPlayingBottomSheetViewModel,
+            backgroundColor = startColor.value.copy(alpha = 0.95f),
+            contentColor = Color.White,
         )
     }
 
@@ -492,10 +492,10 @@ fun NowPlayingScreenContent(
     }
 
     if (showQueueBottomSheet) {
-        QueueBottomSheet(
-            onDismiss = {
-                showQueueBottomSheet = false
-            },
+        FreshQueueSheet(
+            onDismiss = { showQueueBottomSheet = false },
+            backgroundColor = startColor.value.copy(alpha = 0.95f),
+            contentColor = Color.White,
         )
     }
 

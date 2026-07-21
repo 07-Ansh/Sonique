@@ -417,4 +417,57 @@ object LyricsUtils {
 
         return active
     }
+
+    fun isHindi(text: String): Boolean {
+        return text.any { char -> char in '\u0900'..'\u097F' }
+    }
+
+    fun isPunjabi(text: String): Boolean {
+        return text.any { char -> char in '\u0A00'..'\u0A7F' }
+    }
+
+    suspend fun romanizeHindi(text: String): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        com.sonique.domain.lyrics.utils.HindiTransliterator.transliterateLine(text)
+    }
+
+    suspend fun romanizePunjabi(text: String): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        // Punjabi Gurmukhi mapping algorithm matching Metrolist
+        val gurmukhiMap = mapOf(
+            'ੳ' to "o", 'ਅ' to "a", 'ੲ' to "e", 'ਸ' to "s", 'ਹ' to "h",
+            'ਕ' to "k", 'ਖ' to "kh", 'ਗ' to "g", 'ਘ' to "gh", 'ਙ' to "ng",
+            'ਚ' to "ch", 'ਛ' to "chh", 'ਜ' to "j", 'ਝ' to "jh", 'ਞ' to "ny",
+            'ਟ' to "t", 'ਠ' to "th", 'ਡ' to "d", 'ਢ' to "dh", 'ਣ' to "n",
+            'ਤ' to "t", 'ਥ' to "th", 'ਦ' to "d", 'ਧ' to "dh", 'ਨ' to "n",
+            'ਪ' to "p", 'ਫ' to "ph", 'ਬ' to "b", 'ਭ' to "bh", 'ਮ' to "m",
+            'ਯ' to "y", 'ਰ' to "r", 'ਲ' to "l", 'ਵ' to "v", 'ੜ' to "r",
+            'ਸ਼' to "sh", 'ਖ਼' to "kh", 'ਗ਼' to "g", 'ਜ਼' to "z", 'ਫ਼' to "f",
+            'ਾ' to "aa", 'ਿ' to "i", 'ੀ' to "ee", 'ੁ' to "u", 'ੂ' to "oo",
+            'ੇ' to "e", 'ੈ' to "ai", 'ੋ' to "o", 'ੌ' to "au", 'ਂ' to "n", 'ੰ' to "n"
+        )
+        val sb = StringBuilder(text.length)
+        var i = 0
+        while (i < text.length) {
+            val char = text[i]
+            if (char == '\u0A71') { // Adhak / gemination
+                if (i + 1 < text.length) {
+                    val nextCharStr = text[i + 1]
+                    val nextMapped = gurmukhiMap[nextCharStr] ?: ""
+                    if (nextMapped.isNotEmpty()) {
+                        sb.append(nextMapped[0])
+                    }
+                }
+                i++
+                continue
+            }
+            val mapped = gurmukhiMap[char]
+            if (mapped != null) {
+                sb.append(mapped)
+            } else {
+                sb.append(char)
+            }
+            i++
+        }
+        sb.toString()
+    }
 }
+

@@ -1,5 +1,7 @@
 package com.sonique.app.ui.screen.player
 
+import com.sonique.app.ui.component.GoogleCircularProgressIndicator
+import com.sonique.app.ui.component.LyricsShimmer
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -82,11 +84,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.sonique.app.extension.formatDuration
+import com.sonique.app.ui.component.FreshPlayerMenuSheet
+import com.sonique.app.ui.component.FreshQueueSheet
 import com.sonique.app.ui.component.LyricsView
+import com.sonique.app.ui.component.NowPlayingBottomSheet
 import com.sonique.app.ui.component.QueueBottomSheet
 import com.sonique.app.viewModel.NowPlayingScreenData
 import com.sonique.app.viewModel.SharedViewModel
@@ -100,7 +106,6 @@ import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
 import sonique.composeapp.generated.resources.baseline_share_24
 import sonique.composeapp.generated.resources.baseline_repeat_one_24
-
 import sonique.composeapp.generated.resources.lyrics
 import sonique.composeapp.generated.resources.more_horiz
 import sonique.composeapp.generated.resources.pause
@@ -115,7 +120,6 @@ import sonique.composeapp.generated.resources.skip_next
 import sonique.composeapp.generated.resources.skip_previous
 import sonique.composeapp.generated.resources.bedtime
 import sonique.composeapp.generated.resources.baseline_close_24
-import com.sonique.app.ui.component.NowPlayingBottomSheet
 
 import kotlin.math.roundToLong
 
@@ -134,6 +138,7 @@ fun NewPlayerScreen(
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
+    val queueData by sharedViewModel.queueData.collectAsStateWithLifecycle(initialValue = null)
     val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
     val sleepTimerState by sharedViewModel.sleepTimerState.collectAsStateWithLifecycle()
     val ambienceMode by sharedViewModel.ambienceMode.collectAsStateWithLifecycle()
@@ -141,13 +146,39 @@ fun NewPlayerScreen(
 
     val trackTitle = currentSongData?.nowPlayingTitle ?: ""
     val trackArtist = currentSongData?.artistName ?: ""
+    val firstArtist = remember(trackArtist) {
+        if (trackArtist.isBlank()) ""
+        else trackArtist.split(",", ";", "&", " feat.", " Feat.", " ft.", " Ft.").firstOrNull()?.trim() ?: trackArtist
+    }
     val trackArtwork = currentSongData?.thumbnailURL ?: ""
+    val playingContextText = remember(currentSongData?.playlistName, queueData?.data?.playlistName) {
+        currentSongData?.playlistName?.takeIf { it.isNotBlank() }
+            ?: queueData?.data?.playlistName?.takeIf { it.isNotBlank() }
+            ?: "Current Queue"
+    }
 
     // Sheet/dialog visibility state
     var showQueueSheet by remember { mutableStateOf(false) }
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showMoreOptions by remember { mutableStateOf(false) }
+    var showLyricsMenu by remember { mutableStateOf(false) }
+    var isLyricsAutoScrollEnabled by remember { mutableStateOf(true) }
+
+    val paletteState = com.kmpalette.rememberPaletteState()
+    val startColor = remember { androidx.compose.animation.Animatable(Color(0xFF1C1B1F)) }
+
+    LaunchedEffect(currentSongData?.bitmap) {
+        currentSongData?.bitmap?.let { bitmap ->
+            paletteState.generate(bitmap)
+        }
+    }
+
+    LaunchedEffect(paletteState.palette) {
+        paletteState.palette?.let { palette ->
+            startColor.animateTo(com.sonique.app.extension.getColorFromPalette(palette))
+        }
+    }
 
 
     // ── Colors — matching Sonique BLUR background mode defaults ────────────
@@ -227,17 +258,20 @@ fun NewPlayerScreen(
                                     .padding(horizontal = 48.dp)
                             ) {
                                 Text(
-                                    text = "Now Playing",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = TextBackgroundColor
+                                    text = "NOW PLAYING",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Normal,
+                                    color = TextBackgroundColor.copy(alpha = 0.65f),
+                                    letterSpacing = 1.2.sp
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = "Your Queue",
+                                    text = trackTitle.ifBlank { "Unknown Title" },
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = TextBackgroundColor.copy(alpha = 0.8f),
+                                    fontWeight = FontWeight.Normal,
+                                    color = TextBackgroundColor,
                                     maxLines = 1,
-                                    modifier = Modifier.basicMarquee()
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -249,18 +283,33 @@ fun NewPlayerScreen(
                         transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
                         label = "thumbnailOrLyrics"
                     ) { showLyrics ->
-                        if (showLyrics && currentSongData?.lyricsData != null) {
-                            LyricsView(
-                                lyricsData = currentSongData!!.lyricsData!!,
-                                timeLine = sharedViewModel.timeline,
-                                onLineClick = { progress ->
-                                    sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
-                                },
-                                backgroundColor = Color.Transparent,
-                                playerContentColor = Color.White,
-                                modifier = Modifier.fillMaxSize()
-                            )
+                        if (showLyrics) {
+                            if (currentSongData?.lyricsData != null) {
+                                LyricsView(
+                                    lyricsData = currentSongData!!.lyricsData!!,
+                                    timeLine = sharedViewModel.timeline,
+                                    onLineClick = { progress ->
+                                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
+                                    },
+                                    isAutoScrollEnabledState = isLyricsAutoScrollEnabled,
+                                    onAutoScrollStateChanged = { isLyricsAutoScrollEnabled = it },
+                                    backgroundColor = Color.Transparent,
+                                    playerContentColor = Color.White,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    LyricsShimmer(
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    GoogleCircularProgressIndicator()
+                                }
+                            }
                         } else {
+
                             // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
                             // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
                             BoxWithConstraints(
@@ -348,7 +397,7 @@ fun NewPlayerScreen(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    // Title with AnimatedContent + basicMarquee
+                    // Title with AnimatedContent (no marquee, medium font weight)
                     AnimatedContent(
                         targetState = trackTitle,
                         transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -357,32 +406,24 @@ fun NewPlayerScreen(
                         Text(
                             text = title,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.Medium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = TextBackgroundColor,
-                            modifier = Modifier.basicMarquee(
-                                iterations = 1, initialDelayMillis = 3000, velocity = 30.dp
-                            )
+                            color = TextBackgroundColor
                         )
                     }
 
-                    // Artist
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .basicMarquee(
-                                iterations = 1, initialDelayMillis = 3000, velocity = 30.dp
-                            )
-                            .padding(end = 12.dp)
-                    ) {
-                        Text(
-                            text = trackArtist,
-                            style = MaterialTheme.typography.titleMedium.copy(color = TextBackgroundColor),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(2.dp))
+
+                    // First Artist only (no marquee, normal font weight)
+                    Text(
+                        text = firstArtist,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Normal,
+                        color = TextBackgroundColor.copy(alpha = 0.75f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -397,97 +438,59 @@ fun NewPlayerScreen(
                     topEnd = 50.dp, bottomEnd = 50.dp
                 )
 
-                AnimatedContent(targetState = showInlineLyrics, label = "actionButtons") { showLyrics ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Share button
+                    FilledIconButton(
+                        onClick = {
+                            val songId = currentSongData?.songInfoData?.videoId ?: ""
+                            if (songId.isNotEmpty()) {
+                                val intent = android.content.Intent().apply {
+                                    action = android.content.Intent.ACTION_SEND
+                                    type = "text/plain"
+                                    putExtra(
+                                        android.content.Intent.EXTRA_TEXT,
+                                        "https://music.youtube.com/watch?v=$songId"
+                                    )
+                                }
+                                context.startActivity(android.content.Intent.createChooser(intent, null))
+                            }
+                        },
+                        shape = shareShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = textButtonColor,
+                            contentColor = iconButtonColor
+                        ),
+                        modifier = Modifier.size(42.dp)
                     ) {
-                        if (showLyrics) {
-                            // Close/collapse button to go back to artwork
-                            FilledIconButton(
-                                onClick = { showInlineLyrics = false },
-                                shape = shareShape,
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = textButtonColor,
-                                    contentColor = iconButtonColor
-                                ),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.baseline_close_24),
-                                    contentDescription = "Close lyrics",
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
+                        Icon(
+                            painter = painterResource(Res.drawable.baseline_share_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
 
-                            // More options button (opens track options menu)
-                            FilledIconButton(
-                                onClick = { showMoreOptions = true },
-                                shape = favShape,
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = textButtonColor,
-                                    contentColor = iconButtonColor
-                                ),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.more_horiz),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        } else {
-                            // Share button
-                            FilledIconButton(
-                                onClick = {
-                                    val songId = currentSongData?.songInfoData?.videoId ?: ""
-                                    if (songId.isNotEmpty()) {
-                                        val intent = android.content.Intent().apply {
-                                            action = android.content.Intent.ACTION_SEND
-                                            type = "text/plain"
-                                            putExtra(
-                                                android.content.Intent.EXTRA_TEXT,
-                                                "https://music.youtube.com/watch?v=$songId"
-                                            )
-                                        }
-                                        context.startActivity(android.content.Intent.createChooser(intent, null))
-                                    }
-                                },
-                                shape = shareShape,
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = textButtonColor,
-                                    contentColor = iconButtonColor
-                                ),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(Res.drawable.baseline_share_24),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            // Like button
-                            val isLiked = controllerState.isLiked
-                            FilledIconButton(
-                                onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
-                                shape = favShape,
-                                colors = IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = textButtonColor,
-                                    contentColor = iconButtonColor
-                                ),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(
-                                        if (isLiked) Res.drawable.favorite else Res.drawable.favorite_border
-                                    ),
-                                    contentDescription = null,
-                                    tint = if (isLiked) MaterialTheme.colorScheme.error else iconButtonColor,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                        }
+                    // Like button
+                    val isLiked = controllerState.isLiked
+                    FilledIconButton(
+                        onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
+                        shape = favShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = textButtonColor,
+                            contentColor = iconButtonColor
+                        ),
+                        modifier = Modifier.size(42.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (isLiked) Res.drawable.favorite else Res.drawable.favorite_border
+                            ),
+                            contentDescription = null,
+                            tint = if (isLiked) Color.Red else iconButtonColor,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             }
@@ -745,8 +748,7 @@ fun NewPlayerScreen(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
                 )
 
-                // Lyrics button — toggles inline lyrics overlay
-                val hasLyrics = currentSongData?.lyricsData != null
+                // Lyrics button — toggles inline lyrics overlay instantly
                 PlayerQueueButton(
                     icon = Res.drawable.lyrics,
                     isActive = showInlineLyrics,
@@ -755,9 +757,10 @@ fun NewPlayerScreen(
                     textButtonColor = textButtonColor,
                     iconButtonColor = iconButtonColor,
                     iconSize = iconSize,
-                    enabled = hasLyrics,
-                    onClick = { if (hasLyrics) showInlineLyrics = !showInlineLyrics }
+                    enabled = true,
+                    onClick = { showInlineLyrics = !showInlineLyrics }
                 )
+
 
                 // Repeat button — use transparent repeat/repeat_one drawables always
                 val isRepeat = controllerState.repeatState != RepeatState.None
@@ -795,13 +798,13 @@ fun NewPlayerScreen(
 
             // ── More options bottom sheet ────────────────────────────────────
             if (showMoreOptions) {
-                NowPlayingBottomSheet(
+                FreshPlayerMenuSheet(
                     onDismiss = { showMoreOptions = false },
                     navController = navController,
-                    onNavigateToOtherScreen = { showMoreOptions = false },
                     song = nowPlayingState?.songEntity,
                     viewModel = nowPlayingBottomSheetViewModel,
-                    setSleepTimerEnable = true
+                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 0.92f) else null,
+                    onShowSleepTimer = { showSleepTimerDialog = true }
                 )
             }
 
@@ -812,33 +815,23 @@ fun NewPlayerScreen(
                 var sleepTimerValue by remember(activeRemaining) {
                     mutableFloatStateOf(if (activeRemaining > 0) activeRemaining.toFloat() else sleepTimerDefault)
                 }
-                val isAtDefault = sleepTimerValue.roundToInt() == sleepTimerDefault.roundToInt()
 
                 AlertDialog(
                     onDismissRequest = { showSleepTimerDialog = false },
-                    icon = {
-                        Icon(
-                            painter = painterResource(Res.drawable.bedtime),
-                            contentDescription = null
+                    title = {
+                        Text(
+                            text = "Sleep Timer",
+                            style = MaterialTheme.typography.titleLarge
                         )
                     },
-                    title = { Text("Sleep timer") },
                     text = {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = if (activeRemaining > 0) {
-                                    "Remaining: ${activeRemaining} minutes"
-                                } else {
-                                    "${sleepTimerValue.roundToInt()} minutes"
-                                },
+                                text = if (activeRemaining > 0) "Active: ${formatDuration(activeRemaining * 1000L)}"
+                                else "${sleepTimerValue.roundToInt()} minutes",
                                 style = MaterialTheme.typography.bodyLarge
                             )
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
+                            Spacer(modifier = Modifier.height(16.dp))
                             Slider(
                                 value = sleepTimerValue,
                                 onValueChange = { sleepTimerValue = it },
@@ -848,30 +841,17 @@ fun NewPlayerScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
+                            val isAtDefault = sleepTimerValue.roundToInt() == sleepTimerDefault.roundToInt()
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                if (isAtDefault) {
-                                    Button(
-                                        onClick = {
-                                            sleepTimerDefault = sleepTimerValue
-                                        },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    ) {
-                                        Text("Set as default")
+                                OutlinedButton(
+                                    onClick = {
+                                        sleepTimerDefault = sleepTimerValue
                                     }
-                                } else {
-                                    OutlinedButton(
-                                        onClick = {
-                                            sleepTimerDefault = sleepTimerValue
-                                        }
-                                    ) {
-                                        Text("Set as default")
-                                    }
+                                ) {
+                                    Text("Set as default")
                                 }
 
                                 OutlinedButton(
@@ -928,7 +908,10 @@ fun NewPlayerScreen(
 
             // ── Queue sheet ──────────────────────────────────────────────────
             if (showQueueSheet) {
-                QueueBottomSheet(onDismiss = { showQueueSheet = false })
+                FreshQueueSheet(
+                    onDismiss = { showQueueSheet = false },
+                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 0.92f) else null,
+                )
             }
         }
     }

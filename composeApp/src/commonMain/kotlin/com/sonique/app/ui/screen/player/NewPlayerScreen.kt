@@ -100,7 +100,7 @@ import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
 import sonique.composeapp.generated.resources.baseline_share_24
 import sonique.composeapp.generated.resources.baseline_repeat_one_24
-import sonique.composeapp.generated.resources.fullscreen
+
 import sonique.composeapp.generated.resources.lyrics
 import sonique.composeapp.generated.resources.more_horiz
 import sonique.composeapp.generated.resources.pause
@@ -114,8 +114,9 @@ import sonique.composeapp.generated.resources.shuffle_on
 import sonique.composeapp.generated.resources.skip_next
 import sonique.composeapp.generated.resources.skip_previous
 import sonique.composeapp.generated.resources.bedtime
+import sonique.composeapp.generated.resources.baseline_close_24
 import com.sonique.app.ui.component.NowPlayingBottomSheet
-import com.sonique.app.ui.component.FullscreenLyricsSheet
+
 import kotlin.math.roundToLong
 
 // Matches Sonique constants
@@ -135,6 +136,7 @@ fun NewPlayerScreen(
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
     val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
     val sleepTimerState by sharedViewModel.sleepTimerState.collectAsStateWithLifecycle()
+    val ambienceMode by sharedViewModel.ambienceMode.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val trackTitle = currentSongData?.nowPlayingTitle ?: ""
@@ -146,7 +148,7 @@ fun NewPlayerScreen(
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showMoreOptions by remember { mutableStateOf(false) }
-    var showFullscreenLyrics by remember { mutableStateOf(false) }
+
 
     // ── Colors — matching Sonique BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
@@ -161,9 +163,9 @@ fun NewPlayerScreen(
             .pointerInput(Unit) {} // Consume all touches to prevent leakage triggering home page pull-refresh
             .background(Color(0xFF1C1B1F)) // Sonique surfaceContainer default dark
     ) {
-        // ── Blur background — matches Sonique PlayerBackgroundStyle.BLUR ──
+        // ── Blur background — links to player artwork when Ambience Mode is enabled, solid background when disabled ──
         AnimatedContent(
-            targetState = trackArtwork,
+            targetState = if (ambienceMode) trackArtwork else "",
             transitionSpec = { fadeIn(tween(800)).togetherWith(fadeOut(tween(800))) },
             label = "blurBackground"
         ) { url ->
@@ -248,22 +250,16 @@ fun NewPlayerScreen(
                         label = "thumbnailOrLyrics"
                     ) { showLyrics ->
                         if (showLyrics && currentSongData?.lyricsData != null) {
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = PlayerHorizontalPadding)
-                                    .fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                LyricsView(
-                                    lyricsData = currentSongData!!.lyricsData!!,
-                                    timeLine = sharedViewModel.timeline,
-                                    onLineClick = { progress ->
-                                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
-                                    },
-                                    backgroundColor = Color.Transparent,
-                                    playerContentColor = Color.White,
-                                )
-                            }
+                            LyricsView(
+                                lyricsData = currentSongData!!.lyricsData!!,
+                                timeLine = sharedViewModel.timeline,
+                                onLineClick = { progress ->
+                                    sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
+                                },
+                                backgroundColor = Color.Transparent,
+                                playerContentColor = Color.White,
+                                modifier = Modifier.fillMaxSize()
+                            )
                         } else {
                             // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
                             // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
@@ -407,9 +403,9 @@ fun NewPlayerScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         if (showLyrics) {
-                            // Fullscreen / Collapse lyrics button
+                            // Close/collapse button to go back to artwork
                             FilledIconButton(
-                                onClick = { showFullscreenLyrics = true },
+                                onClick = { showInlineLyrics = false },
                                 shape = shareShape,
                                 colors = IconButtonDefaults.filledIconButtonColors(
                                     containerColor = textButtonColor,
@@ -418,8 +414,8 @@ fun NewPlayerScreen(
                                 modifier = Modifier.size(42.dp)
                             ) {
                                 Icon(
-                                    painter = painterResource(Res.drawable.fullscreen),
-                                    contentDescription = null,
+                                    painter = painterResource(Res.drawable.baseline_close_24),
+                                    contentDescription = "Close lyrics",
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -928,13 +924,7 @@ fun NewPlayerScreen(
                 )
             }
 
-            // ── Fullscreen lyrics sheet ──────────────────────────────────────
-            if (showFullscreenLyrics) {
-                FullscreenLyricsSheet(
-                    sharedViewModel = sharedViewModel,
-                    onDismiss = { showFullscreenLyrics = false }
-                )
-            }
+
 
             // ── Queue sheet ──────────────────────────────────────────────────
             if (showQueueSheet) {

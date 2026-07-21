@@ -422,6 +422,32 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val transliterateLyrics =
+        settingsDataStore.data.map { preferences ->
+            preferences[TRANSLITERATE_LYRICS] ?: FALSE
+        }
+
+    override suspend fun setTransliterateLyrics(enable: Boolean) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[TRANSLITERATE_LYRICS] = if (enable) TRUE else FALSE
+            }
+        }
+    }
+
+    override val playerScreenStyle =
+        settingsDataStore.data.map { preferences ->
+            preferences[PLAYER_SCREEN_STYLE] ?: "modern"
+        }
+
+    override suspend fun setPlayerScreenStyle(style: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[PLAYER_SCREEN_STYLE] = style
+            }
+        }
+    }
+
     override val lyricsProvider =
         settingsDataStore.data.map { preferences ->
             preferences[LYRICS_PROVIDER] ?: LRCLIB
@@ -1251,6 +1277,8 @@ internal class DataStoreManagerImpl(
         val LYRICS_PROVIDER = stringPreferencesKey("lyrics_provider")
         val TRANSLATION_LANGUAGE = stringPreferencesKey("translation_language")
         val USE_TRANSLATION_LANGUAGE = stringPreferencesKey("use_translation_language")
+        val TRANSLITERATE_LYRICS = stringPreferencesKey("transliterate_lyrics")
+        val PLAYER_SCREEN_STYLE = stringPreferencesKey("player_screen_style")
 
         val SPONSOR_BLOCK_ENABLED = stringPreferencesKey("sponsor_block_enabled")
         val MAX_SONG_CACHE_SIZE = intPreferencesKey("maxSongCacheSize")

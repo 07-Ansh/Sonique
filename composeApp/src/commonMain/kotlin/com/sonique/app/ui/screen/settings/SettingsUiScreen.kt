@@ -86,10 +86,12 @@ fun SettingsUiScreen(
     val blurPlayerBackground by viewModel.blurPlayerBackground.collectAsStateWithLifecycle()
     val enableExpressivePlayerControls by viewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
 
 
     LaunchedEffect(Unit) {
         viewModel.getData()
+        viewModel.getPlayerScreenStyle()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -121,7 +123,7 @@ fun SettingsUiScreen(
                 SettingsSectionHeader("Background Effects")
                 SettingItem(
                     title = "Ambience Mode",
-                    subtitle = "Show gradient background based on album art colors",
+                    subtitle = "Link background to current player art (disabled shows solid background)",
                     switch = (ambienceMode to { viewModel.setAmbienceMode(it) }),
                 )
                 SettingItem(
@@ -131,6 +133,36 @@ fun SettingsUiScreen(
                 )
 
                 SettingsSectionHeader("Player Screen")
+                val currentStyleLabel = when (playerScreenStyle) {
+                    "classic" -> "Classic Player (Original)"
+                    else -> "Modern Player (New)"
+                }
+                SettingItem(
+                    title = "Player UI Style",
+                    subtitle = currentStyleLabel,
+                    smallSubtitle = true,
+                    onClick = {
+                        coroutineScope.launch {
+                            viewModel.setAlertData(
+                                SettingAlertState(
+                                    title = "Player UI Style",
+                                    selectOne = SettingAlertState.SelectData(
+                                        listSelect = listOf(
+                                            (playerScreenStyle != "classic") to "Modern Player (New)",
+                                            (playerScreenStyle == "classic") to "Classic Player (Original)"
+                                        )
+                                    ),
+                                    confirm = "Change" to { state ->
+                                        val selectedLabel = state.selectOne?.getSelected() ?: ""
+                                        val styleValue = if (selectedLabel.startsWith("Classic")) "classic" else "modern"
+                                        viewModel.setPlayerScreenStyle(styleValue)
+                                    },
+                                    dismiss = "Cancel"
+                                )
+                            )
+                        }
+                    }
+                )
                 SettingItem(
                     title = "Expressive Player Controls",
                     subtitle = "Use Material 3 Expressive shapes (rounded squares, pill shapes) for playback buttons",

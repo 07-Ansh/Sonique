@@ -143,6 +143,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import multiplatform.network.cmptoast.ToastGravity
 import multiplatform.network.cmptoast.showToast
@@ -1289,6 +1290,7 @@ fun NowPlayingBottomSheet(
     }
 
     LaunchedEffect(key1 = song) {
+        delay(200)
         viewModel.setSongEntity(song)
     }
 

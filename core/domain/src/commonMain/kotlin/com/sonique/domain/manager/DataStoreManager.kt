@@ -104,6 +104,14 @@ interface DataStoreManager {
 
     suspend fun setEnableTranslateLyric(enable: Boolean)
 
+    val transliterateLyrics: Flow<String>
+
+    suspend fun setTransliterateLyrics(enable: Boolean)
+
+    val playerScreenStyle: Flow<String>
+
+    suspend fun setPlayerScreenStyle(style: String)
+
     val lyricsProvider: Flow<String>
 
     suspend fun setLyricsProvider(provider: String)

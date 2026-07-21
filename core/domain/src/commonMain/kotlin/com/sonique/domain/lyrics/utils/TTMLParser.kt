@@ -56,8 +56,8 @@ object TTMLParser {
 
                 // Extract all <span> elements
                 val spanRegex = Regex("""<span\b([^>]*)>(.*?)</span>""", RegexOption.DOT_MATCHES_ALL)
-                var lastIndex = 0
-                spanRegex.findAll(content).forEach { spanMatch ->
+                val spanMatches = spanRegex.findAll(content).toList()
+                spanMatches.forEachIndexed { idx, spanMatch ->
                     val spanAttrs = parseAttributes(spanMatch.groupValues[1])
                     val spanText = spanMatch.groupValues[2]
                     
@@ -65,16 +65,26 @@ object TTMLParser {
                     val spanBegin = spanAttrs["begin"]
                     val spanEnd = spanAttrs["end"]
 
+                    val nextSpanStart = spanMatches.getOrNull(idx + 1)?.range?.first ?: content.length
+                    val betweenText = content.substring(spanMatch.range.last + 1, nextSpanStart)
+                    // Word boundary = trailing space inside the span text itself (semantic TTML signal),
+                    // OR a between-span text node that is ONLY a single space (not XML formatting whitespace
+                    // which is newlines+indentation). Multi-char or newline-containing betweenText is
+                    // just XML pretty-printing, NOT a word separator.
+                    val cleanSpanText = stripTags(spanText)
+                    val spaceAfter = (cleanSpanText.isNotEmpty() && cleanSpanText.last().isWhitespace()) ||
+                        (betweenText == " ")
+
                     if (role == "x-bg") {
                         if (isPBackground) {
-                            parseWordSpan(spanText, spanBegin, spanEnd, globalOffset, spanInfos)
+                            parseWordSpan(spanText, spanBegin, spanEnd, globalOffset, spanInfos, spaceAfter)
                         } else {
                             parseBackgroundSpan(spanText, spanBegin, spanEnd, startTime, globalOffset)?.let {
                                 backgroundLines.add(it)
                             }
                         }
                     } else if (role != "x-translation" && role != "x-roman") {
-                        parseWordSpan(spanText, spanBegin, spanEnd, globalOffset, spanInfos)
+                        parseWordSpan(spanText, spanBegin, spanEnd, globalOffset, spanInfos, spaceAfter)
                     }
                 }
 
@@ -132,11 +142,10 @@ object TTMLParser {
         return best
     }
 
-    private fun parseWordSpan(text: String, begin: String?, end: String?, offset: Double, spanInfos: MutableList<SpanInfo>) {
+    private fun parseWordSpan(text: String, begin: String?, end: String?, offset: Double, spanInfos: MutableList<SpanInfo>, hasTrailingSpace: Boolean) {
         if (!begin.isNullOrEmpty() && !end.isNullOrEmpty()) {
             val cleanText = stripTags(text)
-            val space = cleanText.isNotEmpty() && cleanText.last().isWhitespace()
-            spanInfos.add(SpanInfo(cleanText, parseTime(begin) + offset, parseTime(end) + offset, space))
+            spanInfos.add(SpanInfo(cleanText, parseTime(begin) + offset, parseTime(end) + offset, hasTrailingSpace))
         }
     }
 
@@ -151,12 +160,17 @@ object TTMLParser {
             return ParsedLine(cleanText, start, emptyList(), isBackground = true)
         }
         
-        matches.forEach { match ->
+        matches.forEachIndexed { idx, match ->
             val attrs = parseAttributes(match.groupValues[1])
             val spanText = match.groupValues[2]
             val role = attrs["role"] ?: attrs["ttm:role"]
             if (role != "x-translation" && role != "x-roman") {
-                parseWordSpan(spanText, attrs["begin"], attrs["end"], offset, spanInfos)
+                val nextSpanStart = matches.getOrNull(idx + 1)?.range?.first ?: text.length
+                val betweenText = text.substring(match.range.last + 1, nextSpanStart)
+                val cleanSpanText = stripTags(spanText)
+                val spaceAfter = (cleanSpanText.isNotEmpty() && cleanSpanText.last().isWhitespace()) ||
+                    (betweenText == " ")
+                parseWordSpan(spanText, attrs["begin"], attrs["end"], offset, spanInfos, spaceAfter)
             }
         }
         

@@ -119,7 +119,7 @@ object LyricsUtils {
                             parseWordTimestamps(nextLine.removeSurrounding("<", ">"))
                         } else null
                     }
-                val plainText = content.replace(Regex("<\\d{1,2}:\\d{2}\\.\\d{2,3}>\\s*"), "").trim()
+                val plainText = content.replace(Regex("<\\d{1,2}:\\d{2}\\.\\d{2,3}>"), "").trim()
                 val lineTimeMs = wordTimings?.firstOrNull()?.startTime?.let { (it * 1000).toLong() } ?: 0L
                 result.add(LyricsEntry(lineTimeMs, plainText, wordTimings, agent = lastNonBgAgent ?: "bg", isBackground = true))
                 return@forEachIndexed
@@ -141,7 +141,7 @@ object LyricsUtils {
                             parseWordTimestamps(nextLine.removeSurrounding("<", ">"))
                         } else null
                     }
-                val plainText = content.replace(Regex("<\\d{1,2}:\\d{2}\\.\\d{2,3}>\\s*"), "").trim()
+                val plainText = content.replace(Regex("<\\d{1,2}:\\d{2}\\.\\d{2,3}>"), "").trim()
                 if (!agent.isNullOrBlank()) {
                     lastNonBgAgent = agent
                 }
@@ -176,7 +176,7 @@ object LyricsUtils {
                             parseWordTimestamps(nextLine.removeSurrounding("<", ">"))
                         } else null
                     }
-                val plainText = content.replace(Regex("<\\d{1,2}:\\d{2}\\.\\d{2,3}>\\s*"), "").trim()
+                val plainText = content.replace(Regex("<\\d{1,2}:\\d{2}\\.\\d{2,3}>"), "").trim()
                 if (!isBackground && !agent.isNullOrBlank()) {
                     lastNonBgAgent = agent
                 }

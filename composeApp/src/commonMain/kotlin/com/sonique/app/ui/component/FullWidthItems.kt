@@ -105,6 +105,23 @@ import kotlin.math.roundToInt
 
  
 @Composable
+fun PlayingLottieAnimation(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition {
+        LottieCompositionSpec.JsonString(
+            Res.readBytes("files/audio_playing_animation.json").decodeToString(),
+        )
+    }
+    Image(
+        painter = rememberLottiePainter(
+            composition = composition,
+            iterations = Compottie.IterateForever,
+        ),
+        contentDescription = "Lottie animation",
+        modifier = modifier
+    )
+}
+
+@Composable
 fun SongFullWidthItems(
     track: Track? = null,
     index: Int? = null,
@@ -124,11 +141,6 @@ fun SongFullWidthItems(
         .getSongAsFlow(songEntity?.videoId ?: track?.videoId ?: "")
         .mapNotNull { it?.downloadState }
         .collectAsState(initial = DownloadState.STATE_NOT_DOWNLOADED)
-    val composition by rememberLottieComposition {
-        LottieCompositionSpec.JsonString(
-            Res.readBytes("files/audio_playing_animation.json").decodeToString(),
-        )
-    }
     val offsetX = remember { Animatable(initialValue = 0f) }
     var heightDp by remember { mutableStateOf(0.dp) }
 
@@ -208,14 +220,7 @@ fun SongFullWidthItems(
                 ) {
                     Crossfade(isPlaying) {
                         if (it) {
-                            Image(
-                                painter =
-                                    rememberLottiePainter(
-                                        composition = composition,
-                                        iterations = Compottie.IterateForever,
-                                    ),
-                                contentDescription = "Lottie animation",
-                            )
+                            PlayingLottieAnimation(modifier = Modifier.fillMaxSize())
                         } else if (index == null) {
                             val thumb = track?.thumbnails?.lastOrNull()?.url ?: songEntity?.thumbnails
                             AsyncImage(

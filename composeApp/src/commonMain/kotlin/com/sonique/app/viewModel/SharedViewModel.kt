@@ -286,6 +286,9 @@ class SharedViewModel(
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
+    val playerScreenStyle: StateFlow<String> = dataStoreManager.playerScreenStyle
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "modern")
+
     val blurBg: StateFlow<Boolean> = dataStoreManager.blurPlayerBackground
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
@@ -746,16 +749,24 @@ class SharedViewModel(
             lyricsCanvasRepository.getSavedLyrics(track.videoId).cancellable().collectLatest { lyrics ->
                 if (lyrics != null) {
                     val lyricsData = lyrics.toLyrics()
-                    Logger.d(tag, "Saved Lyrics $lyricsData")
-                    updateLyrics(
-                        track.videoId,
-                        track.durationSeconds ?: 0,
-                        lyricsData,
-                        false,
-                        LyricsProvider.OFFLINE,
-                    )
-
+                    val hasLyrics = !lyricsData.SoniqueLyricsId.isNullOrBlank() || !lyricsData.lines.isNullOrEmpty()
+                    if (hasLyrics) {
+                        Logger.d(tag, "Saved Lyrics $lyricsData")
+                        updateLyrics(
+                            track.videoId,
+                            track.durationSeconds ?: 0,
+                            lyricsData,
+                            false,
+                            LyricsProvider.OFFLINE,
+                        )
+                        return@collectLatest
+                    }
                 }
+                getLyricsFromFormat(
+                    false,
+                    track.toSongEntity(),
+                    (track.durationSeconds ?: 0)
+                )
             }
         }
     }
@@ -1174,15 +1185,19 @@ class SharedViewModel(
             // 1. Check local DB first
             val saved = lyricsCanvasRepository.getSavedLyrics(videoId).cancellable().firstOrNull()
             if (saved != null) {
-                Logger.d(tag, "Loaded saved lyrics from DB for $videoId")
-                updateLyrics(
-                    videoId,
-                    duration,
-                    saved.toLyrics(),
-                    false,
-                    LyricsProvider.OFFLINE
-                )
-                return@launch
+                val lyricsData = saved.toLyrics()
+                val hasLyrics = !lyricsData.SoniqueLyricsId.isNullOrBlank() || !lyricsData.lines.isNullOrEmpty()
+                if (hasLyrics) {
+                    Logger.d(tag, "Loaded saved lyrics from DB for $videoId")
+                    updateLyrics(
+                        videoId,
+                        duration,
+                        lyricsData,
+                        false,
+                        LyricsProvider.OFFLINE
+                    )
+                    return@launch
+                }
             }
 
             // 2. Fetch via sequential helper if not in DB

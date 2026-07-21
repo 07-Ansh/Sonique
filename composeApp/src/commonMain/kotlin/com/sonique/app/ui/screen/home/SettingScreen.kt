@@ -386,7 +386,7 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                 items = listOf(
                     Material3SettingsItem(
                         title = { Text("Ambience Mode") },
-                        description = { Text("Show gradient background based on album art colors") },
+                        description = { Text("Link background to current player art (disabled shows solid background)") },
                         isSwitch = true,
                         checked = ambienceMode,
                         onCheckedChange = { viewModel.setAmbienceMode(it) }

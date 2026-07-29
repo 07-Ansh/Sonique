@@ -151,9 +151,6 @@ class LibraryViewModel(
                     _followedArtists.value = LocalResource.Success(artists)
                 }
             }
-            currentScreenJob.join()
-            cookieJob.join()
-            artistJob.join()
         }
 
         // Keep database collectors running continuously in background to support hot state flows and instant navigation

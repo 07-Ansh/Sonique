@@ -377,25 +377,11 @@ class SharedViewModel(
                         }
 
 
-            val lyricsProviderJob =
-                launch {
-                    dataStoreManager.lyricsProvider.distinctUntilChanged().collectLatest {
-                        setLyricsProvider()
-                    }
+            launch {
+                dataStoreManager.lyricsProvider.distinctUntilChanged().collectLatest {
+                    setLyricsProvider()
                 }
-
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
-
-            lyricsProviderJob.join()
+            }
 
  
 
@@ -567,10 +553,6 @@ class SharedViewModel(
                         }
                     }
                 }
-            job1.join()
-            controllerJob.join()
-            sleepTimerJob.join()
-            playlistNameJob.join()
         }
          
         checkAllDownloadingSongs()

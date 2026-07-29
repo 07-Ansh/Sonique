@@ -240,3 +240,11 @@
 -dontwarn org.mozilla.javascript.ObjToIntMap
 -dontwarn org.mozilla.javascript.**
 
+# Keep Navigation Destination serializable classes and route names for Type-Safe Navigation
+-keep class com.sonique.app.ui.navigation.destination.** { *; }
+-keepclassmembers class com.sonique.app.ui.navigation.destination.** { *; }
+-keepnames @kotlinx.serialization.Serializable class **
+-keepclassmembers class * implements kotlinx.serialization.KSerializer {
+    *** INSTANCE;
+}
+

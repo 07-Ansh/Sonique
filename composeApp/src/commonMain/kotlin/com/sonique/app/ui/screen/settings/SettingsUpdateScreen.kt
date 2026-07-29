@@ -139,7 +139,7 @@ fun SettingsUpdateScreen(
                     title = stringResource(Res.string.check_for_updates_title),
                     items = listOf(
                         Material3SettingsItem(
-                            icon = rememberVectorPainter(Icons.Default.Refresh),
+                            icon = Icons.Default.Refresh,
                             title = { Text(titleText) },
                             onClick = {
                                 if (!isChecking) {

@@ -61,16 +61,14 @@ internal fun parsePlaylistData(
                     duration += secondSubtitle.getOrNull(2)?.text
                 }
                 Logger.d("PlaylistParser", "duration: $duration")
-                if (!header.description?.runs.isNullOrEmpty()) {
-                    for (run in header.description?.runs!!) {
-                        description += (run.text)
+                header.description?.runs?.let { runs ->
+                    for (run in runs) {
+                        description += run.text
                     }
                 }
-                if (!header.subtitle.runs.isNullOrEmpty() && header.subtitle.runs?.size!! > 4) {
-                    year =
-                        header.subtitle.runs
-                            ?.get(4)
-                            ?.text ?: now().year.toString()
+                val subtitleRuns = header.subtitle.runs
+                if (!subtitleRuns.isNullOrEmpty() && subtitleRuns.size > 4) {
+                    year = subtitleRuns.getOrNull(4)?.text ?: now().year.toString()
                 }
                 header.thumbnail.croppedSquareThumbnailRenderer
                     ?.thumbnail

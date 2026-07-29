@@ -37,8 +37,8 @@ data class AccountMenuResponse(
                         ) {
                             fun toAccountInfo() =
                                 AccountInfo(
-                                    accountName.runs!!.first().text,
-                                    channelHandle.runs!!.first().text,
+                                    accountName.runs?.firstOrNull()?.text ?: "",
+                                    channelHandle.runs?.firstOrNull()?.text ?: "",
                                     pageId = null,
                                     accountPhoto.thumbnails,
                                 )

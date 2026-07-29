@@ -289,6 +289,17 @@ fun NowPlayingScreenContent(
         mutableStateOf(false)
     }
 
+    com.sonique.app.expect.ui.BackHandler(
+        enabled = showQueueBottomSheet || showFullscreenLyrics || showSheet || showInfoBottomSheet
+    ) {
+        when {
+            showQueueBottomSheet -> showQueueBottomSheet = false
+            showFullscreenLyrics -> showFullscreenLyrics = false
+            showSheet -> showSheet = false
+            showInfoBottomSheet -> showInfoBottomSheet = false
+        }
+    }
+
     var shouldShowToolbar by remember {
         mutableStateOf(false)
     }

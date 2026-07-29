@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.border
@@ -148,7 +149,7 @@ private fun Material3SettingsItemRow(
         if (item.leadingContent != null) {
             item.leadingContent.invoke()
             Spacer(modifier = Modifier.width(16.dp))
-        } else if (item.icon != null) {
+        } else if (item.icon != null || item.iconPainter != null) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -160,6 +161,31 @@ private fun Material3SettingsItemRow(
                     ),
                 contentAlignment = Alignment.Center
             ) {
+                val tint = if (!item.enabled)
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                else if (item.isHighlighted)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+
+                val iconContent: @Composable () -> Unit = {
+                    if (item.iconPainter != null) {
+                        Icon(
+                            painter = item.iconPainter,
+                            contentDescription = null,
+                            tint = tint,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else if (item.icon != null) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = null,
+                            tint = tint,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
                 if (item.showBadge) {
                     BadgedBox(
                         badge = {
@@ -168,30 +194,10 @@ private fun Material3SettingsItemRow(
                             )
                         }
                     ) {
-                        Icon(
-                            painter = item.icon,
-                            contentDescription = null,
-                            tint = if (!item.enabled)
-                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                            else if (item.isHighlighted)
-                                MaterialTheme.colorScheme.primary
-                            else
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                            modifier = Modifier.size(24.dp)
-                        )
+                        iconContent()
                     }
                 } else {
-                    Icon(
-                        painter = item.icon,
-                        contentDescription = null,
-                        tint = if (!item.enabled)
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-                        else if (item.isHighlighted)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-                        modifier = Modifier.size(24.dp)
-                    )
+                    iconContent()
                 }
             }
 
@@ -235,7 +241,7 @@ private fun Material3SettingsItemRow(
             @Composable {
                 Switch(
                     checked = item.checked,
-                    onCheckedChange = item.onCheckedChange,
+                    onCheckedChange = null,
                     enabled = item.enabled
                 )
             }
@@ -254,7 +260,8 @@ private fun Material3SettingsItemRow(
  * Data class for Material 3 settings item
  */
 data class Material3SettingsItem(
-    val icon: Painter? = null,
+    val icon: ImageVector? = null,
+    val iconPainter: Painter? = null,
     val leadingContent: (@Composable () -> Unit)? = null,
     val title: @Composable () -> Unit,
     val description: (@Composable () -> Unit)? = null,

@@ -76,15 +76,15 @@ fun SettingsStorageScreen(
     val alertData by viewModel.alertData.collectAsStateWithLifecycle()
     val basicAlertData by viewModel.basicAlertData.collectAsStateWithLifecycle()
 
-    if (alertData != null) {
+    alertData?.let { alert ->
         SettingDialog(
-            alert = alertData!!,
+            alert = alert,
             onDismiss = { viewModel.setAlertData(null) }
         )
     }
-    if (basicAlertData != null) {
+    basicAlertData?.let { alert ->
         SettingBasicDialog(
-            alert = basicAlertData!!,
+            alert = alert,
             onDismiss = { viewModel.setBasicAlertData(null) }
         )
     }

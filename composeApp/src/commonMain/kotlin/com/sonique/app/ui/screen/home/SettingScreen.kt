@@ -56,6 +56,8 @@ import com.sonique.app.expect.ui.fileSaverResult
 import com.sonique.app.expect.ui.openEqResult
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.CenterLoadingBox
+import com.sonique.app.ui.component.Material3SettingsGroup
+import com.sonique.app.ui.component.Material3SettingsItem
 import com.sonique.app.ui.component.SettingBasicDialog
 import com.sonique.app.ui.screen.settings.SettingsUpdateScreen
 import com.sonique.app.ui.component.SettingDialog

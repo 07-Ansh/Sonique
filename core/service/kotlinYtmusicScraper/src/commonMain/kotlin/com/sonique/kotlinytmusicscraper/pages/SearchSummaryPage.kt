@@ -41,9 +41,10 @@ data class SearchSummaryPage(
                             } ?: return null,
                         album =
                             subtitle.getOrNull(2)?.firstOrNull()?.takeIf { it.navigationEndpoint?.browseEndpoint != null }?.let {
+                                val browseId = it.navigationEndpoint?.browseEndpoint?.browseId ?: return@let null
                                 Album(
                                     name = it.text,
-                                    id = it.navigationEndpoint?.browseEndpoint?.browseId!!,
+                                    id = browseId,
                                 )
                             },
                         duration =
@@ -147,9 +148,10 @@ data class SearchSummaryPage(
                             } ?: return null,
                         album =
                             secondaryLine.getOrNull(2)?.firstOrNull()?.takeIf { it.navigationEndpoint?.browseEndpoint != null }?.let {
+                                val browseId = it.navigationEndpoint?.browseEndpoint?.browseId ?: return@let null
                                 Album(
                                     name = it.text,
-                                    id = it.navigationEndpoint?.browseEndpoint?.browseId!!,
+                                    id = browseId,
                                 )
                             },
                         duration =

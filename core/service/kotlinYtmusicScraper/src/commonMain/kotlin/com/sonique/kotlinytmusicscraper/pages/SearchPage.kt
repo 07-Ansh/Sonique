@@ -100,9 +100,10 @@ object SearchPage {
                                 ?.firstOrNull()
                                 ?.takeIf { it.navigationEndpoint?.browseEndpoint != null }
                                 ?.let {
+                                    val browseId = it.navigationEndpoint?.browseEndpoint?.browseId ?: return@let null
                                     Album(
                                         name = it.text,
-                                        id = it.navigationEndpoint?.browseEndpoint?.browseId!!,
+                                        id = browseId,
                                     )
                                 },
                         duration =

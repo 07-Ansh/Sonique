@@ -36,7 +36,7 @@ project.ext {
     junitVersion = '4.12'
     retromockVersion = '1.1.1'
     truthVersion = '0.39'
-    robolectricVersion = '4.6.1'
+    robolectricVersion = '4.12.2'
     autoValueVersion = '1.6'
     checkerframeworkVersion = '2.5.0'
     testRunnerVersion = '1.0.2'

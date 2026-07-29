@@ -77,7 +77,7 @@ class GstreamerPlayerAdapter(
      
      
      
-    private val listeners = mutableListOf<MediaPlayerListener>()
+    private val listeners = java.util.concurrent.CopyOnWriteArrayList<MediaPlayerListener>()
 
     @Volatile
     private var currentPlayer: GstreamerPlayer? = null
@@ -1496,7 +1496,7 @@ class GstreamerPlayerAdapter(
     private fun configurePaths() {
         if (Platform.isWindows()) {
             val gstPath = System.getProperty("gstreamer.path", findWindowsLocation())
-            if (!gstPath!!.isEmpty()) {
+            if (!gstPath.isNullOrEmpty()) {
                 val systemPath = System.getenv("PATH")
                 if (systemPath == null || systemPath.trim { it <= ' ' }.isEmpty()) {
                     Kernel32.INSTANCE.SetEnvironmentVariable("PATH", gstPath)
@@ -1516,7 +1516,7 @@ class GstreamerPlayerAdapter(
                     "gstreamer.path",
                     "/Library/Frameworks/GStreamer.framework/Libraries/",
                 )
-            if (!gstPath!!.isEmpty()) {
+            if (!gstPath.isNullOrEmpty()) {
                 val jnaPath = System.getProperty("jna.library.path", "").trim { it <= ' ' }
                 if (jnaPath.isEmpty()) {
                     System.setProperty("jna.library.path", gstPath)
@@ -1537,7 +1537,7 @@ class GstreamerPlayerAdapter(
                     "GSTREAMER_1_0_ROOT_X86_64",
                 ).map<String?> { name: String? -> System.getenv(name) }
                 .filter { p: String? -> p != null }
-                .map<String?> { p: String? -> if (p!!.endsWith("\\")) p + "bin\\" else p + "\\bin\\" }
+                .map<String?> { p: String? -> if (p?.endsWith("\\") == true) p + "bin\\" else (p ?: "") + "\\bin\\" }
                 .findFirst()
                 .orElse("")
         } else {

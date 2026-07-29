@@ -1859,7 +1859,19 @@ class YouTube {
                     endpoint = endpoint,
                 )
             } else {
-                val musicPlaylistShelfContinuation = response.continuationContents?.musicPlaylistShelfContinuation!!
+                val musicPlaylistShelfContinuation = response.continuationContents?.musicPlaylistShelfContinuation
+                    ?: return@runCatching NextResult(
+                        items = emptyList(),
+                        continuation = null,
+                        endpoint = WatchEndpoint(
+                            videoId = null,
+                            playlistId = null,
+                            playlistSetVideoId = null,
+                            params = null,
+                            index = null,
+                            watchEndpointMusicSupportedConfigs = null,
+                        )
+                    )
                 return@runCatching NextResult(
                     items =
                         musicPlaylistShelfContinuation.contents.mapNotNull {

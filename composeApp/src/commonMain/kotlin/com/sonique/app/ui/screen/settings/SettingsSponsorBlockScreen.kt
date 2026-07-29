@@ -66,9 +66,9 @@ fun SettingsSponsorBlockScreen(
         viewModel.getData()
     }
 
-    if (alertData != null) {
+    alertData?.let { alert ->
         SettingDialog(
-            alert = alertData!!,
+            alert = alert,
             onDismiss = { viewModel.setAlertData(null) }
         )
     }

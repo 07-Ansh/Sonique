@@ -73,9 +73,9 @@ fun SettingsUiScreen(
 ) {
     val coroutineScope = rememberCoroutineScope()
     val alertData by viewModel.alertData.collectAsStateWithLifecycle()
-    if (alertData != null) {
+    alertData?.let { alert ->
         SettingDialog(
-            alert = alertData!!,
+            alert = alert,
             onDismiss = { viewModel.setAlertData(null) }
         )
     }

@@ -161,11 +161,6 @@ class HomeViewModel(
                         }
                     }
                 }
-            job1.join()
-            job2.join()
-            job3.join()
-            job4.join()
-            job5.join()
         }
     }
 

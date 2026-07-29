@@ -262,13 +262,11 @@ class SearchViewModel(
                         }
                     }
                 }
-            job1.join()
-            job2.join()
-            job3.join()
-            job4.join()
-            job5.join()
-            job6.join()
-            job7.join()
+            try {
+                kotlinx.coroutines.joinAll(job1, job2, job3, job4, job5, job6, job7)
+            } catch (e: Exception) {
+                Logger.e(tag, "Search data fetch error: ${e.message}")
+            }
 
              
             if (errorCount == totalRequests) {

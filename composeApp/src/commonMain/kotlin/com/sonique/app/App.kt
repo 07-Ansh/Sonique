@@ -140,20 +140,28 @@ fun App(
     com.sonique.app.expect.ui.BackHandler(
         enabled = isShowNowPlaylistScreen || !isAtHome
     ) {
-        if (isShowNowPlaylistScreen) {
-            isShowNowPlaylistScreen = false
-        } else {
-            if (navController.previousBackStackEntry != null) {
-                navController.popBackStack()
+        try {
+            if (isShowNowPlaylistScreen) {
+                isShowNowPlaylistScreen = false
             } else {
-                navController.navigate(HomeDestination) {
-                    popUpTo(navController.graph.startDestinationId) {
-                        inclusive = false
+                if (navController.previousBackStackEntry != null) {
+                    navController.popBackStack()
+                } else {
+                    navController.navigate(HomeDestination) {
+                        navController.graph.startDestinationId.let { startId ->
+                            if (startId != 0) {
+                                popUpTo(startId) {
+                                    inclusive = false
+                                }
+                            }
+                        }
+                        launchSingleTop = true
+                        restoreState = true
                     }
-                    launchSingleTop = true
-                    restoreState = true
                 }
             }
+        } catch (e: Exception) {
+            com.sonique.logger.Logger.e("AppNavigation", "Navigation error handled: ${e.message}")
         }
     }
 

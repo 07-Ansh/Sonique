@@ -122,9 +122,10 @@ internal class StreamRepositoryImpl(
 
             while (attempts < maxAttempts && !success) {
                 attempts++
-                youTube
-                    .player(videoId, shouldYtdlp = itag == 774, noLogIn = muxed)
-                    .onSuccess { data ->
+                try {
+                    youTube
+                        .player(videoId, shouldYtdlp = itag == 774, noLogIn = muxed)
+                        .onSuccess { data ->
                         val response = data.second
                         if (data.third == MediaType.Song) {
                             Logger.w(
@@ -255,6 +256,12 @@ internal class StreamRepositoryImpl(
                             delay(500)
                         }
                     }
+                } catch (e: Exception) {
+                    Logger.e("Stream", "Attempt $attempts exception: ${e.message}")
+                    if (attempts < maxAttempts) {
+                        delay(500)
+                    }
+                }
             }
             emit(resultUrl)
         }.flowOn(Dispatchers.IO)

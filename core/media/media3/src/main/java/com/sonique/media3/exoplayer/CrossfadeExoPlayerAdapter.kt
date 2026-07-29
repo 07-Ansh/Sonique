@@ -114,7 +114,7 @@ internal class CrossfadeExoPlayerAdapter(
 
     // ========== State Management ==========
 
-    private val listeners = mutableListOf<MediaPlayerListener>()
+    private val listeners = java.util.concurrent.CopyOnWriteArrayList<MediaPlayerListener>()
 
     @Volatile
     private var currentPlayer: ExoPlayer? = null

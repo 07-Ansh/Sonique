@@ -30,7 +30,7 @@ private const val TAG = "ExoPlayerAdapter"
 class ExoPlayerAdapter(
     private val exoPlayer: ExoPlayer,
 ) : MediaPlayerInterface {
-    private val listeners = mutableListOf<MediaPlayerListener>()
+    private val listeners = java.util.concurrent.CopyOnWriteArrayList<MediaPlayerListener>()
     private val exoPlayerListener = ExoPlayerListenerImpl()
 
      

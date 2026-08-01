@@ -1,6 +1,14 @@
 package com.sonique.app.ui.screen.other
 
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
@@ -170,6 +178,21 @@ import sonique.composeapp.generated.resources.playlist
 import sonique.composeapp.generated.resources.radio
 import sonique.composeapp.generated.resources.search
 import sonique.composeapp.generated.resources.unlimited
+
+private fun Modifier.pressTracker(onPressedChange: (Boolean) -> Unit): Modifier =
+    this.pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                awaitFirstDown(pass = PointerEventPass.Initial)
+                onPressedChange(true)
+                try {
+                    waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                } finally {
+                    onPressedChange(false)
+                }
+            }
+        }
+    }
 
 @OptIn(ExperimentalCoroutinesApi::class, ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
@@ -716,9 +739,74 @@ fun PlaylistScreen(
                                                     }
                                                 }
                                                 if (isMobilePortrait) {
-                                                    // Apple Music-style action row:
-                                                    // [Shuffle][Play pill][Download/More] (cluster centered, all 48dp matching size)
+                                                    // Apple Music-style action row with connected spring physics animation:
+                                                    // [Shuffle][Play pill][Download/More]
                                                     val isThisPlaying = isPlaying && playingPlaylistId == data.id
+
+                                                    var isLeftPressed by remember { mutableStateOf(false) }
+                                                    var isCenterPressed by remember { mutableStateOf(false) }
+                                                    var isRightPressed by remember { mutableStateOf(false) }
+
+                                                    val expressiveSpringSpec = remember {
+                                                        spring<Float>(
+                                                            stiffness = Spring.StiffnessMediumLow,
+                                                            dampingRatio = Spring.DampingRatioMediumBouncy
+                                                        )
+                                                    }
+
+                                                    val leftScale by animateFloatAsState(
+                                                        targetValue = when {
+                                                            isLeftPressed -> 1.08f
+                                                            isCenterPressed || isRightPressed -> 0.95f
+                                                            else -> 1.0f
+                                                        },
+                                                        animationSpec = expressiveSpringSpec
+                                                    )
+                                                    val leftTranslationPx by animateFloatAsState(
+                                                        targetValue = when {
+                                                            isLeftPressed -> -10f
+                                                            isCenterPressed -> -12f
+                                                            isRightPressed -> -5f
+                                                            else -> 0f
+                                                        },
+                                                        animationSpec = expressiveSpringSpec
+                                                    )
+
+                                                    val centerScale by animateFloatAsState(
+                                                        targetValue = when {
+                                                            isCenterPressed -> 1.08f
+                                                            isLeftPressed || isRightPressed -> 0.95f
+                                                            else -> 1.0f
+                                                        },
+                                                        animationSpec = expressiveSpringSpec
+                                                    )
+                                                    val centerTranslationPx by animateFloatAsState(
+                                                        targetValue = when {
+                                                            isLeftPressed -> 8f
+                                                            isRightPressed -> -8f
+                                                            else -> 0f
+                                                        },
+                                                        animationSpec = expressiveSpringSpec
+                                                    )
+
+                                                    val rightScale by animateFloatAsState(
+                                                        targetValue = when {
+                                                            isRightPressed -> 1.08f
+                                                            isCenterPressed || isLeftPressed -> 0.95f
+                                                            else -> 1.0f
+                                                        },
+                                                        animationSpec = expressiveSpringSpec
+                                                    )
+                                                    val rightTranslationPx by animateFloatAsState(
+                                                        targetValue = when {
+                                                            isRightPressed -> 10f
+                                                            isCenterPressed -> 12f
+                                                            isLeftPressed -> 5f
+                                                            else -> 0f
+                                                        },
+                                                        animationSpec = expressiveSpringSpec
+                                                    )
+
                                                     Row(
                                                         modifier =
                                                             Modifier
@@ -731,10 +819,16 @@ fun PlaylistScreen(
                                                             Box(
                                                                 modifier =
                                                                     Modifier
+                                                                        .graphicsLayer {
+                                                                            scaleX = leftScale
+                                                                            scaleY = leftScale
+                                                                            translationX = leftTranslationPx
+                                                                        }
+                                                                        .pressTracker { isLeftPressed = it }
                                                                         .size(48.dp)
                                                                         .clip(CircleShape)
                                                                         .background(Color.White.copy(alpha = 0.12f))
-                                                                        .rubberyClick {
+                                                                        .clickable {
                                                                             viewModel.onUIEvent(PlaylistUIEvent.Shuffle)
                                                                         },
                                                                 contentAlignment = Alignment.Center,
@@ -750,11 +844,17 @@ fun PlaylistScreen(
                                                         Box(
                                                             modifier =
                                                                 Modifier
+                                                                    .graphicsLayer {
+                                                                        scaleX = centerScale
+                                                                        scaleY = centerScale
+                                                                        translationX = centerTranslationPx
+                                                                    }
+                                                                    .pressTracker { isCenterPressed = it }
                                                                     .height(48.dp)
                                                                     .widthIn(min = 110.dp)
                                                                     .clip(CircleShape)
                                                                     .background(Color.White)
-                                                                    .rubberyClick {
+                                                                    .clickable {
                                                                         if (isThisPlaying) {
                                                                             sharedViewModel.onUIEvent(UIEvent.PlayPause)
                                                                         } else {
@@ -783,6 +883,12 @@ fun PlaylistScreen(
                                                             Box(
                                                                 modifier =
                                                                     Modifier
+                                                                        .graphicsLayer {
+                                                                            scaleX = rightScale
+                                                                            scaleY = rightScale
+                                                                            translationX = rightTranslationPx
+                                                                        }
+                                                                        .pressTracker { isRightPressed = it }
                                                                         .size(48.dp)
                                                                         .clip(CircleShape)
                                                                         .background(Color.White.copy(alpha = 0.12f)),

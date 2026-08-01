@@ -443,9 +443,13 @@ fun HomeScreen(
                                         visible = true,
                                         message = stringResource(Res.string.log_in_warning),
                                         actionLabel = stringResource(Res.string.log_in),
-                                        onActionClick = {
-                                            navController.navigate(SettingsGeneralDestination(showYouTubeAccount = true))
-                                        }
+                                         onActionClick = {
+                                             try {
+                                                 navController.navigate(LoginDestination)
+                                             } catch (e: Exception) {
+                                                 com.sonique.logger.Logger.e("HomeScreen", "Error navigating to LoginDestination: ${e.message}")
+                                             }
+                                         }
                                     )
                                 }
                             }

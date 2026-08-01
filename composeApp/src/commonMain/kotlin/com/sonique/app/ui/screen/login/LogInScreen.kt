@@ -90,7 +90,11 @@ fun LoginScreen(
      
     LaunchedEffect(Unit) {
         hideBottomNavigation()
-        createWebViewCookieManager().removeAllCookies()
+        try {
+            createWebViewCookieManager().removeAllCookies()
+        } catch (e: Exception) {
+            Logger.e("LogInScreen", "Error clearing cookies: ${e.message}")
+        }
     }
 
      

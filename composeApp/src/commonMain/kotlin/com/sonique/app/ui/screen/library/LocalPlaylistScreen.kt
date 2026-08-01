@@ -2,6 +2,7 @@ package com.sonique.app.ui.screen.library
 import androidx.compose.ui.platform.LocalUriHandler
 import com.sonique.app.ui.component.DescriptionView
 import sonique.composeapp.generated.resources.no_description
+import com.sonique.app.ui.component.rubberyClick
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -46,9 +47,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import com.sonique.app.ui.screen.other.SharedDetailTemplate
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -390,329 +389,526 @@ fun LocalPlaylistScreen(
         }
     var overscrollJob by remember { mutableStateOf<Job?>(null) }
  
-    SharedDetailTemplate(
-        title = uiState.title,
-        subtitle = stringResource(Res.string.your_playlist),
-        description = null,
-        thumbnailUrl = uiState.thumbnail,
-        listColors = uiState.colors,
-        onBack = { onBack() },
-        playButtonContent = {
-            Crossfade(isPlaying && playingPlaylistId == LOCAL_PLAYLIST_ID + uiState.id) { isThisPlaying ->
-                if (isThisPlaying) {
-                    RippleIconButton(
-                        resId = Res.drawable.baseline_pause_circle_24,
-                        fillMaxSize = true,
-                        tint = seed,
-                        modifier = Modifier.size(48.dp),
-                    ) {
-                        sharedViewModel.onUIEvent(UIEvent.PlayPause)
-                    }
-                } else {
-                    RippleIconButton(
-                        resId = Res.drawable.baseline_play_circle_24,
-                        fillMaxSize = true,
-                        tint = seed,
-                        modifier = Modifier.size(48.dp),
-                    ) {
-                        viewModel.onUIEvent(LocalPlaylistUIEvent.PlayClick)
-                    }
-                }
-            }
-        },
-        onShuffleClick = {
-            viewModel.onUIEvent(LocalPlaylistUIEvent.ShuffleClick)
-        },
-        downloadButtonContent = {
-            Crossfade(targetState = downloadState) { state ->
-                when (state) {
-                    DownloadState.STATE_DOWNLOADED -> {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .clickable {
-                                    viewModel.makeToast(runBlocking { getString(Res.string.downloaded) })
-                                },
-                        ) {
-                            Icon(
-                                painter = painterResource(Res.drawable.baseline_downloaded),
-                                tint = Color(0xFF00A0CB),
-                                contentDescription = "",
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .padding(2.dp),
-                            )
-                        }
-                    }
-                    DownloadState.STATE_DOWNLOADING -> {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .clickable {
-                                    viewModel.makeToast(runBlocking { getString(Res.string.downloading) })
-                                },
-                        ) {
-                            Image(
-                                painter = rememberLottiePainter(
-                                    composition = composition,
-                                    iterations = Compottie.IterateForever,
-                                ),
-                                contentDescription = "Lottie animation",
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    }
-                    else -> {
-                        RippleIconButton(
-                            fillMaxSize = true,
-                            resId = Res.drawable.download_button,
-                            modifier = Modifier.size(36.dp),
-                        ) {
-                            Logger.w("PlaylistScreen", "downloadState: $downloadState")
-                            viewModel.downloadFullPlaylist()
-                        }
-                    }
-                }
-            }
-        },
-        additionalActions = {
-            AnimatedVisibility(visible = shouldShowSuggestButton) {
+    LazyColumn(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(md_theme_dark_background)
+                .pointerInput(Unit) {
+                    detectDragGesturesAfterLongPress(
+                        onDrag = { change, offset ->
+                            Logger.d(TAG, "onDrag $offset")
+                            change.consume()
+                            dragDropState.onDrag(offset = offset)
+
+                            if (overscrollJob?.isActive == true) {
+                                return@detectDragGesturesAfterLongPress
+                            }
+
+                            dragDropState
+                                .checkForOverScroll()
+                                .takeIf { it != 0f }
+                                ?.let {
+                                    overscrollJob =
+                                        coroutineScope.launch {
+                                            dragDropState.state.animateScrollBy(
+                                                it * 1.3f,
+                                                tween(easing = FastOutLinearInEasing),
+                                            )
+                                        }
+                                }
+                                ?: run { overscrollJob?.cancel() }
+                        },
+                        onDragStart = { offset ->
+                            Logger.d(TAG, "onDragStart $offset")
+                            dragDropState.onDragStart(offset)
+                        },
+                        onDragEnd = {
+                            Logger.d(TAG, "onDragEnd")
+                            dragDropState.onDragInterrupted(true)
+                            overscrollJob?.cancel()
+                        },
+                        onDragCancel = {
+                            Logger.d(TAG, "onDragCancel")
+                            dragDropState.onDragInterrupted()
+                            overscrollJob?.cancel()
+                        },
+                    )
+                },
+        state = lazyState,
+    ) {
+        item(contentType = "header") {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .background(Color.Transparent),
+            ) {
                 Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .graphicsLayer {
-                            compositingStrategy = CompositingStrategy.Offscreen
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(),
+ 
+ 
+ 
+ 
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(260.dp)
+                                .clip(
+                                    RoundedCornerShape(8.dp),
+                                ).angledGradientBackground(uiState.colors, 25f),
+                    )
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(180.dp)
+                                .align(Alignment.BottomCenter)
+                                .background(
+                                    brush =
+                                        Brush.verticalGradient(
+                                            listOf(
+                                                Color.Transparent,
+                                                overlayMedium,
+                                                md_theme_dark_background,
+                                            ),
+                                        ),
+                                ),
+                    )
+                }
+                Column(
+                    Modifier
+                        .background(Color.Transparent),
+ 
+                ) {
+                    Row(
+                        modifier =
+                            Modifier
+                                .wrapContentWidth()
+                                .padding(16.dp)
+                                .windowInsetsPadding(WindowInsets.statusBars),
+                    ) {
+                        RippleIconButton(
+                            resId = Res.drawable.baseline_arrow_back_ios_new_24,
+                        ) {
+                            onBack()
                         }
-                        .clickable {
-                            shouldShowSuggestions = !shouldShowSuggestions
-                        }
-                        .drawWithCache {
-                            val width = size.width
-                            val height = size.height
+                    }
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                    ) {
 
-                            val offsetDraw = width * progressAnimated
-                            val gradientColors = listOf(
-                                Color(0xFF4C82EF),
-                                Color(0xFFD96570),
-                            )
-                            val brush = Brush.linearGradient(
-                                colors = gradientColors,
-                                start = Offset(offsetDraw, 0f),
-                                end = Offset(offsetDraw + width, height),
-                            )
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight(),
+                        ) {
+                            Column(Modifier.padding(horizontal = 32.dp)) {
+                                Spacer(modifier = Modifier.size(25.dp))
+                                Text(
+                                    text = uiState.title,
+                                    style = typo().titleMedium,
+                                    color = Color.White,
+                                )
+                                Column(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                ) {
+                                    Text(
+                                        text = stringResource(Res.string.your_playlist),
+                                        style = typo().titleSmall,
+                                        color = Color.White,
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text =
+                                            stringResource(
+                                                Res.string.created_at,
+                                                uiState.inLibrary?.format(
+                                                    LocalDateTime.Format {
+                                                        hour()
+                                                        char(':')
+                                                        minute()
+                                                        chars(" - ")
+                                                        day()
+                                                        char(' ')
+                                                        monthName(
+                                                            MonthNames.ENGLISH_FULL,
+                                                        )
+                                                        char(' ')
+                                                        year()
+                                                    },
+                                                ) ?: "",
+                                            ),
+                                        style = typo().bodyMedium,
+                                        color = textHighEmphasis,
+                                    )
+                                }
+                                Row(
+                                    modifier =
+                                        Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Crossfade(isPlaying && playingPlaylistId == LOCAL_PLAYLIST_ID + uiState.id) { isThisPlaying ->
+                                        Box(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .clip(CircleShape)
+                                                .rubberyClick {
+                                                    if (isThisPlaying) {
+                                                        sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                                    } else {
+                                                        viewModel.onUIEvent(LocalPlaylistUIEvent.PlayClick)
+                                                    }
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            RippleIconButton(
+                                                resId = if (isThisPlaying) Res.drawable.baseline_pause_circle_24 else Res.drawable.baseline_play_circle_24,
+                                                fillMaxSize = true,
+                                                tint = seed,
+                                                modifier = Modifier.size(48.dp),
+                                            ) {
+                                                if (isThisPlaying) {
+                                                    sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                                } else {
+                                                    viewModel.onUIEvent(LocalPlaylistUIEvent.PlayClick)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.size(5.dp))
+                                    Crossfade(targetState = downloadState) {
+                                        when (it) {
+                                            DownloadState.STATE_DOWNLOADED -> {
+                                                Box(
+                                                    modifier =
+                                                        Modifier
+                                                            .size(36.dp)
+                                                            .clip(
+                                                                CircleShape,
+                                                            ).clickable {
+                                                                viewModel.makeToast(runBlocking { getString(Res.string.downloaded) })
+                                                            },
+                                                ) {
+                                                    Icon(
+                                                        painter = painterResource(Res.drawable.baseline_downloaded),
+                                                        tint = Color(0xFF00A0CB),
+                                                        contentDescription = "",
+                                                        modifier =
+                                                            Modifier
+                                                                .size(36.dp)
+                                                                .padding(2.dp),
+                                                    )
+                                                }
+                                            }
 
-                            onDrawBehind {
-                                with(aiPainter) {
-                                    translate(
-                                        left = (size.width - width / 1.5f) / 2,
-                                        top = (size.height - width / 1.5f) / 2,
+                                            DownloadState.STATE_DOWNLOADING -> {
+                                                Box(
+                                                    modifier =
+                                                        Modifier
+                                                            .size(36.dp)
+                                                            .clip(
+                                                                CircleShape,
+                                                            ).clickable {
+                                                                viewModel.makeToast(runBlocking { getString(Res.string.downloading) })
+                                                            },
+                                                ) {
+                                                    Image(
+                                                        painter =
+                                                            rememberLottiePainter(
+                                                                composition = composition,
+                                                                iterations = Compottie.IterateForever,
+                                                            ),
+                                                        contentDescription = "Lottie animation",
+                                                        modifier = Modifier.fillMaxSize(),
+                                                    )
+                                                }
+                                            }
+
+                                            else -> {
+                                                RippleIconButton(
+                                                    fillMaxSize = true,
+                                                    resId = Res.drawable.download_button,
+                                                    modifier = Modifier.size(36.dp),
+                                                ) {
+                                                    Logger.w("PlaylistScreen", "downloadState: $downloadState")
+                                                    viewModel.downloadFullPlaylist()
+                                                }
+                                            }
+                                        }
+                                    }
+                                    Spacer(Modifier.weight(1f))
+                                    Spacer(Modifier.size(5.dp))
+                                    AnimatedVisibility(visible = shouldShowSuggestButton) {
+                                        Box(
+                                            modifier =
+                                                Modifier
+                                                    .size(36.dp)
+                                                    .clip(CircleShape)
+                                                    .graphicsLayer {
+                                                        compositingStrategy =
+                                                            CompositingStrategy.Offscreen
+                                                    }.clickable {
+                                                        shouldShowSuggestions = !shouldShowSuggestions
+                                                    }.drawWithCache {
+                                                        val width = size.width
+                                                        val height = size.height
+
+                                                        val offsetDraw = width * progressAnimated
+                                                        val gradientColors =
+                                                            listOf(
+                                                                Color(0xFF4C82EF),
+                                                                Color(0xFFD96570),
+                                                            )
+                                                        val brush =
+                                                            Brush.linearGradient(
+                                                                colors = gradientColors,
+                                                                start = Offset(offsetDraw, 0f),
+                                                                end =
+                                                                    Offset(
+                                                                        offsetDraw + width,
+                                                                        height,
+                                                                    ),
+                                                            )
+
+                                                        onDrawBehind {
+                                                             
+                                                            with(aiPainter) {
+                                                                translate(
+                                                                    left = (size.width - width / 1.5f) / 2,
+                                                                    top = (size.height - width / 1.5f) / 2,
+                                                                ) {
+                                                                    draw(
+                                                                        size = Size(width / 1.5f, width / 1.5f),
+                                                                    )
+                                                                }
+                                                            }
+
+                                                             
+                                                            drawRect(
+                                                                brush = brush,
+                                                                blendMode = BlendMode.SrcIn,
+                                                            )
+                                                        }
+                                                    },
+                                        )
+                                    }
+                                    RippleIconButton(
+                                        modifier =
+                                            Modifier.size(36.dp),
+                                        resId = Res.drawable.baseline_shuffle_24,
+                                        fillMaxSize = true,
                                     ) {
-                                        draw(size = Size(width / 1.5f, width / 1.5f))
+                                        viewModel.onUIEvent(LocalPlaylistUIEvent.ShuffleClick)
+                                    }
+                                    Spacer(Modifier.size(5.dp))
+                                    RippleIconButton(
+                                        modifier =
+                                            Modifier.size(36.dp),
+                                        resId = Res.drawable.baseline_more_vert_24,
+                                        fillMaxSize = true,
+                                    ) {
+                                        onPlaylistMoreClick()
                                     }
                                 }
-                                drawRect(brush = brush, blendMode = BlendMode.SrcIn)
-                            }
-                        },
-                )
-            }
-            Spacer(Modifier.size(5.dp))
-            RippleIconButton(
-                modifier = Modifier.size(36.dp),
-                resId = Res.drawable.baseline_more_vert_24,
-                fillMaxSize = true,
-            ) {
-                onPlaylistMoreClick()
-            }
-        },
-        onPaletteGenerated = { colors ->
-            viewModel.setBrush(colors)
-        },
-        lazyState = lazyState,
-        listModifier = Modifier
-            .fillMaxWidth()
-            .pointerInput(Unit) {
-                detectDragGesturesAfterLongPress(
-                    onDrag = { change, offset ->
-                        Logger.d(TAG, "onDrag $offset")
-                        change.consume()
-                        dragDropState.onDrag(offset = offset)
-
-                        if (overscrollJob?.isActive == true) {
-                            return@detectDragGesturesAfterLongPress
-                        }
-
-                        dragDropState
-                            .checkForOverScroll()
-                            .takeIf { it != 0f }
-                            ?.let {
-                                overscrollJob = coroutineScope.launch {
-                                    dragDropState.state.animateScrollBy(
-                                        it * 1.3f,
-                                        tween(easing = FastOutLinearInEasing),
-                                    )
+                                val uriHandler = LocalUriHandler.current
+                                DescriptionView(
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    text = stringResource(Res.string.no_description),
+                                    limitLine = 3,
+                                    onTimeClicked = {},
+                                    onURLClicked = { url ->
+                                        uriHandler.openUri(url)
+                                    },
+                                )
+                                Text(
+                                    text =
+                                        stringResource(
+                                            Res.string.album_length,
+                                            (uiState.trackCount).toString(),
+                                            "",
+                                        ),
+                                    color = Color.White,
+                                    style = typo().bodyMedium,
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                )
+                                AnimatedVisibility(visible = shouldShowSuggestions) {
+                                    Column(
+                                        modifier = Modifier.animateContentSize(),
+                                    ) {
+                                        Spacer(modifier = Modifier.size(8.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                        ) {
+                                            Text(
+                                                text =
+                                                    stringResource(
+                                                        Res.string.suggest,
+                                                    ),
+                                                color = Color.White,
+                                                modifier =
+                                                    Modifier
+                                                        .padding(vertical = 8.dp)
+                                                        .weight(1f),
+                                            )
+                                            TextButton(
+                                                onClick = { viewModel.reloadSuggestion() },
+                                                modifier =
+                                                    Modifier
+                                                        .padding(horizontal = 8.dp),
+                                            ) {
+                                                Text(
+                                                    text = stringResource(Res.string.reload),
+                                                    color = Color.White,
+                                                    modifier =
+                                                        Modifier.align(
+                                                            Alignment.CenterVertically,
+                                                        ),
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.size(8.dp))
+                                        Crossfade(targetState = suggestionsLoading) {
+                                            if (it) {
+                                                CenterLoadingBox(
+                                                    modifier =
+                                                        Modifier
+                                                            .fillMaxWidth()
+                                                            .height(200.dp)
+                                                            .align(Alignment.CenterHorizontally),
+                                                )
+                                            } else {
+                                                Column {
+                                                    suggestedTracks.forEachIndexed { index, track ->
+                                                        SuggestItems(
+                                                            track = track,
+                                                            isPlaying = playingTrack?.videoId == track.videoId,
+                                                            onAddClickListener = {
+                                                                viewModel.addSuggestTrackToListTrack(
+                                                                    track,
+                                                                )
+                                                            },
+                                                            onClickListener = {
+                                                                viewModel.onUIEvent(LocalPlaylistUIEvent.SuggestionsItemClick(track.videoId))
+                                                            },
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.size(12.dp))
+                                        HorizontalDivider(
+                                            color = Color.Gray,
+                                            thickness = 0.5.dp,
+                                        )
+                                        Spacer(modifier = Modifier.size(8.dp))
+                                    }
+                                }
+                                Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                                    ElevatedButton(
+                                        contentPadding = PaddingValues(vertical = 4.dp, horizontal = 8.dp),
+                                        modifier =
+                                            Modifier
+                                                .defaultMinSize(minWidth = 1.dp, minHeight = 1.dp),
+                                        onClick = {
+                                            sortBottomSheetShow = true
+                                        },
+                                    ) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.AutoMirrored.Sharp.Sort,
+                                                contentDescription = "Sort playlist",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(24.dp),
+                                            )
+                                            Spacer(modifier = Modifier.size(4.dp))
+                                            Text(
+                                                text =
+                                                    stringResource(Res.string.sort_by) + ": " +
+                                                        stringResource(
+                                                            uiState.filterState.displayNameRes(),
+                                                        ),
+                                                style = typo().bodySmall,
+                                                color = Color.Gray,
+                                            )
+                                        }
+                                    }
+                                    Spacer(Modifier.weight(1f))
+                                    AnimatedVisibility(
+                                        visible =
+                                            uiState.filterState == FilterState.CustomOrder &&
+                                                uiState.syncState != LocalPlaylistEntity.YouTubeSyncState.Synced,
+                                        enter = fadeIn(),
+                                        exit = fadeOut(),
+                                    ) {
+                                        TextButton(
+                                            onClick = {
+                                                changingOrder = !changingOrder
+                                            },
+                                        ) {
+                                            Text(
+                                                text =
+                                                    if (changingOrder) {
+                                                        "Done"
+                                                    } else {
+                                                        "Change order"
+                                                    },
+                                                style = typo().bodySmall,
+                                                color = Color.Gray,
+                                            )
+                                        }
+                                    }
                                 }
                             }
-                            ?: run { overscrollJob?.cancel() }
-                    },
-                    onDragStart = { offset ->
-                        Logger.d(TAG, "onDragStart $offset")
-                        dragDropState.onDragStart(offset)
-                    },
-                    onDragEnd = {
-                        Logger.d(TAG, "onDragEnd")
-                        dragDropState.onDragInterrupted(true)
-                        overscrollJob?.cancel()
-                    },
-                    onDragCancel = {
-                        Logger.d(TAG, "onDragCancel")
-                        dragDropState.onDragInterrupted()
-                        overscrollJob?.cancel()
-                    },
-                )
-            }
-    ) {
-        // Suggestions visibility
-        item {
-            AnimatedVisibility(visible = shouldShowSuggestions) {
-                Column(
-                    modifier = Modifier.animateContentSize(),
-                ) {
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.suggest),
-                            color = Color.White,
-                            modifier = Modifier
-                                .padding(vertical = 8.dp)
-                                .weight(1f),
-                        )
-                        TextButton(
-                            onClick = { viewModel.reloadSuggestion() },
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.reload),
-                                color = Color.White,
-                                modifier = Modifier.align(Alignment.CenterVertically),
-                            )
                         }
-                    }
-                    Spacer(modifier = Modifier.size(8.dp))
-                    Crossfade(targetState = suggestionsLoading) {
-                        if (it) {
-                            CenterLoadingBox(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp)
-                                    .align(Alignment.CenterHorizontally),
-                            )
-                        } else {
-                            Column {
-                                suggestedTracks.forEachIndexed { index, track ->
-                                    SuggestItems(
-                                        track = track,
-                                        isPlaying = playingTrack?.videoId == track.videoId,
-                                        onAddClickListener = {
-                                            viewModel.addSuggestTrackToListTrack(track)
-                                        },
-                                        onClickListener = {
-                                            viewModel.onUIEvent(LocalPlaylistUIEvent.SuggestionsItemClick(track.videoId))
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.size(12.dp))
-                    HorizontalDivider(
-                        color = Color.Gray,
-                        thickness = 0.5.dp,
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
-                }
-            }
-        }
-
-        // Sorting row
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ElevatedButton(
-                    contentPadding = PaddingValues(vertical = 4.dp, horizontal = 8.dp),
-                    modifier = Modifier.defaultMinSize(minWidth = 1.dp, minHeight = 1.dp),
-                    onClick = {
-                        sortBottomSheetShow = true
-                    },
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Sharp.Sort,
-                            contentDescription = "Sort playlist",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        Spacer(modifier = Modifier.size(4.dp))
-                        Text(
-                            text = stringResource(Res.string.sort_by) + ": " + stringResource(uiState.filterState.displayNameRes()),
-                            style = typo().bodySmall,
-                            color = Color.Gray,
-                        )
-                    }
-                }
-                Spacer(Modifier.weight(1f))
-                AnimatedVisibility(
-                    visible = uiState.filterState == FilterState.CustomOrder &&
-                            uiState.syncState != LocalPlaylistEntity.YouTubeSyncState.Synced,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    TextButton(
-                        onClick = {
-                            changingOrder = !changingOrder
-                        },
-                    ) {
-                        Text(
-                            text = if (changingOrder) "Done" else "Change order",
-                            style = typo().bodySmall,
-                            color = Color.Gray,
-                        )
                     }
                 }
             }
         }
-
-        // Track items list
         items(count = trackPagingItems.itemCount, key = { index ->
             val item = trackPagingItems[index]
             (item?.first?.videoId ?: "") + "item_$index" + item?.second?.inPlaylist + item?.second?.position
         }) { index ->
             val item = trackPagingItems[index]?.first
             if (item != null) {
-                val songContent = @Composable {
-                    SongFullWidthItems(
-                        isPlaying = playingTrack?.videoId == item.videoId && isPlaying,
-                        shouldShowDragHandle = changingOrder,
-                        songEntity = item,
-                        onMoreClickListener = { onItemMoreClick(it) },
-                        onClickListener = {
-                            Logger.w("PlaylistScreen", "index: $index")
-                            onPlaylistItemClick(it)
-                        },
-                        onAddToQueue = {
-                            sharedViewModel.playNext(item.toTrack())
-                        },
-                        modifier = Modifier.animateItem(),
-                    )
+                val content = @Composable {
+                    if (playingTrack?.videoId == item.videoId && isPlaying) {
+                        SongFullWidthItems(
+                            isPlaying = true,
+                            shouldShowDragHandle = changingOrder,
+                            songEntity = item,
+                            onMoreClickListener = { onItemMoreClick(it) },
+                            onClickListener = {
+                                Logger.w("PlaylistScreen", "index: $index")
+                                onPlaylistItemClick(it)
+                            },
+                            onAddToQueue = {
+                                sharedViewModel.playNext(item.toTrack())
+                            },
+                            modifier = Modifier.animateItem(),
+                        )
+                    } else {
+                        SongFullWidthItems(
+                            isPlaying = false,
+                            shouldShowDragHandle = changingOrder,
+                            songEntity = item,
+                            onMoreClickListener = { onItemMoreClick(it) },
+                            onClickListener = {
+                                Logger.w("PlaylistScreen", "index: $index")
+                                onPlaylistItemClick(it)
+                            },
+                            onAddToQueue = {
+                                sharedViewModel.playNext(item.toTrack())
+                            },
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
                 }
                 if (changingOrder) {
                     DraggableItem(
@@ -720,30 +916,26 @@ fun LocalPlaylistScreen(
                         index + 1,
                         Modifier.animateItem(),
                     ) {
-                        songContent()
+                        content()
                     }
                 } else {
-                    songContent()
+                    content()
                 }
             }
         }
-
-        // Pagination and loading state
         trackPagingItems.apply {
-            if (loadState.refresh is LoadState.Loading || loadState.append is LoadState.Loading) {
-                item {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Spacer(modifier = Modifier.height(15.dp))
-                        CenterLoadingBox(modifier = Modifier.size(80.dp))
-                        Spacer(modifier = Modifier.height(15.dp))
+            when {
+                loadState.refresh is LoadState.Loading || loadState.append is LoadState.Loading -> {
+                    item {
+                        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Spacer(modifier = Modifier.height(15.dp))
+                            CenterLoadingBox(modifier = Modifier.size(80.dp))
+                            Spacer(modifier = Modifier.height(15.dp))
+                        }
                     }
                 }
             }
         }
-
         item {
             EndOfPage()
         }

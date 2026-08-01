@@ -361,7 +361,7 @@ fun PlayerControlLayout(
 
 
 
-private fun Modifier.rubberyClick(
+fun Modifier.rubberyClick(
     onClick: () -> Unit
 ): Modifier = composed {
     val interactionSource = remember { MutableInteractionSource() }

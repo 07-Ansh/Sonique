@@ -32,12 +32,18 @@ import java.lang.reflect.Field
 class SoniqueApplication :
     Application(),
     KoinComponent,
+    Configuration.Provider,
     SingletonImageLoader.Factory {
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setMinimumLoggingLevel(Log.INFO)
+            .build()
+
     override fun onCreate() {
         super.onCreate()
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         startKoin {
-            androidLogger(level = Level.DEBUG)
+            androidLogger(level = Level.ERROR)
             androidContext(this@SoniqueApplication)
             loadAllModules()
             loadKoinModules(viewModelModule)

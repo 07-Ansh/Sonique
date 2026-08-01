@@ -43,33 +43,43 @@ class SoniqueApplication :
             loadKoinModules(viewModelModule)
         }
          
-        val workConfig =
-            Configuration
-                .Builder()
-                .setMinimumLoggingLevel(Log.INFO)
-                .build()
+        try {
+            val workConfig =
+                Configuration
+                    .Builder()
+                    .setMinimumLoggingLevel(Log.INFO)
+                    .build()
+            WorkManager.initialize(this, workConfig)
+        } catch (e: Exception) {
+            Logger.e("SoniqueApplication", "WorkManager initialization skipped or already completed: ${e.message}")
+        }
 
-         
-        WorkManager.initialize(this, workConfig)
+        try {
+            CaocConfig.Builder
+                .create()
+                .backgroundMode(CaocConfig.BACKGROUND_MODE_SILENT)  
+                .enabled(true)  
+                .showErrorDetails(true)  
+                .showRestartButton(true)  
+                .errorDrawable(R.drawable.app_icon)
+                .logErrorOnRestart(false)  
+                .trackActivities(true)  
+                .minTimeBetweenCrashesMs(2000)  
+                .restartActivity(MainActivity::class.java)  
+                .apply()
+        } catch (e: Exception) {
+            Logger.e("SoniqueApplication", "CaocConfig error: ${e.message}")
+        }
 
-        CaocConfig.Builder
-            .create()
-            .backgroundMode(CaocConfig.BACKGROUND_MODE_SILENT)  
-            .enabled(true)  
-            .showErrorDetails(true)  
-            .showRestartButton(true)  
-            .errorDrawable(R.drawable.app_icon)
-            .logErrorOnRestart(false)  
-            .trackActivities(true)  
-            .minTimeBetweenCrashesMs(2000)  
-            .restartActivity(MainActivity::class.java)  
-            .apply()
-
-        @SuppressLint("DiscouragedPrivateApi")
-        val field: Field = CursorWindow::class.java.getDeclaredField("sCursorWindowSize")
-        field.isAccessible = true
-        val expectSize = 100 * 1024 * 1024
-        field.set(null, expectSize)
+        try {
+            @SuppressLint("DiscouragedPrivateApi")
+            val field: Field = CursorWindow::class.java.getDeclaredField("sCursorWindowSize")
+            field.isAccessible = true
+            val expectSize = 100 * 1024 * 1024
+            field.set(null, expectSize)
+        } catch (e: Exception) {
+            Logger.e("SoniqueApplication", "CursorWindow reflection not supported on this Android version: ${e.message}")
+        }
 
         AppContext.apply {
             set(applicationContext)

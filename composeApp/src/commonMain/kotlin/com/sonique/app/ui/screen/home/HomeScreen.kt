@@ -123,7 +123,6 @@ import com.sonique.app.ui.navigation.destination.home.SettingsDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
-import com.sonique.app.ui.navigation.destination.home.SettingsGeneralDestination
 import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.typo
@@ -443,13 +442,9 @@ fun HomeScreen(
                                         visible = true,
                                         message = stringResource(Res.string.log_in_warning),
                                         actionLabel = stringResource(Res.string.log_in),
-                                         onActionClick = {
-                                             try {
-                                                 navController.navigate(LoginDestination)
-                                             } catch (e: Exception) {
-                                                 com.sonique.logger.Logger.e("HomeScreen", "Error navigating to LoginDestination: ${e.message}")
-                                             }
-                                         }
+                                        onActionClick = {
+                                            navController.navigate(LoginDestination)
+                                        }
                                     )
                                 }
                             }

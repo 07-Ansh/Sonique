@@ -248,3 +248,7 @@
     *** INSTANCE;
 }
 
+# Keep MediaServiceCore classes
+-keep class com.liskovsoft.** { *; }
+-keep interface com.liskovsoft.** { *; }
+

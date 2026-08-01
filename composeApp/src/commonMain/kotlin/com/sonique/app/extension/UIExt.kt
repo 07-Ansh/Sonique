@@ -331,13 +331,13 @@ fun LazyListState.animateScrollAndCentralizeItem(
 expect fun KeepScreenOn()
 
 @Composable
-fun LazyListState.isScrollingUp(): State<Boolean> {
+fun LazyListState.isScrollingUp(thresholdPx: Int = 12): State<Boolean> {
     var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
     var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
+    var scrollingUpState by remember(this) { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         snapshotFlow { layoutInfo.totalItemsCount }.collect {
-            Logger.w("isScrollingUp", "firstVisibleItemIndex: $firstVisibleItemIndex")
             previousIndex = firstVisibleItemIndex
             previousScrollOffset = firstVisibleItemScrollOffset
         }
@@ -346,15 +346,22 @@ fun LazyListState.isScrollingUp(): State<Boolean> {
     return remember(this) {
         derivedStateOf {
             if (firstVisibleItemIndex > 0 || firstVisibleItemScrollOffset > 0) {
-                val scrollingUp = if (previousIndex != firstVisibleItemIndex) {
-                    previousIndex > firstVisibleItemIndex
+                if (previousIndex != firstVisibleItemIndex) {
+                    scrollingUpState = previousIndex > firstVisibleItemIndex
+                    previousIndex = firstVisibleItemIndex
+                    previousScrollOffset = firstVisibleItemScrollOffset
                 } else {
-                    previousScrollOffset >= firstVisibleItemScrollOffset
+                    val delta = firstVisibleItemScrollOffset - previousScrollOffset
+                    if (kotlin.math.abs(delta) >= thresholdPx) {
+                        scrollingUpState = delta <= 0
+                        previousScrollOffset = firstVisibleItemScrollOffset
+                    }
                 }
-                previousIndex = firstVisibleItemIndex
-                previousScrollOffset = firstVisibleItemScrollOffset
-                scrollingUp
+                scrollingUpState
             } else {
+                scrollingUpState = true
+                previousIndex = 0
+                previousScrollOffset = 0
                 true
             }
         }
@@ -362,13 +369,13 @@ fun LazyListState.isScrollingUp(): State<Boolean> {
 }
 
 @Composable
-fun LazyGridState.isScrollingUp(): State<Boolean> {
+fun LazyGridState.isScrollingUp(thresholdPx: Int = 12): State<Boolean> {
     var previousIndex by remember(this) { mutableIntStateOf(firstVisibleItemIndex) }
     var previousScrollOffset by remember(this) { mutableIntStateOf(firstVisibleItemScrollOffset) }
+    var scrollingUpState by remember(this) { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         snapshotFlow { layoutInfo.totalItemsCount }.collect {
-            Logger.w("isScrollingUp", "firstVisibleItemIndex: $firstVisibleItemIndex")
             previousIndex = firstVisibleItemIndex
             previousScrollOffset = firstVisibleItemScrollOffset
         }
@@ -377,15 +384,22 @@ fun LazyGridState.isScrollingUp(): State<Boolean> {
     return remember(this) {
         derivedStateOf {
             if (firstVisibleItemIndex > 0 || firstVisibleItemScrollOffset > 0) {
-                val scrollingUp = if (previousIndex != firstVisibleItemIndex) {
-                    previousIndex > firstVisibleItemIndex
+                if (previousIndex != firstVisibleItemIndex) {
+                    scrollingUpState = previousIndex > firstVisibleItemIndex
+                    previousIndex = firstVisibleItemIndex
+                    previousScrollOffset = firstVisibleItemScrollOffset
                 } else {
-                    previousScrollOffset >= firstVisibleItemScrollOffset
+                    val delta = firstVisibleItemScrollOffset - previousScrollOffset
+                    if (kotlin.math.abs(delta) >= thresholdPx) {
+                        scrollingUpState = delta <= 0
+                        previousScrollOffset = firstVisibleItemScrollOffset
+                    }
                 }
-                previousIndex = firstVisibleItemIndex
-                previousScrollOffset = firstVisibleItemScrollOffset
-                scrollingUp
+                scrollingUpState
             } else {
+                scrollingUpState = true
+                previousIndex = 0
+                previousScrollOffset = 0
                 true
             }
         }

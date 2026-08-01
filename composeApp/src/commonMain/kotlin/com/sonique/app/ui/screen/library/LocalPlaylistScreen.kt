@@ -3,6 +3,14 @@ import androidx.compose.ui.platform.LocalUriHandler
 import com.sonique.app.ui.component.DescriptionView
 import sonique.composeapp.generated.resources.no_description
 import com.sonique.app.ui.component.rubberyClick
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -178,6 +186,21 @@ import sonique.composeapp.generated.resources.warning
 import sonique.composeapp.generated.resources.yes
 import sonique.composeapp.generated.resources.your_playlist
 import com.sonique.app.extension.isScrollingUp
+
+private fun Modifier.pressTracker(onPressedChange: (Boolean) -> Unit): Modifier =
+    this.pointerInput(Unit) {
+        awaitPointerEventScope {
+            while (true) {
+                awaitFirstDown(pass = PointerEventPass.Initial)
+                onPressedChange(true)
+                try {
+                    waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                } finally {
+                    onPressedChange(false)
+                }
+            }
+        }
+    }
 
 private const val TAG = "LocalPlaylistScreen"
 
@@ -549,39 +572,55 @@ fun LocalPlaylistScreen(
                                         color = textHighEmphasis,
                                     )
                                 }
-                                Row(
-                                    modifier =
-                                        Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Crossfade(isPlaying && playingPlaylistId == LOCAL_PLAYLIST_ID + uiState.id) { isThisPlaying ->
-                                        Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(CircleShape)
-                                                .rubberyClick {
-                                                    if (isThisPlaying) {
-                                                        sharedViewModel.onUIEvent(UIEvent.PlayPause)
-                                                    } else {
-                                                        viewModel.onUIEvent(LocalPlaylistUIEvent.PlayClick)
-                                                    }
-                                                },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            RippleIconButton(
-                                                resId = if (isThisPlaying) Res.drawable.baseline_pause_circle_24 else Res.drawable.baseline_play_circle_24,
-                                                fillMaxSize = true,
-                                                tint = seed,
-                                                modifier = Modifier.size(48.dp),
-                                            ) {
-                                                if (isThisPlaying) {
-                                                    sharedViewModel.onUIEvent(UIEvent.PlayPause)
-                                                } else {
-                                                    viewModel.onUIEvent(LocalPlaylistUIEvent.PlayClick)
-                                                }
-                                            }
-                                        }
-                                    }
+                                 var isPlayPressed by remember { mutableStateOf(false) }
+                                 val expressiveSpringSpec = remember {
+                                     spring<Float>(
+                                         stiffness = Spring.StiffnessMediumLow,
+                                         dampingRatio = Spring.DampingRatioMediumBouncy
+                                     )
+                                 }
+                                 val playScale by animateFloatAsState(
+                                     targetValue = if (isPlayPressed) 1.08f else 1.0f,
+                                     animationSpec = expressiveSpringSpec
+                                 )
+                                 Row(
+                                     modifier =
+                                         Modifier.fillMaxWidth(),
+                                     verticalAlignment = Alignment.CenterVertically,
+                                 ) {
+                                     Crossfade(isPlaying && playingPlaylistId == LOCAL_PLAYLIST_ID + uiState.id) { isThisPlaying ->
+                                         Box(
+                                             modifier = Modifier
+                                                 .graphicsLayer {
+                                                     scaleX = playScale
+                                                     scaleY = playScale
+                                                 }
+                                                 .pressTracker { isPlayPressed = it }
+                                                 .size(48.dp)
+                                                 .clip(CircleShape)
+                                                 .clickable {
+                                                     if (isThisPlaying) {
+                                                         sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                                     } else {
+                                                         viewModel.onUIEvent(LocalPlaylistUIEvent.PlayClick)
+                                                     }
+                                                 },
+                                             contentAlignment = Alignment.Center
+                                         ) {
+                                             RippleIconButton(
+                                                 resId = if (isThisPlaying) Res.drawable.baseline_pause_circle_24 else Res.drawable.baseline_play_circle_24,
+                                                 fillMaxSize = true,
+                                                 tint = seed,
+                                                 modifier = Modifier.size(48.dp),
+                                             ) {
+                                                 if (isThisPlaying) {
+                                                     sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                                 } else {
+                                                     viewModel.onUIEvent(LocalPlaylistUIEvent.PlayClick)
+                                                 }
+                                             }
+                                         }
+                                     }
                                     Spacer(modifier = Modifier.size(5.dp))
                                     Crossfade(targetState = downloadState) {
                                         when (it) {

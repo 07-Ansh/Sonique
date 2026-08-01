@@ -112,8 +112,6 @@ class MainActivity : AppCompatActivity() {
             }
         )
          
-        unloadKoinModules(viewModelModule)
-        loadKoinModules(viewModelModule)
         VersionManager.initialize()
 
         if (viewModel.recreateActivity.value || viewModel.isServiceRunning) {
@@ -233,7 +231,6 @@ class MainActivity : AppCompatActivity() {
         if (shouldStopMusicService && shouldUnbind && isFinishing) {
             viewModel.isServiceRunning = false
         }
-        unloadKoinModules(viewModelModule)
         super.onDestroy()
         Logger.d("MainActivity", "onDestroy: ")
     }

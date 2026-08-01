@@ -106,13 +106,19 @@ fun CollapsingToolbarParallaxEffect(
 
     val scroll: ScrollState = rememberScrollState(0)
     var previousValue by remember(scroll) { mutableIntStateOf(scroll.value) }
+    var isScrollingUpState by remember(scroll) { mutableStateOf(true) }
     val isScrollingUp by remember(scroll) {
         derivedStateOf {
             if (scroll.value > 0) {
-                val up = previousValue >= scroll.value
-                previousValue = scroll.value
-                up
+                val delta = scroll.value - previousValue
+                if (kotlin.math.abs(delta) >= 12) {
+                    isScrollingUpState = delta <= 0
+                    previousValue = scroll.value
+                }
+                isScrollingUpState
             } else {
+                isScrollingUpState = true
+                previousValue = 0
                 true
             }
         }

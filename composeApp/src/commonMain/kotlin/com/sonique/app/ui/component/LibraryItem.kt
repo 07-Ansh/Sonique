@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,8 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.GridView
-import androidx.compose.material.icons.rounded.LibraryMusic
-import androidx.compose.material.icons.automirrored.rounded.QueueMusic
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -173,29 +172,68 @@ fun LibraryItem(
                                     }
                                 }
                                 if (isPinnedGridView) {
+                                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                                     NonLazyGrid(
                                         columns = 3,
-                                        itemCount = pinnedItems.size,
+                                        itemCount = pinnedItems.size + 1,
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                                     ) { index ->
-                                        val pinned = pinnedItems[index]
-                                        HomeGridCardItem(
-                                            title = pinned.title,
-                                            thumbUrl = pinned.thumbnails,
-                                            subtitle = pinned.author,
-                                            isArtist = false,
-                                            onClick = {
-                                                when (pinned.id) {
-                                                    Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
-                                                    Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
-                                                    Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
-                                                    "LM" -> onPlaylistClick?.invoke("LM", false) ?: navController.navigate(PlaylistDestination("LM"))
-                                                    else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
+                                        if (index == pinnedItems.size) {
+                                            // ── Create card ──
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(4.dp)
+                                                    .fillMaxWidth()
+                                                    .aspectRatio(1f)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .clickable { uriHandler.openUri("https://music.youtube.com/library/playlists") },
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
+                                                    drawRoundRect(
+                                                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.08f),
+                                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
+                                                    )
                                                 }
-                                            },
-                                        )
+                                                Column(
+                                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                                    verticalArrangement = Arrangement.Center,
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Rounded.AddCircleOutline,
+                                                        contentDescription = "Create playlist",
+                                                        tint = Color.White.copy(alpha = 0.7f),
+                                                        modifier = Modifier.size(28.dp),
+                                                    )
+                                                    Spacer(modifier = Modifier.height(4.dp))
+                                                    Text(
+                                                        text = "New Playlist",
+                                                        style = typo().labelSmall,
+                                                        color = Color.White.copy(alpha = 0.7f),
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            val pinned = pinnedItems[index]
+                                            HomeGridCardItem(
+                                                title = pinned.title,
+                                                thumbUrl = pinned.thumbnails,
+                                                subtitle = pinned.author,
+                                                isArtist = false,
+                                                onClick = {
+                                                    when (pinned.id) {
+                                                        Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                        Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
+                                                        Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                                                        "LM" -> onPlaylistClick?.invoke("LM", false) ?: navController.navigate(PlaylistDestination("LM"))
+                                                        else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
+                                                    }
+                                                },
+                                            )
+                                        }
                                     }
                                 } else {
+                                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
                                     Column(modifier = Modifier.fillMaxWidth()) {
                                         pinnedItems.forEach { pinned ->
                                             PlaylistFullWidthItems(
@@ -209,6 +247,27 @@ fun LibraryItem(
                                                         else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
                                                     }
                                                 },
+                                            )
+                                        }
+                                        // Create row at bottom of list
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable { uriHandler.openUri("https://music.youtube.com/library/playlists") }
+                                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.AddCircleOutline,
+                                                contentDescription = "Create playlist",
+                                                tint = Color.White.copy(alpha = 0.7f),
+                                                modifier = Modifier.size(24.dp),
+                                            )
+                                            Text(
+                                                text = "New Playlist",
+                                                style = typo().bodyMedium,
+                                                color = Color.White.copy(alpha = 0.7f),
                                             )
                                         }
                                     }
@@ -281,121 +340,6 @@ fun LibraryItem(
                                 }
                             }
 
-                            // ── Create New section ────────────────────────────────
-                            val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
-                            var showCreateDialog by remember { mutableStateOf(false) }
-
-                            if (showCreateDialog) {
-                                androidx.compose.material3.AlertDialog(
-                                    onDismissRequest = { showCreateDialog = false },
-                                    title = {
-                                        Text(
-                                            text = "Create in YouTube Music",
-                                            style = typo().titleMedium,
-                                            color = Color.White,
-                                        )
-                                    },
-                                    text = {
-                                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        showCreateDialog = false
-                                                        uriHandler.openUri("https://music.youtube.com/library/playlists")
-                                                    }
-                                                    .padding(vertical = 12.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.AutoMirrored.Rounded.QueueMusic,
-                                                    contentDescription = null,
-                                                    tint = Color.White,
-                                                )
-                                                Text(
-                                                    text = "New Playlist",
-                                                    style = typo().bodyLarge,
-                                                    color = Color.White,
-                                                )
-                                            }
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable {
-                                                        showCreateDialog = false
-                                                        uriHandler.openUri("https://music.youtube.com/library/albums")
-                                                    }
-                                                    .padding(vertical = 12.dp),
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Rounded.LibraryMusic,
-                                                    contentDescription = null,
-                                                    tint = Color.White,
-                                                )
-                                                Text(
-                                                    text = "New Album",
-                                                    style = typo().bodyLarge,
-                                                    color = Color.White,
-                                                )
-                                            }
-                                        }
-                                    },
-                                    confirmButton = {},
-                                    dismissButton = {
-                                        androidx.compose.material3.TextButton(onClick = { showCreateDialog = false }) {
-                                            Text("Cancel", color = Color.White)
-                                        }
-                                    },
-                                )
-                            }
-
-                            Row(
-                                modifier = Modifier.padding(top = 15.dp, start = 10.dp, end = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "Create New",
-                                    style = typo().titleMedium,
-                                    color = Color.White,
-                                    modifier = Modifier.weight(1f),
-                                )
-                            }
-
-                            Box(
-                                modifier = Modifier
-                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                                    .size(115.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { showCreateDialog = true },
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
-                                    drawRoundRect(
-                                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.08f),
-                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
-                                    )
-                                }
-                                androidx.compose.foundation.layout.Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center,
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.AddCircleOutline,
-                                        contentDescription = "Create new",
-                                        tint = Color.White.copy(alpha = 0.7f),
-                                        modifier = Modifier.size(36.dp),
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Create",
-                                        style = typo().labelMedium,
-                                        color = Color.White.copy(alpha = 0.7f),
-                                    )
-                                }
-                            }
                         } // close Column (Quick Access + Recent Activity)
                     } else if (state.type is LibraryItemType.FollowedArtists) {
                         LazyRow(

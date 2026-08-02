@@ -110,6 +110,7 @@ import sonique.composeapp.generated.resources.album
 import sonique.composeapp.generated.resources.album_length
 import sonique.composeapp.generated.resources.baseline_arrow_back_ios_new_24
 import sonique.composeapp.generated.resources.baseline_downloaded
+import sonique.composeapp.generated.resources.done
 import sonique.composeapp.generated.resources.baseline_pause_circle_24
 import sonique.composeapp.generated.resources.baseline_play_circle_24
 import sonique.composeapp.generated.resources.baseline_shuffle_24
@@ -282,9 +283,9 @@ fun AlbumScreen(
                                             .clickable { showCancelDownloadDialog = true },
                                     ) {
                                         Icon(
-                                            painter = painterResource(Res.drawable.baseline_downloaded),
-                                            tint = Color(0xFF00A0CB),
-                                            contentDescription = "",
+                                            painter = painterResource(Res.drawable.done),
+                                            tint = Color.White,
+                                            contentDescription = "Downloaded",
                                             modifier = Modifier
                                                 .size(36.dp)
                                                 .padding(2.dp),

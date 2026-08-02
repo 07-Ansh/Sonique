@@ -137,6 +137,7 @@ fun LibraryItem(
         }
         val isGridView by viewModel.isGridView.collectAsStateWithLifecycle()
         val pinnedItems by viewModel.pinnedItems.collectAsStateWithLifecycle()
+        val isPinnedGridView by viewModel.isPinnedGridView.collectAsStateWithLifecycle()
         Column {
             Crossfade(targetState = state.isLoading, label = "Loading") { isLoading ->
                 if (!isLoading) {
@@ -158,28 +159,54 @@ fun LibraryItem(
                                             .wrapContentHeight(align = Alignment.CenterVertically)
                                             .weight(1f).focusable(),
                                     )
+                                    IconButton(onClick = { viewModel.togglePinnedLayoutView() }) {
+                                        Icon(
+                                            imageVector = if (isPinnedGridView) Icons.AutoMirrored.Rounded.ViewList else Icons.Rounded.GridView,
+                                            contentDescription = "Toggle Quick Access Layout",
+                                            tint = Color.White,
+                                        )
+                                    }
                                 }
-                                NonLazyGrid(
-                                    columns = 3,
-                                    itemCount = pinnedItems.size,
-                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                                ) { index ->
-                                    val pinned = pinnedItems[index]
-                                    HomeGridCardItem(
-                                        title = pinned.title,
-                                        thumbUrl = pinned.thumbnails,
-                                        subtitle = pinned.author,
-                                        isArtist = false,
-                                        onClick = {
-                                            when (pinned.id) {
-                                                Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
-                                                Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
-                                                Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
-                                                "LM" -> onPlaylistClick?.invoke("LM", false) ?: navController.navigate(PlaylistDestination("LM"))
-                                                else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
-                                            }
-                                        },
-                                    )
+                                if (isPinnedGridView) {
+                                    NonLazyGrid(
+                                        columns = 3,
+                                        itemCount = pinnedItems.size,
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                    ) { index ->
+                                        val pinned = pinnedItems[index]
+                                        HomeGridCardItem(
+                                            title = pinned.title,
+                                            thumbUrl = pinned.thumbnails,
+                                            subtitle = pinned.author,
+                                            isArtist = false,
+                                            onClick = {
+                                                when (pinned.id) {
+                                                    Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                    Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
+                                                    Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                                                    "LM" -> onPlaylistClick?.invoke("LM", false) ?: navController.navigate(PlaylistDestination("LM"))
+                                                    else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
+                                                }
+                                            },
+                                        )
+                                    }
+                                } else {
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        pinnedItems.forEach { pinned ->
+                                            PlaylistFullWidthItems(
+                                                data = pinned,
+                                                onClickListener = {
+                                                    when (pinned.id) {
+                                                        Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                        Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
+                                                        Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                                                        "LM" -> onPlaylistClick?.invoke("LM", false) ?: navController.navigate(PlaylistDestination("LM"))
+                                                        else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
+                                                    }
+                                                },
+                                            )
+                                        }
+                                    }
                                 }
                             }
 

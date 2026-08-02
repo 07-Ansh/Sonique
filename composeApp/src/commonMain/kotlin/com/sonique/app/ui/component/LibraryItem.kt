@@ -172,186 +172,29 @@ fun LibraryItem(
                                     }
                                 }
                                 if (isPinnedGridView) {
-                                    var showCreateDialog by remember { mutableStateOf(false) }
-                                    var newPlaylistTitle by remember { mutableStateOf("") }
-
-                                    if (showCreateDialog) {
-                                        androidx.compose.material3.AlertDialog(
-                                            onDismissRequest = { 
-                                                showCreateDialog = false 
-                                                newPlaylistTitle = ""
-                                            },
-                                            title = {
-                                                Text(
-                                                    text = "New Playlist",
-                                                    style = typo().titleMedium,
-                                                    color = Color.White,
-                                                )
-                                            },
-                                            text = {
-                                                androidx.compose.material3.OutlinedTextField(
-                                                    value = newPlaylistTitle,
-                                                    onValueChange = { newPlaylistTitle = it },
-                                                    label = { Text("Playlist Title", color = Color.Gray) },
-                                                    singleLine = true,
-                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = Color.White,
-                                                        unfocusedBorderColor = Color.Gray,
-                                                        focusedLabelColor = Color.White,
-                                                        cursorColor = Color.White,
-                                                        focusedTextColor = Color.White,
-                                                        unfocusedTextColor = Color.White
-                                                    ),
-                                                    modifier = Modifier.fillMaxWidth()
-                                                )
-                                            },
-                                            confirmButton = {
-                                                androidx.compose.material3.TextButton(
-                                                    onClick = {
-                                                        if (newPlaylistTitle.isNotBlank()) {
-                                                            viewModel.createPlaylist(newPlaylistTitle.trim())
-                                                            showCreateDialog = false
-                                                            newPlaylistTitle = ""
-                                                            viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
-                                                        }
-                                                    }
-                                                ) {
-                                                    Text("Create", color = Color.White)
-                                                }
-                                            },
-                                            dismissButton = {
-                                                androidx.compose.material3.TextButton(
-                                                    onClick = { 
-                                                        showCreateDialog = false
-                                                        newPlaylistTitle = ""
-                                                    }
-                                                ) {
-                                                    Text("Cancel", color = Color.Gray)
-                                                }
-                                            }
-                                        )
-                                    }
-
                                     NonLazyGrid(
                                         columns = 3,
-                                        itemCount = pinnedItems.size + 1,
+                                        itemCount = pinnedItems.size,
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                                     ) { index ->
-                                        if (index == pinnedItems.size) {
-                                            // ── Create card ──
-                                            Box(
-                                                modifier = Modifier
-                                                    .padding(4.dp)
-                                                    .fillMaxWidth()
-                                                    .aspectRatio(1f)
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .clickable { showCreateDialog = true },
-                                                contentAlignment = Alignment.Center,
-                                            ) {
-                                                androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
-                                                    drawRoundRect(
-                                                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.08f),
-                                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(12.dp.toPx()),
-                                                    )
-                                                }
-                                                Column(
-                                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                                    verticalArrangement = Arrangement.Center,
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Rounded.AddCircleOutline,
-                                                        contentDescription = "Create playlist",
-                                                        tint = Color.White.copy(alpha = 0.7f),
-                                                        modifier = Modifier.size(28.dp),
-                                                    )
-                                                    Spacer(modifier = Modifier.height(4.dp))
-                                                    Text(
-                                                        text = "New Playlist",
-                                                        style = typo().labelSmall,
-                                                        color = Color.White.copy(alpha = 0.7f),
-                                                    )
-                                                }
-                                            }
-                                        } else {
-                                            val pinned = pinnedItems[index]
-                                            HomeGridCardItem(
-                                                title = pinned.title,
-                                                thumbUrl = pinned.thumbnails,
-                                                subtitle = pinned.author,
-                                                isArtist = false,
-                                                onClick = {
-                                                    when (pinned.id) {
-                                                        Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
-                                                        Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
-                                                        Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
-                                                        "LM" -> onPlaylistClick?.invoke("LM", false) ?: navController.navigate(PlaylistDestination("LM"))
-                                                        else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
-                                                    }
-                                                },
-                                            )
-                                        }
-                                    }
-                                } else {
-                                    var showCreateDialogList by remember { mutableStateOf(false) }
-                                    var newPlaylistTitleList by remember { mutableStateOf("") }
-
-                                    if (showCreateDialogList) {
-                                        androidx.compose.material3.AlertDialog(
-                                            onDismissRequest = { 
-                                                showCreateDialogList = false 
-                                                newPlaylistTitleList = ""
-                                            },
-                                            title = {
-                                                Text(
-                                                    text = "New Playlist",
-                                                    style = typo().titleMedium,
-                                                    color = Color.White,
-                                                )
-                                            },
-                                            text = {
-                                                androidx.compose.material3.OutlinedTextField(
-                                                    value = newPlaylistTitleList,
-                                                    onValueChange = { newPlaylistTitleList = it },
-                                                    label = { Text("Playlist Title", color = Color.Gray) },
-                                                    singleLine = true,
-                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                                                        focusedBorderColor = Color.White,
-                                                        unfocusedBorderColor = Color.Gray,
-                                                        focusedLabelColor = Color.White,
-                                                        cursorColor = Color.White,
-                                                        focusedTextColor = Color.White,
-                                                        unfocusedTextColor = Color.White
-                                                    ),
-                                                    modifier = Modifier.fillMaxWidth()
-                                                )
-                                            },
-                                            confirmButton = {
-                                                androidx.compose.material3.TextButton(
-                                                    onClick = {
-                                                        if (newPlaylistTitleList.isNotBlank()) {
-                                                            viewModel.createPlaylist(newPlaylistTitleList.trim())
-                                                            showCreateDialogList = false
-                                                            newPlaylistTitleList = ""
-                                                            viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
-                                                        }
-                                                    }
-                                                ) {
-                                                    Text("Create", color = Color.White)
+                                        val pinned = pinnedItems[index]
+                                        HomeGridCardItem(
+                                            title = pinned.title,
+                                            thumbUrl = pinned.thumbnails,
+                                            subtitle = pinned.author,
+                                            isArtist = false,
+                                            onClick = {
+                                                when (pinned.id) {
+                                                    Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                    Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
+                                                    Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                                                    "LM" -> onPlaylistClick?.invoke("LM", false) ?: navController.navigate(PlaylistDestination("LM"))
+                                                    else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
                                                 }
                                             },
-                                            dismissButton = {
-                                                androidx.compose.material3.TextButton(
-                                                    onClick = { 
-                                                        showCreateDialogList = false
-                                                        newPlaylistTitleList = ""
-                                                    }
-                                                ) {
-                                                    Text("Cancel", color = Color.Gray)
-                                                }
-                                            }
                                         )
                                     }
-
+                                } else {
                                     Column(modifier = Modifier.fillMaxWidth()) {
                                         pinnedItems.forEach { pinned ->
                                             PlaylistFullWidthItems(
@@ -365,27 +208,6 @@ fun LibraryItem(
                                                         else -> onPlaylistClick?.invoke(pinned.id, false) ?: navController.navigate(PlaylistDestination(pinned.id))
                                                     }
                                                 },
-                                            )
-                                        }
-                                        // Create row at bottom of list
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable { showCreateDialogList = true }
-                                                .padding(horizontal = 16.dp, vertical = 14.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.AddCircleOutline,
-                                                contentDescription = "Create playlist",
-                                                tint = Color.White.copy(alpha = 0.7f),
-                                                modifier = Modifier.size(24.dp),
-                                            )
-                                            Text(
-                                                text = "New Playlist",
-                                                style = typo().bodyMedium,
-                                                color = Color.White.copy(alpha = 0.7f),
                                             )
                                         }
                                     }

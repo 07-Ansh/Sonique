@@ -411,6 +411,12 @@ class LibraryViewModel(
         }
     }
 
+    fun deleteLocalPlaylist(id: Long) {
+        viewModelScope.launch {
+            localPlaylistRepository.deleteLocalPlaylist(id, "Deleted").collect {}
+        }
+    }
+
 
 }
 

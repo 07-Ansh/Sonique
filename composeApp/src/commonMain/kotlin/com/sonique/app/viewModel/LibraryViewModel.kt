@@ -226,7 +226,7 @@ class LibraryViewModel(
                 val pinned = temp.filterIsInstance<PlaylistEntity>().filter { it.description == "PIN" }
                 _pinnedItems.value = pinned
 
-                val realRecent = temp.filter { it !is PlaylistEntity || it.description != "PIN" }
+                val realRecent = temp.filter { it is SongEntity || it is AlbumEntity }
                 val limited = realRecent.take(6)
                 _recentlyAdded.value = LocalResource.Success(limited.toImmutableList())
             }

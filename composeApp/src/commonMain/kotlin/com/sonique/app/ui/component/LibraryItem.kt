@@ -172,7 +172,66 @@ fun LibraryItem(
                                     }
                                 }
                                 if (isPinnedGridView) {
-                                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                                    var showCreateDialog by remember { mutableStateOf(false) }
+                                    var newPlaylistTitle by remember { mutableStateOf("") }
+
+                                    if (showCreateDialog) {
+                                        androidx.compose.material3.AlertDialog(
+                                            onDismissRequest = { 
+                                                showCreateDialog = false 
+                                                newPlaylistTitle = ""
+                                            },
+                                            title = {
+                                                Text(
+                                                    text = "New Playlist",
+                                                    style = typo().titleMedium,
+                                                    color = Color.White,
+                                                )
+                                            },
+                                            text = {
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = newPlaylistTitle,
+                                                    onValueChange = { newPlaylistTitle = it },
+                                                    label = { Text("Playlist Title", color = Color.Gray) },
+                                                    singleLine = true,
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = Color.White,
+                                                        unfocusedBorderColor = Color.Gray,
+                                                        focusedLabelColor = Color.White,
+                                                        cursorColor = Color.White,
+                                                        focusedTextColor = Color.White,
+                                                        unfocusedTextColor = Color.White
+                                                    ),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            },
+                                            confirmButton = {
+                                                androidx.compose.material3.TextButton(
+                                                    onClick = {
+                                                        if (newPlaylistTitle.isNotBlank()) {
+                                                            viewModel.createPlaylist(newPlaylistTitle.trim())
+                                                            showCreateDialog = false
+                                                            newPlaylistTitle = ""
+                                                            viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                        }
+                                                    }
+                                                ) {
+                                                    Text("Create", color = Color.White)
+                                                }
+                                            },
+                                            dismissButton = {
+                                                androidx.compose.material3.TextButton(
+                                                    onClick = { 
+                                                        showCreateDialog = false
+                                                        newPlaylistTitle = ""
+                                                    }
+                                                ) {
+                                                    Text("Cancel", color = Color.Gray)
+                                                }
+                                            }
+                                        )
+                                    }
+
                                     NonLazyGrid(
                                         columns = 3,
                                         itemCount = pinnedItems.size + 1,
@@ -186,7 +245,7 @@ fun LibraryItem(
                                                     .fillMaxWidth()
                                                     .aspectRatio(1f)
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .clickable { uriHandler.openUri("https://music.youtube.com/library/playlists") },
+                                                    .clickable { showCreateDialog = true },
                                                 contentAlignment = Alignment.Center,
                                             ) {
                                                 androidx.compose.foundation.Canvas(modifier = Modifier.matchParentSize()) {
@@ -233,7 +292,66 @@ fun LibraryItem(
                                         }
                                     }
                                 } else {
-                                    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                                    var showCreateDialogList by remember { mutableStateOf(false) }
+                                    var newPlaylistTitleList by remember { mutableStateOf("") }
+
+                                    if (showCreateDialogList) {
+                                        androidx.compose.material3.AlertDialog(
+                                            onDismissRequest = { 
+                                                showCreateDialogList = false 
+                                                newPlaylistTitleList = ""
+                                            },
+                                            title = {
+                                                Text(
+                                                    text = "New Playlist",
+                                                    style = typo().titleMedium,
+                                                    color = Color.White,
+                                                )
+                                            },
+                                            text = {
+                                                androidx.compose.material3.OutlinedTextField(
+                                                    value = newPlaylistTitleList,
+                                                    onValueChange = { newPlaylistTitleList = it },
+                                                    label = { Text("Playlist Title", color = Color.Gray) },
+                                                    singleLine = true,
+                                                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                        focusedBorderColor = Color.White,
+                                                        unfocusedBorderColor = Color.Gray,
+                                                        focusedLabelColor = Color.White,
+                                                        cursorColor = Color.White,
+                                                        focusedTextColor = Color.White,
+                                                        unfocusedTextColor = Color.White
+                                                    ),
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            },
+                                            confirmButton = {
+                                                androidx.compose.material3.TextButton(
+                                                    onClick = {
+                                                        if (newPlaylistTitleList.isNotBlank()) {
+                                                            viewModel.createPlaylist(newPlaylistTitleList.trim())
+                                                            showCreateDialogList = false
+                                                            newPlaylistTitleList = ""
+                                                            viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                        }
+                                                    }
+                                                ) {
+                                                    Text("Create", color = Color.White)
+                                                }
+                                            },
+                                            dismissButton = {
+                                                androidx.compose.material3.TextButton(
+                                                    onClick = { 
+                                                        showCreateDialogList = false
+                                                        newPlaylistTitleList = ""
+                                                    }
+                                                ) {
+                                                    Text("Cancel", color = Color.Gray)
+                                                }
+                                            }
+                                        )
+                                    }
+
                                     Column(modifier = Modifier.fillMaxWidth()) {
                                         pinnedItems.forEach { pinned ->
                                             PlaylistFullWidthItems(
@@ -253,7 +371,7 @@ fun LibraryItem(
                                         Row(
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clickable { uriHandler.openUri("https://music.youtube.com/library/playlists") }
+                                                .clickable { showCreateDialogList = true }
                                                 .padding(horizontal = 16.dp, vertical = 14.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(16.dp),

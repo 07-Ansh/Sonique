@@ -222,8 +222,7 @@ class LibraryViewModel(
                         )
                     )
                 }
-                // Separate pinned shortcuts from real recent activity
-                val pinned = temp.filterIsInstance<PlaylistEntity>().filter { it.description == "PIN" }
+                val pinned = temp.filterIsInstance<PlaylistEntity>().filter { it.description == "PIN" }.toMutableList()
                 _pinnedItems.value = pinned
 
                 val realRecent = temp.filter { it is SongEntity || it is AlbumEntity }
@@ -235,6 +234,19 @@ class LibraryViewModel(
         viewModelScope.launch {
             localPlaylistRepository.getAllLocalPlaylists().collect { values ->
                 _yourLocalPlaylist.value = LocalResource.Success(values.reversed())
+                val currentPinned = _pinnedItems.value.filter { it.description == "PIN" }.toMutableList()
+                values.reversed().forEach { local ->
+                    currentPinned.add(
+                        PlaylistEntity(
+                            id = local.id.toString(),
+                            title = local.title,
+                            author = "Local Playlist",
+                            description = "LOCAL_PIN",
+                            thumbnails = local.thumbnail ?: ""
+                        )
+                    )
+                }
+                _pinnedItems.value = currentPinned
             }
         }
 

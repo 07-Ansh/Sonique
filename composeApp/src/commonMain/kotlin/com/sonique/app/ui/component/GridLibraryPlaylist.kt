@@ -117,6 +117,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
     noinline onAlbumClick: ((String) -> Unit)? = null,
     noinline onArtistClick: ((String) -> Unit)? = null,
     noinline onPlaylistClick: ((String, Boolean) -> Unit)? = null,
+    noinline actions: (@Composable () -> Unit)? = null,
     noinline onReload: () -> Unit,
 ) {
     Logger.w("GridLibraryPlaylist", "Generic Type: ${T::class.java}")
@@ -515,14 +516,17 @@ internal inline fun <reified T> GridLibraryPlaylist(
                     )
                 },
                 navigationIcon = {
-                    Box(Modifier.padding(horizontal = 5.dp)) {
-                        RippleIconButton(
-                            Res.drawable.baseline_arrow_back_ios_new_24,
-                            Modifier.size(32.dp),
-                            true,
-                        ) {
-                            onBack?.invoke() ?: navController.navigateUp()
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.padding(start = 5.dp, end = 4.dp)) {
+                            RippleIconButton(
+                                Res.drawable.baseline_arrow_back_ios_new_24,
+                                Modifier.size(32.dp),
+                                true,
+                            ) {
+                                onBack?.invoke() ?: navController.navigateUp()
+                            }
                         }
+                        actions?.invoke()
                     }
                 },
                 actions = {

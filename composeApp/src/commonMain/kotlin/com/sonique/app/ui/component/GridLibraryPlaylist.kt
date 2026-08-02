@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -346,13 +347,52 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                 }
                             }
 
-                            HomeGridCardItem(
-                                title = title,
-                                thumbUrl = thumbUrl,
-                                subtitle = subtitle,
-                                isArtist = isArtist,
-                                onClick = onClick,
-                            )
+                            var showDeleteDialog by remember { mutableStateOf(false) }
+                            if (showDeleteDialog && item is LocalPlaylistEntity) {
+                                androidx.compose.material3.AlertDialog(
+                                    onDismissRequest = { showDeleteDialog = false },
+                                    title = { Text("Delete Playlist", color = Color.White) },
+                                    text = { Text("Are you sure you want to delete '${item.title}'?", color = Color.White) },
+                                    confirmButton = {
+                                        androidx.compose.material3.TextButton(
+                                            onClick = {
+                                                viewModel.deleteLocalPlaylist(item.id)
+                                                showDeleteDialog = false
+                                            }
+                                        ) {
+                                            Text("Delete", color = Color.Red)
+                                        }
+                                    },
+                                    dismissButton = {
+                                        androidx.compose.material3.TextButton(onClick = { showDeleteDialog = false }) {
+                                            Text("Cancel", color = Color.Gray)
+                                        }
+                                    }
+                                )
+                            }
+
+                            Box {
+                                HomeGridCardItem(
+                                    title = title,
+                                    thumbUrl = thumbUrl,
+                                    subtitle = subtitle,
+                                    isArtist = isArtist,
+                                    onClick = onClick,
+                                )
+                                if (item is LocalPlaylistEntity) {
+                                    IconButton(
+                                        onClick = { showDeleteDialog = true },
+                                        modifier = Modifier.align(Alignment.TopEnd).padding(2.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Close,
+                                            contentDescription = "Delete",
+                                            tint = Color.White.copy(alpha = 0.8f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         item {
@@ -369,34 +409,75 @@ internal inline fun <reified T> GridLibraryPlaylist(
                             ),
                         ) {
                             items(filteredList) { item ->
-                                if (item is PlaylistType) {
-                                    PlaylistFullWidthItems(
-                                        onClickListener = {
-                                            when (item) {
-                                                is LocalPlaylistEntity -> onLocalPlaylistClick(item.id)
-                                                is PlaylistsResult -> {
-                                                    if (item.browseId.startsWith("MPRE")) {
-                                                        onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
-                                                    } else {
-                                                        onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(PlaylistDestination(item.browseId, isYourYouTubePlaylist = true))
-                                                    }
+                                var showDeleteDialogList by remember { mutableStateOf(false) }
+                                if (showDeleteDialogList && item is LocalPlaylistEntity) {
+                                    androidx.compose.material3.AlertDialog(
+                                        onDismissRequest = { showDeleteDialogList = false },
+                                        title = { Text("Delete Playlist", color = Color.White) },
+                                        text = { Text("Are you sure you want to delete '${item.title}'?", color = Color.White) },
+                                        confirmButton = {
+                                            androidx.compose.material3.TextButton(
+                                                onClick = {
+                                                    viewModel.deleteLocalPlaylist(item.id)
+                                                    showDeleteDialogList = false
                                                 }
-                                                is AlbumEntity -> onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
-                                                is PlaylistEntity -> onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(PlaylistDestination(item.id))
-                                                is PodcastsEntity -> navController.navigate(PodcastDestination(podcastId = item.podcastId))
+                                            ) {
+                                                Text("Delete", color = Color.Red)
                                             }
                                         },
-                                        data = item,
-                                    )
-                                } else if (item is com.sonique.domain.data.entities.ArtistEntity) {
-                                    ArtistFullWidthItems(
-                                        data = item,
-                                        onClickListener = {
-                                            onArtistClick?.invoke(item.channelId) ?: navController.navigate(
-                                                com.sonique.app.ui.navigation.destination.list.ArtistDestination(channelId = item.channelId)
-                                            )
+                                        dismissButton = {
+                                            androidx.compose.material3.TextButton(onClick = { showDeleteDialogList = false }) {
+                                                Text("Cancel", color = Color.Gray)
+                                            }
                                         }
                                     )
+                                }
+
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    if (item is PlaylistType) {
+                                        PlaylistFullWidthItems(
+                                            modifier = Modifier.weight(1f),
+                                            onClickListener = {
+                                                when (item) {
+                                                    is LocalPlaylistEntity -> onLocalPlaylistClick(item.id)
+                                                    is PlaylistsResult -> {
+                                                        if (item.browseId.startsWith("MPRE")) {
+                                                            onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
+                                                        } else {
+                                                            onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(PlaylistDestination(item.browseId, isYourYouTubePlaylist = true))
+                                                        }
+                                                    }
+                                                    is AlbumEntity -> onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
+                                                    is PlaylistEntity -> onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(PlaylistDestination(item.id))
+                                                    is PodcastsEntity -> navController.navigate(PodcastDestination(podcastId = item.podcastId))
+                                                }
+                                            },
+                                            data = item,
+                                        )
+                                    } else if (item is com.sonique.domain.data.entities.ArtistEntity) {
+                                        ArtistFullWidthItems(
+                                            modifier = Modifier.weight(1f),
+                                            data = item,
+                                            onClickListener = {
+                                                onArtistClick?.invoke(item.channelId) ?: navController.navigate(
+                                                    com.sonique.app.ui.navigation.destination.list.ArtistDestination(channelId = item.channelId)
+                                                )
+                                            }
+                                        )
+                                    }
+
+                                    if (item is LocalPlaylistEntity) {
+                                        IconButton(onClick = { showDeleteDialogList = true }) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.Close,
+                                                contentDescription = "Delete",
+                                                tint = Color.White.copy(alpha = 0.7f)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                             item { EndOfPage() }

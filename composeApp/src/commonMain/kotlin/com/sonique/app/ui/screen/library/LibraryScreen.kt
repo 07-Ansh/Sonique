@@ -382,13 +382,13 @@ fun LibraryScreen(
                             }
 
                             LibraryChipType.YOUTUBE_MUSIC_PLAYLIST -> {
-                                var selectedPlaylistTab by rememberSaveable { mutableStateOf(0) } // 0 = Local, 1 = YouTube
+                                var selectedPlaylistTab by rememberSaveable { mutableStateOf(0) } // 0 = YouTube, 1 = Local
                                 val currentPlaylistData: LocalResource<List<com.sonique.domain.data.type.PlaylistType>> = if (selectedPlaylistTab == 0) {
-                                    (yourLocalPlaylist as? LocalResource.Success)?.let { success ->
+                                    (youTubePlaylist as? LocalResource.Success)?.let { success ->
                                         LocalResource.Success(success.data?.map { p -> p as com.sonique.domain.data.type.PlaylistType } ?: emptyList())
                                     } ?: LocalResource.Loading()
                                 } else {
-                                    (youTubePlaylist as? LocalResource.Success)?.let { success ->
+                                    (yourLocalPlaylist as? LocalResource.Success)?.let { success ->
                                         LocalResource.Success(success.data?.map { p -> p as com.sonique.domain.data.type.PlaylistType } ?: emptyList())
                                     } ?: LocalResource.Loading()
                                 }
@@ -403,7 +403,7 @@ fun LibraryScreen(
                                         androidx.compose.material3.FilterChip(
                                             selected = selectedPlaylistTab == 0,
                                             onClick = { selectedPlaylistTab = 0 },
-                                            label = { Text("Your Local Playlists") },
+                                            label = { Text("YouTube Playlists") },
                                             leadingIcon = if (selectedPlaylistTab == 0) {
                                                 { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                             } else null
@@ -411,7 +411,7 @@ fun LibraryScreen(
                                         androidx.compose.material3.FilterChip(
                                             selected = selectedPlaylistTab == 1,
                                             onClick = { selectedPlaylistTab = 1 },
-                                            label = { Text("YouTube Playlists") },
+                                            label = { Text("Your Local Playlists") },
                                             leadingIcon = if (selectedPlaylistTab == 1) {
                                                 { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                                             } else null
@@ -422,7 +422,7 @@ fun LibraryScreen(
                                         navController,
                                         innerPadding.copy(top = 10.dp),
                                         currentPlaylistData,
-                                        emptyText = if (selectedPlaylistTab == 0) Res.string.no_playlists_added else Res.string.no_YouTube_playlists,
+                                        emptyText = if (selectedPlaylistTab == 0) Res.string.no_YouTube_playlists else Res.string.no_playlists_added,
                                         title = null,
                                         onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
                                         onScrolling = handleScrolling,
@@ -432,9 +432,9 @@ fun LibraryScreen(
                                         onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
                                     ) {
                                         if (selectedPlaylistTab == 0) {
-                                            viewModel.getCanvasSong()
-                                        } else {
                                             viewModel.getYouTubePlaylist()
+                                        } else {
+                                            viewModel.getCanvasSong()
                                         }
                                     }
                                 }

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -97,6 +98,12 @@ import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import kotlinx.coroutines.delay
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.material3.Surface
+import sonique.composeapp.generated.resources.baseline_sync_24
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
@@ -124,6 +131,7 @@ fun LyricsView(
         mutableIntStateOf(0)
     }
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     val current by timeLine.collectAsStateWithLifecycle()
     var currentLineIndex by rememberSaveable {
         mutableIntStateOf(-1)
@@ -182,17 +190,27 @@ fun LyricsView(
             currentLineIndex = -1
         }
     }
-    LaunchedEffect(key1 = currentLineIndex, key2 = currentLineHeight) {
-        if (currentLineIndex > -1 && currentLineHeight > 0 &&
-            (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED")) {
-            val boxEnd = listState.layoutInfo.viewportEndOffset
-            val boxStart = listState.layoutInfo.viewportStartOffset
-            val viewPort = boxEnd - boxStart
-            val offset = viewPort / 2 - currentLineHeight / 2
-            Logger.w(TAG, "Offset: $offset")
+    var userIsScrolling by remember { mutableStateOf(false) }
+
+    // Pause auto-scroll when user manually scrolls lyrics
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (listState.isScrollInProgress) {
+            userIsScrolling = true
+        } else if (userIsScrolling) {
+            // When user stops scrolling, wait 5 seconds of inactivity before resuming auto-scroll
+            delay(5000)
+            userIsScrolling = false
+        }
+    }
+
+    // Auto-scroll to active line smoothly when user is not scrolling
+    LaunchedEffect(currentLineIndex, userIsScrolling) {
+        if (!userIsScrolling && currentLineIndex > -1 &&
+            (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED")
+        ) {
             listState.animateScrollAndCentralizeItem(
                 index = currentLineIndex,
-                this,
+                scope = this,
             )
         }
     }
@@ -306,6 +324,7 @@ fun LyricsView(
                                     modifier =
                                         Modifier
                                             .clickable {
+                                                userIsScrolling = false
                                                 onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
                                             }.onGloballyPositioned { c ->
                                                 currentLineHeight = c.size.height
@@ -322,6 +341,7 @@ fun LyricsView(
                                     modifier =
                                         Modifier
                                             .clickable {
+                                                userIsScrolling = false
                                                 onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
                                             }.onGloballyPositioned { c ->
                                                 currentLineHeight = c.size.height
@@ -341,6 +361,7 @@ fun LyricsView(
                                 modifier =
                                     Modifier
                                         .clickable(enabled = lyricsData.lyrics.syncType == "LINE_SYNCED") {
+                                            userIsScrolling = false
                                             onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
                                         }.onGloballyPositioned { c ->
                                             currentLineHeight = c.size.height
@@ -348,6 +369,46 @@ fun LyricsView(
                             )
                         }
                     }
+                }
+            }
+        }
+
+        // Floating Sync to current lyric button when user scrolled away to read lyrics
+        AnimatedVisibility(
+            visible = userIsScrolling && currentLineIndex >= 0 && (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED"),
+            enter = fadeIn() + slideInVertically { it / 2 },
+            exit = fadeOut() + slideOutVertically { it / 2 },
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
+        ) {
+            Surface(
+                onClick = {
+                    userIsScrolling = false
+                    if (currentLineIndex >= 0) {
+                        listState.animateScrollAndCentralizeItem(currentLineIndex, scope)
+                    }
+                },
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f),
+                contentColor = playerContentColor,
+                shadowElevation = 6.dp,
+                border = BorderStroke(1.dp, playerContentColor.copy(alpha = 0.15f)),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.baseline_sync_24),
+                        contentDescription = "Sync",
+                        modifier = Modifier.size(18.dp),
+                        tint = playerContentColor,
+                    )
+                    Text(
+                        text = "Sync to current lyric",
+                        style = typo().labelLarge,
+                        color = playerContentColor,
+                    )
                 }
             }
         }

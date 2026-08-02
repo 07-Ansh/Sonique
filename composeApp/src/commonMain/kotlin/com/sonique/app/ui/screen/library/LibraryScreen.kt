@@ -12,6 +12,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +34,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -378,19 +382,61 @@ fun LibraryScreen(
                             }
 
                             LibraryChipType.YOUTUBE_MUSIC_PLAYLIST -> {
-                                GridLibraryPlaylist(
-                                    navController,
-                                    innerPadding.copy(top = 30.dp),
-                                    youTubePlaylist,
-                                    emptyText = Res.string.no_YouTube_playlists,
-                                    title = Res.string.your_youtube_playlists,
-                                    onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
-                                    onScrolling = handleScrolling,
-                                    onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
-                                    onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
-                                    onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
-                                ) {
-                                    viewModel.getYouTubePlaylist()
+                                var selectedPlaylistTab by rememberSaveable { mutableStateOf(0) } // 0 = Local, 1 = YouTube
+                                val currentPlaylistData: LocalResource<List<com.sonique.domain.data.type.PlaylistType>> = if (selectedPlaylistTab == 0) {
+                                    (yourLocalPlaylist as? LocalResource.Success)?.let { success ->
+                                        LocalResource.Success(success.data?.map { p -> p as com.sonique.domain.data.type.PlaylistType } ?: emptyList())
+                                    } ?: LocalResource.Loading()
+                                } else {
+                                    (youTubePlaylist as? LocalResource.Success)?.let { success ->
+                                        LocalResource.Success(success.data?.map { p -> p as com.sonique.domain.data.type.PlaylistType } ?: emptyList())
+                                    } ?: LocalResource.Loading()
+                                }
+
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = innerPadding.calculateTopPadding() + 10.dp, start = 16.dp, end = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        androidx.compose.material3.FilterChip(
+                                            selected = selectedPlaylistTab == 0,
+                                            onClick = { selectedPlaylistTab = 0 },
+                                            label = { Text("Your Local Playlists") },
+                                            leadingIcon = if (selectedPlaylistTab == 0) {
+                                                { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                            } else null
+                                        )
+                                        androidx.compose.material3.FilterChip(
+                                            selected = selectedPlaylistTab == 1,
+                                            onClick = { selectedPlaylistTab = 1 },
+                                            label = { Text("YouTube Playlists") },
+                                            leadingIcon = if (selectedPlaylistTab == 1) {
+                                                { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                            } else null
+                                        )
+                                    }
+
+                                    GridLibraryPlaylist(
+                                        navController,
+                                        innerPadding.copy(top = 10.dp),
+                                        currentPlaylistData,
+                                        emptyText = if (selectedPlaylistTab == 0) Res.string.no_playlists_added else Res.string.no_YouTube_playlists,
+                                        title = null,
+                                        onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
+                                        onScrolling = handleScrolling,
+                                        onLocalPlaylistClick = { id -> activeLocalPlaylistId = id; activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS },
+                                        onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                        onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                        onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                    ) {
+                                        if (selectedPlaylistTab == 0) {
+                                            viewModel.getCanvasSong()
+                                        } else {
+                                            viewModel.getYouTubePlaylist()
+                                        }
+                                    }
                                 }
                             }
 

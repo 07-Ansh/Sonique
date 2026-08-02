@@ -171,17 +171,8 @@ class LibraryViewModel(
                     temp.remove(it)
                 }
                 temp.removeIf { it is SongEntity && it.inLibrary == Config.REMOVED_SONG_DATE_TIME }
+                // Strip pinned playlist stubs so they are only injected once below
                 temp.removeIf { it is PlaylistEntity && (it.id == "LM" || it.id == LOCAL_PLAYLIST_ID_LIKED) }
-                
-                temp.add(
-                    PlaylistEntity(
-                        id = LOCAL_PLAYLIST_ID_LIKED,
-                        title = getString(Res.string.liked_songs),
-                        author = "Sonique",
-                        thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
-                        description = "PIN"
-                    )
-                )
 
                 if (dataStoreManager.loggedIn.first() == DataStoreManager.TRUE) {
                     temp.add(
@@ -241,17 +232,6 @@ class LibraryViewModel(
                 playlistRepository.getLikedPlaylists()
             ) { album, playlist ->
                 val temp: MutableList<PlaylistType> = mutableListOf()
-                temp.add(
-                    PlaylistEntity(
-                        id = LOCAL_PLAYLIST_ID_LIKED,
-                        title = likedSongsTitle,
-                        author = soniqueLyricsAuthor,
-                        thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
-                        favoriteAt = now(),
-                        inLibrary = now(),
-                        downloadState = 0,
-                    )
-                )
                 temp.addAll(album)
                 temp.addAll(playlist)
                 temp.sortedWith<PlaylistType>(

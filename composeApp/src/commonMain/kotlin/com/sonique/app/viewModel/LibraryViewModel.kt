@@ -72,6 +72,9 @@ class LibraryViewModel(
         MutableStateFlow(LocalResource.Loading())
     val recentlyAdded: StateFlow<LocalResource<List<RecentlyType>>> get() = _recentlyAdded.asStateFlow()
 
+    private val _pinnedItems: MutableStateFlow<List<PlaylistEntity>> = MutableStateFlow(emptyList())
+    val pinnedItems: StateFlow<List<PlaylistEntity>> get() = _pinnedItems.asStateFlow()
+
     private val _yourLocalPlaylist: MutableStateFlow<LocalResource<List<LocalPlaylistEntity>>> =
         MutableStateFlow(LocalResource.Loading())
     val yourLocalPlaylist: StateFlow<LocalResource<List<LocalPlaylistEntity>>> get() = _yourLocalPlaylist.asStateFlow()
@@ -212,8 +215,12 @@ class LibraryViewModel(
                         )
                     )
                 }
-                temp.reverse()
-                val limited = temp.take(5)
+                // Separate pinned shortcuts from real recent activity
+                val pinned = temp.filterIsInstance<PlaylistEntity>().filter { it.description == "PIN" }
+                _pinnedItems.value = pinned
+
+                val realRecent = temp.filter { it !is PlaylistEntity || it.description != "PIN" }
+                val limited = realRecent.take(6)
                 _recentlyAdded.value = LocalResource.Success(limited.toImmutableList())
             }
         }

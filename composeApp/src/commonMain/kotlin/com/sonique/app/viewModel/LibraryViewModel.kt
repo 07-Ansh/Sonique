@@ -117,8 +117,15 @@ class LibraryViewModel(
     private val _isGridView = MutableStateFlow(true)
     val isGridView: StateFlow<Boolean> get() = _isGridView.asStateFlow()
 
+    private val _isPinnedGridView = MutableStateFlow(true)
+    val isPinnedGridView: StateFlow<Boolean> get() = _isPinnedGridView.asStateFlow()
+
     fun toggleLayoutView() {
         _isGridView.value = !_isGridView.value
+    }
+
+    fun togglePinnedLayoutView() {
+        _isPinnedGridView.value = !_isPinnedGridView.value
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)

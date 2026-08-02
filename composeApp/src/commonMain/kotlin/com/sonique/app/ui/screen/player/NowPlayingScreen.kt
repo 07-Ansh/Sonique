@@ -54,11 +54,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.SubtitlesOff
-import androidx.compose.material.icons.rounded.AddCircleOutline
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Forward5
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Replay5
+import androidx.compose.foundation.Image
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -74,6 +76,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -164,8 +167,11 @@ import com.sonique.app.ui.theme.overlay
 import com.sonique.app.ui.theme.seed
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.LyricsProvider
+import com.sonique.app.viewModel.NowPlayingBottomSheetUIEvent
+import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
+import com.sonique.domain.data.entities.DownloadState
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -175,8 +181,11 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.artists
+import sonique.composeapp.generated.resources.baseline_downloaded
+import sonique.composeapp.generated.resources.baseline_downloading_white
 import sonique.composeapp.generated.resources.baseline_fullscreen_24
 import sonique.composeapp.generated.resources.baseline_more_vert_24
 import sonique.composeapp.generated.resources.description
@@ -254,6 +263,12 @@ fun NowPlayingScreenContent(
     val blurBg by sharedViewModel.blurBg.collectAsStateWithLifecycle()
 
     val hazeState = rememberHazeState()
+
+    // Inject the bottom-sheet VM to access songUIState.downloadState
+    val bottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
+    val bsUiState by bottomSheetViewModel.uiState.collectAsStateWithLifecycle()
+    var showCancelDlDialog by rememberSaveable { mutableStateOf(false) }
+
 
     val mainScrollState = rememberScrollState()
 
@@ -1123,50 +1138,62 @@ fun NowPlayingScreenContent(
                                         }
                                         if (isLoggedIn) {
                                             Spacer(modifier = Modifier.size(16.dp))
-                                            Crossfade(
-                                                targetState = likeStatus,
-                                            ) {
-                                                if (it) {
-                                                    IconButton(
-                                                        modifier =
-                                                            Modifier
-                                                                .size(24.dp)
-                                                                .aspectRatio(1f)
-                                                                .clip(
-                                                                    CircleShape,
-                                                                ),
-                                                        onClick = {
-                                                            sharedViewModel.addToYouTubeLiked()
-                                                        },
-                                                    ) {
-                                                        Icon(imageVector = Icons.Rounded.CheckCircle, tint = playerContentColor, contentDescription = "")
-                                                    }
-                                                } else {
-                                                    IconButton(
-                                                        modifier =
-                                                            Modifier
-                                                                .size(24.dp)
-                                                                .aspectRatio(1f)
-                                                                .clip(
-                                                                    CircleShape,
-                                                                ),
-                                                        onClick = {
-                                                            sharedViewModel.addToYouTubeLiked()
-                                                        },
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Rounded.AddCircleOutline,
-                                                            tint = playerContentColor,
-                                                            contentDescription = "",
+                                            // --- Download button ---
+                                            val dlState = bsUiState.songUIState.downloadState
+                                            if (showCancelDlDialog) {
+                                                AlertDialog(
+                                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                                    onDismissRequest = { showCancelDlDialog = false },
+                                                    confirmButton = {
+                                                        TextButton(onClick = {
+                                                            showCancelDlDialog = false
+                                                            bottomSheetViewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                                                        }) { Text("Yes") }
+                                                    },
+                                                    dismissButton = {
+                                                        TextButton(onClick = { showCancelDlDialog = false }) { Text("Cancel") }
+                                                    },
+                                                    text = {
+                                                        Text(
+                                                            if (dlState == DownloadState.STATE_DOWNLOADED) "Remove this download?" else "Cancel the download?",
+                                                            style = typo().bodyMedium,
                                                         )
+                                                    },
+                                                )
+                                            }
+                                            IconButton(
+                                                modifier = Modifier.size(24.dp).aspectRatio(1f).clip(CircleShape),
+                                                onClick = {
+                                                    when (dlState) {
+                                                        DownloadState.STATE_NOT_DOWNLOADED -> bottomSheetViewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                                                        else -> showCancelDlDialog = true
                                                     }
+                                                },
+                                            ) {
+                                                when (dlState) {
+                                                    DownloadState.STATE_DOWNLOADING,
+                                                    DownloadState.STATE_PREPARING -> Image(
+                                                        painter = painterResource(Res.drawable.baseline_downloading_white),
+                                                        contentDescription = "Downloading",
+                                                        modifier = Modifier.size(24.dp),
+                                                    )
+                                                    DownloadState.STATE_DOWNLOADED -> Image(
+                                                        painter = painterResource(Res.drawable.baseline_downloaded),
+                                                        contentDescription = "Downloaded",
+                                                        modifier = Modifier.size(24.dp),
+                                                    )
+                                                    else -> Icon(
+                                                        imageVector = Icons.Rounded.Download,
+                                                        tint = playerContentColor,
+                                                        contentDescription = "Download",
+                                                    )
                                                 }
                                             }
                                         }
                                         Spacer(modifier = Modifier.size(12.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                             HeartCheckBox(checked = controllerState.isLiked, size = 28) {
-                                                 sharedViewModel.onUIEvent(UIEvent.ToggleLike)
+                                             HeartCheckBox(checked = likeStatus, size = 28) {
+                                                 sharedViewModel.addToYouTubeLiked()
                                              }
 
                                         }
@@ -1880,8 +1907,8 @@ fun NowPlayingScreenContent(
                             }
                         }
                         Spacer(modifier = Modifier.width(15.dp))
-                        HeartCheckBox(checked = controllerState.isLiked, size = 30) {
-                            sharedViewModel.onUIEvent(UIEvent.ToggleLike)
+                        HeartCheckBox(checked = likeStatus, size = 30) {
+                            sharedViewModel.addToYouTubeLiked()
                         }
                         Spacer(modifier = Modifier.width(15.dp))
                         Crossfade(targetState = timelineState.loading, label = "") {

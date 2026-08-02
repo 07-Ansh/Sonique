@@ -54,6 +54,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.SubtitlesOff
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.Forward5
@@ -1177,10 +1178,10 @@ fun NowPlayingScreenContent(
                                                         contentDescription = "Downloading",
                                                         modifier = Modifier.size(24.dp),
                                                     )
-                                                    DownloadState.STATE_DOWNLOADED -> Image(
-                                                        painter = painterResource(Res.drawable.baseline_downloaded),
+                                                    DownloadState.STATE_DOWNLOADED -> Icon(
+                                                        imageVector = Icons.Rounded.Check,
+                                                        tint = Color.White,
                                                         contentDescription = "Downloaded",
-                                                        modifier = Modifier.size(24.dp),
                                                     )
                                                     else -> Icon(
                                                         imageVector = Icons.Rounded.Download,

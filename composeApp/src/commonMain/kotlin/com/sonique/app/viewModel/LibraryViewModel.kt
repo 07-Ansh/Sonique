@@ -111,6 +111,13 @@ class LibraryViewModel(
         MutableStateFlow(LocalResource.Loading())
     val followedArtists: StateFlow<LocalResource<List<ArtistEntity>>> get() = _followedArtists.asStateFlow()
 
+    private val _isGridView = MutableStateFlow(true)
+    val isGridView: StateFlow<Boolean> get() = _isGridView.asStateFlow()
+
+    fun toggleLayoutView() {
+        _isGridView.value = !_isGridView.value
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     val youtubeLoggedIn = dataStoreManager.loggedIn.mapLatest { it == DataStoreManager.TRUE }
 

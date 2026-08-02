@@ -272,19 +272,6 @@ fun LibraryScreen(
                                         ),
                                     state = state,
                                 ) {
-                                    item {
-                                        LibraryTilingBox(
-                                            navController = navController,
-                                            onNavigate = { type ->
-                                                viewModel.setCurrentScreen(type)
-                                            },
-                                            onDynamicPlaylistClick = { type ->
-                                                activeDynamicType = type
-                                                activeSubScreen = LibrarySubScreen.DYNAMIC_PLAYLIST
-                                            }
-                                        )
-                                    }
-
                                     if (showMostPlayed && !listCanvasSong.data.isNullOrEmpty()) {
                                         item {
                                             LibraryItem(

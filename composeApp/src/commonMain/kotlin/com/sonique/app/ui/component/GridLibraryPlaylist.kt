@@ -56,22 +56,50 @@ import com.sonique.app.ui.navigation.destination.list.PodcastDestination
 import com.sonique.app.ui.theme.seed
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.ui.theme.white
+import androidx.compose.material.icons.automirrored.rounded.ViewList
+import androidx.compose.material.icons.rounded.GridView
+import androidx.compose.material3.IconButton
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sonique.app.viewModel.LibraryViewModel
+import org.koin.compose.viewmodel.koinViewModel
 import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
 import dev.chrisbanes.haze.materials.HazeMaterials
 import dev.chrisbanes.haze.rememberHazeState
 import org.jetbrains.compose.resources.StringResource
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.CachePolicy
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import com.sonique.app.ui.component.painterPlaylistThumbnail
+import com.sonique.domain.utils.connectArtists
+import com.sonique.domain.utils.toListName
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import sonique.composeapp.generated.resources.Res
-import sonique.composeapp.generated.resources.create
+import sonique.composeapp.generated.resources.album
+import sonique.composeapp.generated.resources.artists
 import sonique.composeapp.generated.resources.baseline_arrow_back_ios_new_24
 import sonique.composeapp.generated.resources.baseline_close_24
 import sonique.composeapp.generated.resources.baseline_search_24
+import sonique.composeapp.generated.resources.create
+import sonique.composeapp.generated.resources.playlist
+import sonique.composeapp.generated.resources.podcasts
 import sonique.composeapp.generated.resources.search
-
-
+import sonique.composeapp.generated.resources.sonique_lyrics
+import sonique.composeapp.generated.resources.you
 
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -91,6 +119,8 @@ internal inline fun <reified T> GridLibraryPlaylist(
     noinline onReload: () -> Unit,
 ) {
     Logger.w("GridLibraryPlaylist", "Generic Type: ${T::class.java}")
+    val viewModel: LibraryViewModel = koinViewModel()
+    val isGridView by viewModel.isGridView.collectAsStateWithLifecycle()
     val state = rememberLazyListState()
     val isScrollingUp by state.isScrollingUp()
     val typography = typo()
@@ -157,135 +187,219 @@ internal inline fun <reified T> GridLibraryPlaylist(
                 }
 
                 if (data is LocalResource.Success && (filteredList.isNotEmpty() || list.isNotEmpty()) || createNewPlaylist != null) {
-                    LazyColumn(
-                        modifier = Modifier.hazeSource(hazeState),
-                        contentPadding = contentPadding.copy(top = contentPadding.calculateTopPadding() + 25.dp),
-                        state = state,
+                    if (isGridView) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.hazeSource(hazeState).fillMaxSize(),
+                        contentPadding = PaddingValues(
+                            start = 12.dp,
+                            end = 12.dp,
+                            top = contentPadding.calculateTopPadding() + 65.dp,
+                            bottom = 100.dp,
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        state = rememberLazyGridState(),
                     ) {
-                        item {
-                            Spacer(Modifier.height(64.dp))
-                        }
-                        item {
-                            androidx.compose.animation.AnimatedVisibility(showSearchBar) {
+                        if (showSearchBar) {
+                            item(span = { GridItemSpan(3) }) {
                                 Spacer(Modifier.height(55.dp))
                             }
                         }
 
                         if (createNewPlaylist != null) {
                             item {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .clickable {
-                                                createNewPlaylist()
-                                            },
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { createNewPlaylist() }
+                                        .padding(4.dp),
+                                    horizontalAlignment = Alignment.Start,
                                 ) {
-                                    Row(
-                                        modifier =
-                                            Modifier
-                                                .padding(vertical = 10.dp, horizontal = 15.dp)
-                                                .fillMaxWidth(),
-                                        verticalAlignment = Alignment.CenterVertically,
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(1f)
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(Color.White.copy(alpha = 0.08f)),
+                                        contentAlignment = Alignment.Center,
                                     ) {
-                                        Box(
-                                            Modifier
-                                                .size(48.dp)
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background(white.copy(alpha = 0.1f)),
-                                            Alignment.Center,
-                                        ) {
-                                            Icon(
-                                                modifier = Modifier.size(32.dp),
-                                                imageVector = Icons.Rounded.Add,
-                                                tint = white,
-                                                contentDescription = null,
-                                            )
-                                        }
-                                        Text(
-                                            text = createString,
-                                            style = typography.bodyMedium,
-                                            color = Color.White,
-                                            maxLines = 1,
-                                            modifier =
-                                                Modifier
-                                                    .padding(start = 12.dp)
-                                                    .weight(1f),
+                                        Icon(
+                                            modifier = Modifier.size(32.dp),
+                                            imageVector = Icons.Rounded.Add,
+                                            tint = Color.White,
+                                            contentDescription = null,
                                         )
                                     }
+                                    Text(
+                                        text = createString,
+                                        style = typo().bodyMedium,
+                                        color = Color.White,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 8.dp),
+                                    )
                                 }
                             }
                         }
+
                         items(filteredList) { item ->
-                            if (item is PlaylistType) {
-                                PlaylistFullWidthItems(
-                                    onClickListener = {
-                                        when (item) {
-                                            is LocalPlaylistEntity -> {
-                                                onLocalPlaylistClick(item.id)
-                                            }
+                            var title = ""
+                            var thumbUrl: String? = null
+                            var subtitle: String? = null
+                            var isArtist = false
 
-                                            is PlaylistsResult -> {
-                                                if (item.browseId.startsWith("MPRE")) {
-                                                    // This is an album browseId — route to AlbumScreen
-                                                    onAlbumClick?.invoke(item.browseId) ?: navController.navigate(
-                                                        AlbumDestination(
-                                                            item.browseId,
-                                                        ),
-                                                    )
-                                                } else {
-                                                    onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(
-                                                        PlaylistDestination(
-                                                            item.browseId,
-                                                            isYourYouTubePlaylist = true,
-                                                        ),
-                                                    )
-                                                }
-                                            }
+                            when (item) {
+                                is AlbumEntity -> {
+                                    title = item.title
+                                    thumbUrl = item.thumbnails
+                                    subtitle = item.artistName?.connectArtists() ?: stringResource(Res.string.album)
+                                }
 
-                                            is AlbumEntity -> {
-                                                onAlbumClick?.invoke(item.browseId) ?: navController.navigate(
-                                                    AlbumDestination(
-                                                        item.browseId,
-                                                    ),
-                                                )
-                                            }
+                                is PlaylistEntity -> {
+                                    title = item.title
+                                    thumbUrl = item.thumbnails
+                                    val author = item.author ?: stringResource(Res.string.playlist)
+                                    subtitle = if (author == stringResource(Res.string.sonique_lyrics)) "Sonique" else author
+                                }
 
-                                            is PlaylistEntity -> {
-                                                onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(
-                                                    PlaylistDestination(
-                                                        item.id,
-                                                    ),
-                                                )
-                                            }
+                                is LocalPlaylistEntity -> {
+                                    title = item.title
+                                    thumbUrl = item.thumbnail
+                                    subtitle = stringResource(Res.string.you)
+                                }
 
-                                            is PodcastsEntity -> {
-                                                navController.navigate(
-                                                    PodcastDestination(
-                                                        podcastId = item.podcastId,
-                                                    ),
-                                                )
-                                            }
+                                is PlaylistsResult -> {
+                                    title = item.title
+                                    thumbUrl = item.thumbnails.lastOrNull()?.url
+                                    subtitle = item.author ?: stringResource(Res.string.playlist)
+                                }
+
+                                is AlbumsResult -> {
+                                    title = item.title
+                                    thumbUrl = item.thumbnails.lastOrNull()?.url
+                                    subtitle = item.artists.toListName().connectArtists()
+                                }
+
+                                is PodcastsEntity -> {
+                                    title = item.title
+                                    thumbUrl = item.thumbnail
+                                    subtitle = item.authorName ?: stringResource(Res.string.podcasts)
+                                }
+
+                                is com.sonique.domain.data.entities.ArtistEntity -> {
+                                    title = item.name
+                                    thumbUrl = item.thumbnails
+                                    subtitle = stringResource(Res.string.artists)
+                                    isArtist = true
+                                }
+                            }
+
+                            val onClick: () -> Unit = {
+                                when (item) {
+                                    is LocalPlaylistEntity -> {
+                                        onLocalPlaylistClick(item.id)
+                                    }
+
+                                    is PlaylistsResult -> {
+                                        if (item.browseId.startsWith("MPRE")) {
+                                            onAlbumClick?.invoke(item.browseId) ?: navController.navigate(
+                                                AlbumDestination(item.browseId),
+                                            )
+                                        } else {
+                                            onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(
+                                                PlaylistDestination(
+                                                    item.browseId,
+                                                    isYourYouTubePlaylist = true,
+                                                ),
+                                            )
                                         }
-                                    },
-                                    data = item,
-                                )
-                            } else if (item is com.sonique.domain.data.entities.ArtistEntity) {
-                                com.sonique.app.ui.component.ArtistFullWidthItems(
-                                    data = item,
-                                    onClickListener = {
+                                    }
+
+                                    is AlbumEntity -> {
+                                        onAlbumClick?.invoke(item.browseId) ?: navController.navigate(
+                                            AlbumDestination(item.browseId),
+                                        )
+                                    }
+
+                                    is PlaylistEntity -> {
+                                        onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(
+                                            PlaylistDestination(item.id),
+                                        )
+                                    }
+
+                                    is PodcastsEntity -> {
+                                        navController.navigate(
+                                            PodcastDestination(podcastId = item.podcastId),
+                                        )
+                                    }
+
+                                    is com.sonique.domain.data.entities.ArtistEntity -> {
                                         onArtistClick?.invoke(item.channelId) ?: navController.navigate(
                                             com.sonique.app.ui.navigation.destination.list.ArtistDestination(
                                                 channelId = item.channelId,
                                             )
                                         )
                                     }
-                                )
+                                }
                             }
+
+                            HomeGridCardItem(
+                                title = title,
+                                thumbUrl = thumbUrl,
+                                subtitle = subtitle,
+                                isArtist = isArtist,
+                                onClick = onClick,
+                            )
                         }
 
                         item {
                             EndOfPage()
+                        }
+                    }
+                    } else {
+                        // List view
+                        LazyColumn(
+                            modifier = Modifier.hazeSource(hazeState).fillMaxSize(),
+                            contentPadding = PaddingValues(
+                                top = contentPadding.calculateTopPadding() + 65.dp,
+                                bottom = 100.dp,
+                            ),
+                        ) {
+                            items(filteredList) { item ->
+                                if (item is PlaylistType) {
+                                    PlaylistFullWidthItems(
+                                        onClickListener = {
+                                            when (item) {
+                                                is LocalPlaylistEntity -> onLocalPlaylistClick(item.id)
+                                                is PlaylistsResult -> {
+                                                    if (item.browseId.startsWith("MPRE")) {
+                                                        onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
+                                                    } else {
+                                                        onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(PlaylistDestination(item.browseId, isYourYouTubePlaylist = true))
+                                                    }
+                                                }
+                                                is AlbumEntity -> onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
+                                                is PlaylistEntity -> onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(PlaylistDestination(item.id))
+                                                is PodcastsEntity -> navController.navigate(PodcastDestination(podcastId = item.podcastId))
+                                            }
+                                        },
+                                        data = item,
+                                    )
+                                } else if (item is com.sonique.domain.data.entities.ArtistEntity) {
+                                    ArtistFullWidthItems(
+                                        data = item,
+                                        onClickListener = {
+                                            onArtistClick?.invoke(item.channelId) ?: navController.navigate(
+                                                com.sonique.app.ui.navigation.destination.list.ArtistDestination(channelId = item.channelId)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                            item { EndOfPage() }
                         }
                     }
                 } else if (data is LocalResource.Loading) {
@@ -331,6 +445,14 @@ internal inline fun <reified T> GridLibraryPlaylist(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { viewModel.toggleLayoutView() }) {
+                        Icon(
+                            imageVector = if (isGridView) Icons.AutoMirrored.Rounded.ViewList else Icons.Rounded.GridView,
+                            contentDescription = "Toggle Layout",
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
                     Box(Modifier.padding(horizontal = 5.dp)) {
                         RippleIconButton(
                             if (showSearchBar) Res.drawable.baseline_close_24 else Res.drawable.baseline_search_24,
@@ -382,6 +504,87 @@ internal inline fun <reified T> GridLibraryPlaylist(
                 ) {
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun HomeGridCardItem(
+    title: String,
+    thumbUrl: String?,
+    subtitle: String?,
+    isArtist: Boolean = false,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(4.dp),
+        horizontalAlignment = if (isArtist) Alignment.CenterHorizontally else Alignment.Start,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(if (isArtist) CircleShape else RoundedCornerShape(6.dp))
+                .background(Color.White.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            val placeholderPainter = painterPlaylistThumbnail(
+                title = title,
+                style = typo().bodySmall,
+                sizeDp = 120.dp to 120.dp,
+            )
+
+            if (!thumbUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalPlatformContext.current)
+                        .data(thumbUrl)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .crossfade(550)
+                        .build(),
+                    placeholder = placeholderPainter,
+                    error = placeholderPainter,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                Image(
+                    painter = placeholderPainter,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        }
+
+        Text(
+            text = title,
+            style = typo().bodyMedium,
+            color = Color.White,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = if (isArtist) TextAlign.Center else TextAlign.Start,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+        )
+
+        if (!subtitle.isNullOrEmpty()) {
+            Text(
+                text = subtitle,
+                style = typo().bodySmall,
+                color = Color.White.copy(alpha = 0.7f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = if (isArtist) TextAlign.Center else TextAlign.Start,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 2.dp),
+            )
         }
     }
 }

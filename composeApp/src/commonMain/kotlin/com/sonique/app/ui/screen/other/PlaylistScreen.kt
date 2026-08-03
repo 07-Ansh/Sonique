@@ -54,7 +54,9 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Shuffle
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -406,6 +408,37 @@ fun PlaylistScreen(
                 val data = state.data
                 Logger.d(tag, "data: $data")
                 if (data == null) return@Crossfade
+                var showDeleteDownloadDialog by rememberSaveable { mutableStateOf(false) }
+                if (showDeleteDownloadDialog) {
+                    AlertDialog(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        onDismissRequest = { showDeleteDownloadDialog = false },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                showDeleteDownloadDialog = false
+                                viewModel.onUIEvent(PlaylistUIEvent.CancelDownload)
+                            }) {
+                                Text(text = "Delete", style = typo().labelSmall)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDeleteDownloadDialog = false }) {
+                                Text(text = "Cancel", style = typo().labelSmall)
+                            }
+                        },
+                        title = {
+                            Text(text = "Remove downloads?", style = typo().titleSmall)
+                        },
+                        text = {
+                            Text(
+                                text = "This will delete all downloaded songs for this playlist. You can re-download it anytime.",
+                                style = typo().bodyMedium,
+                            )
+                        },
+                    )
+                }
                 val hazeState =
                     rememberHazeState(
                         blurEnabled = true,
@@ -903,9 +936,7 @@ fun PlaylistScreen(
                                                                                     Modifier
                                                                                         .fillMaxSize()
                                                                                         .clickable {
-                                                                                            viewModel.makeToast(
-                                                                                                getStringBlocking(Res.string.downloaded),
-                                                                                            )
+                                                                                            showDeleteDownloadDialog = true
                                                                                         },
                                                                                 contentAlignment = Alignment.Center,
                                                                             ) {
@@ -1014,7 +1045,7 @@ fun PlaylistScreen(
                                                                                     .clip(
                                                                                         CircleShape,
                                                                                     ).clickable {
-                                                                                        viewModel.makeToast(getStringBlocking(Res.string.downloaded))
+                                                                                        showDeleteDownloadDialog = true
                                                                                     },
                                                                         ) {
                                                                             Icon(

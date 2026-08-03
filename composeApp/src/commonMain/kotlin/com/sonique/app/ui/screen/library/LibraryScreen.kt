@@ -476,7 +476,7 @@ fun LibraryScreen(
                                              ) {
                                                  Text(
                                                      text = "Playlists",
-                                                     style = typo().titleLarge,
+                                                     style = typo().titleMedium,
                                                      color = Color.White
                                                  )
                                                  Row(

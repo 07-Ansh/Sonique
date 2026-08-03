@@ -93,7 +93,7 @@ fun AlbumsScreen(
                     item {
                         Text(
                             text = "Albums",
-                            style = typo().headlineLarge,
+                            style = typo().titleMedium,
                             color = Color.White,
                             modifier = Modifier
                                 .fillMaxWidth()

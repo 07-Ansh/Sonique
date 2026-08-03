@@ -23,7 +23,7 @@ import com.sonique.app.ui.navigation.destination.search.SearchDestination
 import com.sonique.app.ui.screen.home.HomeScreen
 import com.sonique.app.ui.screen.library.LibraryScreen
 import com.sonique.app.ui.screen.other.SearchScreen
-import com.sonique.app.ui.navigation.destination.library.DownloadsDestination
+import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
 import com.sonique.app.ui.navigation.destination.library.LikedDestination
 import com.sonique.app.ui.screen.other.PlaylistScreen
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
@@ -145,8 +145,6 @@ fun AppNavigationGraph(
                 openDownloads = destination.openDownloads,
             )
         }
-
-import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
 
         composable<PlaylistsDestination> {
             LibraryScreen(

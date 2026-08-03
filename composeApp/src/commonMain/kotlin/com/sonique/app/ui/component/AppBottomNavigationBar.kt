@@ -34,9 +34,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Favorite
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
-import com.sonique.app.ui.navigation.destination.library.DownloadsDestination
-import androidx.compose.ui.graphics.vector.ImageVector
-import kotlin.reflect.KClass
+import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
 
 @Composable
 fun AppBottomNavigationBar(
@@ -170,7 +168,7 @@ fun AppNavigationRail(
             when (startDestination) {
                 is HomeDestination -> BottomNavScreen.Home.ordinal
                 is SearchDestination -> BottomNavScreen.Search.ordinal
-                is DownloadsDestination -> BottomNavScreen.Downloads.ordinal
+                is PlaylistsDestination -> BottomNavScreen.Playlists.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
                 else -> BottomNavScreen.Home.ordinal  
             },

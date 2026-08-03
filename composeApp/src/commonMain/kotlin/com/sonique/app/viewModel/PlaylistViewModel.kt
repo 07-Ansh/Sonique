@@ -239,7 +239,7 @@ class PlaylistViewModel(
                             trackCount = list.size,
                             favoriteAt = now(),
                             inLibrary = now(),
-                            downloadState = 0
+                            downloadState = STATE_DOWNLOADED
                         )
                         _playlistEntity.value = playlist
                         _tracks.value = list.map { it.toTrack() }

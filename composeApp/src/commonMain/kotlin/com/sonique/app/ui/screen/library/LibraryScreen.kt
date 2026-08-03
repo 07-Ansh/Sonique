@@ -297,7 +297,7 @@ fun LibraryScreen(
                                 LazyColumn(
                                     contentPadding =
                                         innerPadding.copy(
-                                            top = 25.dp,
+                                            top = 30.dp,
                                         ),
                                     state = state,
                                 ) {
@@ -677,7 +677,7 @@ fun LibraryScreen(
 
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 0.dp),
+                                    innerPadding.copy(top = 30.dp),
                                     currentPlaylistData,
                                     emptyText = if (selectedPlaylistTab == 0) Res.string.no_YouTube_playlists else Res.string.no_playlists_added,
                                     title = null,

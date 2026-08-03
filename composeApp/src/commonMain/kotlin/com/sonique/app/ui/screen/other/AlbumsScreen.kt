@@ -92,7 +92,7 @@ fun AlbumsScreen(
                 ) {
                     item {
                         Text(
-                            text = stringResource(Res.string.youtube_albums),
+                            text = "Albums",
                             style = typo().headlineLarge,
                             color = Color.White,
                             modifier = Modifier

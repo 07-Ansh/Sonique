@@ -51,25 +51,28 @@ class AlbumsViewModel(
 
                 if (homeRes is Resource.Success) {
                     val items = homeRes.data?.second ?: emptyList()
-                    val albumHomeItems = items.filter { item ->
-                        item.title.contains("album", ignoreCase = true) ||
-                        item.subtitle?.contains("album", ignoreCase = true) == true ||
-                        item.contents.any { content ->
-                            content?.album != null ||
-                            (content?.browseId?.startsWith("MPRE") == true)
+                    val albumHomeItems = items.mapNotNull { item ->
+                        val albumContents = item.contents.filter { content ->
+                            content?.browseId?.startsWith("MPRE") == true ||
+                            (content?.videoId == null && content?.playlistId?.startsWith("OLAK5uy") == true)
                         }
+                        if (albumContents.isNotEmpty()) {
+                            item.copy(contents = albumContents)
+                        } else null
                     }
                     resultList.addAll(albumHomeItems)
                 }
 
                 if (newReleaseRes is Resource.Success) {
                     val newReleases = newReleaseRes.data ?: emptyList()
-                    val newReleaseAlbums = newReleases.filter { item ->
-                        item.title.contains("album", ignoreCase = true) ||
-                        item.contents.any { content ->
-                            content?.album != null ||
-                            (content?.browseId?.startsWith("MPRE") == true)
+                    val newReleaseAlbums = newReleases.mapNotNull { item ->
+                        val albumContents = item.contents.filter { content ->
+                            content?.browseId?.startsWith("MPRE") == true ||
+                            (content?.videoId == null && content?.playlistId?.startsWith("OLAK5uy") == true)
                         }
+                        if (albumContents.isNotEmpty()) {
+                            item.copy(contents = albumContents)
+                        } else null
                     }
                     resultList.addAll(newReleaseAlbums)
                 }

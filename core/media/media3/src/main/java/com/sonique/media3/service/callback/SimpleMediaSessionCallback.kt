@@ -80,15 +80,23 @@ internal class SimpleMediaSessionCallback(
         val sessionCommands =
             MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS
                 .buildUpon()
-                 
                 .add(SessionCommand(MEDIA_CUSTOM_COMMAND.LIKE, Bundle()))
                 .add(SessionCommand(MEDIA_CUSTOM_COMMAND.REPEAT, Bundle()))
                 .add(SessionCommand(MEDIA_CUSTOM_COMMAND.RADIO, Bundle()))
                 .add(SessionCommand(MEDIA_CUSTOM_COMMAND.SHUFFLE, Bundle()))
                 .build()
+        val playerCommands =
+            MediaSession.ConnectionResult.DEFAULT_PLAYER_COMMANDS
+                .buildUpon()
+                .add(androidx.media3.common.Player.COMMAND_SEEK_TO_NEXT)
+                .add(androidx.media3.common.Player.COMMAND_SEEK_TO_NEXT_MEDIA_ITEM)
+                .add(androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS)
+                .add(androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM)
+                .build()
         return MediaSession.ConnectionResult
             .AcceptedResultBuilder(session)
             .setAvailableSessionCommands(sessionCommands)
+            .setAvailablePlayerCommands(playerCommands)
             .build()
     }
 

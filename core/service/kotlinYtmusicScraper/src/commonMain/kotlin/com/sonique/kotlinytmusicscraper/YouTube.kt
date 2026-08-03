@@ -104,6 +104,8 @@ import kotlin.jvm.JvmInline
 import kotlin.math.round
 import kotlin.random.Random
 import kotlin.time.Clock
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
@@ -112,6 +114,10 @@ private const val TAG = "YouTubeScraper"
  
 class YouTube {
     private val ytMusic = Ytmusic()
+
+    private val tidalTokenMutex = kotlinx.coroutines.sync.Mutex()
+    private var tidalAccessToken: String? = null
+    private var tidalTokenExpiresAt: Long = 0L
 
     var cookiePath: Path?
         get() = ytMusic.cookiePath
@@ -294,42 +300,70 @@ class YouTube {
         withSongs: Boolean = true,
     ): Result<AlbumPage> =
         runCatching {
-            val response = ytMusic.browse(WEB_REMIX, browseId).body<BrowseResponse>()
+            val fetchId = if (browseId.startsWith("OLAK5uy")) "VL$browseId" else browseId
+            val response = ytMusic.browse(WEB_REMIX, fetchId).body<BrowseResponse>()
             val playlistId =
                 response.microformat
                     ?.microformatDataRenderer
                     ?.urlCanonical
-                    ?.substringAfterLast('=')!!
+                    ?.substringAfterLast('=')
+                    ?: response.contents
+                        ?.twoColumnBrowseResultsRenderer
+                        ?.tabs
+                        ?.firstOrNull()
+                        ?.tabRenderer
+                        ?.content
+                        ?.sectionListRenderer
+                        ?.contents
+                        ?.firstOrNull()
+                        ?.musicResponsiveHeaderRenderer
+                        ?.buttons
+                        ?.firstOrNull()
+                        ?.menuRenderer
+                        ?.items
+                        ?.firstOrNull()
+                        ?.menuNavigationItemRenderer
+                        ?.navigationEndpoint
+                        ?.watchPlaylistEndpoint
+                        ?.playlistId
+                    ?: browseId
+
+            val header = response.contents
+                ?.twoColumnBrowseResultsRenderer
+                ?.tabs
+                ?.firstOrNull()
+                ?.tabRenderer
+                ?.content
+                ?.sectionListRenderer
+                ?.contents
+                ?.firstOrNull()
+                ?.musicResponsiveHeaderRenderer
+
+            val detailHeader = response.header?.musicDetailHeaderRenderer
+
             val albumItem =
                 AlbumItem(
                     browseId = browseId,
                     playlistId = playlistId,
                     title =
-                        response.contents
-                            ?.twoColumnBrowseResultsRenderer
-                            ?.tabs
-                            ?.firstOrNull()
-                            ?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.firstOrNull()
-                            ?.musicResponsiveHeaderRenderer
+                        header
                             ?.title
                             ?.runs
                             ?.firstOrNull()
-                            ?.text ?: "",
+                            ?.text
+                            ?: detailHeader
+                                ?.title
+                                ?.runs
+                                ?.firstOrNull()
+                                ?.text
+                            ?: response.header
+                                ?.musicHeaderRenderer
+                                ?.title
+                                ?.runs
+                                ?.firstOrNull()
+                                ?.text ?: "",
                     artists =
-                        response.contents
-                            ?.twoColumnBrowseResultsRenderer
-                            ?.tabs
-                            ?.firstOrNull()
-                            ?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.firstOrNull()
-                            ?.musicResponsiveHeaderRenderer
+                        header
                             ?.straplineTextOne
                             ?.runs
                             ?.oddElements()
@@ -338,33 +372,25 @@ class YouTube {
                                     name = it.text,
                                     id = it.navigationEndpoint?.browseEndpoint?.browseId,
                                 )
-                            }!!,
+                            }
+                            ?: detailHeader?.subtitle?.runs?.getOrNull(2)?.let { artistRun ->
+                                listOf(Artist(name = artistRun.text, id = artistRun.navigationEndpoint?.browseEndpoint?.browseId))
+                            }
+                            ?: emptyList(),
                     year =
-                        response.contents.twoColumnBrowseResultsRenderer.tabs
-                            .firstOrNull()
-                            ?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.firstOrNull()
-                            ?.musicResponsiveHeaderRenderer
+                        header
                             ?.subtitle
                             ?.runs
                             ?.lastOrNull()
                             ?.text
                             ?.toIntOrNull(),
                     thumbnail =
-                        response.contents.twoColumnBrowseResultsRenderer.tabs
-                            .firstOrNull()
-                            ?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.firstOrNull()
-                            ?.musicResponsiveHeaderRenderer
+                        header
                             ?.thumbnail
                             ?.musicThumbnailRenderer
-                            ?.getThumbnailUrl()!!,
+                            ?.getThumbnailUrl()
+                            ?: detailHeader?.thumbnail?.croppedSquareThumbnailRenderer?.getThumbnailUrl()
+                            ?: "",
                 )
             AlbumPage(
                 album = albumItem,
@@ -372,22 +398,44 @@ class YouTube {
                     if (withSongs) {
                         albumSongs(
                             response.contents
-                                .twoColumnBrowseResultsRenderer
-                                .secondaryContents
+                                ?.twoColumnBrowseResultsRenderer
+                                ?.secondaryContents
                                 ?.sectionListRenderer
                                 ?.contents
                                 ?.firstOrNull()
                                 ?.musicShelfRenderer
-                                ?.contents,
+                                ?.contents
+                                ?: response.contents
+                                    ?.twoColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.firstOrNull()
+                                    ?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                                    ?.contents
+                                    ?.firstOrNull()
+                                    ?.musicPlaylistShelfRenderer
+                                    ?.contents
+                                ?: response.contents
+                                    ?.twoColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.firstOrNull()
+                                    ?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                                    ?.contents
+                                    ?.firstOrNull()
+                                    ?.musicShelfRenderer
+                                    ?.contents,
                             albumItem,
-                        ).getOrThrow()
+                        ).getOrDefault(emptyList())
                     } else {
                         emptyList()
                     },
                 description =
                     getDescriptionAlbum(
-                        response.contents.twoColumnBrowseResultsRenderer.tabs
-                            .firstOrNull()
+                        response.contents?.twoColumnBrowseResultsRenderer?.tabs
+                            ?.firstOrNull()
                             ?.tabRenderer
                             ?.content
                             ?.sectionListRenderer
@@ -400,8 +448,10 @@ class YouTube {
                             ?.runs,
                     ),
                 duration =
-                    response.contents.twoColumnBrowseResultsRenderer.tabs
-                        .firstOrNull()
+                    response.contents
+                        ?.twoColumnBrowseResultsRenderer
+                        ?.tabs
+                        ?.firstOrNull()
                         ?.tabRenderer
                         ?.content
                         ?.sectionListRenderer
@@ -410,11 +460,13 @@ class YouTube {
                         ?.musicResponsiveHeaderRenderer
                         ?.secondSubtitle
                         ?.runs
-                        ?.get(2)
+                        ?.getOrNull(2)
                         ?.text ?: "",
                 thumbnails =
-                    response.contents.twoColumnBrowseResultsRenderer.tabs
-                        .firstOrNull()
+                    response.contents
+                        ?.twoColumnBrowseResultsRenderer
+                        ?.tabs
+                        ?.firstOrNull()
                         ?.tabRenderer
                         ?.content
                         ?.sectionListRenderer
@@ -426,8 +478,8 @@ class YouTube {
                         ?.thumbnail,
                 otherVersion =
                     response.contents
-                        .twoColumnBrowseResultsRenderer
-                        .secondaryContents
+                        ?.twoColumnBrowseResultsRenderer
+                        ?.secondaryContents
                         ?.sectionListRenderer
                         ?.contents
                         ?.lastOrNull()
@@ -1094,192 +1146,7 @@ class YouTube {
         }
     }
 
-    suspend fun ytDlpPlayer(
-        videoId: String,
-        tempRes: PlayerResponse,
-        useCookie: Boolean = false,
-    ): PlayerResponse? {
-        val listUrlSig = mutableListOf<String>()
-        var decodedSigResponse: PlayerResponse?
-        var sigResponse: PlayerResponse?
-        Logger.d(TAG, "YouTube TempRes ${tempRes.playabilityStatus}")
-        if (tempRes.playabilityStatus.status != "OK") {
-            return null
-        } else {
-            sigResponse = tempRes
-        }
-        val streamInfo = ytMusic.ytdlpGetStreamUrl(videoId, null, "tv", poTokenJsonDeserializer, useCookie) ?: return null
-        val streamsList = streamInfo.formats.takeIf { !it.isNullOrEmpty() } ?: return null
-        streamsList.forEach {
-            Logger.d(TAG, "YouTube Ytdlp Stream ${it?.formatId} ${it?.url}")
-        }
-        decodedSigResponse =
-            sigResponse.copy(
-                streamingData =
-                    sigResponse.streamingData?.copy(
-                        formats =
-                            sigResponse.streamingData.formats?.map { format ->
-                                format.copy(
-                                    url = streamsList.find { it?.formatId == format.itag.toString() }?.url,
-                                )
-                            },
-                        adaptiveFormats =
-                            sigResponse.streamingData.adaptiveFormats.map { adaptiveFormats ->
-                                adaptiveFormats.copy(
-                                    url = streamsList.find { it?.formatId == adaptiveFormats.itag.toString() }?.url,
-                                )
-                            },
-                    ),
-            )
-        decodedSigResponse =
-            decodedSigResponse.copy(
-                streamingData =
-                    decodedSigResponse.streamingData?.copy(
-                        formats =
-                            decodedSigResponse.streamingData.formats?.let { formats ->
-                                val copy = formats.toMutableList()
-                                streamInfo.formats
-                                    ?.filterNotNull()
-                                    ?.filter {
-                                        isManifestUrl(it.url ?: "")
-                                    }?.forEach { manifest ->
-                                        copy.add(
-                                            PlayerResponse.StreamingData.Format(
-                                                itag = manifest.formatId?.toInt() ?: 0,
-                                                url = manifest.url,
-                                                mimeType = "",
-                                                bitrate = 0,
-                                                width = manifest.width?.toInt(),
-                                                height = manifest.height?.toInt(),
-                                                contentLength = 0,
-                                                quality = "",
-                                                fps = 0,
-                                                qualityLabel = "",
-                                                averageBitrate = 0,
-                                                audioQuality = "",
-                                                approxDurationMs = "",
-                                                audioSampleRate = 0,
-                                                audioChannels = 0,
-                                                loudnessDb = 0.0,
-                                                lastModified = 0,
-                                                signatureCipher = "",
-                                            ),
-                                        )
-                                    }
-                                copy.filter { it.itag != 0 }
-                                copy
-                            },
-                    ),
-            )
-        listUrlSig.addAll(
-            (
-                decodedSigResponse
-                    .streamingData
-                    ?.adaptiveFormats
-                    ?.mapNotNull { it.url }
-                    ?.toMutableList() ?: mutableListOf()
-            ).apply {
-                decodedSigResponse
-                    .streamingData
-                    ?.formats
-                    ?.mapNotNull { it.url }
-                    ?.let { addAll(it) }
-            },
-        )
-        listUrlSig.forEach {
-            Logger.d(TAG, "YouTube Ytdlp URL $it")
-        }
-        val randomUrl = listUrlSig.randomOrNull() ?: return null
-        if (listUrlSig.isNotEmpty() && !is403Url(randomUrl)) {
-            Logger.d(TAG, "YouTube Ytdlp Found URL $randomUrl")
-            return decodedSigResponse
-        } else {
-            Logger.d(TAG, "YouTube Ytdlp No URL Found")
-            return null
-        }
-    }
 
-    suspend fun smartTubePlayer(
-        videoId: String,
-        tempRes: PlayerResponse,
-    ): PlayerResponse? {
-        val listUrlSig = mutableListOf<String>()
-        var decodedSigResponse: PlayerResponse?
-        var sigResponse: PlayerResponse?
-        listUrlSig.removeAll(listUrlSig)
-        Logger.d(TAG, "YouTube TempRes ${tempRes.playabilityStatus}")
-        if (tempRes.playabilityStatus.status != "OK") {
-            return null
-        } else {
-            sigResponse = tempRes
-        }
-        val streamsList = ytMusic.getSmartTubePlayer(videoId)
-        streamsList.forEach {
-            Logger.d(TAG, "YouTube SmartTube Audio Stream ${it.first} ${it.second}")
-        }
-
-        if (streamsList.isEmpty()) return null
-
-        decodedSigResponse =
-            sigResponse.copy(
-                streamingData =
-                    sigResponse.streamingData?.copy(
-                        formats =
-                            sigResponse.streamingData.formats?.map { format ->
-                                format.copy(
-                                    url = streamsList.find { it.first == format.itag }?.second,
-                                )
-                            },
-                        adaptiveFormats =
-                            sigResponse.streamingData.adaptiveFormats.map { adaptiveFormats ->
-                                adaptiveFormats.copy(
-                                    url = streamsList.find { it.first == adaptiveFormats.itag }?.second,
-                                )
-                            },
-                    ),
-            )
-        listUrlSig.addAll(
-            (
-                decodedSigResponse
-                    .streamingData
-                    ?.adaptiveFormats
-                    ?.mapNotNull { it.url }
-                    ?.toMutableList() ?: mutableListOf()
-            ).apply {
-                decodedSigResponse
-                    .streamingData
-                    ?.formats
-                    ?.mapNotNull { it.url }
-                    ?.let { addAll(it) }
-            },
-        )
-        Logger.d(TAG, "YouTube URL ${decodedSigResponse.streamingData?.formats?.mapNotNull { it.url }}")
-        val listFormat =
-            (
-                decodedSigResponse
-                    .streamingData
-                    ?.formats
-                    ?.map { Pair(it.itag, it.url) }
-                    ?.toMutableList() ?: mutableListOf()
-            ).apply {
-                addAll(
-                    decodedSigResponse.streamingData?.adaptiveFormats?.map {
-                        Pair(it.itag, it.url)
-                    } ?: emptyList(),
-                )
-            }
-        listFormat.forEach {
-            Logger.d(TAG, "YouTube Format ${it.first} ${it.second}")
-        }
-        val randomUrl = listUrlSig.randomOrNull() ?: return null
-        if (listUrlSig.isNotEmpty() && !is403Url(randomUrl)) {
-            Logger.d(TAG, "YouTube SmartTube Found URL $randomUrl")
-            return decodedSigResponse
-        } else {
-            Logger.d(TAG, "YouTube SmartTube No URL Found")
-            return null
-        }
-    }
 
     suspend fun newPipePlayer(
         videoId: String,
@@ -1476,32 +1343,7 @@ class YouTube {
                             )
                         }
 
-                val response =
-                    if (noLogIn) {
-                        var count = 0
-                        var res: PlayerResponse? = null
-                        while (count < 3) {
-                            val resp = newPipePlayer(videoId, tempRes)
-                            val testUrl =
-                                resp?.streamingData
-                                    ?.adaptiveFormats
-                                    ?.firstOrNull()
-                                    ?.url ?: ""
-                            if (!is403Url(testUrl)) {
-                                res = resp
-                                break
-                            }
-                            count++
-                        }
-                        res
-                    } else if (shouldYtdlp) {
-                        ytDlpPlayer(videoId, tempRes)
-                    } else {
-                        // Try newPipePlayer first (fast, no extra network calls), then fall
-                        // back to smartTubePlayer to avoid the PoToken WebView challenge blocking
-                        // playback on physical devices before we even attempt stream extraction.
-                        newPipePlayer(videoId, tempRes) ?: smartTubePlayer(videoId, tempRes)
-                    }
+                val response = newPipePlayer(videoId, tempRes)
                 if (response != null) {
                     decodedSigResponse = response
                     Logger.d(TAG, "YouTube Player found URL with client WEB_REMIX")
@@ -2208,14 +2050,6 @@ class YouTube {
                     } else {
                          
                         runCatching {
-                            try {
-                                val videoPath = "$filePath.mp4".toPath()
-                                if (FileSystem.SYSTEM.exists(videoPath)) {
-                                    FileSystem.SYSTEM.delete(videoPath)
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
                             ytMusic
                                 .download(audioUrl, ("$filePath.webm"))
                                 .collect { downloadProgress ->
@@ -2245,6 +2079,46 @@ class YouTube {
                     trySend(DownloadProgress.failed(it.message ?: "Player response is null"))
                 }
         }.flowOn(Dispatchers.IO)
+
+    suspend fun getTidalRemoteConfig(): Result<com.sonique.kotlinytmusicscraper.models.response.RemoteConfig> =
+        runCatching {
+            ytMusic.getTidalRemoteConfig()
+        }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun ensureTidalToken(): String =
+        tidalTokenMutex.withLock {
+            val now = Clock.System.now().toEpochMilliseconds()
+            val cached = tidalAccessToken
+            if (cached != null && now < tidalTokenExpiresAt) return@withLock cached
+
+            val response = ytMusic.getTidalOAuthToken().body<com.sonique.kotlinytmusicscraper.models.response.TidalOAuthResponse>()
+            tidalAccessToken = response.accessToken
+            tidalTokenExpiresAt = now + (response.expiresIn * 1000L) - 60_000L
+            Logger.d("Stream", "Tidal OAuth token refreshed, expires in ${response.expiresIn}s")
+            response.accessToken
+        }
+
+    suspend fun searchTidalMetadata(
+        query: String,
+        durationSeconds: Int,
+    ) = runCatching {
+        val token = ensureTidalToken()
+        val searchRes = ytMusic.searchTidalId(token, query).body<com.sonique.kotlinytmusicscraper.models.response.TidalSearchResponse>()
+        val matchedItem =
+            searchRes.tracks
+                ?.items
+                ?.filterNotNull()
+                ?.filter { it.duration?.let { dur -> kotlin.math.abs(dur - durationSeconds) <= 1 } ?: false }
+                ?.minByOrNull { kotlin.math.abs((it.duration ?: 0) - durationSeconds) }
+                ?: throw Exception("No matching track found")
+        val attrs = matchedItem.audioAnalysisAttributes
+        com.sonique.kotlinytmusicscraper.models.TidalMetadataResult(
+            bpm = attrs?.bpm?.toDoubleOrNull()?.toInt(),
+            musicKey = attrs?.key,
+            keyScale = attrs?.keyScale,
+        )
+    }
 
     suspend fun is403Url(url: String) = ytMusic.is403Url(url)
 

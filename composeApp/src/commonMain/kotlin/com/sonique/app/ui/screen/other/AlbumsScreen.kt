@@ -1,9 +1,11 @@
 package com.sonique.app.ui.screen.other
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -12,6 +14,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,14 +24,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.sonique.app.extension.isScrollingUp
 import com.sonique.app.ui.component.EndOfPage
-import com.sonique.app.ui.component.HomeItem
+import com.sonique.app.ui.component.HomeGridCardItem
 import com.sonique.app.ui.component.HomeShimmer
+import com.sonique.app.ui.navigation.destination.list.AlbumDestination
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.AlbumsViewModel
-import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
-import sonique.composeapp.generated.resources.Res
-import sonique.composeapp.generated.resources.youtube_albums
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,11 +41,16 @@ fun AlbumsScreen(
 ) {
     val albumSections by viewModel.albumSections.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val scrollState = rememberLazyListState()
-    val isScrollingUp by scrollState.isScrollingUp()
+    val gridState = rememberLazyGridState()
+    val isScrollingUp by gridState.isScrollingUp()
 
-    LaunchedEffect(scrollState, isScrollingUp) {
-        snapshotFlow { scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset == 0 }
+    val allAlbums = remember(albumSections) {
+        albumSections.flatMap { it.contents.filterNotNull() }
+            .distinctBy { it.browseId ?: it.playlistId ?: it.title }
+    }
+
+    LaunchedEffect(gridState, isScrollingUp) {
+        snapshotFlow { gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0 }
             .collect { isAtTop ->
                 val shouldBeVisible = if (isAtTop) true else isScrollingUp
                 onScrolling(shouldBeVisible)
@@ -75,40 +81,55 @@ fun AlbumsScreen(
                 )
             },
         ) {
-            if (isLoading && albumSections.isEmpty()) {
+            if (isLoading && allAlbums.isEmpty()) {
                 Column {
                     Spacer(Modifier.height(16.dp))
                     HomeShimmer()
                 }
             } else {
-                LazyColumn(
-                    state = scrollState,
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    state = gridState,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
+                        start = 12.dp,
+                        end = 12.dp,
                         top = 12.dp,
                         bottom = innerPadding.calculateBottomPadding() + 80.dp
                     ),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item {
+                    item(span = { GridItemSpan(3) }) {
                         Text(
                             text = "Albums",
                             style = typo().titleMedium,
                             color = Color.White,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(vertical = 8.dp)
                         )
                     }
 
-                    items(albumSections, key = { it.hashCode() }) { item ->
-                        HomeItem(
-                            navController = navController,
-                            data = item,
+                    items(allAlbums, key = { it.browseId ?: it.playlistId ?: it.title.hashCode() }) { content ->
+                        val browseId = content.browseId ?: content.playlistId ?: ""
+                        val title = content.title
+                        val thumbUrl = content.thumbnails.lastOrNull()?.url
+                        val artistName = content.artists?.firstOrNull()?.name ?: "Album"
+
+                        HomeGridCardItem(
+                            title = title,
+                            thumbUrl = thumbUrl,
+                            subtitle = artistName,
+                            onClick = {
+                                if (browseId.isNotEmpty()) {
+                                    navController.navigate(AlbumDestination(browseId))
+                                }
+                            }
                         )
                     }
 
-                    item {
+                    item(span = { GridItemSpan(3) }) {
                         EndOfPage()
                     }
                 }

@@ -51,30 +51,30 @@ class AlbumsViewModel(
 
                 if (homeRes is Resource.Success) {
                     val items = homeRes.data?.second ?: emptyList()
-                    val albumHomeItems = items.mapNotNull { item ->
-                        val albumContents = item.contents.filter { content ->
-                            content?.browseId?.startsWith("MPRE") == true ||
-                            (content?.videoId == null && content?.playlistId?.startsWith("OLAK5uy") == true)
+                    items.forEach { item ->
+                        val albumContents = item.contents.filterNotNull().filter { content ->
+                            content.browseId?.startsWith("MPRE") == true ||
+                            (content.videoId == null && content.playlistId?.startsWith("OLAK5uy") == true) ||
+                            content.album != null
                         }
                         if (albumContents.isNotEmpty()) {
-                            item.copy(contents = albumContents)
-                        } else null
+                            resultList.add(item.copy(contents = albumContents))
+                        }
                     }
-                    resultList.addAll(albumHomeItems)
                 }
 
                 if (newReleaseRes is Resource.Success) {
                     val newReleases = newReleaseRes.data ?: emptyList()
-                    val newReleaseAlbums = newReleases.mapNotNull { item ->
-                        val albumContents = item.contents.filter { content ->
-                            content?.browseId?.startsWith("MPRE") == true ||
-                            (content?.videoId == null && content?.playlistId?.startsWith("OLAK5uy") == true)
+                    newReleases.forEach { item ->
+                        val albumContents = item.contents.filterNotNull().filter { content ->
+                            content.browseId?.startsWith("MPRE") == true ||
+                            (content.videoId == null && content.playlistId?.startsWith("OLAK5uy") == true) ||
+                            content.album != null
                         }
                         if (albumContents.isNotEmpty()) {
-                            item.copy(contents = albumContents)
-                        } else null
+                            resultList.add(item.copy(contents = albumContents))
+                        }
                     }
-                    resultList.addAll(newReleaseAlbums)
                 }
 
                 resultList

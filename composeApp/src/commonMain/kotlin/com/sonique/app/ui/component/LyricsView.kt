@@ -3,10 +3,8 @@ package com.sonique.app.ui.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.unit.sp
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
@@ -19,7 +17,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -130,16 +127,14 @@ fun LyricsView(
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     playerContentColor: Color = Color.White,
 ) {
-    val parsedLyricsData = remember(lyricsData) {
+    val effectiveLyricsData = remember(lyricsData) {
         val rawLrc = lyricsData.lyrics.SoniqueLyricsId
         if (lyricsData.lyrics.lines.isNullOrEmpty() && !rawLrc.isNullOrBlank()) {
-            val parsedLyrics = com.sonique.domain.utils.parseRawLrcToLyrics(rawLrc)
-            lyricsData.copy(lyrics = parsedLyrics)
+            lyricsData.copy(lyrics = com.sonique.domain.utils.parseRawLrcToLyrics(rawLrc))
         } else {
             lyricsData
         }
     }
-    val effectiveLyricsData = parsedLyricsData
     var currentLineHeight by remember {
         mutableIntStateOf(0)
     }
@@ -169,7 +164,7 @@ fun LyricsView(
     }
 
     LaunchedEffect(key1 = current) {
-        val lines = effectiveLyricsData.lyrics.lines
+        val lines = lyricsData.lyrics.lines
         if (current.current > 0L) {
             lines?.indices?.forEach { i ->
                 val sentence = lines[i]
@@ -219,7 +214,7 @@ fun LyricsView(
     // Auto-scroll to active line smoothly when user is not scrolling
     LaunchedEffect(currentLineIndex, userIsScrolling) {
         if (!userIsScrolling && currentLineIndex > -1 &&
-            (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED")
+            (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED")
         ) {
             listState.animateScrollAndCentralizeItem(
                 index = currentLineIndex,
@@ -229,7 +224,7 @@ fun LyricsView(
     }
 
     fun findClosestTranslatedLine(originalTimeMs: String): String? {
-        val translatedLines = effectiveLyricsData.translatedLyrics?.first?.lines ?: return null
+        val translatedLines = lyricsData.translatedLyrics?.first?.lines ?: return null
         if (translatedLines.isEmpty()) return null
 
         val originalTime = originalTimeMs.toLongOrNull() ?: return null
@@ -250,8 +245,6 @@ fun LyricsView(
     Box(modifier = modifier) {
         LazyColumn(
             state = listState,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 40.dp),
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -302,14 +295,14 @@ fun LyricsView(
                         }
                     },
         ) {
-            items(effectiveLyricsData.lyrics.lines?.size ?: 0) { index ->
-                val line = effectiveLyricsData.lyrics.lines?.getOrNull(index)
+            items(lyricsData.lyrics.lines?.size ?: 0) { index ->
+                val line = lyricsData.lyrics.lines?.getOrNull(index)
                  
                 val translatedWords =
-                    if (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED") {
+                    if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
                         line?.startTimeMs?.let { findClosestTranslatedLine(it) }
                     } else {
-                        effectiveLyricsData.translatedLyrics
+                        lyricsData.translatedLyrics
                             ?.first
                             ?.lines
                             ?.getOrNull(index)
@@ -439,40 +432,84 @@ fun LyricsLineItem(
     modifier: Modifier = Modifier,
     playerContentColor: Color = Color.White,
 ) {
-    val alphaAnim by animateFloatAsState(
-        targetValue = if (isCurrent) 1.0f else 0.25f,
-        animationSpec = tween(durationMillis = 250),
-        label = "lineAlpha",
-    )
-
-    Column(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = originalWords,
-            style =
-                if (isCurrent) {
-                    typo().headlineLarge.copy(fontSize = 28.sp)
-                } else {
-                    typo().headlineMedium.copy(fontSize = 22.sp)
-                },
-            color = playerContentColor.copy(alpha = alphaAnim),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        if (translatedWords != null) {
-            Spacer(modifier = Modifier.height(4.dp))
+    Crossfade(targetState = isBold) {
+        if (it) {
+            Column(
+                modifier = modifier,
+            ) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    modifier =
+                        Modifier.then(
+                            if (isCurrent) {
+                                Modifier
+                            } else {
+                                Modifier.blur(1.dp)
+                            },
+                        ),
+                    text = originalWords,
+                    style = typo().headlineLarge,
+                    color =
+                        if (isCurrent) {
+                            playerContentColor
+                        } else {
+                            Color.LightGray.copy(
+                                alpha = 0.35f,
+                            )
+                        },
+                )
+                if (translatedWords != null) {
+                    Text(
+                        modifier =
+                            Modifier.then(
+                                if (isCurrent) {
+                                    Modifier
+                                } else {
+                                    Modifier.blur(1.dp)
+                                },
+                            ),
+                        text = translatedWords,
+                        style = typo().bodyMedium,
+                        color =
+                            if (isCurrent) {
+                                musica_accent
+                            } else {
+                                musica_accent.copy(
+                                    alpha = 0.3f,
+                                )
+                            },
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+    }
+    if (!isBold) {
+        Column(
+            modifier = modifier,
+        ) {
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = translatedWords,
-                style = typo().bodyMedium,
-                color = musica_accent.copy(alpha = if (isCurrent) 0.8f else 0.25f),
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.blur(1.dp),
+                text = originalWords,
+                style = typo().headlineMedium,
+                color =
+                    Color.LightGray.copy(
+                        alpha = 0.35f,
+                    ),
             )
+            if (translatedWords != null) {
+                Text(
+                    modifier = Modifier.blur(1.dp),
+                    text = translatedWords,
+                    style = typo().bodyMedium,
+                    color =
+                        musica_accent.copy(
+                            alpha = 0.3f,
+                        ),
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -498,22 +535,21 @@ fun RichSyncLyricsLineItem(
     }
 
     Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier,
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
          
         FlowRow(
             modifier =
-                Modifier.fillMaxWidth().then(
+                Modifier.then(
                     if (isCurrent) {
                         Modifier
                     } else {
                         Modifier.blur(1.dp)
                     },
                 ),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             parsedLine.words.forEachIndexed { index, wordTiming ->
@@ -531,7 +567,7 @@ fun RichSyncLyricsLineItem(
         if (translatedWords != null) {
             Text(
                 modifier =
-                    Modifier.fillMaxWidth().then(
+                    Modifier.then(
                         if (isCurrent) {
                             Modifier
                         } else {
@@ -540,7 +576,6 @@ fun RichSyncLyricsLineItem(
                     ),
                 text = translatedWords,
                 style = typo().bodyMedium,
-                textAlign = TextAlign.Center,
                 color =
                     if (isCurrent) {
                         musica_accent

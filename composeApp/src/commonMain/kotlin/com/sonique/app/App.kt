@@ -700,6 +700,7 @@ fun App(
                         } else {
                             NewPlayerScreen(
                                 navController = navController,
+                                isVisible = isShowNowPlaylistScreen,
                             ) {
                                 isShowNowPlaylistScreen = false
                             }

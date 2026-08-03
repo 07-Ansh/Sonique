@@ -144,6 +144,7 @@ private val ThumbnailCornerRadius = 3.dp  // cornerRadius * 2 = 6.dp applied in 
 fun NewPlayerScreen(
     sharedViewModel: SharedViewModel = koinInject(),
     navController: NavController,
+    isVisible: Boolean = false,
     onDismiss: () -> Unit = {},
 ) {
     val nowPlayingBottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
@@ -197,6 +198,14 @@ fun NewPlayerScreen(
     // Reset translation to 0f whenever screen is opened
     LaunchedEffect(Unit) {
         offsetYAnimatable.snapTo(0f)
+    }
+
+    // When player re-opens (isVisible flips true), reset inner offset.
+    // At this moment playerOffsetY is still at screenHeightPx so the reset is invisible.
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            offsetYAnimatable.snapTo(0f)
+        }
     }
 
     // Trigger lyrics fetch when user opens lyrics panel (fetch may not have run yet)

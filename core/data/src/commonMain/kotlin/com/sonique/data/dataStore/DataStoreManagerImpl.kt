@@ -482,6 +482,51 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val watchVideoInsteadOfPlayingAudio =
+        settingsDataStore.data.map { preferences ->
+            preferences[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] ?: FALSE
+        }
+
+    override suspend fun setWatchVideoInsteadOfPlayingAudio(watch: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (watch) {
+                settingsDataStore.edit { settings ->
+                    settings[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO] = FALSE
+                }
+            }
+        }
+    }
+
+    override val videoQuality =
+        settingsDataStore.data.map { preferences ->
+            preferences[VIDEO_QUALITY] ?: "720p"
+        }
+
+    override suspend fun setVideoQuality(quality: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[VIDEO_QUALITY] = quality
+            }
+        }
+    }
+
+    override val videoDownloadQuality =
+        settingsDataStore.data.map { preferences ->
+            preferences[VIDEO_DOWNLOAD_QUALITY] ?: "720p"
+        }
+
+    override suspend fun setVideoDownloadQuality(quality: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[VIDEO_DOWNLOAD_QUALITY] = quality
+            }
+        }
+    }
+
 
 
     override val spdc =
@@ -1232,6 +1277,8 @@ internal class DataStoreManagerImpl(
         val QUALITY = stringPreferencesKey("quality")
         val DOWNLOAD_QUALITY = stringPreferencesKey("download_quality")
         val VIDEO_DOWNLOAD_QUALITY = stringPreferencesKey("video_download_quality")
+        val VIDEO_QUALITY = stringPreferencesKey("video_quality")
+        val WATCH_VIDEO_INSTEAD_OF_PLAYING_AUDIO = stringPreferencesKey("watch_video_instead_of_playing_audio")
         val NORMALIZE_VOLUME = stringPreferencesKey("normalize_volume")
         val SKIP_SILENT = stringPreferencesKey("skip_silent")
         val SAVE_STATE_OF_PLAYBACK = stringPreferencesKey("save_state_of_playback")
@@ -1304,7 +1351,6 @@ internal class DataStoreManagerImpl(
         val GITHUB_POPUP_SHOWN_COUNT = intPreferencesKey("github_popup_shown_count")
         val NEVER_SHOW_GITHUB_POPUP = booleanPreferencesKey("never_show_github_popup")
         val LAST_VERSION_CODE = intPreferencesKey("last_version_code")
-
     }
 
 

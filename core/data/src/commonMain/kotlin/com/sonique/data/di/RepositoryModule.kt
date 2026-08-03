@@ -60,7 +60,7 @@ val repositoryModule =
                 get<YouTube>(),
                 get<Spotify>()
             ).apply {
-                this.init("${fileDir()}/ytdlp-cookie.txt", get<DataStoreManager>())
+                this.init("${fileDir()}/cookie.txt", get<DataStoreManager>())
             }
         }
 

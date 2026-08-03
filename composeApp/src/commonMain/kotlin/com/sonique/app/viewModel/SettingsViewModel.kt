@@ -958,7 +958,7 @@ class SettingsViewModel(
                         netscapeCookie ?: commonRepository
                             .getCookiesFromInternalDatabase(Config.YOUTUBE_MUSIC_MAIN_URL, getPackageName())
                             .toNetScapeString()
-                    commonRepository.writeTextToFile(cookieItem, (getFileDir() + "/ytdlp-cookie.txt")).let {
+                    commonRepository.writeTextToFile(cookieItem, (getFileDir() + "/cookie.txt")).let {
                         Logger.d("getAllGoogleAccount", "addAccount: write cookie file: $it")
                     }
                     accountInfoList.forEachIndexed { index, account ->
@@ -1021,7 +1021,7 @@ class SettingsViewModel(
                     ?.let {
                         Logger.w("getAllGoogleAccount", "set used: $it")
                     }
-                acc.netscapeCookie?.let { commonRepository.writeTextToFile(it, (getFileDir() + "/ytdlp-cookie.txt")) }.let {
+                acc.netscapeCookie?.let { commonRepository.writeTextToFile(it, (getFileDir() + "/cookie.txt")) }.let {
                     Logger.d("getAllGoogleAccount", "addAccount: write cookie file: $it")
                 }
                 dataStoreManager.setCookie(acc.cache ?: "", acc.pageId)

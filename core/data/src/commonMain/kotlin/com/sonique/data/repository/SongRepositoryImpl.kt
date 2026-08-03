@@ -54,9 +54,9 @@ internal class SongRepositoryImpl(
 
     override fun getSongsByListVideoId(listVideoId: List<String>): Flow<List<SongEntity>> =
         flow {
-            emit(
-                localDataSource.getSongByListVideoIdFull(listVideoId),
-            )
+            val songs = localDataSource.getSongByListVideoIdFull(listVideoId)
+            val byId = songs.associateBy { it.videoId }
+            emit(listVideoId.mapNotNull { byId[it] })
         }.flowOn(Dispatchers.IO)
 
     override fun getDownloadedSongs(): Flow<List<SongEntity>?> =

@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.guava.future
+import kotlinx.coroutines.launch
 
 private const val TAG = "AndroidAuto"
 
@@ -100,26 +101,27 @@ internal class SimpleMediaSessionCallback(
     ): ListenableFuture<SessionResult> {
         when (customCommand.customAction) {
             MEDIA_CUSTOM_COMMAND.LIKE -> {
-                toggleLike()
+                scope.launch(Dispatchers.Main) {
+                    mediaPlayerHandler.onPlayerEvent(com.sonique.domain.mediaservice.handler.PlayerEvent.ToggleLike)
+                }
             }
 
             MEDIA_CUSTOM_COMMAND.REPEAT -> {
-                session.player.repeatMode =
-                    when (session.player.repeatMode) {
-                        ExoPlayer.REPEAT_MODE_OFF -> ExoPlayer.REPEAT_MODE_ONE
-                        ExoPlayer.REPEAT_MODE_ONE -> ExoPlayer.REPEAT_MODE_ALL
-                        ExoPlayer.REPEAT_MODE_ALL -> ExoPlayer.REPEAT_MODE_OFF
-                        else -> ExoPlayer.REPEAT_MODE_OFF
-                    }
+                scope.launch(Dispatchers.Main) {
+                    mediaPlayerHandler.onPlayerEvent(com.sonique.domain.mediaservice.handler.PlayerEvent.Repeat)
+                }
             }
 
             MEDIA_CUSTOM_COMMAND.RADIO -> {
-                toggleRadio()
+                scope.launch(Dispatchers.Main) {
+                    toggleRadio()
+                }
             }
 
             MEDIA_CUSTOM_COMMAND.SHUFFLE -> {
-                val isShuffle = session.player.shuffleModeEnabled
-                session.player.shuffleModeEnabled = !isShuffle
+                scope.launch(Dispatchers.Main) {
+                    mediaPlayerHandler.onPlayerEvent(com.sonique.domain.mediaservice.handler.PlayerEvent.Shuffle)
+                }
             }
         }
         return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))

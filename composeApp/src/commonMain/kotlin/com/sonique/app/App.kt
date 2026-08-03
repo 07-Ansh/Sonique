@@ -86,6 +86,7 @@ import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import sonique.composeapp.generated.resources.Res
+import kotlin.reflect.KClass
 import sonique.composeapp.generated.resources.good_night
 import sonique.composeapp.generated.resources.sleep_timer_off
 import sonique.composeapp.generated.resources.this_link_is_not_supported

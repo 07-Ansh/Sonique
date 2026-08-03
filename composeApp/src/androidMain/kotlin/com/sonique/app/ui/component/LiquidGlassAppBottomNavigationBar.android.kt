@@ -53,7 +53,7 @@ import com.sonique.app.expect.ui.PlatformBackdrop
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.search.SearchDestination
-import com.sonique.app.ui.navigation.destination.library.DownloadsDestination
+import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
 import com.sonique.app.ui.screen.MiniPlayer
 import com.sonique.app.viewModel.SharedViewModel
 import kotlinx.coroutines.Dispatchers

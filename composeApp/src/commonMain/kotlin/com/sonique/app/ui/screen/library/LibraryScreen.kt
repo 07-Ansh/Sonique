@@ -150,6 +150,7 @@ fun LibraryScreen(
     navController: NavController,
     onScrolling: (onTop: Boolean) -> Unit = {},
     openDownloads: Boolean = false,
+    initialChip: LibraryChipType? = null,
 ) {
     val sharedViewModel: SharedViewModel = koinInject()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
@@ -164,9 +165,11 @@ fun LibraryScreen(
     var activePlaylistId by rememberSaveable { mutableStateOf("") }
     var activeIsYourYouTubePlaylist by rememberSaveable { mutableStateOf(false) }
 
-    LaunchedEffect(openDownloads) {
+    LaunchedEffect(openDownloads, initialChip) {
         if (openDownloads) {
             viewModel.setCurrentScreen(LibraryChipType.DOWNLOADED_PLAYLIST)
+        } else if (initialChip != null) {
+            viewModel.setCurrentScreen(initialChip)
         }
     }
     val density = LocalDensity.current
@@ -259,7 +262,17 @@ fun LibraryScreen(
         onScrolling(scrollingUp)
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize().then(
+            when (activeSubScreen) {
+                LibrarySubScreen.PLAYLIST_DETAILS,
+                LibrarySubScreen.ALBUM_DETAILS,
+                LibrarySubScreen.ARTIST_DETAILS,
+                LibrarySubScreen.LOCAL_PLAYLIST_DETAILS -> Modifier
+                else -> Modifier.windowInsetsPadding(WindowInsets.statusBars)
+            }
+        )
+    ) {
         Crossfade(
             modifier = Modifier.fillMaxSize(),
             targetState = activeSubScreen,

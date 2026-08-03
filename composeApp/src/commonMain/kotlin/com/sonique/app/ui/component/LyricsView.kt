@@ -595,7 +595,7 @@ fun RichSyncLyricsLineItem(
                     } else {
                         musica_accent.copy(
                             alpha = 0.3f,
-                        ),
+                        )
                     },
             )
         }

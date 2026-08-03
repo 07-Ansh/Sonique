@@ -26,6 +26,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -257,23 +259,37 @@ fun AlbumScreen(
                             playingVideoId.isNotEmpty() &&
                                     playingPlaylistId == browseId.replaceFirst("VL", ""),
                         ) { isThisPlaying ->
-                            if (isThisPlaying) {
-                                RippleIconButton(
-                                    resId = Res.drawable.baseline_pause_circle_24,
-                                    fillMaxSize = true,
-                                    tint = seed,
-                                    modifier = Modifier.size(48.dp),
-                                ) {
-                                    sharedViewModel.onUIEvent(UIEvent.PlayPause)
-                                }
-                            } else {
-                                RippleIconButton(
-                                    resId = Res.drawable.baseline_play_circle_24,
-                                    fillMaxSize = true,
-                                    tint = seed,
-                                    modifier = Modifier.size(48.dp),
-                                ) {
-                                    viewModel.playTrack(uiState.listTrack.firstOrNull() ?: return@RippleIconButton)
+                            Box(
+                                modifier = Modifier
+                                    .height(48.dp)
+                                    .widthIn(min = 110.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .clickable {
+                                        if (isThisPlaying) {
+                                            sharedViewModel.onUIEvent(UIEvent.PlayPause)
+                                        } else {
+                                            viewModel.playTrack(uiState.listTrack.firstOrNull() ?: return@clickable)
+                                        }
+                                    }
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        painter = painterResource(
+                                            if (isThisPlaying) Res.drawable.baseline_pause_circle_24 else Res.drawable.baseline_play_circle_24
+                                        ),
+                                        contentDescription = null,
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(22.dp),
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (isThisPlaying) "Pause" else "Play",
+                                        color = Color.Black,
+                                        style = typo().labelLarge.copy(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                                    )
                                 }
                             }
                         }
@@ -407,7 +423,25 @@ fun AlbumScreen(
             }
 
             LocalPlaylistState.PlaylistLoadState.Error -> {
-                navController.navigateUp()
+                Box(
+                    modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+                    ) {
+                        Text(
+                            text = "Failed to load album data",
+                            color = Color.White,
+                            style = typo().bodyLarge,
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        TextButton(onClick = { onBack?.invoke() ?: navController.navigateUp() }) {
+                            Text(text = "Go Back", color = Color.White)
+                        }
+                    }
+                }
             }
 
             LocalPlaylistState.PlaylistLoadState.Loading -> {

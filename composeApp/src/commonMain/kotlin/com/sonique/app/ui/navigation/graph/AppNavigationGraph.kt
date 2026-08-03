@@ -15,7 +15,6 @@ import androidx.navigation.compose.composable
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.SettingsDestination
 import com.sonique.app.ui.screen.home.SettingScreen
-
 import androidx.navigation.toRoute
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.player.FullscreenDestination
@@ -23,12 +22,9 @@ import com.sonique.app.ui.navigation.destination.search.SearchDestination
 import com.sonique.app.ui.screen.home.HomeScreen
 import com.sonique.app.ui.screen.library.LibraryScreen
 import com.sonique.app.ui.screen.other.SearchScreen
-import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
-import com.sonique.app.ui.navigation.destination.library.LikedDestination
-import com.sonique.app.ui.screen.other.PlaylistScreen
-import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
-import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
+import com.sonique.app.ui.navigation.destination.library.AlbumsDestination
 import com.sonique.app.ui.screen.player.FullscreenPlayer
+import com.sonique.common.LibraryChipType
 
 @Composable
 @ExperimentalMaterial3Api
@@ -123,7 +119,6 @@ fun AppNavigationGraph(
             }
         },
     ) {
-         
         composable<HomeDestination> {
             HomeScreen(
                 onScrolling = onScrolling,
@@ -145,12 +140,12 @@ fun AppNavigationGraph(
                 openDownloads = destination.openDownloads,
             )
         }
-
-        composable<PlaylistsDestination> {
+        composable<AlbumsDestination> {
             LibraryScreen(
                 innerPadding = innerPadding,
                 navController = navController,
                 onScrolling = onScrolling,
+                initialChip = LibraryChipType.YOUTUBE_ALBUMS,
             )
         }
         composable<FullscreenDestination> {
@@ -206,9 +201,8 @@ private fun getTabExtensionIndex(route: String?): Int {
     return when {
         route.contains("HomeDestination") -> 0
         route.contains("SearchDestination") -> 1
-        route.contains("PlaylistsDestination") -> 2
+        route.contains("AlbumsDestination") -> 2
         route.contains("LibraryDestination") -> 3
         else -> 0
     }
 }
-

@@ -32,10 +32,10 @@ import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.LibraryMusic
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Favorite
-import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.rounded.Album
 import androidx.compose.ui.graphics.vector.ImageVector
 import kotlin.reflect.KClass
-import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
+import com.sonique.app.ui.navigation.destination.library.AlbumsDestination
 
 @Composable
 fun AppBottomNavigationBar(
@@ -49,7 +49,7 @@ fun AppBottomNavigationBar(
         listOf(
             BottomNavScreen.Home,
             BottomNavScreen.Search,
-            BottomNavScreen.Playlists,
+            BottomNavScreen.Albums,
             BottomNavScreen.Library,
         )
     var selectedIndex by rememberSaveable {
@@ -57,7 +57,7 @@ fun AppBottomNavigationBar(
             when (startDestination) {
                 is HomeDestination -> BottomNavScreen.Home.ordinal
                 is SearchDestination -> BottomNavScreen.Search.ordinal
-                is PlaylistsDestination -> BottomNavScreen.Playlists.ordinal
+                is AlbumsDestination -> BottomNavScreen.Albums.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
                 else -> BottomNavScreen.Home.ordinal  
             },
@@ -169,7 +169,7 @@ fun AppNavigationRail(
             when (startDestination) {
                 is HomeDestination -> BottomNavScreen.Home.ordinal
                 is SearchDestination -> BottomNavScreen.Search.ordinal
-                is PlaylistsDestination -> BottomNavScreen.Playlists.ordinal
+                is AlbumsDestination -> BottomNavScreen.Albums.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
                 else -> BottomNavScreen.Home.ordinal  
             },
@@ -257,7 +257,7 @@ enum class BottomNavScreen(
 ) {
     Home(Res.string.home, Icons.Rounded.Home, HomeDestination),
     Search(Res.string.search, Icons.Rounded.Search, SearchDestination),
-    Playlists(Res.string.playlists, Icons.AutoMirrored.Filled.QueueMusic, PlaylistsDestination),
+    Albums(Res.string.youtube_albums, Icons.Rounded.Album, AlbumsDestination),
     Library(Res.string.library, Icons.Rounded.LibraryMusic, LibraryDestination())
 }
 

@@ -180,7 +180,6 @@ fun LibraryItem(
                                 )
                             }
                         }
-                    }
                     } else if (state.type is LibraryItemType.FollowedArtists) {
                         LazyRow(
                             Modifier.padding(

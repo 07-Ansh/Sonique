@@ -880,7 +880,7 @@ fun PlaylistScreen(
                                                                 )
                                                             }
                                                         }
-                                                        if (!data.isRadio) {
+                                                        if (!data.isRadio && playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
                                                             Box(
                                                                 modifier =
                                                                     Modifier
@@ -996,7 +996,7 @@ fun PlaylistScreen(
                                                                 }
                                                             }
                                                         }
-                                                        if (!data.isRadio) {
+                                                        if (!data.isRadio && playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
                                                             HeartCheckBox(
                                                                 size = 32,
                                                                 checked = liked,

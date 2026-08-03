@@ -1,16 +1,17 @@
 package com.sonique.media3.di
 
 import android.app.Activity
-import java.util.concurrent.TimeUnit
 import android.content.Context
 import android.content.Context.BIND_AUTO_CREATE
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import androidx.annotation.OptIn
+import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.Player
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.DatabaseProvider
@@ -28,14 +29,13 @@ import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultLoadControl.DEFAULT_MAX_BUFFER_MS
 import androidx.media3.exoplayer.DefaultLoadControl.DEFAULT_MIN_BUFFER_MS
 import androidx.media3.exoplayer.DefaultRenderersFactory
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.LoadControl
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.SilenceSkippingAudioProcessor
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.extractor.ExtractorsFactory
+import androidx.media3.extractor.flac.FlacExtractor
 import androidx.media3.extractor.mkv.MatroskaExtractor
 import androidx.media3.extractor.mp4.FragmentedMp4Extractor
 import androidx.media3.extractor.mp4.Mp4Extractor
@@ -48,7 +48,6 @@ import com.sonique.common.Config.PLAYER_CACHE
 import com.sonique.common.Config.SERVICE_SCOPE
 import com.sonique.common.MERGING_DATA_TYPE
 import com.sonique.domain.extension.now
-import com.sonique.domain.data.entities.DownloadState
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.mediaservice.handler.DownloadHandler
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
@@ -61,9 +60,7 @@ import com.sonique.domain.repository.SearchRepository
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.repository.StreamRepository
 import com.sonique.logger.Logger
-import androidx.media3.common.Player
 import com.sonique.media3.exoplayer.CrossfadeExoPlayerAdapter
-import com.sonique.media3.exoplayer.ExoPlayerAdapter
 import com.sonique.media3.repository.CacheRepositoryImpl
 import com.sonique.media3.service.SimpleMediaService
 import com.sonique.media3.service.callback.SimpleMediaSessionCallback
@@ -86,26 +83,29 @@ import org.koin.core.context.loadKoinModules
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import java.net.Proxy
+import kotlin.time.Duration.Companion.seconds
 
- 
+/**
+ * Required repository first initialization
+ */
 @UnstableApi
 private val mediaServiceModule =
     module {
-         
-         
+        // Service
+        // CoroutineScope for service
         single<CoroutineScope>(
             createdAtStart = true,
             qualifier = named(SERVICE_SCOPE),
         ) {
             CoroutineScope(Dispatchers.Main + SupervisorJob())
         }
-         
+        // Cache
         single<DatabaseProvider>(
             createdAtStart = true,
         ) {
             provideDatabaseProvider(androidContext())
         }
-         
+        // Player Cache
         single<SimpleCache>(qualifier = named(PLAYER_CACHE), createdAtStart = true) {
             provideSimpleCache(
                 context = androidContext(),
@@ -114,7 +114,7 @@ private val mediaServiceModule =
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
-         
+        // Download Cache
         single<SimpleCache>(qualifier = named(DOWNLOAD_CACHE), createdAtStart = true) {
             provideSimpleCache(
                 context = androidContext(),
@@ -123,16 +123,16 @@ private val mediaServiceModule =
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
-         
+        // Spotify Canvas Cache
         single<SimpleCache>(qualifier = named(CANVAS_CACHE), createdAtStart = true) {
             provideSimpleCache(
                 context = androidContext(),
                 cacheName = "spotifyCanvas",
-                cacheSize = 512 * 1024 * 1024,
+                cacheSize = -1,
                 databaseProvider = get<DatabaseProvider>(),
             )
         }
-         
+        // DownloadUtils
         single<DownloadHandler>(createdAtStart = true) {
             DownloadUtils(
                 context = androidContext(),
@@ -145,7 +145,7 @@ private val mediaServiceModule =
             )
         }
 
-         
+        // AudioAttributes
         single<AudioAttributes>(createdAtStart = true) {
             provideAudioAttributes()
         }
@@ -155,10 +155,9 @@ private val mediaServiceModule =
                 androidContext(),
                 get(named(DOWNLOAD_CACHE)),
                 get(named(PLAYER_CACHE)),
-                get(), // StreamRepository
-                get(), // SongRepository
-                get(named(SERVICE_SCOPE)), // CoroutineScope
-                get(), // DataStoreManager
+                get(),
+                get(named(SERVICE_SCOPE)),
+                get(),
             )
         }
 
@@ -166,12 +165,11 @@ private val mediaServiceModule =
             provideRendererFactory(androidContext())
         }
 
-         
         single<Player>(qualifier = named(MAIN_PLAYER)) {
             (get<MediaPlayerInterface>() as CrossfadeExoPlayerAdapter).forwardingPlayer
         }
 
-         
+        // CoilBitmapLoader
         single<CoilBitmapLoader>(createdAtStart = true) {
             provideCoilBitmapLoader(androidContext(), get(named(SERVICE_SCOPE)))
         }
@@ -187,7 +185,7 @@ private val mediaServiceModule =
             )
         }
 
-         
+        // MediaSession Callback for main player
         single<MediaLibrarySession.Callback>(createdAtStart = true) {
             SimpleMediaSessionCallback(
                 androidApplication(),
@@ -218,7 +216,6 @@ private fun provideResolvingDataSourceFactory(
     playerCache: SimpleCache,
     dataStoreManager: DataStoreManager,
     streamRepository: StreamRepository,
-    songRepository: SongRepository,
     coroutineScope: CoroutineScope,
 ): DataSource.Factory {
     val chunkLength = 10 * 512 * 1024L
@@ -233,30 +230,20 @@ private fun provideResolvingDataSourceFactory(
                 length,
             )
         ) {
-            val isDownloaded = runBlocking {
-                val id = if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                    mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                } else {
-                    mediaId
-                }
-                songRepository.getSongById(id).firstOrNull()?.downloadState == DownloadState.STATE_DOWNLOADED
+            coroutineScope.launch(Dispatchers.IO) {
+                streamRepository.updateFormat(
+                    if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
+                        mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
+                    } else {
+                        mediaId
+                    },
+                )
             }
-
-            if (isDownloaded) {
-                coroutineScope.launch(Dispatchers.IO) {
-                    streamRepository.updateFormat(
-                        if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                            mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                        } else {
-                            mediaId
-                        },
-                    )
-                }
-                Logger.w("Stream", "Downloaded $mediaId")
-                return@Factory dataSpec
-            }
+            Logger.w("Stream", "Downloaded $mediaId")
+            return@Factory dataSpec
         }
-        if (playerCache.isCached(mediaId, dataSpec.position, chunkLength)) {
+        val playerCached = playerCache.isCached(mediaId, dataSpec.position, chunkLength)
+        if (playerCached) {
             coroutineScope.launch(Dispatchers.IO) {
                 streamRepository.updateFormat(
                     if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
@@ -267,9 +254,9 @@ private fun provideResolvingDataSourceFactory(
                 )
             }
             Logger.w("Stream", "Cached $mediaId")
-            return@Factory dataSpec
         }
         var dataSpecReturn: DataSpec = dataSpec
+        var resolved = false
         runBlocking(Dispatchers.IO) {
             if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
                 val id = mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
@@ -282,6 +269,7 @@ private fun provideResolvingDataSourceFactory(
                         Logger.d("Stream", "is 403 $is403Url")
                         if (!is403Url) {
                             dataSpecReturn = dataSpec.withUri(videoUrl.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
+                            resolved = true
                             return@runBlocking
                         }
                     }
@@ -297,6 +285,7 @@ private fun provideResolvingDataSourceFactory(
                         Logger.d("Stream", it)
                         Logger.w("Stream", "Video")
                         dataSpecReturn = dataSpec.withUri(it.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
+                        resolved = true
                     }
             } else {
                 streamRepository.getNewFormat(mediaId).lastOrNull()?.let {
@@ -308,6 +297,7 @@ private fun provideResolvingDataSourceFactory(
                         Logger.d("Stream", "is 403 $is403Url")
                         if (!is403Url) {
                             dataSpecReturn = dataSpec.withUri(audioUrl.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
+                            resolved = true
                             return@runBlocking
                         }
                     }
@@ -323,8 +313,13 @@ private fun provideResolvingDataSourceFactory(
                         Logger.d("Stream", it)
                         Logger.w("Stream", "Audio")
                         dataSpecReturn = dataSpec.withUri(it.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
+                        resolved = true
                     }
             }
+        }
+        if (!resolved) {
+            Logger.e("Stream", "Failed to resolve stream URL for $mediaId")
+            throw java.io.IOException("Failed to resolve stream URL for $mediaId")
         }
         return@Factory dataSpecReturn
     }
@@ -334,6 +329,9 @@ private fun provideResolvingDataSourceFactory(
 private fun provideExtractorFactory(): ExtractorsFactory =
     ExtractorsFactory {
         arrayOf(
+            FlacExtractor(
+                FlacExtractor.FLAG_DISABLE_ID3_METADATA,
+            ),
             MatroskaExtractor(
                 DefaultSubtitleParserFactory(),
             ),
@@ -352,7 +350,6 @@ private fun provideMediaSourceFactory(
     downloadCache: SimpleCache,
     playerCache: SimpleCache,
     streamRepository: StreamRepository,
-    songRepository: SongRepository,
     dataStoreManager: DataStoreManager,
     coroutineScope: CoroutineScope,
 ): DefaultMediaSourceFactory =
@@ -376,7 +373,6 @@ private fun provideMediaSourceFactory(
             playerCache,
             dataStoreManager,
             streamRepository,
-            songRepository,
             coroutineScope,
         ),
         provideExtractorFactory(),
@@ -388,7 +384,6 @@ private fun provideMergingMediaSource(
     downloadCache: SimpleCache,
     playerCache: SimpleCache,
     streamRepository: StreamRepository,
-    songRepository: SongRepository,
     coroutineScope: CoroutineScope,
     dataStoreManager: DataStoreManager,
 ): MergingMediaSourceFactory =
@@ -398,99 +393,67 @@ private fun provideMergingMediaSource(
             downloadCache,
             playerCache,
             streamRepository,
-            songRepository,
             dataStoreManager,
             coroutineScope,
         ),
+        dataStoreManager,
     )
 
-@UnstableApi
-private fun provideRendererFactory(context: Context): DefaultRenderersFactory =
-    object : DefaultRenderersFactory(context) {
-        override fun buildAudioSink(
-            context: Context,
-            enableFloatOutput: Boolean,
-            enableAudioTrackPlaybackParams: Boolean,
-        ): AudioSink =
-            DefaultAudioSink
-                .Builder(context)
-                .setEnableFloatOutput(enableFloatOutput)
-                .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
-                .setAudioProcessorChain(
-                    DefaultAudioSink.DefaultAudioProcessorChain(
-                        emptyArray(),
-                        SilenceSkippingAudioProcessor(
-                            2_000_000,
-                            (20_000 / 2_000_000).toFloat(),
-                            2_000_000,
-                            0,
-                            256,
-                        ),
-                        SonicAudioProcessor(),
-                    ),
-                ).build()
-    }
-
-@UnstableApi
+@OptIn(UnstableApi::class)
 private fun provideCacheDataSource(
     downloadCache: SimpleCache,
     playerCache: SimpleCache,
     context: Context,
     proxy: Proxy? = null,
-): CacheDataSource.Factory =
-    CacheDataSource
+): CacheDataSource.Factory {
+    val upstreamFactory =
+        DefaultDataSource.Factory(
+            context,
+            OkHttpDataSource.Factory(
+                OkHttpClient
+                    .Builder()
+                    .proxy(proxy)
+                    .addInterceptor(
+                        HttpLoggingInterceptor().apply {
+                            level = HttpLoggingInterceptor.Level.HEADERS
+                        },
+                    ).callTimeout(15.seconds.inWholeMilliseconds, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .connectTimeout(15.seconds.inWholeMilliseconds, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .readTimeout(15.seconds.inWholeMilliseconds, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .writeTimeout(15.seconds.inWholeMilliseconds, java.util.concurrent.TimeUnit.MILLISECONDS)
+                    .build(),
+            ),
+        )
+    return CacheDataSource
         .Factory()
         .setCache(downloadCache)
         .setUpstreamDataSourceFactory(
             CacheDataSource
                 .Factory()
                 .setCache(playerCache)
-                .setUpstreamDataSourceFactory(
-                    DefaultDataSource
-                        .Factory(
-                            context,
-                            OkHttpDataSource.Factory(
-                                OkHttpClient
-                                    .Builder()
-                                    .connectTimeout(30, TimeUnit.SECONDS)
-                                    .readTimeout(30, TimeUnit.SECONDS)
-                                    .proxy(
-                                        proxy,
-                                    ).addInterceptor(
-                                        HttpLoggingInterceptor()
-                                            .apply {
-                                                level = HttpLoggingInterceptor.Level.NONE
-                                            },
-                                    ).build(),
-                            ),
-                        ),
-                ),
+                .setUpstreamDataSourceFactory(upstreamFactory)
+                .setCacheWriteDataSinkFactory(null)
+                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR),
         ).setCacheWriteDataSinkFactory(null)
         .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+}
 
 @UnstableApi
-private fun provideLoadControl(): LoadControl =
-    DefaultLoadControl
-        .Builder()
-        .setBufferDurationsMs(
-            DEFAULT_MIN_BUFFER_MS * 4,
-            DEFAULT_MAX_BUFFER_MS * 4,
-             
-            0,
-             
-            0,
-        ).build()
+private fun provideRendererFactory(context: Context): DefaultRenderersFactory =
+    DefaultRenderersFactory(context).apply {
+        setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+    }
 
-@UnstableApi
+@OptIn(UnstableApi::class)
 private fun provideAudioAttributes(): AudioAttributes =
     AudioAttributes
         .Builder()
-        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .setUsage(C.USAGE_MEDIA)
+        .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .build()
 
 @UnstableApi
-private fun provideDatabaseProvider(context: Context) = StandaloneDatabaseProvider(context)
+private fun provideDatabaseProvider(context: Context): DatabaseProvider = StandaloneDatabaseProvider(context)
 
 @UnstableApi
 private fun provideSimpleCache(
@@ -513,9 +476,24 @@ private fun provideCoilBitmapLoader(
     coroutineScope: CoroutineScope,
 ): CoilBitmapLoader = CoilBitmapLoader(context, coroutineScope)
 
-@OptIn(UnstableApi::class)
-fun loadMediaService() {
+@UnstableApi
+fun loadMediaServiceModule() {
     loadKoinModules(mediaServiceModule)
+}
+
+fun bindSimpleMediaService(
+    context: Context,
+    connection: ServiceConnection,
+) {
+    val intent = Intent(context, SimpleMediaService::class.java)
+    context.bindService(intent, connection, BIND_AUTO_CREATE)
+}
+
+fun unbindSimpleMediaService(
+    context: Context,
+    connection: ServiceConnection,
+) {
+    context.unbindService(connection)
 }
 
 @OptIn(UnstableApi::class)
@@ -524,7 +502,11 @@ fun startService(
     serviceConnection: ServiceConnection,
 ) {
     val intent = Intent(context, SimpleMediaService::class.java)
-    context.startService(intent)
+    try {
+        context.startService(intent)
+    } catch (e: IllegalStateException) {
+        ContextCompat.startForegroundService(context, intent)
+    }
     context.bindService(intent, serviceConnection, BIND_AUTO_CREATE)
     Logger.d("Service", "Service started")
 }
@@ -542,4 +524,3 @@ fun setServiceActivitySession(
 ) {
     (musicService as? SimpleMediaService.MusicBinder)?.setActivitySession(context, cls)
 }
-

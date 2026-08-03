@@ -1,11 +1,8 @@
 package com.sonique.kotlinytmusicscraper.utils
 
-import java.security.MessageDigest
-import java.time.Instant
+import okio.ByteString.Companion.encodeUtf8
 
-fun ByteArray.toHex(): String = joinToString(separator = "") { eachByte -> "%02x".format(eachByte) }
-
-fun sha1(str: String): String = MessageDigest.getInstance("SHA-1").digest(str.toByteArray()).toHex()
+fun sha1(str: String): String = str.encodeUtf8().sha1().hex()
 
 fun parseCookieString(cookie: String): Map<String, String> =
     cookie
@@ -38,8 +35,9 @@ fun generateNetscapeCookies(
     path: String = "/",
     secure: Boolean = false,
     httpOnly: Boolean = false,
-    expirationTimeSeconds: Long = Instant.now().epochSecond + 86400 * 365,
+    expirationTimeSeconds: Long? = null,
 ): String {
+    val expTime = expirationTimeSeconds ?: 2147483647L
     val header =
         "# Netscape HTTP Cookie File\n" +
             "# This is a generated file! Do not edit.\n\n"
@@ -47,17 +45,16 @@ fun generateNetscapeCookies(
     val cookieLines =
         cookies
             .map { (name, value) ->
-                 
                 buildString {
                     append(domain)
                     append("\t")
-                    append("TRUE")  
+                    append("TRUE")
                     append("\t")
                     append(path)
                     append("\t")
                     append(if (secure) "TRUE" else "FALSE")
                     append("\t")
-                    append(expirationTimeSeconds)
+                    append(expTime)
                     append("\t")
                     append(name)
                     append("\t")
@@ -67,4 +64,3 @@ fun generateNetscapeCookies(
 
     return header + cookieLines
 }
-

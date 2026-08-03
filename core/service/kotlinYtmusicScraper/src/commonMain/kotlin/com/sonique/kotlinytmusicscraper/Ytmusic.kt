@@ -22,7 +22,6 @@ import com.sonique.kotlinytmusicscraper.models.body.NextBody
 import com.sonique.kotlinytmusicscraper.models.body.PlayerBody
 import com.sonique.kotlinytmusicscraper.models.body.SearchBody
 import com.sonique.kotlinytmusicscraper.models.response.DownloadProgress
-import com.sonique.kotlinytmusicscraper.models.ytdlp.YtdlpVideoInfo
 import com.sonique.kotlinytmusicscraper.utils.parseCookieString
 import com.sonique.kotlinytmusicscraper.utils.sha1
 import com.sonique.ktorext.encoding.brotli
@@ -48,7 +47,9 @@ import io.ktor.client.request.post
 import io.ktor.client.request.prepareRequest
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
+import io.ktor.client.request.forms.submitForm
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
 import io.ktor.client.utils.DEFAULT_HTTP_BUFFER_SIZE
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -181,9 +182,7 @@ class Ytmusic {
             }
         }
 
-    fun updateYtdlp() {
-        extractor.update()
-    }
+    fun updateYtdlp() {}
 
     internal fun HttpRequestBuilder.mask(value: String = "*") = header("X-Goog-FieldMask", value)
 
@@ -235,7 +234,7 @@ class Ytmusic {
             "SAPISIDHASH ${currentTime}_$sapisidHash"
         }
 
-    fun getSmartTubePlayer(videoId: String): List<Pair<Int, String>> = extractor.smartTubePlayer(videoId)
+    fun getSmartTubePlayer(videoId: String): List<Pair<Int, String>> = emptyList()
 
     fun getNewPipePlayer(videoId: String): List<Pair<Int, String>> = extractor.newPipePlayer(videoId)
 
@@ -383,26 +382,6 @@ class Ytmusic {
     }
 
     suspend fun test403Error(url: String): Boolean = httpClient.get(url).status.value in 200..299
-
-    suspend fun ytdlpGetStreamUrl(
-        videoId: String,
-        poToken: String?,
-        clientName: String,
-        json: Json,
-        useCookie: Boolean,
-    ): YtdlpVideoInfo? =
-        withContext(Dispatchers.IO) {
-            Logger.d(TAG, "ytdlpGetStreamUrl: videoId: $videoId, poToken: $poToken, clientName: $clientName")
-            val result =
-                extractor.ytdlpGetStreamUrl(
-                    videoId = videoId,
-                    poToken = null,
-                    clientName = null,
-                    cookiePath = if (useCookie) cookiePath?.toString() else null,
-                )
-            val data = result?.let { json.decodeFromString<YtdlpVideoInfo>(it) }
-            return@withContext data
-        }
 
     suspend fun player(
         client: YouTubeClient,
@@ -899,9 +878,57 @@ class Ytmusic {
             true
         }
     }
+
+    var tidalClientId: String = ""
+    var tidalClientSecret: String = ""
+
+    suspend fun getTidalOAuthToken() =
+        httpClient.submitForm(
+            url = TIDAL_AUTH_URL,
+            formParameters =
+                io.ktor.http.Parameters.build {
+                    append("client_id", tidalClientId)
+                    append("client_secret", tidalClientSecret)
+                    append("grant_type", "client_credentials")
+                },
+        )
+
+    suspend fun searchTidalId(
+        token: String,
+        query: String,
+    ) = httpClient.get(TIDAL_SEARCH_URL) {
+        header("Authorization", "Bearer $token")
+        header("Accept", "application/json")
+        header("Referer", "https://tidal.com/")
+        userAgent("Mozilla/5.0 (X11; Linux x86_64; rv:144.0) Gecko/20100101 Firefox/144.0")
+        parameter("query", query)
+        parameter("types", "TRACKS")
+        parameter("limit", 5)
+        parameter("countryCode", "US")
+        parameter("locale", "en_US")
+        parameter("deviceType", "BROWSER")
+        parameter("includeContributors", true)
+        parameter("supportsUserData", true)
+    }
+
+    suspend fun getTidalRemoteConfig(): com.sonique.kotlinytmusicscraper.models.response.RemoteConfig {
+        val text =
+            httpClient
+                .get(TIDAL_REMOTE_CONFIG_URL) {
+                    accept(io.ktor.http.ContentType.Application.Json)
+                }.bodyAsText()
+        return normalJson.decodeFromString(com.sonique.kotlinytmusicscraper.models.response.RemoteConfig.serializer(), text)
+    }
+
+    companion object {
+        private const val TIDAL_AUTH_URL = "https://auth.tidal.com/v1/oauth2/token"
+        private const val TIDAL_SEARCH_URL = "https://tidal.com/v2/client-search/"
+        private const val TIDAL_REMOTE_CONFIG_URL = "https://raw.githubusercontent.com/07-Ansh/Sonique/main/config/remote_config.json"
+    }
 }
 
 expect fun getCountry(): String
 
 expect fun getLanguage(): String
+
 

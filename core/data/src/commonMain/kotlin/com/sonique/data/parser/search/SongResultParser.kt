@@ -29,7 +29,12 @@ internal fun parseSearchSong(result: SearchResult): ArrayList<SongsResult> {
                         )
                     },
                 category = "Song",
-                duration = if (song.duration != null) "%02d:%02d".format(song.duration!! / 60, song.duration!! % 60) else "",
+                duration = if (song.duration != null) {
+                    val dur = song.duration!!
+                    val m = dur / 60
+                    val s = dur % 60
+                    "${if (m < 10) "0$m" else "$m"}:${if (s < 10) "0$s" else "$s"}"
+                } else "",
                 durationSeconds = song.duration ?: 0,
                 feedbackTokens = null,
                 isExplicit = song.explicit,

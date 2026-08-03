@@ -105,7 +105,6 @@ kotlin {
                 implementation(projects.sharedutils)
                 implementation(libs.ffmpeg.kit.audio)
                 implementation(libs.smart.exception)
-                implementation(libs.ytdlp.android)
                 implementation(libs.gson)
 
                 implementation(libs.pipepipe.extractor)

@@ -1,5 +1,7 @@
 package com.sonique.app.ui.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.unit.sp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -437,90 +439,32 @@ fun LyricsLineItem(
     modifier: Modifier = Modifier,
     playerContentColor: Color = Color.White,
 ) {
-    Crossfade(targetState = isBold) {
-        if (it) {
-            Column(
-                modifier = modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    modifier =
-                        Modifier.fillMaxWidth().then(
-                            if (isCurrent) {
-                                Modifier
-                            } else {
-                                Modifier.blur(1.dp)
-                            },
-                        ),
-                    text = originalWords,
-                    style = typo().headlineLarge,
-                    textAlign = TextAlign.Center,
-                    color =
-                        if (isCurrent) {
-                            playerContentColor
-                        } else {
-                            Color.LightGray.copy(
-                                alpha = 0.35f,
-                            )
-                        },
-                )
-                if (translatedWords != null) {
-                    Text(
-                        modifier =
-                            Modifier.fillMaxWidth().then(
-                                if (isCurrent) {
-                                    Modifier
-                                } else {
-                                    Modifier.blur(1.dp)
-                                },
-                            ),
-                        text = translatedWords,
-                        style = typo().bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color =
-                            if (isCurrent) {
-                                musica_accent
-                            } else {
-                                musica_accent.copy(
-                                    alpha = 0.3f,
-                                )
-                            },
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-        }
-    }
-    if (!isBold) {
-        Column(
-            modifier = modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(modifier = Modifier.height(12.dp))
+    val alphaAnim by animateFloatAsState(
+        targetValue = if (isCurrent) 1.0f else if (isBold) 0.5f else 0.25f,
+        animationSpec = tween(durationMillis = 250),
+        label = "lineAlpha",
+    )
+
+    Column(
+        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = originalWords,
+            style = if (isCurrent) typo().headlineLarge.copy(fontSize = 28.sp) else typo().headlineMedium.copy(fontSize = 22.sp),
+            color = playerContentColor.copy(alpha = alphaAnim),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        if (translatedWords != null) {
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                modifier = Modifier.fillMaxWidth().blur(1.dp),
-                text = originalWords,
-                style = typo().headlineMedium,
+                text = translatedWords,
+                style = typo().bodyMedium,
+                color = musica_accent.copy(alpha = if (isCurrent) 0.8f else 0.25f),
                 textAlign = TextAlign.Center,
-                color =
-                    Color.LightGray.copy(
-                        alpha = 0.35f,
-                    ),
+                modifier = Modifier.fillMaxWidth(),
             )
-            if (translatedWords != null) {
-                Text(
-                    modifier = Modifier.fillMaxWidth().blur(1.dp),
-                    text = translatedWords,
-                    style = typo().bodyMedium,
-                    textAlign = TextAlign.Center,
-                    color =
-                        musica_accent.copy(
-                            alpha = 0.3f,
-                        ),
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

@@ -177,6 +177,8 @@ fun LibraryScreen(
     val activeDownloads by viewModel.activeDownloads.collectAsStateWithLifecycle()
     val youTubeAlbums by viewModel.youTubeAlbums.collectAsStateWithLifecycle()
     val followedArtists by viewModel.followedArtists.collectAsStateWithLifecycle()
+    val pinnedItems by viewModel.pinnedItems.collectAsStateWithLifecycle()
+    val isPinnedGridView by viewModel.isPinnedGridView.collectAsStateWithLifecycle()
 
     var showAddSheet by remember { mutableStateOf(false) }
     var isScrollingUp by remember { mutableStateOf(true) }
@@ -205,7 +207,8 @@ fun LibraryScreen(
 
             LibraryChipType.YOUR_LIBRARY -> {
                 viewModel.getCanvasSong()
-                viewModel.getRecentlyAdded()
+                viewModel.getLocalPlaylist()
+                viewModel.getYouTubePlaylist()
                 if (loggedIn) {
                     viewModel.syncFollowedArtists()
                 }
@@ -295,6 +298,75 @@ fun LibraryScreen(
                                                 onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
                                                 onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
                                             )
+                                        }
+                                    }
+
+                                    if (pinnedItems.isNotEmpty()) {
+                                        item {
+                                            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                                                Row(
+                                                    modifier = Modifier.padding(start = 10.dp, end = 10.dp),
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                ) {
+                                                    Text(
+                                                        text = "Quick Access",
+                                                        style = typo().titleMedium,
+                                                        color = Color.White,
+                                                        maxLines = 1,
+                                                        modifier = Modifier.fillMaxWidth().height(35.dp)
+                                                            .wrapContentHeight(align = Alignment.CenterVertically)
+                                                            .weight(1f).focusable(),
+                                                    )
+                                                    IconButton(onClick = { viewModel.togglePinnedLayoutView() }) {
+                                                        Icon(
+                                                            imageVector = if (isPinnedGridView) Icons.AutoMirrored.Rounded.ViewList else Icons.Rounded.GridView,
+                                                            contentDescription = "Toggle Quick Access Layout",
+                                                            tint = Color.White,
+                                                        )
+                                                    }
+                                                }
+                                                if (isPinnedGridView) {
+                                                    NonLazyGrid(
+                                                        columns = 3,
+                                                        itemCount = pinnedItems.size,
+                                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                                                    ) { index ->
+                                                        val pinned = pinnedItems[index]
+                                                        HomeGridCardItem(
+                                                            title = pinned.title,
+                                                            thumbUrl = pinned.thumbnails,
+                                                            subtitle = pinned.author,
+                                                            isArtist = false,
+                                                            onClick = {
+                                                                when (pinned.id) {
+                                                                    Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                                    Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
+                                                                    Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                                                                    "LM" -> activePlaylistId = "LM"; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                    else -> activePlaylistId = pinned.id; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                }
+                                                            },
+                                                        )
+                                                    }
+                                                } else {
+                                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                                        pinnedItems.forEach { pinned ->
+                                                            PlaylistFullWidthItems(
+                                                                data = pinned,
+                                                                onClickListener = {
+                                                                    when (pinned.id) {
+                                                                        Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
+                                                                        Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
+                                                                        Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
+                                                                        "LM" -> activePlaylistId = "LM"; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                        else -> activePlaylistId = pinned.id; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                    }
+                                                                },
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
 

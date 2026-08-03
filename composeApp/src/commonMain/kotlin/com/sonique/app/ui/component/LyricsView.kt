@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -130,7 +131,8 @@ fun LyricsView(
     val effectiveLyricsData = remember(lyricsData) {
         val rawLrc = lyricsData.lyrics.SoniqueLyricsId
         if (lyricsData.lyrics.lines.isNullOrEmpty() && !rawLrc.isNullOrBlank()) {
-            lyricsData.copy(lyrics = com.sonique.domain.utils.parseRawLrcToLyrics(rawLrc))
+            val parsedLyrics = com.sonique.domain.utils.parseRawLrcToLyrics(rawLrc)
+            lyricsData.copy(lyrics = parsedLyrics)
         } else {
             lyricsData
         }
@@ -164,7 +166,7 @@ fun LyricsView(
     }
 
     LaunchedEffect(key1 = current) {
-        val lines = lyricsData.lyrics.lines
+        val lines = effectiveLyricsData.lyrics.lines
         if (current.current > 0L) {
             lines?.indices?.forEach { i ->
                 val sentence = lines[i]
@@ -199,10 +201,11 @@ fun LyricsView(
         }
     }
     var userIsScrolling by remember { mutableStateOf(false) }
+    val isDragged by listState.interactionSource.collectIsDraggedAsState()
 
-    // Pause auto-scroll when user manually scrolls lyrics
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (listState.isScrollInProgress) {
+    // Pause auto-scroll ONLY when user physically drags the lyrics with finger
+    LaunchedEffect(isDragged) {
+        if (isDragged) {
             userIsScrolling = true
         } else if (userIsScrolling) {
             // When user stops scrolling, wait 5 seconds of inactivity before resuming auto-scroll
@@ -214,7 +217,7 @@ fun LyricsView(
     // Auto-scroll to active line smoothly when user is not scrolling
     LaunchedEffect(currentLineIndex, userIsScrolling) {
         if (!userIsScrolling && currentLineIndex > -1 &&
-            (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED")
+            (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED")
         ) {
             listState.animateScrollAndCentralizeItem(
                 index = currentLineIndex,
@@ -295,14 +298,14 @@ fun LyricsView(
                         }
                     },
         ) {
-            items(lyricsData.lyrics.lines?.size ?: 0) { index ->
-                val line = lyricsData.lyrics.lines?.getOrNull(index)
+            items(effectiveLyricsData.lyrics.lines?.size ?: 0) { index ->
+                val line = effectiveLyricsData.lyrics.lines?.getOrNull(index)
                  
                 val translatedWords =
-                    if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
+                    if (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED") {
                         line?.startTimeMs?.let { findClosestTranslatedLine(it) }
                     } else {
-                        lyricsData.translatedLyrics
+                        effectiveLyricsData.translatedLyrics
                             ?.first
                             ?.lines
                             ?.getOrNull(index)
@@ -311,10 +314,10 @@ fun LyricsView(
                 Logger.d(TAG, "Line $index: ${line?.words}, Translated: $translatedWords")
 
                 line?.words?.let { words ->
-                    Logger.d(TAG, "SyncType: ${lyricsData.lyrics.syncType}, Line $index content preview: ${words.take(50)}")
+                    Logger.d(TAG, "SyncType: ${effectiveLyricsData.lyrics.syncType}, Line $index content preview: ${words.take(50)}")
                     when {
                          
-                        lyricsData.lyrics.syncType == "RICH_SYNCED" -> {
+                        effectiveLyricsData.lyrics.syncType == "RICH_SYNCED" -> {
                             val parsedLine =
                                 remember(words, line.startTimeMs, line.endTimeMs) {
                                     val result = parseRichSyncWords(words, line.startTimeMs, line.endTimeMs)

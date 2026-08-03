@@ -225,7 +225,18 @@ class LibraryViewModel(
 
         viewModelScope.launch {
             localPlaylistRepository.getAllLocalPlaylists().collect { values ->
-                _yourLocalPlaylist.value = LocalResource.Success(values.reversed())
+                val mutableLocal = values.reversed().toMutableList()
+                val downloadedSongsTitle = getString(Res.string.downloaded_songs)
+                // Add Downloaded Songs as a dedicated local playlist entry at top
+                mutableLocal.add(
+                    0,
+                    LocalPlaylistEntity(
+                        id = -999L,
+                        title = downloadedSongsTitle,
+                        thumbnail = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
+                    )
+                )
+                _yourLocalPlaylist.value = LocalResource.Success(mutableLocal)
                 val currentPinned = _pinnedItems.value.filter { it.description == "PIN" }.toMutableList()
                 values.reversed().forEach { local ->
                     currentPinned.add(

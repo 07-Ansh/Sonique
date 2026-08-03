@@ -76,6 +76,7 @@ import com.sonique.app.ui.navigation.graph.AppNavigationGraph
 import com.sonique.app.ui.screen.MiniPlayer
 import com.sonique.app.ui.screen.player.NowPlayingScreen
 import com.sonique.app.ui.screen.player.NowPlayingScreenContent
+import com.sonique.app.ui.screen.player.NewPlayerScreen
 import com.sonique.app.ui.theme.AppTheme
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.SharedViewModel
@@ -110,6 +111,7 @@ fun App(
     val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
     val intent by viewModel.intent.collectAsStateWithLifecycle()
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
     
     val updateViewModel: UpdateViewModel = koinInject()
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
@@ -686,10 +688,18 @@ fun App(
                             .fillMaxSize()
                             .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt()) }
                     ) {
-                        NowPlayingScreen(
-                            navController = navController,
-                        ) {
-                            isShowNowPlaylistScreen = false
+                        if (playerScreenStyle == "classic") {
+                            NowPlayingScreen(
+                                navController = navController,
+                            ) {
+                                isShowNowPlaylistScreen = false
+                            }
+                        } else {
+                            NewPlayerScreen(
+                                navController = navController,
+                            ) {
+                                isShowNowPlaylistScreen = false
+                            }
                         }
                     }
                 }

@@ -67,8 +67,14 @@ fun SettingsPlaybackScreen(
     val crossfadeEnabled by viewModel.crossfadeEnabled.collectAsStateWithLifecycle()
     val crossfadeDjMode by viewModel.crossfadeDjMode.collectAsStateWithLifecycle()
 
+    val transliterateLyricsFlow = remember(viewModel.transliterateLyrics) {
+        viewModel.transliterateLyrics.map { it == DataStoreManager.Values.TRUE }
+    }
+    val transliterateLyrics by transliterateLyricsFlow.collectAsStateWithLifecycle(initialValue = false)
+
     LaunchedEffect(Unit) {
         viewModel.getData()
+        viewModel.getTransliterateLyrics()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -193,6 +199,12 @@ fun SettingsPlaybackScreen(
                                 switch = ((crossfadeDjMode) to { viewModel.setCrossfadeDjMode(it) }),
                             )
                         }
+                        SettingsSectionHeader("Lyrics")
+                        SettingItem(
+                            title = "Hinglish Lyrics",
+                            subtitle = "Transliterate Hindi (Devanagari) lyrics to Roman script",
+                            switch = (transliterateLyrics to { viewModel.setTransliterateLyrics(it) }),
+                        )
                     }
                 }
             }

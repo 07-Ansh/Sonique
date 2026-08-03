@@ -66,6 +66,7 @@ kotlin {
             dependencies {
                 implementation(projects.common)
                 implementation(projects.domain)
+                implementation(projects.ktorExt)
                 implementation(projects.lyricsService)
                 implementation(projects.spotify)
                 implementation(projects.kotlinYtmusicScraper)

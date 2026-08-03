@@ -91,6 +91,10 @@ class SettingsViewModel(
     val translationLanguage: StateFlow<String?> = _translationLanguage
     private var _useTranslation: MutableStateFlow<String?> = MutableStateFlow(null)
     val useTranslation: StateFlow<String?> = _useTranslation
+    private var _transliterateLyrics: MutableStateFlow<String?> = MutableStateFlow(null)
+    val transliterateLyrics: StateFlow<String?> = _transliterateLyrics
+    private var _playerScreenStyle: MutableStateFlow<String?> = MutableStateFlow(null)
+    val playerScreenStyle: StateFlow<String?> = _playerScreenStyle
     private var _playerCacheLimit: MutableStateFlow<Int?> = MutableStateFlow(null)
     val playerCacheLimit: StateFlow<Int?> = _playerCacheLimit
 
@@ -540,6 +544,36 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setEnableTranslateLyric(useTranslation)
             getUseTranslation()
+        }
+    }
+
+    fun getTransliterateLyrics() {
+        viewModelScope.launch {
+            dataStoreManager.transliterateLyrics.collect { value ->
+                _transliterateLyrics.emit(value)
+            }
+        }
+    }
+
+    fun setTransliterateLyrics(enable: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setTransliterateLyrics(enable)
+            getTransliterateLyrics()
+        }
+    }
+
+    fun getPlayerScreenStyle() {
+        viewModelScope.launch {
+            dataStoreManager.playerScreenStyle.collect { value ->
+                _playerScreenStyle.emit(value)
+            }
+        }
+    }
+
+    fun setPlayerScreenStyle(style: String) {
+        viewModelScope.launch {
+            dataStoreManager.setPlayerScreenStyle(style)
+            getPlayerScreenStyle()
         }
     }
 

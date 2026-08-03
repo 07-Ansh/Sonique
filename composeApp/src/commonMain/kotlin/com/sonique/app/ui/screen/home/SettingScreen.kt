@@ -367,7 +367,21 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
     val enableExpressivePlayerControls by viewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
     val continueListeningLayout by viewModel.continueListeningLayout.collectAsStateWithLifecycle()
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
+
+    val transliterateLyricsFlow = remember(viewModel.transliterateLyrics) {
+        viewModel.transliterateLyrics.map { it == com.sonique.domain.manager.DataStoreManager.Values.TRUE }
+    }
+    val transliterateLyrics by transliterateLyricsFlow.collectAsStateWithLifecycle(initialValue = false)
     val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        viewModel.getPlayerScreenStyle()
+        viewModel.getTransliterateLyrics()
+    }
+
+    val isClassic = playerScreenStyle == "classic"
+    val currentStyleLabel = if (isClassic) "Classic Player (Original)" else "Modern Player (New)"
 
     val currentLayoutLabel = when (continueListeningLayout) {
         "1_row" -> "1 Row (Standard)"
@@ -384,36 +398,82 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
     ) {
         item {
             Material3SettingsGroup(
-                title = "Background Effects",
+                title = "Player Screen Layout",
                 items = listOf(
                     Material3SettingsItem(
-                        title = { Text("Ambience Mode") },
-                        description = { Text("Show gradient background based on album art colors") },
-                        isSwitch = true,
-                        checked = ambienceMode,
-                        onCheckedChange = { viewModel.setAmbienceMode(it) }
-                    ),
-                    Material3SettingsItem(
-                        title = { Text("Frosted Player Background") },
-                        description = { Text("Blur background artwork based on album art using frosted glassmorphism") },
-                        isSwitch = true,
-                        checked = blurPlayerBackground,
-                        onCheckedChange = { viewModel.setBlurPlayerBackground(it) }
+                        title = { Text("Player UI Style") },
+                        description = { Text(currentStyleLabel) },
+                        onClick = {
+                            coroutineScope.launch {
+                                viewModel.setAlertData(
+                                    SettingAlertState(
+                                        title = "Player UI Style",
+                                        selectOne = SettingAlertState.SelectData(
+                                            listSelect = listOf(
+                                                (!isClassic) to "Modern Player (New)",
+                                                (isClassic) to "Classic Player (Original)"
+                                            )
+                                        ),
+                                        confirm = "Change" to { state ->
+                                            val selectedLabel = state.selectOne?.getSelected() ?: ""
+                                            val styleValue = if (selectedLabel.startsWith("Classic")) "classic" else "modern"
+                                            viewModel.setPlayerScreenStyle(styleValue)
+                                        },
+                                        dismiss = "Cancel"
+                                    )
+                                )
+                            }
+                        }
                     )
                 )
             )
         }
 
         item {
+            val playerGroupItems = mutableListOf<Material3SettingsItem>()
+            playerGroupItems.add(
+                Material3SettingsItem(
+                    title = { Text("Ambience Mode") },
+                    description = {
+                        Text(
+                            if (isClassic)
+                                "Dynamic ambient color tinting for classic player surface"
+                            else
+                                "Link background dynamically to active track artwork (disabled shows dark background)"
+                        )
+                    },
+                    isSwitch = true,
+                    checked = ambienceMode,
+                    onCheckedChange = { viewModel.setAmbienceMode(it) }
+                )
+            )
+            if (isClassic) {
+                playerGroupItems.add(
+                    Material3SettingsItem(
+                        title = { Text("Frosted Player Background") },
+                        description = { Text("Blur album artwork overlay behind classic player controls") },
+                        isSwitch = true,
+                        checked = blurPlayerBackground,
+                        onCheckedChange = { viewModel.setBlurPlayerBackground(it) }
+                    )
+                )
+            }
             Material3SettingsGroup(
-                title = "Player Screen",
+                title = if (isClassic) "Classic Player Options" else "Modern Player Options",
+                items = playerGroupItems
+            )
+        }
+
+        item {
+            Material3SettingsGroup(
+                title = "Lyrics Options",
                 items = listOf(
                     Material3SettingsItem(
-                        title = { Text("Expressive Player Controls") },
-                        description = { Text("Use Material 3 Expressive shapes for playback buttons") },
+                        title = { Text("Hinglish Lyrics") },
+                        description = { Text("Transliterate Hindi (Devanagari) lyrics to Roman script") },
                         isSwitch = true,
-                        checked = enableExpressivePlayerControls,
-                        onCheckedChange = { viewModel.setEnableExpressivePlayerControls(it) }
+                        checked = transliterateLyrics,
+                        onCheckedChange = { viewModel.setTransliterateLyrics(it) }
                     )
                 )
             )

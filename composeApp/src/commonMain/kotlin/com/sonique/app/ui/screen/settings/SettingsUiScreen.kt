@@ -58,6 +58,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.app.Platform
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.SettingItem
+import com.sonique.domain.manager.DataStoreManager
+import kotlinx.coroutines.flow.map
 import com.sonique.app.ui.component.SettingDialog
 import com.sonique.app.viewModel.SettingsViewModel
 import com.sonique.app.viewModel.SettingAlertState
@@ -86,10 +88,18 @@ fun SettingsUiScreen(
     val blurPlayerBackground by viewModel.blurPlayerBackground.collectAsStateWithLifecycle()
     val enableExpressivePlayerControls by viewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
+
+    val transliterateLyricsFlow = remember(viewModel.transliterateLyrics) {
+        viewModel.transliterateLyrics.map { it == DataStoreManager.Values.TRUE }
+    }
+    val transliterateLyrics by transliterateLyricsFlow.collectAsStateWithLifecycle(initialValue = false)
 
 
     LaunchedEffect(Unit) {
         viewModel.getData()
+        viewModel.getPlayerScreenStyle()
+        viewModel.getTransliterateLyrics()
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -118,23 +128,59 @@ fun SettingsUiScreen(
             contentPadding = PaddingValues(bottom = 140.dp)
         ) {
             item {
-                SettingsSectionHeader("Background Effects")
+                val isClassic = playerScreenStyle == "classic"
+
+                SettingsSectionHeader("Player Screen Layout")
+                val currentStyleLabel = if (isClassic) "Classic Player (Original)" else "Modern Player (New)"
                 SettingItem(
-                    title = "Ambience Mode",
-                    subtitle = "Show gradient background based on album art colors",
-                    switch = (ambienceMode to { viewModel.setAmbienceMode(it) }),
-                )
-                SettingItem(
-                    title = "Frosted Player Background",
-                    subtitle = "Blur background artwork based on album art using frosted glassmorphism",
-                    switch = (blurPlayerBackground to { viewModel.setBlurPlayerBackground(it) }),
+                    title = "Player UI Style",
+                    subtitle = currentStyleLabel,
+                    smallSubtitle = true,
+                    onClick = {
+                        coroutineScope.launch {
+                            viewModel.setAlertData(
+                                SettingAlertState(
+                                    title = "Player UI Style",
+                                    selectOne = SettingAlertState.SelectData(
+                                        listSelect = listOf(
+                                            (!isClassic) to "Modern Player (New)",
+                                            (isClassic) to "Classic Player (Original)"
+                                        )
+                                    ),
+                                    confirm = "Change" to { state ->
+                                        val selectedLabel = state.selectOne?.getSelected() ?: ""
+                                        val styleValue = if (selectedLabel.startsWith("Classic")) "classic" else "modern"
+                                        viewModel.setPlayerScreenStyle(styleValue)
+                                    },
+                                    dismiss = "Cancel"
+                                )
+                            )
+                        }
+                    }
                 )
 
-                SettingsSectionHeader("Player Screen")
+                SettingsSectionHeader(if (isClassic) "Classic Player Options" else "Modern Player Options")
                 SettingItem(
-                    title = "Expressive Player Controls",
-                    subtitle = "Use Material 3 Expressive shapes (rounded squares, pill shapes) for playback buttons",
-                    switch = (enableExpressivePlayerControls to { viewModel.setEnableExpressivePlayerControls(it) }),
+                    title = "Ambience Mode",
+                    subtitle = if (isClassic)
+                        "Dynamic ambient color tinting for classic player surface"
+                    else
+                        "Link background dynamically to active track artwork (disabled shows dark background)",
+                    switch = (ambienceMode to { viewModel.setAmbienceMode(it) }),
+                )
+                if (isClassic) {
+                    SettingItem(
+                        title = "Frosted Player Background",
+                        subtitle = "Blur album artwork overlay behind classic player controls",
+                        switch = (blurPlayerBackground to { viewModel.setBlurPlayerBackground(it) }),
+                    )
+                }
+
+                SettingsSectionHeader("Lyrics Options")
+                SettingItem(
+                    title = "Hinglish Lyrics",
+                    subtitle = "Transliterate Hindi (Devanagari) lyrics to Roman script",
+                    switch = (transliterateLyrics to { viewModel.setTransliterateLyrics(it) }),
                 )
 
                 SettingsSectionHeader("Home Screen")

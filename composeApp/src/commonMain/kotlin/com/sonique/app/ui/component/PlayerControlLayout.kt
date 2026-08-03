@@ -41,6 +41,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.sonique.domain.mediaservice.handler.ControlState
 import com.sonique.domain.mediaservice.handler.RepeatState
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import com.sonique.app.ui.theme.seed
 import com.sonique.app.ui.theme.transparent
 import com.sonique.app.viewModel.UIEvent
@@ -64,146 +66,161 @@ fun PlayerControlLayout(
                 .padding(horizontal = 20.dp),
     ) {
         if (enableExpressive) {
-            val mainHeight = if (isSmallSize) 48.dp else 80.dp
-            val skipWidth = if (isSmallSize) 32.dp else 48.dp
-            val playSize = if (isSmallSize) 48.dp else 80.dp
-            val controlSize = if (isSmallSize) 32.dp else 48.dp
-            val borderStroke = BorderStroke(1.dp, contentColor.copy(alpha = 0.2f))
+            val backInteractionSource = remember { MutableInteractionSource() }
+            val nextInteractionSource = remember { MutableInteractionSource() }
+            val playPauseInteractionSource = remember { MutableInteractionSource() }
 
-            // 1. Shuffle
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(controlSize)
-                        .border(borderStroke, CircleShape)
-                        .clip(CircleShape)
-                        .rubberyClick { onUIEvent(UIEvent.Shuffle) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(targetState = controllerState.isShuffle, label = "Shuffle Button") { isShuffle ->
-                        Icon(
-                            imageVector = Icons.Rounded.Shuffle,
-                            tint = if (isShuffle) seed else Color.Gray,
-                            contentDescription = "",
-                            modifier = Modifier.size(if (isSmallSize) 18.dp else 24.dp),
-                        )
-                    }
-                }
+            val isPlayPausePressed by playPauseInteractionSource.collectIsPressedAsState()
+            val isBackPressed by backInteractionSource.collectIsPressedAsState()
+            val isNextPressed by nextInteractionSource.collectIsPressedAsState()
+
+            val playPauseWeight by animateFloatAsState(
+                targetValue =
+                    if (isPlayPausePressed) {
+                        1.9f
+                    } else if (isBackPressed || isNextPressed) {
+                        1.1f
+                    } else {
+                        1.3f
+                    },
+                animationSpec =
+                    spring(
+                        dampingRatio = 0.6f,
+                        stiffness = 500f,
+                    ),
+                label = "playPauseWeight",
+            )
+
+            val backButtonWeight by animateFloatAsState(
+                targetValue =
+                    if (isBackPressed) {
+                        0.65f
+                    } else if (isPlayPausePressed) {
+                        0.35f
+                    } else {
+                        0.45f
+                    },
+                animationSpec =
+                    spring(
+                        dampingRatio = 0.6f,
+                        stiffness = 500f,
+                    ),
+                label = "backButtonWeight",
+            )
+
+            val nextButtonWeight by animateFloatAsState(
+                targetValue =
+                    if (isNextPressed) {
+                        0.65f
+                    } else if (isPlayPausePressed) {
+                        0.35f
+                    } else {
+                        0.45f
+                    },
+                animationSpec =
+                    spring(
+                        dampingRatio = 0.6f,
+                        stiffness = 500f,
+                    ),
+                label = "nextButtonWeight",
+            )
+
+            val buttonBgColor = Color.White
+            val buttonIconColor = Color.Black
+            val sideButtonContainerColor = Color.White.copy(alpha = 0.2f)
+            val sideButtonContentColor = Color.White
+
+            // 1. Skip Previous
+            Box(
+                Modifier
+                    .height(68.dp)
+                    .weight(backButtonWeight)
+                    .clip(RoundedCornerShape(50))
+                    .background(sideButtonContainerColor)
+                    .clickable(
+                        interactionSource = backInteractionSource,
+                        indication = androidx.compose.material3.ripple(bounded = true),
+                        enabled = controllerState.isPreviousAvailable,
+                        onClick = { onUIEvent(UIEvent.Previous) }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.SkipPrevious,
+                    tint = if (controllerState.isPreviousAvailable) sideButtonContentColor else Color.Gray,
+                    contentDescription = "",
+                    modifier = Modifier.size(32.dp),
+                )
             }
 
-            // 2. Skip Previous
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(width = skipWidth, height = mainHeight)
-                        .background(contentColor.copy(alpha = 0.12f), RoundedCornerShape(percent = 50))
-                        .clip(RoundedCornerShape(percent = 50))
-                        .rubberyClick {
-                            if (controllerState.isPreviousAvailable) {
-                                onUIEvent(UIEvent.Previous)
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // 2. Play/Pause
+            Box(
+                Modifier
+                    .height(68.dp)
+                    .weight(playPauseWeight)
+                    .clip(RoundedCornerShape(50))
+                    .background(buttonBgColor)
+                    .clickable(
+                        interactionSource = playPauseInteractionSource,
+                        indication = androidx.compose.material3.ripple(bounded = true),
+                        onClick = { onUIEvent(UIEvent.PlayPause) }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Crossfade(targetState = controllerState.isPlaying) { isPlaying ->
                     Icon(
-                        imageVector = Icons.Rounded.SkipPrevious,
-                        tint = if (controllerState.isPreviousAvailable) contentColor else Color.Gray,
+                        imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                        tint = buttonIconColor,
                         contentDescription = "",
-                        modifier = Modifier.size(if (isSmallSize) 20.dp else 28.dp),
+                        modifier = Modifier.size(36.dp),
                     )
                 }
             }
 
-            // 3. Play/Pause
-            Box(Modifier.weight(1.2f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(playSize)
-                        .background(Color(0xFFFAF9F6), RoundedCornerShape(if (isSmallSize) 14.dp else 24.dp))
-                        .clip(RoundedCornerShape(if (isSmallSize) 14.dp else 24.dp))
-                        .rubberyClick { onUIEvent(UIEvent.PlayPause) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(targetState = controllerState.isPlaying) { isPlaying ->
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            tint = Color.Black,
-                            contentDescription = "",
-                            modifier = Modifier.size(if (isSmallSize) 28.dp else 40.dp),
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.width(8.dp))
 
-            // 4. Skip Next
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(width = skipWidth, height = mainHeight)
-                        .background(contentColor.copy(alpha = 0.12f), RoundedCornerShape(percent = 50))
-                        .clip(RoundedCornerShape(percent = 50))
-                        .rubberyClick {
-                            if (controllerState.isNextAvailable) {
-                                onUIEvent(UIEvent.Next)
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.SkipNext,
-                        tint = if (controllerState.isNextAvailable) contentColor else Color.Gray,
-                        contentDescription = "",
-                        modifier = Modifier.size(if (isSmallSize) 20.dp else 28.dp),
-                    )
-                }
-            }
-
-            // 5. Repeat
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(controlSize)
-                        .border(borderStroke, CircleShape)
-                        .clip(CircleShape)
-                        .rubberyClick { onUIEvent(UIEvent.Repeat) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(targetState = controllerState.repeatState) { rs ->
-                        val icon = when (rs) {
-                            RepeatState.One -> Icons.Rounded.RepeatOne
-                            else -> Icons.Rounded.Repeat
-                        }
-                        val tint = when (rs) {
-                            RepeatState.None -> Color.Gray
-                            else -> seed
-                        }
-                        Icon(
-                            imageVector = icon,
-                            tint = tint,
-                            contentDescription = "",
-                            modifier = Modifier.size(if (isSmallSize) 18.dp else 24.dp),
-                        )
-                    }
-                }
+            // 3. Skip Next
+            Box(
+                Modifier
+                    .height(68.dp)
+                    .weight(nextButtonWeight)
+                    .clip(RoundedCornerShape(50))
+                    .background(sideButtonContainerColor)
+                    .clickable(
+                        interactionSource = nextInteractionSource,
+                        indication = androidx.compose.material3.ripple(bounded = true),
+                        enabled = controllerState.isNextAvailable,
+                        onClick = { onUIEvent(UIEvent.Next) }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.SkipNext,
+                    tint = if (controllerState.isNextAvailable) sideButtonContentColor else Color.Gray,
+                    contentDescription = "",
+                    modifier = Modifier.size(32.dp),
+                )
             }
         } else {
             val smallIcon = if (isSmallSize) 20.dp to 28.dp else 32.dp to 42.dp
             val mediumIcon = if (isSmallSize) 28.dp to 38.dp else 42.dp to 52.dp
             val bigIcon = if (isSmallSize) 38.dp to 48.dp else 72.dp to 96.dp
 
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .clickable { onUIEvent(UIEvent.Shuffle) },
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier =
                         Modifier
                             .background(transparent)
                             .size(smallIcon.second)
-                            .aspectRatio(1f)
-                            .clip(
-                                CircleShape,
-                            )
-                            .clickable {
-                                onUIEvent(UIEvent.Shuffle)
-                            },
+                            .aspectRatio(1f),
                     contentAlignment = Alignment.Center,
                 ) {
                     Crossfade(targetState = controllerState.isShuffle, label = "Shuffle Button") { isShuffle ->
@@ -225,21 +242,23 @@ fun PlayerControlLayout(
                     }
                 }
             }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .clickable {
+                        if (controllerState.isPreviousAvailable) {
+                            onUIEvent(UIEvent.Previous)
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier =
                         Modifier
                             .background(transparent)
                             .size(mediumIcon.second)
-                            .aspectRatio(1f)
-                            .clip(
-                                CircleShape,
-                            )
-                            .clickable {
-                                if (controllerState.isPreviousAvailable) {
-                                    onUIEvent(UIEvent.Previous)
-                                }
-                            },
+                            .aspectRatio(1f),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -250,19 +269,20 @@ fun PlayerControlLayout(
                     )
                 }
             }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .clickable { onUIEvent(UIEvent.PlayPause) },
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier =
                         Modifier
                             .size(bigIcon.second)
                             .aspectRatio(1f)
-                            .clip(
-                                CircleShape,
-                            )
-                            .background(Color(0xFFE0E0E0))  
-                            .clickable {
-                                onUIEvent(UIEvent.PlayPause)
-                            },
+                            .clip(CircleShape)
+                            .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Crossfade(targetState = controllerState.isPlaying) { isPlaying ->
@@ -284,21 +304,23 @@ fun PlayerControlLayout(
                     }
                 }
             }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .clickable {
+                        if (controllerState.isNextAvailable) {
+                            onUIEvent(UIEvent.Next)
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier =
                         Modifier
                             .background(transparent)
                             .size(mediumIcon.second)
-                            .aspectRatio(1f)
-                            .clip(
-                                CircleShape,
-                            )
-                            .clickable {
-                                if (controllerState.isNextAvailable) {
-                                    onUIEvent(UIEvent.Next)
-                                }
-                            },
+                            .aspectRatio(1f),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -309,18 +331,18 @@ fun PlayerControlLayout(
                     )
                 }
             }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .clip(CircleShape)
+                    .clickable { onUIEvent(UIEvent.Repeat) },
+                contentAlignment = Alignment.Center
+            ) {
                 Box(
                     modifier =
                         Modifier
                             .size(smallIcon.second)
-                            .aspectRatio(1f)
-                            .clip(
-                                CircleShape,
-                            )
-                            .clickable {
-                                onUIEvent(UIEvent.Repeat)
-                            },
+                            .aspectRatio(1f),
                     contentAlignment = Alignment.Center,
                 ) {
                     Crossfade(targetState = controllerState.repeatState) { rs ->
@@ -388,7 +410,7 @@ fun Modifier.rubberyClick(
         }
         .clickable(
             interactionSource = interactionSource,
-            indication = null,
+            indication = androidx.compose.material3.ripple(bounded = false, radius = 40.dp),
             onClick = onClick
         )
 }

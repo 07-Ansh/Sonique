@@ -8,6 +8,7 @@ import com.sonique.domain.repository.AccountRepository
 import com.sonique.kotlinytmusicscraper.YouTube
 import com.sonique.logger.Logger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

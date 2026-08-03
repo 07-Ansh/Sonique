@@ -8,8 +8,6 @@ expect class Extractor() {
 
     fun logIn(cookie: String?)
 
-    fun update()
-
     fun mergeAudioVideoDownload(filePath: String): DownloadProgress
 
     fun saveAudioWithThumbnail(
@@ -17,15 +15,5 @@ expect class Extractor() {
         track: SongItem,
     ): DownloadProgress
 
-    fun ytdlpGetStreamUrl(
-        videoId: String,
-        poToken: String?,
-        clientName: String?,
-        cookiePath: String?,
-    ): String?  
-
-    fun smartTubePlayer(videoId: String): List<Pair<Int, String>>
-
     fun newPipePlayer(videoId: String): List<Pair<Int, String>>
 }
-

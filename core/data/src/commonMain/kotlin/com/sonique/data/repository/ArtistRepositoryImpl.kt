@@ -9,6 +9,7 @@ import com.sonique.domain.utils.Resource
 import com.sonique.kotlinytmusicscraper.YouTube
 import com.sonique.logger.Logger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow

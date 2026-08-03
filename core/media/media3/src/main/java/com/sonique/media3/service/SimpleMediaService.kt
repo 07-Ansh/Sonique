@@ -17,8 +17,6 @@ import android.os.IBinder
 import androidx.core.content.getSystemService
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import com.sonique.domain.mediaservice.player.MediaPlayerInterface
-import com.sonique.media3.exoplayer.CrossfadeExoPlayerAdapter
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaLibraryService
@@ -27,11 +25,12 @@ import androidx.media3.session.SessionToken
 import androidx.media3.ui.DefaultMediaDescriptionAdapter
 import androidx.media3.ui.PlayerNotificationManager
 import com.google.common.util.concurrent.MoreExecutors
-import com.sonique.common.Config
 import com.sonique.common.MEDIA_NOTIFICATION
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
+import com.sonique.domain.mediaservice.player.MediaPlayerInterface
 import com.sonique.logger.Logger
+import com.sonique.media3.exoplayer.CrossfadeExoPlayerAdapter
 import com.sonique.media3.R
 import com.sonique.media3.extension.toCommandButton
 import com.sonique.media3.utils.CoilBitmapLoader
@@ -51,7 +50,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class SimpleMediaService :
     MediaLibraryService(),
     KoinComponent {
-    private val coroutineScope by inject<CoroutineScope>(named(Config.SERVICE_SCOPE))
+    private val coroutineScope by inject<CoroutineScope>(named(com.sonique.common.Config.SERVICE_SCOPE))
     private val mediaPlayerAdapter: MediaPlayerInterface by inject<MediaPlayerInterface>()
     private val player: Player by lazy {
         (mediaPlayerAdapter as CrossfadeExoPlayerAdapter).forwardingPlayer
@@ -68,7 +67,6 @@ internal class SimpleMediaService :
     private val binder = MusicBinder()
 
     private lateinit var playerNotificationManager: PlayerNotificationManager
-    private var keepAliveJob: kotlinx.coroutines.Job? = null
 
     inner class MusicBinder : Binder() {
         val service: SimpleMediaService
@@ -106,7 +104,7 @@ internal class SimpleMediaService :
                 MEDIA_NOTIFICATION.NOTIFICATION_CHANNEL_ID,
                 R.string.notification_channel_name,
             ).apply {
-                setSmallIcon(R.drawable.ic_stat_noti)
+                setSmallIcon(R.drawable.app_icon)
             },
         )
 
@@ -156,18 +154,13 @@ internal class SimpleMediaService :
                                 ongoing: Boolean,
                             ) {
                                 fun startFg() {
-                                    try {
-                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                            startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
-                                        } else {
-                                            startForeground(notificationId, notification)
-                                        }
-                                    } catch (e: Throwable) {
-                                        Logger.e("Service", "Failed to start foreground service: ${e.message}", e)
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                        startForeground(notificationId, notification, FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+                                    } else {
+                                        startForeground(notificationId, notification)
                                     }
                                 }
-                                keepAliveJob?.cancel()
-                                keepAliveJob = coroutineScope.launch {
+                                coroutineScope.launch {
                                     while (coroutineScope.isActive) {
                                         startFg()
                                         delay(30.seconds)
@@ -178,7 +171,7 @@ internal class SimpleMediaService :
                     ).setMediaDescriptionAdapter(DefaultMediaDescriptionAdapter(mediaSession?.sessionActivity))
                     .build()
             playerNotificationManager.setPlayer(player)
-            playerNotificationManager.setSmallIcon(R.drawable.ic_stat_noti)
+            playerNotificationManager.setSmallIcon(R.drawable.app_icon)
             mediaSession?.platformToken?.let { playerNotificationManager.setMediaSessionToken(it) }
         }
 
@@ -215,13 +208,11 @@ internal class SimpleMediaService :
         Logger.w("Service", "Starting release process")
         runBlocking {
             try {
-                 
                 mediaSession?.run {
                     this.player.pause()
                     this.player.playWhenReady = false
                     this.release()
                 }
-                 
                 simpleMediaServiceHandler.release()
                 mediaSession = null
                 Logger.w("Service", "Simple Media Service Released")
@@ -233,9 +224,11 @@ internal class SimpleMediaService :
 
     @UnstableApi
     override fun onDestroy() {
-        Logger.w("Service", "Simple Media Service Destroyed")
-        release()
         super.onDestroy()
+        Logger.w("Service", "Simple Media Service Destroyed")
+        if (simpleMediaServiceHandler.shouldReleaseOnTaskRemoved()) {
+            release()
+        }
     }
 
     override fun onTrimMemory(level: Int) {
@@ -253,7 +246,6 @@ internal class SimpleMediaService :
         }
     }
 
-     
     @UnstableApi
     private fun provideMediaLibrarySession(
         service: MediaLibraryService,
@@ -275,4 +267,3 @@ internal class SimpleMediaService :
         return appProcessInfo.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND
     }
 }
-

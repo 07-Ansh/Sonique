@@ -14,6 +14,7 @@ import com.sonique.kotlinytmusicscraper.YouTube
 import com.sonique.kotlinytmusicscraper.models.AlbumItem
 import com.sonique.logger.Logger
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn

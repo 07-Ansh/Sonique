@@ -48,7 +48,7 @@ json = "1.9.0"
 
 slf4j = "1.7.36"
 newpipe = "v0.26.1"
-brave-newpipe = "v0.26.4"
+brave-newpipe = "v0.26.3"
 pipepipe = "c3139c584d"
 webkit = "1.14.0"
 kermit = "2.0.8"

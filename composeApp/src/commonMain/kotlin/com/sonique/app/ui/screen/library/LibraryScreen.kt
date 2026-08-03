@@ -9,7 +9,6 @@ import com.sonique.app.extension.NonLazyGrid
 import com.sonique.app.ui.component.HomeGridCardItem
 import com.sonique.app.ui.component.PlaylistFullWidthItems
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
-import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandHorizontally
@@ -260,7 +259,20 @@ fun LibraryScreen(
         onScrolling(scrollingUp)
     }
 
-    Box(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
+    Box(
+        modifier = Modifier.fillMaxSize().then(
+            // Full-screen detail sub-screens (PlaylistScreen, AlbumScreen, etc.) draw behind
+            // the status bar and handle their own insets. Applying statusBars padding here
+            // would double-pad them and leave a dark gap at the top.
+            when (activeSubScreen) {
+                LibrarySubScreen.PLAYLIST_DETAILS,
+                LibrarySubScreen.ALBUM_DETAILS,
+                LibrarySubScreen.ARTIST_DETAILS,
+                LibrarySubScreen.LOCAL_PLAYLIST_DETAILS -> Modifier
+                else -> Modifier.windowInsetsPadding(WindowInsets.statusBars)
+            }
+        )
+    ) {
         Crossfade(
             modifier = Modifier.fillMaxSize(),
             targetState = activeSubScreen,
@@ -502,21 +514,13 @@ fun LibraryScreen(
                                                  ),
                                                  navController = navController,
                                                  onLocalPlaylistClick = { id ->
-                                                     when (id) {
-                                                         -999L -> {
-                                                             activePlaylistId = LOCAL_PLAYLIST_ID_DOWNLOADED
-                                                             activeIsYourYouTubePlaylist = false
-                                                             activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
-                                                         }
-                                                         -998L -> {
-                                                             activePlaylistId = LOCAL_PLAYLIST_ID_LIKED
-                                                             activeIsYourYouTubePlaylist = false
-                                                             activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
-                                                         }
-                                                         else -> {
-                                                             activeLocalPlaylistId = id
-                                                             activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
-                                                         }
+                                                     if (id == -999L) {
+                                                         activePlaylistId = LOCAL_PLAYLIST_ID_DOWNLOADED
+                                                         activeIsYourYouTubePlaylist = false
+                                                         activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                     } else {
+                                                         activeLocalPlaylistId = id
+                                                         activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
                                                      }
                                                  },
                                                  onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
@@ -746,22 +750,8 @@ fun LibraryScreen(
                                         showAddSheet = true
                                     },
                                     onLocalPlaylistClick = { id ->
-                                        when (id) {
-                                            -999L -> {
-                                                activePlaylistId = LOCAL_PLAYLIST_ID_DOWNLOADED
-                                                activeIsYourYouTubePlaylist = false
-                                                activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
-                                            }
-                                            -998L -> {
-                                                activePlaylistId = LOCAL_PLAYLIST_ID_LIKED
-                                                activeIsYourYouTubePlaylist = false
-                                                activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
-                                            }
-                                            else -> {
-                                                activeLocalPlaylistId = id
-                                                activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
-                                            }
-                                        }
+                                        activeLocalPlaylistId = id
+                                        activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
                                     },
                                     onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
                                     onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },

@@ -411,7 +411,7 @@ internal class CrossfadeExoPlayerAdapter(
         val player =
             ExoPlayer
                 .Builder(context)
-                .setAudioAttributes(audioAttributes, true)
+                .setAudioAttributes(audioAttributes, false)
                 .setLoadControl(
                     DefaultLoadControl
                         .Builder()

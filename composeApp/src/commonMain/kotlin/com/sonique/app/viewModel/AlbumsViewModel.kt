@@ -54,7 +54,8 @@ class AlbumsViewModel(
                     items.forEach { item ->
                         val albumContents = item.contents.filterNotNull().filter { content ->
                             content.browseId?.startsWith("MPRE") == true ||
-                            (content.videoId == null && content.playlistId?.startsWith("OLAK5uy") == true) ||
+                            (content.browseId != null && content.videoId.isNullOrEmpty() && content.playlistId == null) ||
+                            (content.playlistId?.startsWith("OLAK5uy") == true) ||
                             content.album != null
                         }
                         if (albumContents.isNotEmpty()) {
@@ -68,7 +69,8 @@ class AlbumsViewModel(
                     newReleases.forEach { item ->
                         val albumContents = item.contents.filterNotNull().filter { content ->
                             content.browseId?.startsWith("MPRE") == true ||
-                            (content.videoId == null && content.playlistId?.startsWith("OLAK5uy") == true) ||
+                            (content.browseId != null && content.videoId.isNullOrEmpty() && content.playlistId == null) ||
+                            (content.playlistId?.startsWith("OLAK5uy") == true) ||
                             content.album != null
                         }
                         if (albumContents.isNotEmpty()) {

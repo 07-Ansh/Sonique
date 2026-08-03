@@ -350,8 +350,16 @@ fun LibraryScreen(
                                                                     Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
                                                                     Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
                                                                     Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
-                                                                    "LM" -> activePlaylistId = "LM"; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
-                                                                    else -> activePlaylistId = pinned.id; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                    "LM" -> {
+                                                                        activePlaylistId = "LM"
+                                                                        activeIsYourYouTubePlaylist = false
+                                                                        activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                    }
+                                                                    else -> {
+                                                                        activePlaylistId = pinned.id
+                                                                        activeIsYourYouTubePlaylist = false
+                                                                        activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                    }
                                                                 }
                                                             },
                                                         )

@@ -180,9 +180,7 @@
 
 -keep class org.apache.commons.io.** { *; }
 
-#YtDlp
--keep class com.yausername.** { *; }
--keep class org.apache.commons.compress.archivers.zip.** { *; }
+
 -keepattributes SourceFile
 
 ## Rules for NewPipeExtractor

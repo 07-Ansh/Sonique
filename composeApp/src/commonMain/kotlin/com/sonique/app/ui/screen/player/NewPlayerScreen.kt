@@ -10,7 +10,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import com.sonique.app.extension.getColorFromPalette
 import com.sonique.app.ui.component.GoogleCircularProgressIndicator
-import com.sonique.app.ui.component.LyricsShimmer
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -354,8 +353,6 @@ fun NewPlayerScreen(
                                     onLineClick = { progress ->
                                         sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
                                     },
-                                    isAutoScrollEnabledState = isLyricsAutoScrollEnabled,
-                                    onAutoScrollStateChanged = { isLyricsAutoScrollEnabled = it },
                                     backgroundColor = Color.Transparent,
                                     playerContentColor = Color.White,
                                     modifier = Modifier.fillMaxSize()
@@ -365,9 +362,6 @@ fun NewPlayerScreen(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.fillMaxSize()
                                 ) {
-                                    LyricsShimmer(
-                                        modifier = Modifier.fillMaxSize()
-                                    )
                                     GoogleCircularProgressIndicator()
                                 }
                             }

@@ -162,7 +162,6 @@ import com.sonique.app.ui.component.PlayPauseButton
 import com.sonique.app.ui.component.PlayerControlLayout
 import com.sonique.app.ui.component.WavySliderTrack
 import com.sonique.app.ui.component.QueueBottomSheet
-import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.player.FullscreenDestination

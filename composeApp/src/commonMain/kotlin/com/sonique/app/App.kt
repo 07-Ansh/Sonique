@@ -325,6 +325,9 @@ fun App(
 
         LaunchedEffect(isShowNowPlaylistScreen, screenHeightPx) {
              if (isShowNowPlaylistScreen) {
+                 // Yield one tick so NewPlayerScreen's offsetYAnimatable.snapTo(0f) runs first,
+                 // preventing a jerk where content briefly appears at translationY=1500f.
+                 kotlinx.coroutines.yield()
                  // Opening: slide the player container up from bottom
                  playerOffsetY.animateTo(
                      0f,

@@ -3,8 +3,31 @@ package com.sonique.app.ui.component
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationState
+import androidx.compose.animation.core.animateDecay
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.exponentialDecay
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.verticalDrag
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.sp
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
@@ -14,6 +37,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -119,6 +145,54 @@ import kotlin.math.abs
 
 private const val TAG = "LyricsView"
 
+private const val LYRICS_ANCHOR_RATIO = 0.35f
+private val LYRICS_ITEM_FALLBACK_HEIGHT_DP = 68.dp
+private val LYRICS_ITEM_GAP_DP = 16.dp
+private val LYRICS_FADE_TOP_DP = 130.dp
+private val LYRICS_FADE_BOTTOM_DP = 160.dp
+private const val LYRICS_STAGGER_DELAY_PER_DISTANCE = 20
+private const val LYRICS_STAGGER_DELAY_MAX_MS = 200
+
+fun Modifier.fadingEdge(
+    left: Dp? = null,
+    top: Dp? = null,
+    right: Dp? = null,
+    bottom: Dp? = null,
+) = graphicsLayer(alpha = 0.99f)
+    .drawWithContent {
+        drawContent()
+        if (top != null) {
+            drawRect(
+                brush =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color.Transparent,
+                                Color.Black,
+                            ),
+                        startY = 0f,
+                        endY = top.toPx(),
+                    ),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+        if (bottom != null) {
+            drawRect(
+                brush =
+                    Brush.verticalGradient(
+                        colors =
+                            listOf(
+                                Color.Black,
+                                Color.Transparent,
+                            ),
+                        startY = size.height - bottom.toPx(),
+                        endY = size.height,
+                    ),
+                blendMode = BlendMode.DstIn,
+            )
+        }
+    }
+
 @Composable
 fun LyricsView(
     lyricsData: NowPlayingScreenData.LyricsData,
@@ -138,10 +212,6 @@ fun LyricsView(
             lyricsData
         }
     }
-    var currentLineHeight by remember {
-        mutableIntStateOf(0)
-    }
-    val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val current by timeLine.collectAsStateWithLifecycle()
     var currentLineIndex by rememberSaveable {
@@ -201,30 +271,6 @@ fun LyricsView(
             currentLineIndex = -1
         }
     }
-    var userIsScrolling by remember { mutableStateOf(false) }
-    val isDragged by listState.interactionSource.collectIsDraggedAsState()
-
-    // Pause auto-scroll ONLY when user physically drags the lyrics with finger
-    LaunchedEffect(isDragged) {
-        if (isDragged) {
-            userIsScrolling = true
-        } else if (userIsScrolling) {
-            // When user stops scrolling, wait 5 seconds of inactivity before resuming auto-scroll
-            delay(5000)
-            userIsScrolling = false
-        }
-    }
-
-    // Auto-scroll to active line smoothly when user is not scrolling
-    LaunchedEffect(currentLineIndex, userIsScrolling) {
-        if (!userIsScrolling && currentLineIndex > -1 &&
-            (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED")
-        ) {
-            listState.animateScrollAndCentralizeItem(
-                index = currentLineIndex,
-                scope = this,
-            )
-        }
     }
 
     fun findClosestTranslatedLine(originalTimeMs: String): String? {
@@ -246,183 +292,174 @@ fun LyricsView(
             }?.words
     }
 
-    Box(modifier = modifier) {
-        LazyColumn(
-            state = listState,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 32.dp),
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .drawWithContent {
-                        drawContent()
+    BoxWithConstraints(
+        contentAlignment = Alignment.TopCenter,
+        modifier = modifier.fillMaxSize().padding(bottom = 12.dp)
+    ) {
+        val maxHeightPx = constraints.maxHeight.toFloat()
+        val anchorY = maxHeightPx * LYRICS_ANCHOR_RATIO
+        val density = LocalDensity.current
+        val lineHeightPx = with(density) { LYRICS_ITEM_FALLBACK_HEIGHT_DP.toPx() }
 
-                         
-                        if (showScrollShadows) {
-                             
-                            if (showTopShadow) {
-                                drawRect(
-                                    brush =
-                                        Brush.verticalGradient(
-                                            colors =
-                                                listOf(
-                                                    backgroundColor,
-                                                    backgroundColor.copy(alpha = 0.8f),
-                                                    backgroundColor.copy(alpha = 0.4f),
-                                                    Color.Transparent,
-                                                ),
-                                            startY = 0f,
-                                            endY = 80.dp.toPx(),
-                                        ),
-                                    topLeft = Offset(0f, 0f),
-                                    size = Size(size.width, 80.dp.toPx()),
-                                )
+        val lines = effectiveLyricsData.lyrics.lines ?: emptyList()
+        val activeListIndex = currentLineIndex.coerceAtLeast(0)
+
+        val itemHeights = remember(lines) { mutableStateMapOf<Int, Int>() }
+
+        val positions = remember(itemHeights.toMap(), activeListIndex, lines) {
+            val map = mutableMapOf<Int, Float>()
+            if (activeListIndex == -1 || lines.isEmpty()) return@remember map
+
+            map[activeListIndex] = 0f
+            var currentY = 0f
+            for (i in activeListIndex - 1 downTo 0) {
+                val height = itemHeights[i]?.toFloat() ?: lineHeightPx
+                currentY -= (height + with(density) { LYRICS_ITEM_GAP_DP.toPx() })
+                map[i] = currentY
+            }
+            currentY = 0f
+            for (i in activeListIndex until lines.size - 1) {
+                val height = itemHeights[i]?.toFloat() ?: lineHeightPx
+                currentY += (height + with(density) { LYRICS_ITEM_GAP_DP.toPx() })
+                map[i + 1] = currentY
+            }
+            map
+        }
+
+        var userManualOffset by remember { mutableFloatStateOf(0f) }
+        var isAutoScrollEnabled by remember { mutableStateOf(true) }
+        var flingJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+        val velocityTracker = remember { VelocityTracker() }
+        val decayAnimSpec = remember { exponentialDecay<Float>(frictionMultiplier = 1.8f) }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .fadingEdge(top = LYRICS_FADE_TOP_DP, bottom = LYRICS_FADE_BOTTOM_DP)
+                .clipToBounds()
+                .pointerInput(Unit) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val down = awaitFirstDown(requireUnconsumed = false)
+                            flingJob?.cancel()
+                            velocityTracker.resetTracking()
+                            isAutoScrollEnabled = false
+                            velocityTracker.addPosition(down.uptimeMillis, down.position)
+                            verticalDrag(down.id) { change ->
+                                userManualOffset += change.positionChange().y
+                                velocityTracker.addPosition(change.uptimeMillis, change.position)
+                                change.consume()
                             }
-
-                             
-                            if (showBottomShadow) {
-                                drawRect(
-                                    brush =
-                                        Brush.verticalGradient(
-                                            colors =
-                                                listOf(
-                                                    Color.Transparent,
-                                                    backgroundColor.copy(alpha = 0.4f),
-                                                    backgroundColor.copy(alpha = 0.8f),
-                                                    backgroundColor,
-                                                ),
-                                            startY = size.height - 80.dp.toPx(),
-                                            endY = size.height,
-                                        ),
-                                    topLeft = Offset(0f, size.height - 80.dp.toPx()),
-                                    size = Size(size.width, 80.dp.toPx()),
-                                )
-                            }
-                        }
-                    },
-        ) {
-            items(effectiveLyricsData.lyrics.lines?.size ?: 0) { index ->
-                val line = effectiveLyricsData.lyrics.lines?.getOrNull(index)
-                 
-                val translatedWords =
-                    if (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED") {
-                        line?.startTimeMs?.let { findClosestTranslatedLine(it) }
-                    } else {
-                        effectiveLyricsData.translatedLyrics
-                            ?.first
-                            ?.lines
-                            ?.getOrNull(index)
-                            ?.words
-                    }
-                Logger.d(TAG, "Line $index: ${line?.words}, Translated: $translatedWords")
-
-                line?.words?.let { words ->
-                    Logger.d(TAG, "SyncType: ${effectiveLyricsData.lyrics.syncType}, Line $index content preview: ${words.take(50)}")
-                    when {
-                         
-                        effectiveLyricsData.lyrics.syncType == "RICH_SYNCED" -> {
-                            val parsedLine =
-                                remember(words, line.startTimeMs, line.endTimeMs) {
-                                    val result = parseRichSyncWords(words, line.startTimeMs, line.endTimeMs)
-                                    Logger.d(TAG, "Line $index parseRichSyncWords result: ${if (result != null) "${result.words.size} words" else "null"}")
-                                    result
+                            val velocity = velocityTracker.calculateVelocity().y
+                            flingJob = scope.launch {
+                                AnimationState(initialValue = userManualOffset, initialVelocity = velocity).animateDecay(decayAnimSpec) {
+                                    userManualOffset = value
                                 }
-
-                            if (parsedLine != null) {
-                                RichSyncLyricsLineItem(
-                                    parsedLine = parsedLine,
-                                    translatedWords = translatedWords,
-                                    currentTimeMs = current.current,
-                                    isCurrent = index == currentLineIndex,
-                                    playerContentColor = playerContentColor,
-                                    modifier =
-                                        Modifier
-                                            .clickable {
-                                                userIsScrolling = false
-                                                onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
-                                            }.onGloballyPositioned { c ->
-                                                currentLineHeight = c.size.height
-                                            },
-                                )
-                            } else {
-                                 
-                                LyricsLineItem(
-                                    originalWords = words,
-                                    translatedWords = translatedWords,
-                                    isBold = index <= currentLineIndex,
-                                    isCurrent = index == currentLineIndex,
-                                    playerContentColor = playerContentColor,
-                                    modifier =
-                                        Modifier
-                                            .clickable {
-                                                userIsScrolling = false
-                                                onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
-                                            }.onGloballyPositioned { c ->
-                                                currentLineHeight = c.size.height
-                                            },
-                                )
                             }
-                        }
-
-                         
-                        else -> {
-                            LyricsLineItem(
-                                originalWords = words,
-                                translatedWords = translatedWords,
-                                isBold = index <= currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
-                                isCurrent = index == currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
-                                playerContentColor = playerContentColor,
-                                modifier =
-                                    Modifier
-                                        .clickable(enabled = lyricsData.lyrics.syncType == "LINE_SYNCED") {
-                                            userIsScrolling = false
-                                            onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
-                                        }.onGloballyPositioned { c ->
-                                            currentLineHeight = c.size.height
-                                        },
-                            )
                         }
                     }
                 }
-            }
-        }
-
-        // Floating Sync to current lyric button when user scrolled away to read lyrics
-        AnimatedVisibility(
-            visible = userIsScrolling && currentLineIndex >= 0 && (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED"),
-            enter = fadeIn() + slideInVertically { it / 2 },
-            exit = fadeOut() + slideOutVertically { it / 2 },
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 16.dp),
         ) {
-            Surface(
-                onClick = {
-                    userIsScrolling = false
-                    if (currentLineIndex >= 0) {
-                        listState.animateScrollAndCentralizeItem(currentLineIndex, scope)
+            lines.forEachIndexed { listIndex, line ->
+                key(listIndex) {
+                    val distance = abs(listIndex - activeListIndex)
+                    val targetOffset = anchorY + positions.getOrDefault(listIndex, (listIndex - activeListIndex) * lineHeightPx)
+                    val frozenOffset = remember { mutableFloatStateOf(targetOffset) }
+
+                    LaunchedEffect(isAutoScrollEnabled, targetOffset) {
+                        if (isAutoScrollEnabled) frozenOffset.floatValue = targetOffset
                     }
-                },
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.92f),
-                contentColor = playerContentColor,
-                shadowElevation = 6.dp,
-                border = BorderStroke(1.dp, playerContentColor.copy(alpha = 0.15f)),
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.baseline_sync_24),
-                        contentDescription = "Sync",
-                        modifier = Modifier.size(18.dp),
-                        tint = playerContentColor,
+
+                    val animatedOffset by animateFloatAsState(
+                        targetValue = if (isAutoScrollEnabled) targetOffset else frozenOffset.floatValue,
+                        animationSpec = tween(
+                            durationMillis = 750,
+                            delayMillis = (distance * LYRICS_STAGGER_DELAY_PER_DISTANCE).coerceAtMost(LYRICS_STAGGER_DELAY_MAX_MS),
+                            easing = FastOutSlowInEasing
+                        ),
+                        label = "lyricStaggeredOffset_$listIndex"
                     )
-                    Text(
-                        text = "Sync to current lyric",
-                        style = typo().labelLarge,
-                        color = playerContentColor,
-                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .layout { measurable, constraints ->
+                                val placeable = measurable.measure(constraints.copy(maxHeight = Constraints.Infinity))
+                                layout(placeable.width, 0) { placeable.place(0, 0) }
+                            }
+                            .offset { IntOffset(0, (animatedOffset + userManualOffset).roundToInt()) }
+                    ) {
+                        val distanceFromCurrent = if (currentLineIndex >= 0) abs(listIndex - currentLineIndex) else 99
+                        val words = line.words ?: ""
+                        val translatedWords = if (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED") {
+                            line.startTimeMs.let { findClosestTranslatedLine(it) }
+                        } else {
+                            effectiveLyricsData.translatedLyrics?.first?.lines?.getOrNull(listIndex)?.words
+                        }
+
+                        when {
+                            effectiveLyricsData.lyrics.syncType == "RICH_SYNCED" -> {
+                                val parsedLine = remember(words, line.startTimeMs, line.endTimeMs) {
+                                    parseRichSyncWords(words, line.startTimeMs, line.endTimeMs)
+                                }
+                                if (parsedLine != null) {
+                                    RichSyncLyricsLineItem(
+                                        parsedLine = parsedLine,
+                                        translatedWords = translatedWords,
+                                        currentTimeMs = current.current,
+                                        isCurrent = listIndex == currentLineIndex,
+                                        playerContentColor = playerContentColor,
+                                        modifier = Modifier
+                                            .clickable {
+                                                isAutoScrollEnabled = true
+                                                userManualOffset = 0f
+                                                onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
+                                            }
+                                            .onSizeChanged { size ->
+                                                itemHeights[listIndex] = size.height
+                                            }
+                                    )
+                                } else {
+                                    LyricsLineItem(
+                                        originalWords = words,
+                                        translatedWords = translatedWords,
+                                        isBold = listIndex <= currentLineIndex,
+                                        isCurrent = listIndex == currentLineIndex,
+                                        distanceFromCurrent = distanceFromCurrent,
+                                        playerContentColor = playerContentColor,
+                                        modifier = Modifier
+                                            .clickable {
+                                                isAutoScrollEnabled = true
+                                                userManualOffset = 0f
+                                                onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
+                                            }
+                                            .onSizeChanged { size ->
+                                                itemHeights[listIndex] = size.height
+                                            }
+                                    )
+                                }
+                            }
+                            else -> {
+                                LyricsLineItem(
+                                    originalWords = words,
+                                    translatedWords = translatedWords,
+                                    isBold = listIndex <= currentLineIndex || effectiveLyricsData.lyrics.syncType != "LINE_SYNCED",
+                                    isCurrent = listIndex == currentLineIndex || effectiveLyricsData.lyrics.syncType != "LINE_SYNCED",
+                                    distanceFromCurrent = distanceFromCurrent,
+                                    playerContentColor = playerContentColor,
+                                    modifier = Modifier
+                                        .clickable(enabled = effectiveLyricsData.lyrics.syncType == "LINE_SYNCED") {
+                                            isAutoScrollEnabled = true
+                                            userManualOffset = 0f
+                                            onLineClick(line.startTimeMs.toFloat() * 100 / timeLine.value.total)
+                                        }
+                                        .onSizeChanged { size ->
+                                            itemHeights[listIndex] = size.height
+                                        }
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -435,93 +472,69 @@ fun LyricsLineItem(
     translatedWords: String?,
     isBold: Boolean,
     isCurrent: Boolean = false,
+    distanceFromCurrent: Int = 99,
     modifier: Modifier = Modifier,
     playerContentColor: Color = Color.White,
 ) {
-    Crossfade(targetState = isBold) {
-        if (it) {
-            Column(
-                modifier = modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    modifier =
-                        Modifier.fillMaxWidth().then(
-                            if (isCurrent) {
-                                Modifier
-                            } else {
-                                Modifier.blur(1.dp)
-                            },
-                        ),
-                    text = originalWords,
-                    style = typo().headlineLarge,
-                    textAlign = TextAlign.Center,
-                    color =
-                        if (isCurrent) {
-                            playerContentColor
-                        } else {
-                            Color.LightGray.copy(
-                                alpha = 0.35f,
-                            )
-                        },
-                )
-                if (translatedWords != null) {
-                    Text(
-                        modifier =
-                            Modifier.fillMaxWidth().then(
-                                if (isCurrent) {
-                                    Modifier
-                                } else {
-                                    Modifier.blur(1.dp)
-                                },
-                            ),
-                        text = translatedWords,
-                        style = typo().bodyMedium,
-                        textAlign = TextAlign.Center,
-                        color =
-                            if (isCurrent) {
-                                musica_accent
-                            } else {
-                                musica_accent.copy(
-                                    alpha = 0.3f,
-                                )
-                            },
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
+    val targetAlpha =
+        if (isCurrent) {
+            1.0f
+        } else {
+            when (distanceFromCurrent) {
+                1 -> 0.25f
+                2 -> 0.20f
+                3 -> 0.15f
+                else -> 0.08f
             }
         }
-    }
-    if (!isBold) {
-        Column(
-            modifier = modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                modifier = Modifier.fillMaxWidth().blur(1.dp),
-                text = originalWords,
-                style = typo().headlineMedium,
-                textAlign = TextAlign.Center,
-                color =
-                    Color.LightGray.copy(
-                        alpha = 0.35f,
+
+    val animatedAlpha by animateFloatAsState(
+        targetValue = targetAlpha,
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        label = "lineAlpha",
+    )
+
+    val fontSize = if (isCurrent) 32.sp else 24.sp
+    val fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Medium
+
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (isCurrent) {
+                            Modifier
+                        } else {
+                            Modifier.blur(1.dp)
+                        },
                     ),
-            )
-            if (translatedWords != null) {
-                Text(
-                    modifier = Modifier.fillMaxWidth().blur(1.dp),
-                    text = translatedWords,
-                    style = typo().bodyMedium,
+            text = originalWords,
+            style =
+                TextStyle(
+                    fontSize = fontSize,
+                    fontWeight = fontWeight,
+                    letterSpacing = (-0.5).sp,
                     textAlign = TextAlign.Center,
-                    color =
-                        musica_accent.copy(
-                            alpha = 0.3f,
-                        ),
-                )
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+                    fontFamily = typo().headlineLarge.fontFamily,
+                ),
+            color = playerContentColor.copy(alpha = animatedAlpha),
+        )
+        if (translatedWords != null) {
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                modifier = Modifier.fillMaxWidth(),
+                text = translatedWords,
+                style = typo().bodyMedium,
+                textAlign = TextAlign.Center,
+                color = musica_accent.copy(alpha = animatedAlpha * 0.85f),
+            )
         }
     }
 }

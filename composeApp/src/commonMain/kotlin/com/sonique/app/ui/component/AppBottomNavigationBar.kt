@@ -257,7 +257,7 @@ enum class BottomNavScreen(
 ) {
     Home(Res.string.home, Icons.Rounded.Home, HomeDestination),
     Search(Res.string.search, Icons.Rounded.Search, SearchDestination),
-    Albums(Res.string.youtube_albums, Icons.Rounded.Album, AlbumsDestination),
+    Albums(Res.string.albums, Icons.Rounded.Album, AlbumsDestination),
     Library(Res.string.library, Icons.Rounded.LibraryMusic, LibraryDestination())
 }
 

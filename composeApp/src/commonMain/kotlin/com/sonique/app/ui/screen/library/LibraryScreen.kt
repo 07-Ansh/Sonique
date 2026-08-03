@@ -297,6 +297,124 @@ fun LibraryScreen(
                                         }
                                     }
 
+                                    item {
+                                         var selectedPlaylistTab by rememberSaveable { mutableStateOf(0) }
+                                         val currentPlaylistData: LocalResource<List<com.sonique.domain.data.type.PlaylistType>> = if (selectedPlaylistTab == 0) {
+                                             (yourLocalPlaylist as? LocalResource.Success)?.let { success ->
+                                                 LocalResource.Success(success.data?.map { p -> p as com.sonique.domain.data.type.PlaylistType } ?: emptyList())
+                                             } ?: LocalResource.Loading()
+                                         } else {
+                                             (youTubePlaylist as? LocalResource.Success)?.let { success ->
+                                                 LocalResource.Success(success.data?.map { p -> p as com.sonique.domain.data.type.PlaylistType } ?: emptyList())
+                                             } ?: LocalResource.Loading()
+                                         }
+
+                                         var showCreateDialogTab by remember { mutableStateOf(false) }
+                                         var newPlaylistTitleTab by remember { mutableStateOf("") }
+
+                                         if (showCreateDialogTab) {
+                                             androidx.compose.material3.AlertDialog(
+                                                 onDismissRequest = {
+                                                     showCreateDialogTab = false
+                                                     newPlaylistTitleTab = ""
+                                                 },
+                                                 title = { Text("New Playlist", style = typo().titleMedium, color = Color.White) },
+                                                 text = {
+                                                     androidx.compose.material3.OutlinedTextField(
+                                                         value = newPlaylistTitleTab,
+                                                         onValueChange = { newPlaylistTitleTab = it },
+                                                         label = { Text("Playlist Title", color = Color.Gray) },
+                                                         singleLine = true,
+                                                         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                                                             focusedBorderColor = Color.White,
+                                                             unfocusedBorderColor = Color.Gray,
+                                                             focusedLabelColor = Color.White,
+                                                             cursorColor = Color.White,
+                                                             focusedTextColor = Color.White,
+                                                             unfocusedTextColor = Color.White
+                                                         ),
+                                                         modifier = Modifier.fillMaxWidth()
+                                                     )
+                                                 },
+                                                 confirmButton = {
+                                                     androidx.compose.material3.TextButton(
+                                                         onClick = {
+                                                             if (newPlaylistTitleTab.isNotBlank()) {
+                                                                 viewModel.createPlaylist(newPlaylistTitleTab.trim())
+                                                                 showCreateDialogTab = false
+                                                                 newPlaylistTitleTab = ""
+                                                             }
+                                                         }
+                                                     ) { Text("Create", color = Color.White) }
+                                                 },
+                                                 dismissButton = {
+                                                     androidx.compose.material3.TextButton(
+                                                         onClick = {
+                                                             showCreateDialogTab = false
+                                                             newPlaylistTitleTab = ""
+                                                         }
+                                                     ) { Text("Cancel", color = Color.Gray) }
+                                                 }
+                                             )
+                                         }
+
+                                         Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                                             Row(
+                                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                                                 horizontalArrangement = Arrangement.SpaceBetween,
+                                                 verticalAlignment = Alignment.CenterVertically
+                                             ) {
+                                                 Text(
+                                                     text = "Playlists",
+                                                     style = typo().titleLarge,
+                                                     color = Color.White
+                                                 )
+                                                 Row(
+                                                     horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                                     verticalAlignment = Alignment.CenterVertically
+                                                 ) {
+                                                     androidx.compose.material3.FilterChip(
+                                                         selected = selectedPlaylistTab == 0,
+                                                         onClick = { selectedPlaylistTab = 0 },
+                                                         label = { Text("Local", style = typo().labelMedium) },
+                                                         leadingIcon = if (selectedPlaylistTab == 0) {
+                                                             { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                                         } else null
+                                                     )
+                                                     androidx.compose.material3.FilterChip(
+                                                         selected = selectedPlaylistTab == 1,
+                                                         onClick = { selectedPlaylistTab = 1 },
+                                                         label = { Text("YouTube", style = typo().labelMedium) },
+                                                         leadingIcon = if (selectedPlaylistTab == 1) {
+                                                             { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
+                                                         } else null
+                                                     )
+                                                 }
+                                             }
+
+                                             LibraryItem(
+                                                 state = LibraryItemState(
+                                                     type = if (selectedPlaylistTab == 0) {
+                                                         LibraryItemType.YourLocalPlaylist
+                                                     } else {
+                                                         LibraryItemType.YouTubePlaylist
+                                                     },
+                                                     data = (currentPlaylistData as? LocalResource.Success)?.data ?: emptyList(),
+                                                     isLoading = currentPlaylistData is LocalResource.Loading,
+                                                 ),
+                                                 navController = navController,
+                                                 createNewPlaylist = if (selectedPlaylistTab == 0) { { showCreateDialogTab = true } } else null,
+                                                 onLocalPlaylistClick = { id ->
+                                                     activeLocalPlaylistId = id
+                                                     activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
+                                                 },
+                                                 onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
+                                                 onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },
+                                                 onPlaylistClick = { id, isYt -> activePlaylistId = id; activeIsYourYouTubePlaylist = isYt; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS }
+                                             )
+                                         }
+                                    }
+
                                     if (activeDownloads > 0) {
                                         item {
                                             val cardModifier = if (enableLiquidGlass) {

@@ -1141,60 +1141,6 @@ fun NowPlayingScreenContent(
                                                 }
                                             }
                                         }
-                                        if (isLoggedIn) {
-                                            Spacer(modifier = Modifier.size(16.dp))
-                                            // --- Download button ---
-                                            val dlState = bsUiState.songUIState.downloadState
-                                            if (showCancelDlDialog) {
-                                                AlertDialog(
-                                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                                    onDismissRequest = { showCancelDlDialog = false },
-                                                    confirmButton = {
-                                                        TextButton(onClick = {
-                                                            showCancelDlDialog = false
-                                                            bottomSheetViewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
-                                                        }) { Text("Yes") }
-                                                    },
-                                                    dismissButton = {
-                                                        TextButton(onClick = { showCancelDlDialog = false }) { Text("Cancel") }
-                                                    },
-                                                    text = {
-                                                        Text(
-                                                            if (dlState == DownloadState.STATE_DOWNLOADED) "Remove this download?" else "Cancel the download?",
-                                                            style = typo().bodyMedium,
-                                                        )
-                                                    },
-                                                )
-                                            }
-                                            IconButton(
-                                                modifier = Modifier.size(24.dp).aspectRatio(1f).clip(CircleShape),
-                                                onClick = {
-                                                    when (dlState) {
-                                                        DownloadState.STATE_NOT_DOWNLOADED -> bottomSheetViewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
-                                                        else -> showCancelDlDialog = true
-                                                    }
-                                                },
-                                            ) {
-                                                when (dlState) {
-                                                    DownloadState.STATE_DOWNLOADING,
-                                                    DownloadState.STATE_PREPARING -> Image(
-                                                        painter = painterResource(Res.drawable.baseline_downloading_white),
-                                                        contentDescription = "Downloading",
-                                                        modifier = Modifier.size(24.dp),
-                                                    )
-                                                    DownloadState.STATE_DOWNLOADED -> Icon(
-                                                        imageVector = Icons.Rounded.Check,
-                                                        tint = Color.White,
-                                                        contentDescription = "Downloaded",
-                                                    )
-                                                    else -> Icon(
-                                                        imageVector = Icons.Rounded.Download,
-                                                        tint = playerContentColor,
-                                                        contentDescription = "Download",
-                                                    )
-                                                }
-                                            }
-                                        }
                                         Spacer(modifier = Modifier.size(12.dp))
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                              HeartCheckBox(checked = likeStatus, size = 28) {

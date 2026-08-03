@@ -345,6 +345,10 @@ fun NowPlayingScreenContent(
 
 
 
+    LaunchedEffect(nowPlayingState?.songEntity) {
+        bottomSheetViewModel.setSongEntity(nowPlayingState?.songEntity)
+    }
+
     LaunchedEffect(screenDataState) {
         Logger.d(TAG, "ScreenDataState: $screenDataState")
         showHideMiddleLayout = screenDataState.canvasData == null

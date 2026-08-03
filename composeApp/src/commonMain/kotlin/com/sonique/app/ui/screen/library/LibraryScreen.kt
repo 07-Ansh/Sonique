@@ -259,20 +259,7 @@ fun LibraryScreen(
         onScrolling(scrollingUp)
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize().then(
-            // Full-screen detail sub-screens (PlaylistScreen, AlbumScreen, etc.) draw behind
-            // the status bar and handle their own insets. Applying statusBars padding here
-            // would double-pad them and leave a dark gap at the top.
-            when (activeSubScreen) {
-                LibrarySubScreen.PLAYLIST_DETAILS,
-                LibrarySubScreen.ALBUM_DETAILS,
-                LibrarySubScreen.ARTIST_DETAILS,
-                LibrarySubScreen.LOCAL_PLAYLIST_DETAILS -> Modifier
-                else -> Modifier.windowInsetsPadding(WindowInsets.statusBars)
-            }
-        )
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Crossfade(
             modifier = Modifier.fillMaxSize(),
             targetState = activeSubScreen,
@@ -297,7 +284,7 @@ fun LibraryScreen(
                                 LazyColumn(
                                     contentPadding =
                                         innerPadding.copy(
-                                            top = 25.dp,
+                                            top = 12.dp,
                                         ),
                                     state = state,
                                 ) {

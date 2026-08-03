@@ -107,13 +107,13 @@ actual fun LiquidGlassAppBottomNavigationBar(
         listOf(
             BottomNavScreen.Home,
             BottomNavScreen.Search,
-            BottomNavScreen.Downloads,
+            BottomNavScreen.Playlists,
             BottomNavScreen.Library,
         )
     val barTabs =
         listOf(
             BottomNavScreen.Home,
-            BottomNavScreen.Downloads,
+            BottomNavScreen.Playlists,
             BottomNavScreen.Library,
         )
     var selectedIndex by rememberSaveable {
@@ -121,7 +121,7 @@ actual fun LiquidGlassAppBottomNavigationBar(
             when (startDestination) {
                 is HomeDestination -> BottomNavScreen.Home.ordinal
                 is SearchDestination -> BottomNavScreen.Search.ordinal
-                is DownloadsDestination -> BottomNavScreen.Downloads.ordinal
+                is PlaylistsDestination -> BottomNavScreen.Playlists.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
                 else -> BottomNavScreen.Home.ordinal
             },

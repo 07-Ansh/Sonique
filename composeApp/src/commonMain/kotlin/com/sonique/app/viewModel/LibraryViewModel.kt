@@ -236,6 +236,15 @@ class LibraryViewModel(
                         thumbnail = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
                     )
                 )
+                // Add Liked Songs as a virtual local playlist entry at position 1
+                mutableLocal.add(
+                    1,
+                    LocalPlaylistEntity(
+                        id = -998L,
+                        title = getString(Res.string.liked_songs),
+                        thumbnail = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
+                    )
+                )
                 _yourLocalPlaylist.value = LocalResource.Success(mutableLocal)
                 val currentPinned = _pinnedItems.value.filter { it.description == "PIN" }.toMutableList()
                 values.reversed().forEach { local ->

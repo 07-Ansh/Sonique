@@ -223,13 +223,6 @@ android {
                 )
         }
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters.add("x86")
-            abiFilters.add("x86_64")
-            abiFilters.add("armeabi-v7a")
-            abiFilters.add("arm64-v8a")
-        }
     }
 
     bundle {
@@ -250,7 +243,7 @@ android {
                 abi {
                     isEnable = true
                     reset()
-                    isUniversalApk = true
+                    isUniversalApk = false
                     include(*abis)
                 }
             }
@@ -289,7 +282,6 @@ android {
                     "META-INF/notice",
                     "META-INF/*.kotlin_module",
                 )
-            keepDebugSymbols += setOf("**/libpython.zip.so")
         }
         // Prevent stripping libpython.zip.so (it's a ZIP file, not a native library)
         resources {

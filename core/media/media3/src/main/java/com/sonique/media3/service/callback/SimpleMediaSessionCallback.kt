@@ -267,9 +267,7 @@ internal class SimpleMediaSessionCallback(
 
                     RECENTS ->
                         songRepository
-                            .getAllSongs(50)
-                            .last()
-                            .sortedByDescending { it.inLibrary }
+                            .getRecentSong(limit = 50, offset = 0)
                             .map { it.toMediaItem(parentId) }
 
                     PLAYLIST ->
@@ -473,10 +471,7 @@ internal class SimpleMediaSessionCallback(
                     val songId = path.getOrNull(1) ?: return@future defaultResult
                     val recentSongs =
                         songRepository
-                            .getAllSongs(50)
-                            .lastOrNull()
-                            ?.sortedByDescending { it.inLibrary }
-                            ?: emptyList()
+                            .getRecentSong(limit = 50, offset = 0)
                     MediaSession.MediaItemsWithStartPosition(
                         recentSongs.map { it.toMediaItem() },
                         recentSongs.indexOfFirst { it.videoId == songId }.takeIf { it != -1 } ?: 0,

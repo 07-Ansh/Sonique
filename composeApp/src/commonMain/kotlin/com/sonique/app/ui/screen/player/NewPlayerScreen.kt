@@ -238,10 +238,6 @@ fun NewPlayerScreen(
                         velocityTracker.resetTracking()
                         scope.launch {
                             if (offsetYAnimatable.value > 180f || velocityY > 1200f) {
-                                offsetYAnimatable.animateTo(
-                                    targetValue = 1800f,
-                                    animationSpec = tween(durationMillis = 200)
-                                )
                                 onDismiss()
                                 offsetYAnimatable.snapTo(0f)
                             } else {

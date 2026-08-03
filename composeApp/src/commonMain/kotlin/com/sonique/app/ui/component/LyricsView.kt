@@ -119,7 +119,7 @@ private const val TAG = "LyricsView"
 
 @Composable
 fun LyricsView(
-    lyricsDataInput: NowPlayingScreenData.LyricsData,
+    lyricsData: NowPlayingScreenData.LyricsData,
     timeLine: StateFlow<TimeLine>,
     onLineClick: (Float) -> Unit,
     modifier: Modifier = Modifier,
@@ -127,15 +127,16 @@ fun LyricsView(
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     playerContentColor: Color = Color.White,
 ) {
-    val lyricsData = remember(lyricsDataInput) {
-        val rawLrc = lyricsDataInput.lyrics.SoniqueLyricsId
-        if (lyricsDataInput.lyrics.lines.isNullOrEmpty() && !rawLrc.isNullOrBlank()) {
+    val parsedLyricsData = remember(lyricsData) {
+        val rawLrc = lyricsData.lyrics.SoniqueLyricsId
+        if (lyricsData.lyrics.lines.isNullOrEmpty() && !rawLrc.isNullOrBlank()) {
             val parsedLyrics = com.sonique.domain.utils.parseRawLrcToLyrics(rawLrc)
-            lyricsDataInput.copy(lyrics = parsedLyrics)
+            lyricsData.copy(lyrics = parsedLyrics)
         } else {
-            lyricsDataInput
+            lyricsData
         }
     }
+    val effectiveLyricsData = parsedLyricsData
     var currentLineHeight by remember {
         mutableIntStateOf(0)
     }
@@ -165,7 +166,7 @@ fun LyricsView(
     }
 
     LaunchedEffect(key1 = current) {
-        val lines = lyricsData.lyrics.lines
+        val lines = effectiveLyricsData.lyrics.lines
         if (current.current > 0L) {
             lines?.indices?.forEach { i ->
                 val sentence = lines[i]
@@ -215,7 +216,7 @@ fun LyricsView(
     // Auto-scroll to active line smoothly when user is not scrolling
     LaunchedEffect(currentLineIndex, userIsScrolling) {
         if (!userIsScrolling && currentLineIndex > -1 &&
-            (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED")
+            (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED")
         ) {
             listState.animateScrollAndCentralizeItem(
                 index = currentLineIndex,
@@ -225,7 +226,7 @@ fun LyricsView(
     }
 
     fun findClosestTranslatedLine(originalTimeMs: String): String? {
-        val translatedLines = lyricsData.translatedLyrics?.first?.lines ?: return null
+        val translatedLines = effectiveLyricsData.translatedLyrics?.first?.lines ?: return null
         if (translatedLines.isEmpty()) return null
 
         val originalTime = originalTimeMs.toLongOrNull() ?: return null
@@ -296,14 +297,14 @@ fun LyricsView(
                         }
                     },
         ) {
-            items(lyricsData.lyrics.lines?.size ?: 0) { index ->
-                val line = lyricsData.lyrics.lines?.getOrNull(index)
+            items(effectiveLyricsData.lyrics.lines?.size ?: 0) { index ->
+                val line = effectiveLyricsData.lyrics.lines?.getOrNull(index)
                  
                 val translatedWords =
-                    if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
+                    if (effectiveLyricsData.lyrics.syncType == "LINE_SYNCED" || effectiveLyricsData.lyrics.syncType == "RICH_SYNCED") {
                         line?.startTimeMs?.let { findClosestTranslatedLine(it) }
                     } else {
-                        lyricsData.translatedLyrics
+                        effectiveLyricsData.translatedLyrics
                             ?.first
                             ?.lines
                             ?.getOrNull(index)

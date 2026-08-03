@@ -97,6 +97,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import coil3.compose.LocalPlatformContext
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.ui.component.FreshPlayerMenuSheet
 import com.sonique.app.ui.component.FreshQueueSheet
@@ -196,6 +199,13 @@ fun NewPlayerScreen(
         offsetYAnimatable.snapTo(0f)
     }
 
+    // Trigger lyrics fetch when user opens lyrics panel (fetch may not have run yet)
+    LaunchedEffect(showInlineLyrics) {
+        if (showInlineLyrics && currentSongData?.lyricsData == null) {
+            sharedViewModel.setLyricsProvider()
+        }
+    }
+
     // ── Colors — matching Sonique BLUR background mode defaults ────────────
     val TextBackgroundColor = Color.White
     val textButtonColor = Color.White
@@ -239,7 +249,8 @@ fun NewPlayerScreen(
                                     animationSpec = tween(durationMillis = 180, easing = LinearEasing)
                                 )
                                 onDismiss()
-                                offsetYAnimatable.snapTo(0f)
+                                // Do NOT snapTo(0f) here — that causes a 1-frame blink.
+                                // offsetYAnimatable resets to 0f via LaunchedEffect(Unit) when player re-opens.
                             } else {
                                 offsetYAnimatable.animateTo(
                                     targetValue = 0f,
@@ -342,9 +353,21 @@ fun NewPlayerScreen(
                         label = "thumbnailOrLyrics"
                     ) { showLyrics ->
                         if (showLyrics) {
-                            if (currentSongData?.lyricsData != null) {
+                            val lyricsData = currentSongData?.lyricsData
+                            // Track how long we have been waiting for lyrics
+                            var lyricsTimedOut by remember { mutableStateOf(false) }
+                            LaunchedEffect(lyricsData) {
+                                if (lyricsData == null) {
+                                    lyricsTimedOut = false
+                                    kotlinx.coroutines.delay(8000)
+                                    if (currentSongData?.lyricsData == null) {
+                                        lyricsTimedOut = true
+                                    }
+                                }
+                            }
+                            if (lyricsData != null) {
                                 LyricsView(
-                                    lyricsData = currentSongData!!.lyricsData!!,
+                                    lyricsData = lyricsData,
                                     timeLine = sharedViewModel.timeline,
                                     onLineClick = { progress ->
                                         sharedViewModel.onUIEvent(UIEvent.UpdateProgress(progress))
@@ -353,7 +376,31 @@ fun NewPlayerScreen(
                                     playerContentColor = Color.White,
                                     modifier = Modifier.fillMaxSize()
                                 )
+                            } else if (lyricsTimedOut) {
+                                // Lyrics not found after timeout — show empty state
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.lyrics),
+                                            contentDescription = null,
+                                            tint = Color.White.copy(alpha = 0.4f),
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                        Text(
+                                            text = "No lyrics available",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.White.copy(alpha = 0.5f)
+                                        )
+                                    }
+                                }
                             } else {
+                                // Loading
                                 Box(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier.fillMaxSize()
@@ -377,7 +424,8 @@ fun NewPlayerScreen(
                                 ) {
                                     if (trackArtwork.isNotEmpty()) {
                                         AsyncImage(
-                                            model = coil3.request.ImageRequest.Builder(LocalContext.current)
+                                            model = ImageRequest
+                                                .Builder(LocalPlatformContext.current)
                                                 .data(trackArtwork)
                                                 .crossfade(true)
                                                 .build(),
@@ -423,7 +471,8 @@ fun NewPlayerScreen(
                             ) {
                                 if (trackArtwork.isNotEmpty()) {
                                     AsyncImage(
-                                        model = coil3.request.ImageRequest.Builder(LocalContext.current)
+                                        model = ImageRequest
+                                            .Builder(LocalPlatformContext.current)
                                             .data(trackArtwork)
                                             .crossfade(true)
                                             .build(),

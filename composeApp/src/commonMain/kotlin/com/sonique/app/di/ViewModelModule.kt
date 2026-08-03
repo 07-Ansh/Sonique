@@ -150,5 +150,10 @@ val viewModelModule =
                 get(),
             )
         }
+        viewModel {
+            com.sonique.app.viewModel.AlbumsViewModel(
+                get(),
+            )
+        }
     }
 

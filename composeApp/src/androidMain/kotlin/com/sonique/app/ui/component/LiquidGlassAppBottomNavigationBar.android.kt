@@ -53,7 +53,7 @@ import com.sonique.app.expect.ui.PlatformBackdrop
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.search.SearchDestination
-import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
+import com.sonique.app.ui.navigation.destination.library.AlbumsDestination
 import com.sonique.app.ui.screen.MiniPlayer
 import com.sonique.app.viewModel.SharedViewModel
 import kotlinx.coroutines.Dispatchers
@@ -107,13 +107,13 @@ actual fun LiquidGlassAppBottomNavigationBar(
         listOf(
             BottomNavScreen.Home,
             BottomNavScreen.Search,
-            BottomNavScreen.Playlists,
+            BottomNavScreen.Albums,
             BottomNavScreen.Library,
         )
     val barTabs =
         listOf(
             BottomNavScreen.Home,
-            BottomNavScreen.Playlists,
+            BottomNavScreen.Albums,
             BottomNavScreen.Library,
         )
     var selectedIndex by rememberSaveable {
@@ -121,7 +121,7 @@ actual fun LiquidGlassAppBottomNavigationBar(
             when (startDestination) {
                 is HomeDestination -> BottomNavScreen.Home.ordinal
                 is SearchDestination -> BottomNavScreen.Search.ordinal
-                is PlaylistsDestination -> BottomNavScreen.Playlists.ordinal
+                is AlbumsDestination -> BottomNavScreen.Albums.ordinal
                 is LibraryDestination -> BottomNavScreen.Library.ordinal
                 else -> BottomNavScreen.Home.ordinal
             },

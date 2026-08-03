@@ -57,6 +57,7 @@ import com.sonique.domain.data.entities.LocalPlaylistEntity
 import com.sonique.domain.data.entities.PlaylistEntity
 import com.sonique.domain.data.entities.PodcastsEntity
 import com.sonique.domain.data.entities.SongEntity
+import com.sonique.domain.data.model.searchResult.playlists.PlaylistsResult
 import com.sonique.domain.data.model.browse.album.Track
 import com.sonique.domain.data.model.searchResult.playlists.PlaylistsResult
 import com.sonique.domain.data.type.LibraryType
@@ -158,22 +159,25 @@ fun LibraryItem(
                                 val itemTitle: String = when (item) {
                                     is PlaylistEntity -> item.title
                                     is LocalPlaylistEntity -> item.title
+                                    is PlaylistsResult -> item.title
                                     else -> ""
                                 }
                                 val thumbUrl: String? = when (item) {
                                     is PlaylistEntity -> item.thumbnails
                                     is LocalPlaylistEntity -> item.thumbnail
+                                    is PlaylistsResult -> item.thumbnails.lastOrNull()?.url ?: item.thumbnails.firstOrNull()?.url
                                     else -> null
                                 }
                                 HomeGridCardItem(
                                     title = itemTitle,
                                     thumbUrl = thumbUrl,
-                                    subtitle = null,
+                                    subtitle = (item as? PlaylistsResult)?.author,
                                     isArtist = false,
                                     onClick = {
                                         when (item) {
                                             is PlaylistEntity -> onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(PlaylistDestination(item.id))
                                             is LocalPlaylistEntity -> onLocalPlaylistClick(item.id)
+                                            is PlaylistsResult -> onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(PlaylistDestination(item.browseId, isYourYouTubePlaylist = true))
                                         }
                                     },
                                     modifier = Modifier.width(115.dp),

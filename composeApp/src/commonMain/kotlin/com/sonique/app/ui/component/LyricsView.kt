@@ -119,7 +119,7 @@ private const val TAG = "LyricsView"
 
 @Composable
 fun LyricsView(
-    lyricsData: NowPlayingScreenData.LyricsData,
+    lyricsDataInput: NowPlayingScreenData.LyricsData,
     timeLine: StateFlow<TimeLine>,
     onLineClick: (Float) -> Unit,
     modifier: Modifier = Modifier,
@@ -127,6 +127,15 @@ fun LyricsView(
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     playerContentColor: Color = Color.White,
 ) {
+    val lyricsData = remember(lyricsDataInput) {
+        val rawLrc = lyricsDataInput.lyrics.SoniqueLyricsId
+        if (lyricsDataInput.lyrics.lines.isNullOrEmpty() && !rawLrc.isNullOrBlank()) {
+            val parsedLyrics = com.sonique.domain.utils.parseRawLrcToLyrics(rawLrc)
+            lyricsDataInput.copy(lyrics = parsedLyrics)
+        } else {
+            lyricsDataInput
+        }
+    }
     var currentLineHeight by remember {
         mutableIntStateOf(0)
     }

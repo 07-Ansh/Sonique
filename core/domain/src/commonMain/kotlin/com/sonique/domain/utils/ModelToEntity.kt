@@ -306,23 +306,77 @@ fun Track.addThumbnails(): Track =
         year = this.year,
     )
 
+fun parseRawLrcToLyrics(rawLrc: String): Lyrics {
+    if (rawLrc.isBlank()) {
+        return Lyrics(error = true, lines = emptyList(), syncType = null, SoniqueLyricsId = rawLrc)
+    }
+
+    val linesList = mutableListOf<Line>()
+    val lrcLineRegex = Regex("\\[(\\d{1,2}):(\\d{2})[\\.:](\\d{2,3})\\](.*)")
+
+    val rawLines = rawLrc.lines()
+    var isSynced = false
+
+    rawLines.forEach { line ->
+        val trimmed = line.trim()
+        if (trimmed.isNotBlank() &&
+            !trimmed.startsWith("[offset:", ignoreCase = true) &&
+            !trimmed.startsWith("[by:", ignoreCase = true) &&
+            !trimmed.startsWith("[re:", ignoreCase = true) &&
+            !trimmed.startsWith("[ve:", ignoreCase = true) &&
+            !trimmed.startsWith("[ar:", ignoreCase = true) &&
+            !trimmed.startsWith("[ti:", ignoreCase = true) &&
+            !trimmed.startsWith("[al:", ignoreCase = true)
+        ) {
+            val match = lrcLineRegex.matchEntire(trimmed)
+            if (match != null) {
+                isSynced = true
+                val minutes = match.groupValues[1].toLongOrNull() ?: 0L
+                val seconds = match.groupValues[2].toLongOrNull() ?: 0L
+                val msStr = match.groupValues[3]
+                val millis = if (msStr.length == 3) msStr.toLongOrNull() ?: 0L else (msStr.toLongOrNull() ?: 0L) * 10
+                val totalMs = minutes * 60_000L + seconds * 1000L + millis
+                val content = match.groupValues[4].trim()
+
+                linesList.add(
+                    Line(
+                        endTimeMs = "0",
+                        startTimeMs = totalMs.toString(),
+                        words = if (content.isEmpty()) "♫" else content,
+                    ),
+                )
+            } else if (trimmed.isNotBlank()) {
+                linesList.add(
+                    Line(
+                        endTimeMs = "0",
+                        startTimeMs = "0",
+                        words = trimmed,
+                    ),
+                )
+            }
+        }
+    }
+
+    return Lyrics(
+        error = false,
+        lines = linesList,
+        syncType = if (isSynced) "LINE_SYNCED" else "UNSYNCED",
+        SoniqueLyricsId = rawLrc,
+    )
+}
+
 fun LyricsEntity.toLyrics(): Lyrics {
     val firstLine = this.lines?.firstOrNull()
     val isRawLrc = firstLine?.words?.startsWith("SONIQUE_LRC:") == true
     return if (isRawLrc) {
         val rawLrc = firstLine!!.words.removePrefix("SONIQUE_LRC:")
-        Lyrics(
-            error = this.error,
-            lines = emptyList(),
-            syncType = this.syncType,
-            SoniqueLyricsId = rawLrc
-        )
+        parseRawLrcToLyrics(rawLrc).copy(error = this.error)
     } else {
         Lyrics(
             error = this.error,
             lines = this.lines,
             syncType = this.syncType,
-            SoniqueLyricsId = null
+            SoniqueLyricsId = null,
         )
     }
 }

@@ -1202,12 +1202,7 @@ class SharedViewModel(
             )
 
             if (result.lyrics.isNotBlank()) {
-                val lyricsData = com.sonique.domain.data.model.metadata.Lyrics(
-                    error = false,
-                    lines = emptyList(),
-                    syncType = if (result.lyrics.contains("[")) "LINE_SYNCED" else null,
-                    SoniqueLyricsId = result.lyrics
-                )
+                val lyricsData = com.sonique.domain.utils.parseRawLrcToLyrics(result.lyrics)
 
                 // Save to DB
                 lyricsCanvasRepository.insertLyrics(lyricsData.toLyricsEntity(videoId))

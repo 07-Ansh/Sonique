@@ -246,6 +246,12 @@ fun AlbumScreen(
                     thumbnailUrl = uiState.thumbnail,
                     listColors = uiState.colors,
                     onBack = { onBack?.invoke() ?: navController.navigateUp() },
+                    onShuffleClick = {
+                        val firstTrack = uiState.listTrack.shuffled().firstOrNull()
+                        if (firstTrack != null) {
+                            viewModel.playTrack(firstTrack)
+                        }
+                    },
                     playButtonContent = {
                         Crossfade(
                             playingVideoId.isNotEmpty() &&

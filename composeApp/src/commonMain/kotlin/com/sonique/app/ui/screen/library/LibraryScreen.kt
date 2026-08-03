@@ -297,7 +297,7 @@ fun LibraryScreen(
                                 LazyColumn(
                                     contentPadding =
                                         innerPadding.copy(
-                                            top = 30.dp,
+                                            top = 25.dp,
                                         ),
                                     state = state,
                                 ) {
@@ -677,7 +677,7 @@ fun LibraryScreen(
 
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 30.dp),
+                                    innerPadding.copy(top = 24.dp),
                                     currentPlaylistData,
                                     emptyText = if (selectedPlaylistTab == 0) Res.string.no_YouTube_playlists else Res.string.no_playlists_added,
                                     title = null,
@@ -723,7 +723,7 @@ fun LibraryScreen(
                             LibraryChipType.YOUTUBE_MIX_FOR_YOU -> {
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 30.dp),
+                                    innerPadding.copy(top = 24.dp),
                                     youTubeMixForYou,
                                     emptyText = Res.string.no_mixes_found,
                                     title = Res.string.mix_for_you,
@@ -740,7 +740,7 @@ fun LibraryScreen(
                             LibraryChipType.LOCAL_PLAYLIST -> {
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 30.dp),
+                                    innerPadding.copy(top = 24.dp),
                                     yourLocalPlaylist,
                                     onScrolling = handleScrolling,
                                     emptyText = Res.string.no_playlists_added,
@@ -764,7 +764,7 @@ fun LibraryScreen(
                             LibraryChipType.FOLLOWED_ARTISTS -> {
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 30.dp),
+                                    innerPadding.copy(top = 24.dp),
                                     followedArtists,
                                     onScrolling = handleScrolling,
                                     emptyText = Res.string.no_artist_found,
@@ -781,7 +781,7 @@ fun LibraryScreen(
                             LibraryChipType.FAVORITE_PLAYLIST -> {
                                 FavoriteCompositeScreen(
                                     navController = navController,
-                                    contentPadding = innerPadding.copy(top = 30.dp),
+                                    contentPadding = innerPadding.copy(top = 24.dp),
                                     favoritePlaylistData = favoritePlaylist,
                                     onScrolling = handleScrolling,
                                     onBack = { viewModel.setCurrentScreen(LibraryChipType.YOUR_LIBRARY) },
@@ -794,7 +794,7 @@ fun LibraryScreen(
                             LibraryChipType.DOWNLOADED_PLAYLIST -> {
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 30.dp),
+                                    innerPadding.copy(top = 24.dp),
                                     downloadedPlaylist,
                                     emptyText = Res.string.no_playlists_downloaded,
                                     title = Res.string.downloaded_playlists,
@@ -815,7 +815,7 @@ fun LibraryScreen(
                             LibraryChipType.FAVORITE_PODCAST -> {
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 30.dp),
+                                    innerPadding.copy(top = 24.dp),
                                     favoritePodcasts,
                                     emptyText = Res.string.no_favorite_podcasts,
                                     title = Res.string.favorite_podcasts,
@@ -832,7 +832,7 @@ fun LibraryScreen(
                             LibraryChipType.YOUTUBE_ALBUMS -> {
                                 GridLibraryPlaylist(
                                     navController,
-                                    innerPadding.copy(top = 30.dp),
+                                    innerPadding.copy(top = 24.dp),
                                     youTubeAlbums,
                                     emptyText = Res.string.no_youtube_albums,
                                     title = Res.string.youtube_albums,

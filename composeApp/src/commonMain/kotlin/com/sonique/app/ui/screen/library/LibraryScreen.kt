@@ -5,7 +5,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.GridView
 import com.sonique.common.Config
-import com.sonique.app.ui.component.NonLazyGrid
+import com.sonique.app.extension.NonLazyGrid
 import com.sonique.app.ui.component.HomeGridCardItem
 import com.sonique.app.ui.component.PlaylistFullWidthItems
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
@@ -366,8 +366,16 @@ fun LibraryScreen(
                                                                         Config.PIN_YT_PLAYLISTS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MUSIC_PLAYLIST)
                                                                         Config.PIN_YT_ALBUMS -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_ALBUMS)
                                                                         Config.PIN_YT_MIX -> viewModel.setCurrentScreen(LibraryChipType.YOUTUBE_MIX_FOR_YOU)
-                                                                        "LM" -> activePlaylistId = "LM"; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
-                                                                        else -> activePlaylistId = pinned.id; activeIsYourYouTubePlaylist = false; activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                        "LM" -> {
+                                                                            activePlaylistId = "LM"
+                                                                            activeIsYourYouTubePlaylist = false
+                                                                            activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                        }
+                                                                        else -> {
+                                                                            activePlaylistId = pinned.id
+                                                                            activeIsYourYouTubePlaylist = false
+                                                                            activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                                        }
                                                                     }
                                                                 },
                                                             )

@@ -1,5 +1,6 @@
 package com.sonique.app.ui.screen.library
 
+import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.expandHorizontally

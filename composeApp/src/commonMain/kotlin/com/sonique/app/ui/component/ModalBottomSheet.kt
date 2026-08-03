@@ -1538,52 +1538,7 @@ fun NowPlayingBottomSheet(
                             viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.ToggleLike)
                         },
                     )
-                    ActionButton(
-                        icon =
-                            when (uiState.songUIState.downloadState) {
-                                DownloadState.STATE_NOT_DOWNLOADED ->
-                                    painterResource(
-                                        Res.drawable.outline_download_for_offline_24,
-                                    )
 
-                                DownloadState.STATE_DOWNLOADING ->
-                                    painterResource(
-                                        Res.drawable.baseline_downloading_white,
-                                    )
-
-                                DownloadState.STATE_DOWNLOADED ->
-                                    painterResource(
-                                        Res.drawable.baseline_downloaded,
-                                    )
-
-                                DownloadState.STATE_PREPARING ->
-                                    painterResource(
-                                        Res.drawable.baseline_downloading_white,
-                                    )
-
-                                else ->
-                                    painterResource(
-                                        Res.drawable.outline_download_for_offline_24,
-                                    )
-                            },
-                        text =
-                            when (uiState.songUIState.downloadState) {
-                                DownloadState.STATE_NOT_DOWNLOADED -> Res.string.download
-                                DownloadState.STATE_DOWNLOADING -> Res.string.downloading
-                                DownloadState.STATE_DOWNLOADED -> Res.string.downloaded
-                                DownloadState.STATE_PREPARING -> Res.string.downloading
-                                else -> Res.string.download
-                            },
-                    ) {
-                        if (uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADING ||
-                            uiState.songUIState.downloadState == DownloadState.STATE_PREPARING ||
-                            uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADED
-                        ) {
-                            showCancelDownloadDialog = true
-                        } else {
-                            viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
-                        }
-                    }
                     ActionButton(
                         icon = painterResource(Res.drawable.baseline_playlist_add_24),
                         text = Res.string.add_to_a_playlist,

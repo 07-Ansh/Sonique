@@ -146,10 +146,11 @@ fun AppNavigationGraph(
             )
         }
 
-        composable<DownloadsDestination> {
-            PlaylistScreen(
-                playlistId = LOCAL_PLAYLIST_ID_DOWNLOADED,
-                isYourYouTubePlaylist = false,
+import com.sonique.app.ui.navigation.destination.library.PlaylistsDestination
+
+        composable<PlaylistsDestination> {
+            LibraryScreen(
+                innerPadding = innerPadding,
                 navController = navController,
                 onScrolling = onScrolling,
             )
@@ -207,7 +208,7 @@ private fun getTabExtensionIndex(route: String?): Int {
     return when {
         route.contains("HomeDestination") -> 0
         route.contains("SearchDestination") -> 1
-        route.contains("DownloadsDestination") -> 2
+        route.contains("PlaylistsDestination") -> 2
         route.contains("LibraryDestination") -> 3
         else -> 0
     }

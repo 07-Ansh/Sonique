@@ -141,11 +141,10 @@ fun AppNavigationGraph(
             )
         }
         composable<AlbumsDestination> {
-            LibraryScreen(
+            com.sonique.app.ui.screen.other.AlbumsScreen(
                 innerPadding = innerPadding,
                 navController = navController,
                 onScrolling = onScrolling,
-                initialChip = LibraryChipType.YOUTUBE_ALBUMS,
             )
         }
         composable<FullscreenDestination> {

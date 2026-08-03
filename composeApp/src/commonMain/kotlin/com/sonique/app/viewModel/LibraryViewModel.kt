@@ -224,43 +224,82 @@ class LibraryViewModel(
         }
 
         viewModelScope.launch {
-            localPlaylistRepository.getAllLocalPlaylists().collect { values ->
-                val mutableLocal = values.reversed().toMutableList()
-                val downloadedSongsTitle = getString(Res.string.downloaded_songs)
-                // Add Downloaded Songs as a dedicated local playlist entry at top
-                mutableLocal.add(
-                    0,
-                    LocalPlaylistEntity(
-                        id = -999L,
-                        title = downloadedSongsTitle,
-                        thumbnail = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
-                    )
-                )
-                // Add Liked Songs as a virtual local playlist entry at position 1
-                mutableLocal.add(
-                    1,
-                    LocalPlaylistEntity(
-                        id = -998L,
-                        title = getString(Res.string.liked_songs),
-                        thumbnail = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
-                    )
-                )
-                _yourLocalPlaylist.value = LocalResource.Success(mutableLocal)
-                val currentPinned = _pinnedItems.value.filter { it.description == "PIN" }.toMutableList()
-                values.reversed().forEach { local ->
-                    currentPinned.add(
-                        PlaylistEntity(
-                            id = local.id.toString(),
-                            title = local.title,
-                            author = "Local Playlist",
-                            description = "LOCAL_PIN",
-                            thumbnails = local.thumbnail ?: ""
+            val downloadedSongsTitle = getString(Res.string.downloaded_songs)
+            // Chain two binary .combine() calls to keep explicit types
+            localPlaylistRepository.getAllLocalPlaylists()
+                .combine(playlistRepository.getLikedPlaylists()) { local, liked ->
+                    Pair(local, liked)
+                }
+                .combine(playlistRepository.getAllDownloadedPlaylist()) { (localPlaylists, likedPlaylists), rawDownloaded ->
+                    // getAllDownloadedPlaylist() returns List<PlaylistType>; cast to PlaylistEntity
+                    val downloadedPlaylists = rawDownloaded.filterIsInstance<PlaylistEntity>()
+                    val result = mutableListOf<LocalPlaylistEntity>()
+
+                    // 1. "Downloaded Songs" virtual entry always first
+                    result.add(
+                        LocalPlaylistEntity(
+                            id = -999L,
+                            title = downloadedSongsTitle,
+                            thumbnail = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
                         )
                     )
+
+                    // 2. Downloaded YouTube playlists (exclude the virtual Downloaded Songs stub)
+                    downloadedPlaylists
+                        .filter { it.id != LOCAL_PLAYLIST_ID_DOWNLOADED }
+                        .forEach { playlist ->
+                            result.add(
+                                LocalPlaylistEntity(
+                                    id = playlist.id.hashCode().toLong(),
+                                    title = playlist.title,
+                                    thumbnail = playlist.thumbnails,
+                                    youtubePlaylistId = playlist.id,
+                                    downloadState = com.sonique.domain.data.entities.DownloadState.STATE_DOWNLOADED,
+                                )
+                            )
+                        }
+
+                    // 3. Liked YouTube playlists (exclude already-downloaded ones to avoid duplicates)
+                    val downloadedIds = downloadedPlaylists.map { it.id }.toSet()
+                    likedPlaylists
+                        .filter { it.id !in downloadedIds && it.id != LOCAL_PLAYLIST_ID_DOWNLOADED }
+                        .forEach { playlist ->
+                            result.add(
+                                LocalPlaylistEntity(
+                                    id = playlist.id.hashCode().toLong(),
+                                    title = playlist.title,
+                                    thumbnail = playlist.thumbnails,
+                                    youtubePlaylistId = playlist.id,
+                                )
+                            )
+                        }
+
+                    // 4. User-created local playlists at the bottom
+                    result.addAll(localPlaylists.reversed())
+                    result
                 }
-                _pinnedItems.value = currentPinned
-            }
+                .collect { merged ->
+                    _yourLocalPlaylist.value = LocalResource.Success(merged)
+
+                    // Keep pinned items in sync (user-created local playlists only)
+                    val localOnly = merged.filter { it.youtubePlaylistId == null && it.id != -999L }
+                    val currentPinned = _pinnedItems.value.filter { it.description == "PIN" }.toMutableList()
+                    localOnly.forEach { local ->
+                        currentPinned.add(
+                            PlaylistEntity(
+                                id = local.id.toString(),
+                                title = local.title,
+                                author = "Local Playlist",
+                                description = "LOCAL_PIN",
+                                thumbnails = local.thumbnail ?: ""
+                            )
+                        )
+                    }
+                    _pinnedItems.value = currentPinned
+                }
         }
+
+
 
         viewModelScope.launch {
             val likedSongsTitle = getString(Res.string.liked_songs)

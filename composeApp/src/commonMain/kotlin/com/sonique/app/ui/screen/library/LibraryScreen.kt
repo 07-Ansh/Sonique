@@ -404,8 +404,14 @@ fun LibraryScreen(
                                                  ),
                                                  navController = navController,
                                                  onLocalPlaylistClick = { id ->
-                                                     activeLocalPlaylistId = id
-                                                     activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
+                                                     if (id == -999L) {
+                                                         activePlaylistId = LOCAL_PLAYLIST_ID_DOWNLOADED
+                                                         activeIsYourYouTubePlaylist = false
+                                                         activeSubScreen = LibrarySubScreen.PLAYLIST_DETAILS
+                                                     } else {
+                                                         activeLocalPlaylistId = id
+                                                         activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS
+                                                     }
                                                  },
                                                  onAlbumClick = { id -> activeBrowseId = id; activeSubScreen = LibrarySubScreen.ALBUM_DETAILS },
                                                  onArtistClick = { id -> activeChannelId = id; activeSubScreen = LibrarySubScreen.ARTIST_DETAILS },

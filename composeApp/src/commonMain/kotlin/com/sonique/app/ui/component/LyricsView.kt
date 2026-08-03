@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -247,6 +248,8 @@ fun LyricsView(
     Box(modifier = modifier) {
         LazyColumn(
             state = listState,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 40.dp),
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -437,12 +440,13 @@ fun LyricsLineItem(
     Crossfade(targetState = isBold) {
         if (it) {
             Column(
-                modifier = modifier,
+                modifier = modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     modifier =
-                        Modifier.then(
+                        Modifier.fillMaxWidth().then(
                             if (isCurrent) {
                                 Modifier
                             } else {
@@ -451,6 +455,7 @@ fun LyricsLineItem(
                         ),
                     text = originalWords,
                     style = typo().headlineLarge,
+                    textAlign = TextAlign.Center,
                     color =
                         if (isCurrent) {
                             playerContentColor
@@ -463,7 +468,7 @@ fun LyricsLineItem(
                 if (translatedWords != null) {
                     Text(
                         modifier =
-                            Modifier.then(
+                            Modifier.fillMaxWidth().then(
                                 if (isCurrent) {
                                     Modifier
                                 } else {
@@ -472,6 +477,7 @@ fun LyricsLineItem(
                             ),
                         text = translatedWords,
                         style = typo().bodyMedium,
+                        textAlign = TextAlign.Center,
                         color =
                             if (isCurrent) {
                                 musica_accent
@@ -488,13 +494,15 @@ fun LyricsLineItem(
     }
     if (!isBold) {
         Column(
-            modifier = modifier,
+            modifier = modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(modifier = Modifier.height(12.dp))
             Text(
-                modifier = Modifier.blur(1.dp),
+                modifier = Modifier.fillMaxWidth().blur(1.dp),
                 text = originalWords,
                 style = typo().headlineMedium,
+                textAlign = TextAlign.Center,
                 color =
                     Color.LightGray.copy(
                         alpha = 0.35f,
@@ -502,9 +510,10 @@ fun LyricsLineItem(
             )
             if (translatedWords != null) {
                 Text(
-                    modifier = Modifier.blur(1.dp),
+                    modifier = Modifier.fillMaxWidth().blur(1.dp),
                     text = translatedWords,
                     style = typo().bodyMedium,
+                    textAlign = TextAlign.Center,
                     color =
                         musica_accent.copy(
                             alpha = 0.3f,
@@ -537,21 +546,22 @@ fun RichSyncLyricsLineItem(
     }
 
     Column(
-        modifier = modifier,
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
          
         FlowRow(
             modifier =
-                Modifier.then(
+                Modifier.fillMaxWidth().then(
                     if (isCurrent) {
                         Modifier
                     } else {
                         Modifier.blur(1.dp)
                     },
                 ),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.Center,
             verticalArrangement = Arrangement.Center,
         ) {
             parsedLine.words.forEachIndexed { index, wordTiming ->
@@ -569,7 +579,7 @@ fun RichSyncLyricsLineItem(
         if (translatedWords != null) {
             Text(
                 modifier =
-                    Modifier.then(
+                    Modifier.fillMaxWidth().then(
                         if (isCurrent) {
                             Modifier
                         } else {
@@ -578,13 +588,14 @@ fun RichSyncLyricsLineItem(
                     ),
                 text = translatedWords,
                 style = typo().bodyMedium,
+                textAlign = TextAlign.Center,
                 color =
                     if (isCurrent) {
                         musica_accent
                     } else {
                         musica_accent.copy(
                             alpha = 0.3f,
-                        )
+                        ),
                     },
             )
         }

@@ -319,29 +319,33 @@ fun NewPlayerScreen(
                     Spacer(modifier = Modifier.statusBarsPadding())
 
                     // ThumbnailHeader — matches Thumbnail.kt ThumbnailHeader composable
-                    AnimatedVisibility(
-                        visible = !showInlineLyrics,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically()
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Box(
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .align(Alignment.Center)
+                                .padding(horizontal = 48.dp)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier
-                                    .align(Alignment.Center)
-                                    .padding(horizontal = 48.dp)
-                            ) {
-                                Text(
-                                    text = "NOW PLAYING",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Normal,
-                                    color = TextBackgroundColor.copy(alpha = 0.65f),
-                                    letterSpacing = 1.2.sp
-                                )
+                            Text(
+                                text = if (showInlineLyrics) {
+                                    val providerName = currentSongData?.lyricsData?.lyricsProvider?.name
+                                        ?.lowercase()
+                                        ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                                        ?: "LrcLib"
+                                    "Lyrics from $providerName"
+                                } else {
+                                    "NOW PLAYING"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Normal,
+                                color = TextBackgroundColor.copy(alpha = 0.65f),
+                                letterSpacing = 1.2.sp
+                            )
+                            if (!showInlineLyrics) {
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = trackTitle.ifBlank { "Unknown Title" },

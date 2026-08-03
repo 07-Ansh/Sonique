@@ -244,9 +244,9 @@ class LibraryViewModel(
                         )
                     )
 
-                    // 2. Downloaded YouTube playlists (exclude the virtual Downloaded Songs stub)
+                    // 2. Downloaded YouTube playlists (exclude virtual stubs and albums)
                     downloadedPlaylists
-                        .filter { it.id != LOCAL_PLAYLIST_ID_DOWNLOADED }
+                        .filter { it.id != LOCAL_PLAYLIST_ID_DOWNLOADED && !it.id.startsWith("MPRE") }
                         .forEach { playlist ->
                             result.add(
                                 LocalPlaylistEntity(
@@ -259,10 +259,10 @@ class LibraryViewModel(
                             )
                         }
 
-                    // 3. Liked YouTube playlists (exclude already-downloaded ones to avoid duplicates)
+                    // 3. Liked YouTube playlists (exclude already-downloaded ones and albums)
                     val downloadedIds = downloadedPlaylists.map { it.id }.toSet()
                     likedPlaylists
-                        .filter { it.id !in downloadedIds && it.id != LOCAL_PLAYLIST_ID_DOWNLOADED }
+                        .filter { it.id !in downloadedIds && it.id != LOCAL_PLAYLIST_ID_DOWNLOADED && !it.id.startsWith("MPRE") }
                         .forEach { playlist ->
                             result.add(
                                 LocalPlaylistEntity(
@@ -388,7 +388,8 @@ class LibraryViewModel(
         _youTubePlaylist.value = LocalResource.Loading()
         viewModelScope.launch {
             playlistRepository.getLibraryPlaylist().collect { data ->
-                _youTubePlaylist.value = LocalResource.Success(data ?: emptyList())
+                val playlistsOnly = data?.filter { !it.browseId.startsWith("MPRE") }
+                _youTubePlaylist.value = LocalResource.Success(playlistsOnly ?: emptyList())
             }
         }
     }

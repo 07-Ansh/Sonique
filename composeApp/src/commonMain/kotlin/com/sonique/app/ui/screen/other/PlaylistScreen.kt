@@ -913,7 +913,7 @@ fun PlaylistScreen(
                                                                 )
                                                             }
                                                         }
-                                                        if (!data.isRadio && playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                        if (!data.isRadio) {
                                                             Box(
                                                                 modifier =
                                                                     Modifier
@@ -1035,6 +1035,8 @@ fun PlaylistScreen(
                                                                     viewModel.onUIEvent(PlaylistUIEvent.Favorite)
                                                                 },
                                                             )
+                                                        }
+                                                        if (!data.isRadio) {
                                                             Crossfade(targetState = downloadState) {
                                                                 when (it) {
                                                                     DownloadState.STATE_DOWNLOADED -> {

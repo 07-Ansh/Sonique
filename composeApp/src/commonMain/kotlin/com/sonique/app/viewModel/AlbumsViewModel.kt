@@ -2,8 +2,13 @@ package com.sonique.app.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sonique.domain.data.model.home.Content
 import com.sonique.domain.data.model.home.HomeItem
+import com.sonique.domain.data.model.searchResult.songs.Artist
+import com.sonique.domain.data.model.searchResult.songs.Thumbnail
+import com.sonique.domain.repository.AlbumRepository
 import com.sonique.domain.repository.HomeRepository
+import com.sonique.domain.repository.PlaylistRepository
 import com.sonique.domain.utils.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,10 +24,15 @@ import sonique.composeapp.generated.resources.view_count
 
 class AlbumsViewModel(
     private val homeRepository: HomeRepository,
+    private val playlistRepository: PlaylistRepository,
+    private val albumRepository: AlbumRepository,
 ) : ViewModel() {
 
-    private val _albumSections = MutableStateFlow<List<HomeItem>>(emptyList())
-    val albumSections: StateFlow<List<HomeItem>> = _albumSections.asStateFlow()
+    private val _albumsForYou = MutableStateFlow<List<Content>>(emptyList())
+    val albumsForYou: StateFlow<List<Content>> = _albumsForYou.asStateFlow()
+
+    private val _playlistsForYou = MutableStateFlow<List<Content>>(emptyList())
+    val playlistsForYou: StateFlow<List<Content>> = _playlistsForYou.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -45,43 +55,115 @@ class AlbumsViewModel(
                     getString(Res.string.new_release),
                     getString(Res.string.music_video),
                     forceRefresh = forceRefresh
-                )
-            ) { homeRes, newReleaseRes ->
-                val resultList = mutableListOf<HomeItem>()
+                ),
+                playlistRepository.getLibraryAlbums(),
+                playlistRepository.getMixedForYou(),
+                albumRepository.getAllAlbums(100),
+            ) { homeRes, newReleaseRes, libraryAlbums, mixedForYou, localAlbums ->
+                val albumsList = mutableListOf<Content>()
+                val playlistsList = mutableListOf<Content>()
 
-                if (homeRes is Resource.Success) {
-                    val items = homeRes.data?.second ?: emptyList()
-                    items.forEach { item ->
-                        val albumContents = item.contents.filterNotNull().filter { content ->
-                            content.browseId?.startsWith("MPRE") == true ||
-                            (content.browseId != null && content.videoId.isNullOrEmpty() && content.playlistId == null) ||
-                            (content.playlistId?.startsWith("OLAK5uy") == true) ||
-                            content.album != null
-                        }
-                        if (albumContents.isNotEmpty()) {
-                            resultList.add(item.copy(contents = albumContents))
-                        }
-                    }
+                // 1. YouTube Music Library Albums
+                libraryAlbums?.forEach { item ->
+                    albumsList.add(
+                        Content(
+                            album = null,
+                            artists = listOf(Artist(name = item.author, id = null)),
+                            description = null,
+                            isExplicit = false,
+                            playlistId = item.browseId,
+                            browseId = item.browseId,
+                            thumbnails = item.thumbnails,
+                            title = item.title,
+                            videoId = null,
+                            views = null
+                        )
+                    )
                 }
 
+                // 2. Local Database Saved Albums
+                localAlbums.forEach { album ->
+                    albumsList.add(
+                        Content(
+                            album = null,
+                            artists = album.artistName?.map { Artist(name = it, id = null) },
+                            description = album.description,
+                            isExplicit = false,
+                            playlistId = album.audioPlaylistId.ifEmpty { null },
+                            browseId = album.browseId,
+                            thumbnails = listOf(
+                                Thumbnail(
+                                    height = 300,
+                                    width = 300,
+                                    url = album.thumbnails ?: ""
+                                )
+                            ),
+                            title = album.title,
+                            videoId = null,
+                            views = null
+                        )
+                    )
+                }
+
+                // 3. New Release Albums
                 if (newReleaseRes is Resource.Success) {
                     val newReleases = newReleaseRes.data ?: emptyList()
                     newReleases.forEach { item ->
                         val albumContents = item.contents.filterNotNull().filter { content ->
-                            content.browseId?.startsWith("MPRE") == true ||
-                            (content.browseId != null && content.videoId.isNullOrEmpty() && content.playlistId == null) ||
-                            (content.playlistId?.startsWith("OLAK5uy") == true) ||
-                            content.album != null
+                            content.videoId.isNullOrEmpty() && (
+                                content.browseId?.startsWith("MPRE") == true ||
+                                content.playlistId?.startsWith("OLAK5uy") == true ||
+                                content.album != null
+                            )
                         }
-                        if (albumContents.isNotEmpty()) {
-                            resultList.add(item.copy(contents = albumContents))
+                        albumsList.addAll(albumContents)
+                    }
+                }
+
+                // 4. Home Feed Data (Categorize Albums vs Playlists)
+                if (homeRes is Resource.Success) {
+                    val homeItems = homeRes.data?.second ?: emptyList()
+                    homeItems.forEach { homeItem ->
+                        homeItem.contents.filterNotNull().forEach { content ->
+                            if (content.videoId.isNullOrEmpty()) {
+                                val isAlbum = content.browseId?.startsWith("MPRE") == true ||
+                                        content.playlistId?.startsWith("OLAK5uy") == true ||
+                                        content.album != null
+                                if (isAlbum) {
+                                    albumsList.add(content)
+                                } else if (!content.playlistId.isNullOrEmpty() || !content.browseId.isNullOrEmpty()) {
+                                    playlistsList.add(content)
+                                }
+                            }
                         }
                     }
                 }
 
-                resultList
-            }.collect { filteredSections ->
-                _albumSections.value = filteredSections
+                // 5. Recommended Playlists (Mixed For You)
+                mixedForYou?.forEach { item ->
+                    playlistsList.add(
+                        Content(
+                            album = null,
+                            artists = listOf(Artist(name = item.author, id = null)),
+                            description = null,
+                            isExplicit = false,
+                            playlistId = item.browseId,
+                            browseId = item.browseId,
+                            thumbnails = item.thumbnails,
+                            title = item.title,
+                            videoId = null,
+                            views = null
+                        )
+                    )
+                }
+
+                Pair(
+                    albumsList.distinctBy { it.browseId ?: it.playlistId ?: it.title },
+                    playlistsList.distinctBy { it.playlistId ?: it.browseId ?: it.title }
+                )
+            }.collect { (albums, playlists) ->
+                _albumsForYou.value = albums
+                _playlistsForYou.value = playlists
                 _isLoading.value = false
             }
         }

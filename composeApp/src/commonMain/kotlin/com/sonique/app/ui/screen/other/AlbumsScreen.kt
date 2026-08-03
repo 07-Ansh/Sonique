@@ -14,7 +14,6 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +26,7 @@ import com.sonique.app.ui.component.EndOfPage
 import com.sonique.app.ui.component.HomeGridCardItem
 import com.sonique.app.ui.component.HomeShimmer
 import com.sonique.app.ui.navigation.destination.list.AlbumDestination
+import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.AlbumsViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -39,15 +39,11 @@ fun AlbumsScreen(
     viewModel: AlbumsViewModel = koinViewModel(),
     onScrolling: (onTop: Boolean) -> Unit = {},
 ) {
-    val albumSections by viewModel.albumSections.collectAsStateWithLifecycle()
+    val albumsForYou by viewModel.albumsForYou.collectAsStateWithLifecycle()
+    val playlistsForYou by viewModel.playlistsForYou.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val gridState = rememberLazyGridState()
     val isScrollingUp by gridState.isScrollingUp()
-
-    val allAlbums = remember(albumSections) {
-        albumSections.flatMap { it.contents.filterNotNull() }
-            .distinctBy { it.browseId ?: it.playlistId ?: it.title }
-    }
 
     LaunchedEffect(gridState, isScrollingUp) {
         snapshotFlow { gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0 }
@@ -81,7 +77,7 @@ fun AlbumsScreen(
                 )
             },
         ) {
-            if (isLoading && allAlbums.isEmpty()) {
+            if (isLoading && albumsForYou.isEmpty() && playlistsForYou.isEmpty()) {
                 Column {
                     Spacer(Modifier.height(16.dp))
                     HomeShimmer()
@@ -100,33 +96,74 @@ fun AlbumsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    item(span = { GridItemSpan(3) }) {
-                        Text(
-                            text = "Albums",
-                            style = typo().titleMedium,
-                            color = Color.White,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp)
-                        )
+                    // --- SECTION 1: ALBUMS FOR YOU ---
+                    if (albumsForYou.isNotEmpty()) {
+                        item(span = { GridItemSpan(3) }) {
+                            Text(
+                                text = "Albums for you",
+                                style = typo().titleMedium,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
+
+                        items(
+                            items = albumsForYou,
+                            key = { it.browseId ?: it.playlistId ?: it.album?.id ?: it.title.hashCode() }
+                        ) { content ->
+                            val browseId = content.browseId ?: content.playlistId ?: content.album?.id ?: ""
+                            val title = content.title
+                            val thumbUrl = content.thumbnails.lastOrNull()?.url
+                            val artistName = content.artists?.firstOrNull()?.name ?: "Album"
+
+                            HomeGridCardItem(
+                                title = title,
+                                thumbUrl = thumbUrl,
+                                subtitle = artistName,
+                                onClick = {
+                                    if (browseId.isNotEmpty()) {
+                                        navController.navigate(AlbumDestination(browseId))
+                                    }
+                                }
+                            )
+                        }
                     }
 
-                    items(allAlbums, key = { it.browseId ?: it.playlistId ?: it.title.hashCode() }) { content ->
-                        val browseId = content.browseId ?: content.playlistId ?: ""
-                        val title = content.title
-                        val thumbUrl = content.thumbnails.lastOrNull()?.url
-                        val artistName = content.artists?.firstOrNull()?.name ?: "Album"
+                    // --- SECTION 2: PLAYLISTS FOR YOU ---
+                    if (playlistsForYou.isNotEmpty()) {
+                        item(span = { GridItemSpan(3) }) {
+                            Text(
+                                text = "Playlists for you",
+                                style = typo().titleMedium,
+                                color = Color.White,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 16.dp, bottom = 8.dp)
+                            )
+                        }
 
-                        HomeGridCardItem(
-                            title = title,
-                            thumbUrl = thumbUrl,
-                            subtitle = artistName,
-                            onClick = {
-                                if (browseId.isNotEmpty()) {
-                                    navController.navigate(AlbumDestination(browseId))
+                        items(
+                            items = playlistsForYou,
+                            key = { it.playlistId ?: it.browseId ?: it.title.hashCode() }
+                        ) { content ->
+                            val playlistId = content.playlistId ?: content.browseId ?: ""
+                            val title = content.title
+                            val thumbUrl = content.thumbnails.lastOrNull()?.url
+                            val subtitle = content.artists?.firstOrNull()?.name ?: "Playlist"
+
+                            HomeGridCardItem(
+                                title = title,
+                                thumbUrl = thumbUrl,
+                                subtitle = subtitle,
+                                onClick = {
+                                    if (playlistId.isNotEmpty()) {
+                                        navController.navigate(PlaylistDestination(playlistId))
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
 
                     item(span = { GridItemSpan(3) }) {

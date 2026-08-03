@@ -54,6 +54,8 @@ import sonique.composeapp.generated.resources.baseline_shuffle_24
 import sonique.composeapp.generated.resources.holder
 import sonique.composeapp.generated.resources.no_description
 
+import com.sonique.app.expect.ui.toImageBitmap
+
 enum class DetailType {
     ALBUM,
     ARTIST,
@@ -172,17 +174,17 @@ fun SharedDetailTemplate(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(md_theme_dark_background)) {
-        // dynamic ambient background
+        // dynamic ambient background gradient
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(320.dp)
+                .height(380.dp)
                 .angledGradientBackground(listColors, 25f)
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(320.dp)
+                .height(380.dp)
                 .background(
                     Brush.verticalGradient(
                         listOf(Color.Transparent, overlayMedium, md_theme_dark_background)
@@ -199,11 +201,12 @@ fun SharedDetailTemplate(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
+                        .padding(horizontal = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(56.dp)) // Status bar offset
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RippleIconButton(
@@ -212,97 +215,130 @@ fun SharedDetailTemplate(
                         )
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // cover art image
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalPlatformContext.current)
-                                .data(thumbnailUrl)
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .diskCacheKey(thumbnailUrl)
-                                .crossfade(true)
-                                .build(),
-                            placeholder = painterResource(Res.drawable.holder),
-                            error = painterResource(Res.drawable.holder),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(140.dp)
-                                .clip(if (isCircleImage) CircleShape else RoundedCornerShape(12.dp))
-                                .clickable {
-                                    // Set palette generation bitmap
-                                }
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Centered Large Cover Art Image
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalPlatformContext.current)
+                            .data(thumbnailUrl)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .diskCacheKey(thumbnailUrl)
+                            .crossfade(true)
+                            .build(),
+                        placeholder = painterResource(Res.drawable.holder),
+                        error = painterResource(Res.drawable.holder),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        onSuccess = { result ->
+                            bitmap = result.result.image.toImageBitmap()
+                        },
+                        modifier = Modifier
+                            .size(230.dp)
+                            .aspectRatio(1f)
+                            .clip(if (isCircleImage) CircleShape else RoundedCornerShape(16.dp))
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Centered Title
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 24.sp,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        ),
+                        color = Color.White,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        maxLines = 2,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                    )
+
+                    if (!subtitle.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
+                            ),
+                            color = Color.LightGray,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            maxLines = 2,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                         )
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
-                                color = Color.White,
-                                maxLines = 2
-                            )
-                            if (subtitle != null) {
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = subtitle,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = Color.LightGray,
-                                    maxLines = 2
-                                )
-                            }
-                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Description if any
-                    val desc = if (description.isNullOrEmpty() || description == "null") {
-                        stringResource(Res.string.no_description)
-                    } else {
-                        description
-                    }
-                    DescriptionView(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        text = desc,
-                        onTimeClicked = {},
-                        onURLClicked = { url ->
-                            uriHandler.openUri(url)
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Unified Action Row
+                    // Centered Unified Action Row
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
+                        if (onShuffleClick != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.12f))
+                                    .clickable { onShuffleClick() },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(Res.drawable.baseline_shuffle_24),
+                                    contentDescription = "Shuffle",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // Play Button
                         playButtonContent()
 
-                        if (onShuffleClick != null) {
-                            RippleIconButton(
-                                resId = Res.drawable.baseline_shuffle_24,
-                                onClick = onShuffleClick
-                            )
-                        }
-
-                        if (onHeartClick != null) {
-                            onHeartClick()
-                        }
+                        Spacer(modifier = Modifier.width(16.dp))
 
                         if (downloadButtonContent != null) {
-                            downloadButtonContent()
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                downloadButtonContent()
+                            }
+                        } else if (onHeartClick != null) {
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                onHeartClick()
+                            }
                         }
 
                         additionalActions()
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // Description if any
+                    if (!description.isNullOrEmpty() && description != "null") {
+                        DescriptionView(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            text = description,
+                            onTimeClicked = {},
+                            onURLClicked = { url ->
+                                uriHandler.openUri(url)
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
             }
 

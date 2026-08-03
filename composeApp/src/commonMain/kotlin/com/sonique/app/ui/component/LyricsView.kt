@@ -153,46 +153,6 @@ private val LYRICS_FADE_BOTTOM_DP = 160.dp
 private const val LYRICS_STAGGER_DELAY_PER_DISTANCE = 20
 private const val LYRICS_STAGGER_DELAY_MAX_MS = 200
 
-fun Modifier.fadingEdge(
-    left: Dp? = null,
-    top: Dp? = null,
-    right: Dp? = null,
-    bottom: Dp? = null,
-) = graphicsLayer(alpha = 0.99f)
-    .drawWithContent {
-        drawContent()
-        if (top != null) {
-            drawRect(
-                brush =
-                    Brush.verticalGradient(
-                        colors =
-                            listOf(
-                                Color.Transparent,
-                                Color.Black,
-                            ),
-                        startY = 0f,
-                        endY = top.toPx(),
-                    ),
-                blendMode = BlendMode.DstIn,
-            )
-        }
-        if (bottom != null) {
-            drawRect(
-                brush =
-                    Brush.verticalGradient(
-                        colors =
-                            listOf(
-                                Color.Black,
-                                Color.Transparent,
-                            ),
-                        startY = size.height - bottom.toPx(),
-                        endY = size.height,
-                    ),
-                blendMode = BlendMode.DstIn,
-            )
-        }
-    }
-
 @Composable
 fun LyricsView(
     lyricsData: NowPlayingScreenData.LyricsData,
@@ -216,24 +176,6 @@ fun LyricsView(
     val current by timeLine.collectAsStateWithLifecycle()
     var currentLineIndex by rememberSaveable {
         mutableIntStateOf(-1)
-    }
-
-    val showTopShadow by remember {
-        derivedStateOf {
-            (listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 0)
-        }
-    }
-    val showBottomShadow by remember {
-        derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()
-            if (lastVisibleItem != null) {
-                lastVisibleItem.index < layoutInfo.totalItemsCount - 1 ||
-                    lastVisibleItem.offset + lastVisibleItem.size > layoutInfo.viewportEndOffset
-            } else {
-                false
-            }
-        }
     }
 
     LaunchedEffect(key1 = current) {
@@ -271,10 +213,9 @@ fun LyricsView(
             currentLineIndex = -1
         }
     }
-    }
 
     fun findClosestTranslatedLine(originalTimeMs: String): String? {
-        val translatedLines = lyricsData.translatedLyrics?.first?.lines ?: return null
+        val translatedLines = effectiveLyricsData.translatedLyrics?.first?.lines ?: return null
         if (translatedLines.isEmpty()) return null
 
         val originalTime = originalTimeMs.toLongOrNull() ?: return null

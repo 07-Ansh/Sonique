@@ -1,12 +1,12 @@
 package com.sonique.app.ui.component
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.ui.unit.sp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.ui.unit.sp
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
@@ -440,18 +440,26 @@ fun LyricsLineItem(
     playerContentColor: Color = Color.White,
 ) {
     val alphaAnim by animateFloatAsState(
-        targetValue = if (isCurrent) 1.0f else if (isBold) 0.5f else 0.25f,
+        targetValue = if (isCurrent) 1.0f else 0.25f,
         animationSpec = tween(durationMillis = 250),
         label = "lineAlpha",
     )
 
     Column(
-        modifier = modifier.fillMaxWidth().padding(vertical = 12.dp, horizontal = 24.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = originalWords,
-            style = if (isCurrent) typo().headlineLarge.copy(fontSize = 28.sp) else typo().headlineMedium.copy(fontSize = 22.sp),
+            style =
+                if (isCurrent) {
+                    typo().headlineLarge.copy(fontSize = 28.sp)
+                } else {
+                    typo().headlineMedium.copy(fontSize = 22.sp)
+                },
             color = playerContentColor.copy(alpha = alphaAnim),
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),

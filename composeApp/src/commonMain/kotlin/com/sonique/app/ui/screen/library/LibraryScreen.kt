@@ -392,15 +392,17 @@ fun LibraryScreen(
                                                  }
                                              }
 
-                                             GridLibraryPlaylist(
+                                             LibraryItem(
+                                                 state = LibraryItemState(
+                                                     type = if (selectedPlaylistTab == 0) {
+                                                         LibraryItemType.YourLocalPlaylist
+                                                     } else {
+                                                         LibraryItemType.YouTubePlaylist(isLoggedIn = loggedIn)
+                                                     },
+                                                     data = (currentPlaylistData as? LocalResource.Success)?.data ?: emptyList(),
+                                                     isLoading = currentPlaylistData is LocalResource.Loading,
+                                                 ),
                                                  navController = navController,
-                                                 contentPadding = PaddingValues(0.dp),
-                                                 data = currentPlaylistData,
-                                                 emptyText = if (selectedPlaylistTab == 0) Res.string.no_playlists_added else Res.string.no_YouTube_playlists,
-                                                 title = null,
-                                                 createNewPlaylist = if (selectedPlaylistTab == 0) { { showCreateDialogTab = true } } else null,
-                                                 onBack = null,
-                                                 onScrolling = handleScrolling,
                                                  onLocalPlaylistClick = { id ->
                                                      activeLocalPlaylistId = id
                                                      activeSubScreen = LibrarySubScreen.LOCAL_PLAYLIST_DETAILS

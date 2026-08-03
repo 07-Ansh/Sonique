@@ -114,6 +114,7 @@ fun LibraryItem(
             is LibraryItemType.RecentlyAdded -> stringResource(Res.string.recently_added)
             is LibraryItemType.CanvasSong -> stringResource(Res.string.most_played)
             is LibraryItemType.FollowedArtists -> stringResource(Res.string.followed_artists)
+            is LibraryItemType.YourLocalPlaylist, is LibraryItemType.YouTubePlaylist -> ""
             else -> return
         }
     val noPlaylistTitle =
@@ -123,6 +124,7 @@ fun LibraryItem(
             is LibraryItemType.RecentlyAdded -> stringResource(Res.string.recently_added)
             is LibraryItemType.CanvasSong -> stringResource(Res.string.most_played)
             is LibraryItemType.FollowedArtists -> stringResource(Res.string.followed_artists)
+            is LibraryItemType.YourLocalPlaylist, is LibraryItemType.YouTubePlaylist -> ""
             else -> return
         }
     Box {
@@ -145,7 +147,8 @@ fun LibraryItem(
         Column {
             Crossfade(targetState = state.isLoading, label = "Loading") { isLoading ->
                 if (!isLoading) {
-                    if (state.type is LibraryItemType.RecentlyAdded) {
+                    if (state.type is LibraryItemType.RecentlyAdded || state.type is LibraryItemType.YourLocalPlaylist || state.type is LibraryItemType.YouTubePlaylist) {
+                        val playlistList = remember(state.data) { state.data.filterIsInstance<PlaylistType>() }
                         val recentlyList = remember(state.data) { state.data.filterIsInstance<RecentlyType>() }
                         Column {
                             // ── Quick Access section ──────────────────────────────
@@ -214,73 +217,103 @@ fun LibraryItem(
                                 }
                             }
 
-                            // ── Recent Activity section ───────────────────────────
-                            Row(
-                                modifier = Modifier.padding(top = 15.dp, start = 10.dp, end = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(
-                                    text = "Recent Activity",
-                                    style = typo().titleMedium,
-                                    color = Color.White,
-                                    maxLines = 1,
-                                    modifier = Modifier.fillMaxWidth().height(35.dp)
-                                        .wrapContentHeight(align = Alignment.CenterVertically)
-                                        .weight(1f).focusable(),
-                                )
-                            }
-                            // ── Recent Activity horizontal row ────────────────────
-                            LazyRow(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                items(recentlyList) { item ->
-                                    val title: String
-                                    val thumbUrl: String?
-                                    val subtitle: String?
-                                    val onClick: () -> Unit
-                                    when (item) {
-                                        is SongEntity -> {
-                                            title = item.title
-                                            thumbUrl = item.thumbnails
-                                            subtitle = item.artistName?.connectArtists() ?: ""
-                                            onClick = {
-                                                viewModel.setQueueData(
-                                                    QueueData.Data(
-                                                        listTracks = arrayListOf(item.toTrack()),
-                                                        firstPlayedTrack = item.toTrack(),
-                                                        playlistId = "RDAMVM${item.videoId}",
-                                                        playlistName = item.title,
-                                                        playlistType = DomainPlaylistType.RADIO,
-                                                        continuation = null,
-                                                    ),
-                                                )
-                                                viewModel.loadMediaItem(item, type = Config.SONG_CLICK, index = 0)
-                                            }
+                            if (state.type is LibraryItemType.YourLocalPlaylist || state.type is LibraryItemType.YouTubePlaylist) {
+                                LazyRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    items(playlistList) { item ->
+                                        val itemTitle = item.toListName()
+                                        val thumbUrl: String? = when (item) {
+                                            is PlaylistEntity -> item.thumbnails
+                                            is LocalPlaylistEntity -> item.thumbnails
+                                            else -> null
                                         }
-                                        is AlbumEntity -> {
-                                            title = item.title
-                                            thumbUrl = item.thumbnails
-                                            subtitle = item.artistName?.connectArtists() ?: stringResource(Res.string.album)
+                                        HomeGridCardItem(
+                                            title = itemTitle,
+                                            thumbUrl = thumbUrl,
+                                            subtitle = null,
+                                            isArtist = false,
                                             onClick = {
-                                                onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
-                                            }
-                                        }
-                                        else -> return@items
+                                                when (item) {
+                                                    is PlaylistEntity -> onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(PlaylistDestination(item.id))
+                                                    is LocalPlaylistEntity -> onLocalPlaylistClick(item.id)
+                                                }
+                                            },
+                                            modifier = Modifier.width(115.dp),
+                                        )
                                     }
-                                    HomeGridCardItem(
-                                        title = title,
-                                        thumbUrl = thumbUrl,
-                                        subtitle = subtitle,
-                                        isArtist = false,
-                                        onClick = onClick,
-                                        modifier = Modifier.width(115.dp),
+                                }
+                            } else {
+                                // ── Recent Activity section ───────────────────────────
+                                Row(
+                                    modifier = Modifier.padding(top = 15.dp, start = 10.dp, end = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        text = "Recent Activity",
+                                        style = typo().titleMedium,
+                                        color = Color.White,
+                                        maxLines = 1,
+                                        modifier = Modifier.fillMaxWidth().height(35.dp)
+                                            .wrapContentHeight(align = Alignment.CenterVertically)
+                                            .weight(1f).focusable(),
                                     )
+                                }
+                                // ── Recent Activity horizontal row ────────────────────
+                                LazyRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                ) {
+                                    items(recentlyList) { item ->
+                                        val title: String
+                                        val thumbUrl: String?
+                                        val subtitle: String?
+                                        val onClick: () -> Unit
+                                        when (item) {
+                                            is SongEntity -> {
+                                                title = item.title
+                                                thumbUrl = item.thumbnails
+                                                subtitle = item.artistName?.connectArtists() ?: ""
+                                                onClick = {
+                                                    viewModel.setQueueData(
+                                                        QueueData.Data(
+                                                            listTracks = arrayListOf(item.toTrack()),
+                                                            firstPlayedTrack = item.toTrack(),
+                                                            playlistId = "RDAMVM${item.videoId}",
+                                                            playlistName = item.title,
+                                                            playlistType = DomainPlaylistType.RADIO,
+                                                            continuation = null,
+                                                        ),
+                                                    )
+                                                    viewModel.loadMediaItem(item, type = Config.SONG_CLICK, index = 0)
+                                                }
+                                            }
+                                            is AlbumEntity -> {
+                                                title = item.title
+                                                thumbUrl = item.thumbnails
+                                                subtitle = item.artistName?.connectArtists() ?: stringResource(Res.string.album)
+                                                onClick = {
+                                                    onAlbumClick?.invoke(item.browseId) ?: navController.navigate(AlbumDestination(item.browseId))
+                                                }
+                                            }
+                                            else -> return@items
+                                        }
+                                        HomeGridCardItem(
+                                            title = title,
+                                            thumbUrl = thumbUrl,
+                                            subtitle = subtitle,
+                                            isArtist = false,
+                                            onClick = onClick,
+                                            modifier = Modifier.width(115.dp),
+                                        )
+                                    }
                                 }
                             }
 
-                        } // close Column (Quick Access + Recent Activity)
+                        } // close Column (Quick Access + Playlists / Recent Activity)
                     } else if (state.type is LibraryItemType.FollowedArtists) {
                         LazyRow(
                             Modifier.padding(
@@ -485,6 +518,8 @@ sealed class LibraryItemType {
         val isLoggedIn: Boolean,
         val onReload: () -> Unit = {},
     ) : LibraryItemType()
+
+    data object YourLocalPlaylist : LibraryItemType()
 
     data class LocalPlaylist(
          

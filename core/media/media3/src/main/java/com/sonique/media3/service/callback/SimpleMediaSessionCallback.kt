@@ -243,6 +243,13 @@ internal class SimpleMediaSessionCallback(
                                 MediaMetadata.MEDIA_TYPE_PLAYLIST,
                             ),
                             browsableMediaItem(
+                                RECENTS,
+                                "Recents",
+                                null,
+                                drawableUri(R.drawable.baseline_album_24),
+                                MediaMetadata.MEDIA_TYPE_PLAYLIST,
+                            ),
+                            browsableMediaItem(
                                 PLAYLIST,
                                 context.getString(R.string.playlists),
                                 null,
@@ -256,6 +263,13 @@ internal class SimpleMediaSessionCallback(
                             .getAllSongs(1000)
                             .last()
                             .sortedBy { it.inLibrary }
+                            .map { it.toMediaItem(parentId) }
+
+                    RECENTS ->
+                        songRepository
+                            .getAllSongs(50)
+                            .last()
+                            .sortedByDescending { it.inLibrary }
                             .map { it.toMediaItem(parentId) }
 
                     PLAYLIST ->
@@ -455,6 +469,21 @@ internal class SimpleMediaSessionCallback(
                     }
                 }
 
+                RECENTS -> {
+                    val songId = path.getOrNull(1) ?: return@future defaultResult
+                    val recentSongs =
+                        songRepository
+                            .getAllSongs(50)
+                            .lastOrNull()
+                            ?.sortedByDescending { it.inLibrary }
+                            ?: emptyList()
+                    MediaSession.MediaItemsWithStartPosition(
+                        recentSongs.map { it.toMediaItem() },
+                        recentSongs.indexOfFirst { it.videoId == songId }.takeIf { it != -1 } ?: 0,
+                        startPositionMs,
+                    )
+                }
+
                 PLAYLIST -> {
                     val songId = path.getOrNull(2) ?: return@future defaultResult
                     val playlistId = path.getOrNull(1) ?: return@future defaultResult
@@ -615,6 +644,7 @@ internal class SimpleMediaSessionCallback(
     companion object {
         const val ROOT = "root"
         const val SONG = "song"
+        const val RECENTS = "recents"
         const val HOME = "home"
         const val ONLINE_PLAYLIST = "online_playlist"
         const val PLAYLIST = "playlist"

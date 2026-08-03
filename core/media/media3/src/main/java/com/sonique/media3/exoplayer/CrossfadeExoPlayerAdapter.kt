@@ -565,7 +565,7 @@ internal class CrossfadeExoPlayerAdapter(
 
     override fun seekToNext() {
         coroutineScope.launch {
-            // During crossfade Aâ†’A+1, "next" commits A+1 as current (Direction 1: the UI already
+            // During crossfade A→A+1, "next" commits A+1 as current (Direction 1: the UI already
             // shows A+1) and then advances to A+2. Outside crossfade it advances normally.
             val wasCrossfading = isCrossfading
             if (wasCrossfading) {
@@ -573,9 +573,10 @@ internal class CrossfadeExoPlayerAdapter(
                 commitIncomingAsCurrentInternal()
             }
             if (hasNextMediaItem()) {
+                internalPlayWhenReady = true
                 seekTo(getNextMediaItemIndex(), 0)
             } else if (wasCrossfading) {
-                // A+1 was the last track â€” stay on it (already promoted), just refresh metadata.
+                // A+1 was the last track — stay on it (already promoted), just refresh metadata.
                 forwardingPlayer.notifyMediaItemChanged()
             }
         }
@@ -591,16 +592,17 @@ internal class CrossfadeExoPlayerAdapter(
             }
 
             // Standard music player behavior:
-            // - Position > 3s  â†’ seek to start of current track
-            // - Position <= 3s â†’ go to previous track
+            // - Position > 3s  → seek to start of current track
+            // - Position <= 3s → go to previous track
             val positionThresholdMs = 3000L
             if (cachedPosition > positionThresholdMs) {
-                Logger.d(TAG, "seekToPrevious: pos=${cachedPosition}ms > ${positionThresholdMs}ms â€” seeking to start")
+                Logger.d(TAG, "seekToPrevious: pos=${cachedPosition}ms > ${positionThresholdMs}ms — seeking to start")
                 currentPlayer?.seekTo(0)
                 cachedPosition = 0
             } else if (hasPreviousMediaItem()) {
-                Logger.d(TAG, "seekToPrevious: pos=${cachedPosition}ms <= ${positionThresholdMs}ms â€” going to previous track")
+                Logger.d(TAG, "seekToPrevious: pos=${cachedPosition}ms <= ${positionThresholdMs}ms — going to previous track")
                 val prevIndex = getPreviousMediaItemIndex()
+                internalPlayWhenReady = true
                 seekTo(prevIndex, 0)
             } else {
                 Logger.d(TAG, "seekToPrevious: No previous item, seeking to start")
@@ -618,14 +620,15 @@ internal class CrossfadeExoPlayerAdapter(
                 commitIncomingAsCurrentInternal()
             }
 
-            // Always advance to the previous track regardless of `cachedPosition` â€”
+            // Always advance to the previous track regardless of `cachedPosition` —
             // skips the 3-second "seek to start" rule used by seekToPrevious().
             if (hasPreviousMediaItem()) {
                 val prevIndex = getPreviousMediaItemIndex()
                 Logger.d(TAG, "seekToPreviousMediaItem: jumping to previous index=$prevIndex")
+                internalPlayWhenReady = true
                 seekTo(prevIndex, 0)
             } else {
-                Logger.d(TAG, "seekToPreviousMediaItem: No previous item â€” no-op")
+                Logger.d(TAG, "seekToPreviousMediaItem: No previous item — no-op")
             }
         }
     }

@@ -394,7 +394,7 @@ fun LibraryScreen(
 
                                              GridLibraryPlaylist(
                                                  navController = navController,
-                                                 paddingValues = PaddingValues(0.dp),
+                                                 contentPadding = PaddingValues(0.dp),
                                                  data = currentPlaylistData,
                                                  emptyText = if (selectedPlaylistTab == 0) Res.string.no_playlists_added else Res.string.no_YouTube_playlists,
                                                  title = null,

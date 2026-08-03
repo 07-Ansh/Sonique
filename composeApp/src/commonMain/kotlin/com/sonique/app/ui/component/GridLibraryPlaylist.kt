@@ -118,7 +118,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
     noinline onArtistClick: ((String) -> Unit)? = null,
     noinline onPlaylistClick: ((String, Boolean) -> Unit)? = null,
     noinline actions: (@Composable () -> Unit)? = null,
-    noinline onReload: () -> Unit,
+    noinline onReload: () -> Unit = {},
 ) {
     Logger.w("GridLibraryPlaylist", "Generic Type: ${T::class.java}")
     val viewModel: LibraryViewModel = koinViewModel()

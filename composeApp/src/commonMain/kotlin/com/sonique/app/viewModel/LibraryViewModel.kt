@@ -194,15 +194,7 @@ class LibraryViewModel(
                             thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png"
                         )
                     )
-                    temp.add(
-                        PlaylistEntity(
-                            title = getString(Res.string.your_youtube_playlists),
-                            author = "YouTube Music",
-                            id = Config.PIN_YT_PLAYLISTS,
-                            description = "PIN",
-                            thumbnails = "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.iconfinder.com%2Ficons%2F183618%2Fplaylist_icon&psig=AOvVaw2gXU9z_E_Y_M-s_-s_Y_M-&ust=1712239123456000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCKC_y_S_Y_MDFQAAAAAdAAAAABAE"
-                        )
-                    )
+
                     temp.add(
                         PlaylistEntity(
                             title = getString(Res.string.youtube_albums),

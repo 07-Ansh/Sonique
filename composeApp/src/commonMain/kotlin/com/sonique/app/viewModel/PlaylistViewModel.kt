@@ -784,11 +784,16 @@ class PlaylistViewModel(
         viewModelScope.launch {
             val id = playlistEntity.value?.id ?: return@launch
             makeToast("Download removed")
-            updatePlaylistDownloadState(
-                id,
-                com.sonique.domain.data.entities.DownloadState.STATE_NOT_DOWNLOADED,
-                false
-            )
+            // For the virtual Downloaded Songs playlist there is no DB row to update;
+            // the live getDownloadedSongs() Flow will auto-refresh the list as each
+            // track is deleted. For real playlists, reset the DB state as before.
+            if (id != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                updatePlaylistDownloadState(
+                    id,
+                    com.sonique.domain.data.entities.DownloadState.STATE_NOT_DOWNLOADED,
+                    false
+                )
+            }
             tracks.value.forEach {
                 viewModelScope.launch {
                     downloadUtils.removeDownload(it.videoId)

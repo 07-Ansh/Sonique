@@ -175,7 +175,15 @@ fun LibraryItem(
                                     onClick = {
                                         when (item) {
                                             is PlaylistEntity -> onPlaylistClick?.invoke(item.id, false) ?: navController.navigate(PlaylistDestination(item.id))
-                                            is LocalPlaylistEntity -> onLocalPlaylistClick(item.id)
+                                            is LocalPlaylistEntity -> {
+                                                val ytId = item.youtubePlaylistId
+                                                if (ytId != null) {
+                                                    onPlaylistClick?.invoke(ytId, false)
+                                                        ?: navController.navigate(PlaylistDestination(ytId))
+                                                } else {
+                                                    onLocalPlaylistClick(item.id)
+                                                }
+                                            }
                                             is PlaylistsResult -> onPlaylistClick?.invoke(item.browseId, true) ?: navController.navigate(PlaylistDestination(item.browseId, isYourYouTubePlaylist = true))
                                         }
                                     },
@@ -309,7 +317,13 @@ fun LibraryItem(
                                             onClick = {
                                                 when (item) {
                                                     is LocalPlaylistEntity -> {
-                                                        onLocalPlaylistClick(item.id)
+                                                        val ytId = item.youtubePlaylistId
+                                                        if (ytId != null) {
+                                                            onPlaylistClick?.invoke(ytId, false)
+                                                                ?: navController.navigate(PlaylistDestination(ytId))
+                                                        } else {
+                                                            onLocalPlaylistClick(item.id)
+                                                        }
                                                     }
 
                                                     is PlaylistsResult -> {

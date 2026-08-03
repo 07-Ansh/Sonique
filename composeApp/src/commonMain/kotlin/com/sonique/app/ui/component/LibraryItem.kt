@@ -224,10 +224,14 @@ fun LibraryItem(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 ) {
                                     items(playlistList) { item ->
-                                        val itemTitle = item.toListName()
+                                        val itemTitle: String = when (item) {
+                                            is PlaylistEntity -> item.title
+                                            is LocalPlaylistEntity -> item.title
+                                            else -> ""
+                                        }
                                         val thumbUrl: String? = when (item) {
                                             is PlaylistEntity -> item.thumbnails
-                                            is LocalPlaylistEntity -> item.thumbnails
+                                            is LocalPlaylistEntity -> item.thumbnail
                                             else -> null
                                         }
                                         HomeGridCardItem(

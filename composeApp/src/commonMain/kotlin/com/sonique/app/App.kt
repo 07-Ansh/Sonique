@@ -324,15 +324,18 @@ fun App(
         }
 
         LaunchedEffect(isShowNowPlaylistScreen, screenHeightPx) {
-             val target = if (isShowNowPlaylistScreen) 0f else screenHeightPx
-             if (kotlin.math.abs(playerOffsetY.value - target) > 0.5f) {
+             if (isShowNowPlaylistScreen) {
+                 // Opening: slide the player container up from bottom
                  playerOffsetY.animateTo(
-                     target,
+                     0f,
                      animationSpec = androidx.compose.animation.core.tween(
                          durationMillis = 280,
                          easing = androidx.compose.animation.core.FastOutSlowInEasing
                      )
                  )
+             } else {
+                 // Closing: inner screen already animates itself down — just snap container out of view
+                 playerOffsetY.snapTo(screenHeightPx)
              }
              isPlayerExpanded = isShowNowPlaylistScreen
         }

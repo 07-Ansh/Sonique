@@ -155,16 +155,12 @@ fun NewPlayerScreen(
 
     val trackTitle = currentSongData?.nowPlayingTitle ?: ""
     val trackArtist = currentSongData?.artistName ?: ""
-    val firstArtist = remember(trackArtist) {
-        if (trackArtist.isBlank()) ""
-        else trackArtist.split(",", ";", "&", " feat.", " Feat.", " ft.", " Ft.").firstOrNull()?.trim() ?: trackArtist
-    }
+    val firstArtist = if (trackArtist.isBlank()) ""
+    else trackArtist.split(",", ";", "&", " feat.", " Feat.", " ft.", " Ft.").firstOrNull()?.trim() ?: trackArtist
     val trackArtwork = currentSongData?.thumbnailURL ?: ""
-    val playingContextText = remember(currentSongData?.playlistName, queueData?.data?.playlistName) {
-        currentSongData?.playlistName?.takeIf { it.isNotBlank() }
-            ?: queueData?.data?.playlistName?.takeIf { it.isNotBlank() }
-            ?: "Current Queue"
-    }
+    val playingContextText = currentSongData?.playlistName?.takeIf { it.isNotBlank() }
+        ?: queueData?.data?.playlistName?.takeIf { it.isNotBlank() }
+        ?: "Current Queue"
 
     // Sheet/dialog visibility state
     var showQueueSheet by remember { mutableStateOf(false) }
@@ -238,6 +234,10 @@ fun NewPlayerScreen(
                         velocityTracker.resetTracking()
                         scope.launch {
                             if (offsetYAnimatable.value > 180f || velocityY > 1200f) {
+                                offsetYAnimatable.animateTo(
+                                    targetValue = 1500f,
+                                    animationSpec = tween(durationMillis = 180, easing = LinearEasing)
+                                )
                                 onDismiss()
                                 offsetYAnimatable.snapTo(0f)
                             } else {
@@ -363,8 +363,7 @@ fun NewPlayerScreen(
                             }
                         } else {
 
-                            // Album artwork — matches Thumbnail.kt BoxWithConstraints approach
-                            // thumbnailSize = containerWidth - (PlayerHorizontalPadding * 2)
+                            // Album artwork — crossfade between songs
                             BoxWithConstraints(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.fillMaxSize()
@@ -378,7 +377,10 @@ fun NewPlayerScreen(
                                 ) {
                                     if (trackArtwork.isNotEmpty()) {
                                         AsyncImage(
-                                            model = trackArtwork,
+                                            model = coil3.request.ImageRequest.Builder(LocalContext.current)
+                                                .data(trackArtwork)
+                                                .crossfade(true)
+                                                .build(),
                                             contentDescription = null,
                                             contentScale = ContentScale.Crop,
                                             modifier = Modifier.fillMaxSize()
@@ -421,7 +423,10 @@ fun NewPlayerScreen(
                             ) {
                                 if (trackArtwork.isNotEmpty()) {
                                     AsyncImage(
-                                        model = trackArtwork,
+                                        model = coil3.request.ImageRequest.Builder(LocalContext.current)
+                                            .data(trackArtwork)
+                                            .crossfade(true)
+                                            .build(),
                                         contentDescription = null,
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize()

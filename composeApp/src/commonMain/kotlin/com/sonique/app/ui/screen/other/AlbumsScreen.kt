@@ -22,9 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.sonique.app.extension.isScrollingUp
+import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.EndOfPage
 import com.sonique.app.ui.component.HomeGridCardItem
-import com.sonique.app.ui.component.HomeShimmer
 import com.sonique.app.ui.navigation.destination.list.AlbumDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
 import com.sonique.app.ui.theme.typo
@@ -78,10 +78,7 @@ fun AlbumsScreen(
             },
         ) {
             if (isLoading && albumsForYou.isEmpty() && playlistsForYou.isEmpty()) {
-                Column {
-                    Spacer(Modifier.height(16.dp))
-                    HomeShimmer()
-                }
+                CenterLoadingBox(modifier = Modifier.fillMaxSize())
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),

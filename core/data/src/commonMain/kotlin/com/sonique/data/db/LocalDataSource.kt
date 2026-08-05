@@ -233,6 +233,8 @@ internal class LocalDataSource(
         offset,
     )
 
+    fun getAllLocalPlaylistsFlow() = databaseDao.getAllLocalPlaylistsFlow()
+
     suspend fun getAllDownloadingLocalPlaylists(
         limit: Int,
         offset: Int,

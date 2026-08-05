@@ -452,6 +452,9 @@ interface DatabaseDao {
         offset: Int,
     ): List<LocalPlaylistEntity>
 
+    @Query("SELECT * FROM local_playlist ORDER BY inLibrary DESC")
+    fun getAllLocalPlaylistsFlow(): Flow<List<LocalPlaylistEntity>>
+
     @Query("SELECT * FROM local_playlist WHERE downloadState = 1 OR downloadState = 2 LIMIT :limit OFFSET :offset")
     suspend fun getAllDownloadingLocalPlaylists(
         limit: Int,

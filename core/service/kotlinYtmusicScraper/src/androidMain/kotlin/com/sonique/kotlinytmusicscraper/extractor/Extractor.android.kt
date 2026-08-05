@@ -11,6 +11,7 @@ import dev.maxrave.pipepipe.extractor.stream.StreamInfo
 import okio.FileSystem
 import okio.IOException
 import okio.Path.Companion.toPath
+import dev.maxrave.pipepipe.extractor.services.youtube.YoutubeApiDecoder
 import org.schabi.newpipe.extractor.NewPipe as BraveNewPipe
 import org.schabi.newpipe.extractor.ServiceList as BraveServiceList
 import org.schabi.newpipe.extractor.stream.StreamInfo as BraveStreamInfo
@@ -20,10 +21,12 @@ private const val TAG = "Extractor"
 actual class Extractor {
     private var newPipeDownloader = NewPipeDownloaderImpl(proxy = null)
     private var braveNewPipeDownloader = BraveNewPipeDownloaderImpl(proxy = null)
+    private val faradayDecoder = FaradayJsDecoder()
 
     actual fun init() {
         NewPipe.init(newPipeDownloader)
         BraveNewPipe.init(braveNewPipeDownloader)
+        YoutubeApiDecoder.setLocalDecoder(faradayDecoder)
     }
 
     actual fun logIn(cookie: String?) {
@@ -31,6 +34,10 @@ actual class Extractor {
     }
 
     actual fun newPipePlayer(videoId: String): List<Pair<Int, String>> {
+        // Re-register unconditionally: PipePipe drops the local decoder for good the first time it
+        // throws, and the getter is package-private so its state cannot be read from here. Setting
+        // it again each time turns "disabled forever" into "skipped for one track".
+        YoutubeApiDecoder.setLocalDecoder(faradayDecoder)
         try {
             val streamInfo =
                 StreamInfo.getInfo(ServiceList.YouTube, "https://music.youtube.com/watch?v=$videoId")
@@ -49,7 +56,14 @@ actual class Extractor {
                     TAG,
                     "PipePipe stream URL HEAD check failed (non 2xx) for $videoId, falling back to BravePipe",
                 )
+                // A rejected URL is the symptom of a stale player table.
+                faradayDecoder.invalidate()
             } else {
+                ExtractSource.record(videoId, "PipePipe · ${faradayDecoder.lastOutcomeLabel}")
+                Logger.d(
+                    TAG,
+                    "extract source=PipePipe decoder=${faradayDecoder.lastOutcome} itags=${pipeResult.map { it.first }} for $videoId",
+                )
                 return pipeResult
             }
         } catch (e: Throwable) {
@@ -60,9 +74,13 @@ actual class Extractor {
             val streamInfo =
                 BraveStreamInfo.getInfo(BraveServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
             val streamsList = streamInfo.audioStreams + streamInfo.videoStreams + streamInfo.videoOnlyStreams
-            streamsList.mapNotNull {
-                (it.itagItem?.id ?: return@mapNotNull null) to it.content
-            }
+            streamsList
+                .mapNotNull {
+                    (it.itagItem?.id ?: return@mapNotNull null) to it.content
+                }.also {
+                    ExtractSource.record(videoId, "BravePipe")
+                    Logger.d(TAG, "extract source=BravePipe itags=${it.map { pair -> pair.first }} for $videoId")
+                }
         }.onFailure {
             Logger.w(TAG, "BravePipe extractor failed for $videoId: ${it.message}")
         }.getOrElse { emptyList() }

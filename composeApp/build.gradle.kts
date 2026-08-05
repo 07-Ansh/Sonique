@@ -31,6 +31,7 @@ kotlin {
         freeCompilerArgs.add("-Xcontext-parameters")
         freeCompilerArgs.add("-Xmulti-dollar-interpolation")
         freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.add("-Xskip-metadata-version-check")
     }
     androidTarget {
         compilerOptions {

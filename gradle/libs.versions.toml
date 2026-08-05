@@ -49,7 +49,7 @@ json = "1.9.0"
 slf4j = "1.7.36"
 newpipe = "v0.26.1"
 brave-newpipe = "v0.26.3"
-pipepipe = "c3139c584d"
+pipepipe = "f8982ca9e7"
 webkit = "1.14.0"
 kermit = "2.0.8"
 paging-common = "3.3.6"
@@ -73,6 +73,7 @@ componentsResources="1.10.0-rc02"
 foundation="1.10.0-rc02"
 runtime="1.10.0-rc02"
 compottie = "2.0.2"
+quickjs = "1.0.14"
 cmptoast = "1.0.71"
 uri = "0.0.21"
 buildkonfig = "0.17.1"
@@ -193,6 +194,7 @@ compottie-network = { module = "io.github.alexzhirkevich:compottie-network", ver
 compottie-resources = { module = "io.github.alexzhirkevich:compottie-resources", version.ref = "compottie" }
 cmptoast = { module = "network.chaintech:cmptoast", version.ref = "cmptoast" }
 file-picker = { module = "com.mohamedrejeb.calf:calf-file-picker", version.ref = "calf"}
+quickjs = { module = "io.github.dokar3:quickjs-kt", version.ref = "quickjs" }
 
 #JVM
 gst1-java-core = { module = "org.freedesktop.gstreamer:gst1-java-core", version.ref = "gst1JavaCore" }

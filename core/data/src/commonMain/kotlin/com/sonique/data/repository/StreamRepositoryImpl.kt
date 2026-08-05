@@ -41,6 +41,8 @@ internal class StreamRepositoryImpl(
 
     override suspend fun getFormatFlow(videoId: String) = localDataSource.getNewFormatAsFlow(videoId)
 
+    override fun getExtractSource(videoId: String): String? = youTube.getExtractSource(videoId)
+
     override suspend fun updateFormat(videoId: String) {
         localDataSource.getNewFormat(videoId)?.let { oldFormat ->
             Logger.w("Stream", "oldFormatExpired: ${oldFormat.expiredTime}")

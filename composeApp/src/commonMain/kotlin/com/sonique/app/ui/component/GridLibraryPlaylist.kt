@@ -1,8 +1,10 @@
 package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.unit.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,13 +14,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -344,14 +354,111 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                 }
                             }
 
+                            var showOptionsDialog by remember { mutableStateOf(false) }
+                            var showRenameDialog by remember { mutableStateOf(false) }
                             var showDeleteDialog by remember { mutableStateOf(false) }
+                            var renameTitleText by remember { mutableStateOf("") }
+
+                            if (showOptionsDialog && item is LocalPlaylistEntity && item.id != -999L && item.youtubePlaylistId == null) {
+                                AlertDialog(
+                                    onDismissRequest = { showOptionsDialog = false },
+                                    title = { Text(item.title, color = Color.White, style = typo().titleMedium) },
+                                    text = {
+                                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            TextButton(
+                                                onClick = {
+                                                    showOptionsDialog = false
+                                                    renameTitleText = item.title
+                                                    showRenameDialog = true
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.Start,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Icon(Icons.Rounded.Edit, contentDescription = null, tint = Color.White)
+                                                    Spacer(Modifier.width(12.dp))
+                                                    Text("Rename Playlist", color = Color.White)
+                                                }
+                                            }
+                                            TextButton(
+                                                onClick = {
+                                                    showOptionsDialog = false
+                                                    showDeleteDialog = true
+                                                },
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.Start,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Icon(Icons.Rounded.Delete, contentDescription = null, tint = Color.Red)
+                                                    Spacer(Modifier.width(12.dp))
+                                                    Text("Delete Playlist", color = Color.Red)
+                                                }
+                                            }
+                                        }
+                                    },
+                                    confirmButton = {},
+                                    dismissButton = {
+                                        TextButton(onClick = { showOptionsDialog = false }) {
+                                            Text("Cancel", color = Color.Gray)
+                                        }
+                                    }
+                                )
+                            }
+
+                            if (showRenameDialog && item is LocalPlaylistEntity) {
+                                AlertDialog(
+                                    onDismissRequest = { showRenameDialog = false },
+                                    title = { Text("Rename Playlist", color = Color.White, style = typo().titleMedium) },
+                                    text = {
+                                        OutlinedTextField(
+                                            value = renameTitleText,
+                                            onValueChange = { renameTitleText = it },
+                                            label = { Text("Playlist Title", color = Color.Gray) },
+                                            singleLine = true,
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedBorderColor = Color.White,
+                                                unfocusedBorderColor = Color.Gray,
+                                                focusedLabelColor = Color.White,
+                                                cursorColor = Color.White,
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    },
+                                    confirmButton = {
+                                        TextButton(
+                                            onClick = {
+                                                if (renameTitleText.isNotBlank()) {
+                                                    viewModel.renameLocalPlaylist(item.id, renameTitleText.trim())
+                                                    showRenameDialog = false
+                                                }
+                                            }
+                                        ) {
+                                            Text("Rename", color = Color.White)
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { showRenameDialog = false }) {
+                                            Text("Cancel", color = Color.Gray)
+                                        }
+                                    }
+                                )
+                            }
+
                             if (showDeleteDialog && item is LocalPlaylistEntity) {
-                                androidx.compose.material3.AlertDialog(
+                                AlertDialog(
                                     onDismissRequest = { showDeleteDialog = false },
-                                    title = { Text("Delete Playlist", color = Color.White) },
+                                    title = { Text("Delete Playlist", color = Color.White, style = typo().titleMedium) },
                                     text = { Text("Are you sure you want to delete '${item.title}'?", color = Color.White) },
                                     confirmButton = {
-                                        androidx.compose.material3.TextButton(
+                                        TextButton(
                                             onClick = {
                                                 viewModel.deleteLocalPlaylist(item.id)
                                                 showDeleteDialog = false
@@ -361,7 +468,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                         }
                                     },
                                     dismissButton = {
-                                        androidx.compose.material3.TextButton(onClick = { showDeleteDialog = false }) {
+                                        TextButton(onClick = { showDeleteDialog = false }) {
                                             Text("Cancel", color = Color.Gray)
                                         }
                                     }
@@ -375,15 +482,18 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                     subtitle = subtitle,
                                     isArtist = isArtist,
                                     onClick = onClick,
+                                    onLongClick = if (item is LocalPlaylistEntity && item.id != -999L && item.youtubePlaylistId == null) {
+                                        { showOptionsDialog = true }
+                                    } else null,
                                 )
-                                if (item is LocalPlaylistEntity) {
+                                if (item is LocalPlaylistEntity && item.id != -999L && item.youtubePlaylistId == null) {
                                     IconButton(
-                                        onClick = { showDeleteDialog = true },
+                                        onClick = { showOptionsDialog = true },
                                         modifier = Modifier.align(Alignment.TopEnd).padding(2.dp)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Rounded.Close,
-                                            contentDescription = "Delete",
+                                            imageVector = Icons.Rounded.MoreVert,
+                                            contentDescription = "Options",
                                             tint = Color.White.copy(alpha = 0.8f),
                                             modifier = Modifier.size(20.dp)
                                         )
@@ -406,14 +516,111 @@ internal inline fun <reified T> GridLibraryPlaylist(
                             ),
                         ) {
                             items(filteredList) { item ->
+                                var showOptionsDialogList by remember { mutableStateOf(false) }
+                                var showRenameDialogList by remember { mutableStateOf(false) }
                                 var showDeleteDialogList by remember { mutableStateOf(false) }
+                                var renameTitleTextList by remember { mutableStateOf("") }
+
+                                if (showOptionsDialogList && item is LocalPlaylistEntity && item.id != -999L && item.youtubePlaylistId == null) {
+                                    AlertDialog(
+                                        onDismissRequest = { showOptionsDialogList = false },
+                                        title = { Text(item.title, color = Color.White, style = typo().titleMedium) },
+                                        text = {
+                                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                                TextButton(
+                                                    onClick = {
+                                                        showOptionsDialogList = false
+                                                        renameTitleTextList = item.title
+                                                        showRenameDialogList = true
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.Start,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Icon(Icons.Rounded.Edit, contentDescription = null, tint = Color.White)
+                                                        Spacer(Modifier.width(12.dp))
+                                                        Text("Rename Playlist", color = Color.White)
+                                                    }
+                                                }
+                                                TextButton(
+                                                    onClick = {
+                                                        showOptionsDialogList = false
+                                                        showDeleteDialogList = true
+                                                    },
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        horizontalArrangement = Arrangement.Start,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Icon(Icons.Rounded.Delete, contentDescription = null, tint = Color.Red)
+                                                        Spacer(Modifier.width(12.dp))
+                                                        Text("Delete Playlist", color = Color.Red)
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        confirmButton = {},
+                                        dismissButton = {
+                                            TextButton(onClick = { showOptionsDialogList = false }) {
+                                                Text("Cancel", color = Color.Gray)
+                                            }
+                                        }
+                                    )
+                                }
+
+                                if (showRenameDialogList && item is LocalPlaylistEntity) {
+                                    AlertDialog(
+                                        onDismissRequest = { showRenameDialogList = false },
+                                        title = { Text("Rename Playlist", color = Color.White, style = typo().titleMedium) },
+                                        text = {
+                                            OutlinedTextField(
+                                                value = renameTitleTextList,
+                                                onValueChange = { renameTitleTextList = it },
+                                                label = { Text("Playlist Title", color = Color.Gray) },
+                                                singleLine = true,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = Color.White,
+                                                    unfocusedBorderColor = Color.Gray,
+                                                    focusedLabelColor = Color.White,
+                                                    cursorColor = Color.White,
+                                                    focusedTextColor = Color.White,
+                                                    unfocusedTextColor = Color.White
+                                                ),
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        },
+                                        confirmButton = {
+                                            TextButton(
+                                                onClick = {
+                                                    if (renameTitleTextList.isNotBlank()) {
+                                                        viewModel.renameLocalPlaylist(item.id, renameTitleTextList.trim())
+                                                        showRenameDialogList = false
+                                                    }
+                                                }
+                                            ) {
+                                                Text("Rename", color = Color.White)
+                                            }
+                                        },
+                                        dismissButton = {
+                                            TextButton(onClick = { showRenameDialogList = false }) {
+                                                Text("Cancel", color = Color.Gray)
+                                            }
+                                        }
+                                    )
+                                }
+
                                 if (showDeleteDialogList && item is LocalPlaylistEntity) {
-                                    androidx.compose.material3.AlertDialog(
+                                    AlertDialog(
                                         onDismissRequest = { showDeleteDialogList = false },
-                                        title = { Text("Delete Playlist", color = Color.White) },
+                                        title = { Text("Delete Playlist", color = Color.White, style = typo().titleMedium) },
                                         text = { Text("Are you sure you want to delete '${item.title}'?", color = Color.White) },
                                         confirmButton = {
-                                            androidx.compose.material3.TextButton(
+                                            TextButton(
                                                 onClick = {
                                                     viewModel.deleteLocalPlaylist(item.id)
                                                     showDeleteDialogList = false
@@ -423,7 +630,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                             }
                                         },
                                         dismissButton = {
-                                            androidx.compose.material3.TextButton(onClick = { showDeleteDialogList = false }) {
+                                            TextButton(onClick = { showDeleteDialogList = false }) {
                                                 Text("Cancel", color = Color.Gray)
                                             }
                                         }
@@ -466,11 +673,11 @@ internal inline fun <reified T> GridLibraryPlaylist(
                                         )
                                     }
 
-                                    if (item is LocalPlaylistEntity) {
-                                        IconButton(onClick = { showDeleteDialogList = true }) {
+                                    if (item is LocalPlaylistEntity && item.id != -999L && item.youtubePlaylistId == null) {
+                                        IconButton(onClick = { showOptionsDialogList = true }) {
                                             Icon(
-                                                imageVector = Icons.Rounded.Close,
-                                                contentDescription = "Delete",
+                                                imageVector = Icons.Rounded.MoreVert,
+                                                contentDescription = "Options",
                                                 tint = Color.White.copy(alpha = 0.7f)
                                             )
                                         }
@@ -589,6 +796,7 @@ internal inline fun <reified T> GridLibraryPlaylist(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeGridCardItem(
     title: String,
@@ -596,12 +804,16 @@ fun HomeGridCardItem(
     subtitle: String?,
     isArtist: Boolean = false,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .padding(4.dp),
         horizontalAlignment = if (isArtist) Alignment.CenterHorizontally else Alignment.Start,
     ) {

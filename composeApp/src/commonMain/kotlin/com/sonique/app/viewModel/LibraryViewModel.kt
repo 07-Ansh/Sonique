@@ -244,7 +244,10 @@ class LibraryViewModel(
                         )
                     )
 
-                    // 2. Downloaded YouTube playlists (exclude virtual stubs and albums)
+                    // 2. User-created local playlists right after Downloaded Songs (newest first)
+                    result.addAll(localPlaylists)
+
+                    // 3. Downloaded YouTube playlists (exclude virtual stubs and albums)
                     downloadedPlaylists
                         .filter { it.id != LOCAL_PLAYLIST_ID_DOWNLOADED && !it.id.startsWith("MPRE") }
                         .forEach { playlist ->
@@ -259,7 +262,7 @@ class LibraryViewModel(
                             )
                         }
 
-                    // 3. Liked YouTube playlists (exclude already-downloaded ones and albums)
+                    // 4. Liked YouTube playlists (exclude already-downloaded ones and albums)
                     val downloadedIds = downloadedPlaylists.map { it.id }.toSet()
                     likedPlaylists
                         .filter { it.id !in downloadedIds && it.id != LOCAL_PLAYLIST_ID_DOWNLOADED && !it.id.startsWith("MPRE") }
@@ -273,9 +276,6 @@ class LibraryViewModel(
                                 )
                             )
                         }
-
-                    // 4. User-created local playlists at the bottom
-                    result.addAll(localPlaylists.reversed())
                     result
                 }
                 .collect { merged ->
@@ -469,6 +469,16 @@ class LibraryViewModel(
         }
     }
 
-
+    fun renameLocalPlaylist(id: Long, newTitle: String) {
+        viewModelScope.launch {
+            localPlaylistRepository.updateTitleLocalPlaylist(
+                id = id,
+                newTitle = newTitle,
+                updatedMessage = getString(Res.string.updated),
+                updatedYtMessage = getString(Res.string.updated_to_youtube_playlist),
+                errorMessage = getString(Res.string.error),
+            ).collect {}
+        }
+    }
 }
 

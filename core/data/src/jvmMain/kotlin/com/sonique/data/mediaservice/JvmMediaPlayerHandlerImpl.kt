@@ -13,6 +13,8 @@ import com.sonique.common.DESC
 import com.sonique.common.LOCAL_PLAYLIST_ID
 import com.sonique.common.LOCAL_PLAYLIST_ID_SAVED_QUEUE
 import com.sonique.common.MERGING_DATA_TYPE
+import com.sonique.common.SPONSOR_BLOCK_MIN_SEGMENT_SECONDS
+import com.sonique.common.SPONSOR_BLOCK_SKIP_MARGIN_MS
 import com.sonique.common.TITLE
 import com.sonique.data.db.Converters
 import com.sonique.data.mediaservice.mac.MacOSMediaIntegration
@@ -349,13 +351,18 @@ class JvmMediaPlayerHandlerImpl(
                                     if (skipSegments != null) {
                                         for (skip in skipSegments) {
                                             if (listCategory.contains(skip.category)) {
+                                                if (skip.segment[1] - skip.segment[0] < SPONSOR_BLOCK_MIN_SEGMENT_SECONDS) {
+                                                    continue
+                                                }
                                                 val firstPart = ((skip.segment[0] / skip.videoDuration) * 100).toFloat()
                                                 val secondPart =
                                                     ((skip.segment[1] / skip.videoDuration) * 100).toFloat()
                                                 if (current in firstPart..secondPart) {
                                                     Logger.w(TAG, "Seek to $secondPart")
                                                     Logger.d(TAG, "Seek to Cr: $current, First: $firstPart, Second: $secondPart")
-                                                    skipSegment((secondPart * player.duration).toLong() / 100)
+                                                    skipSegment(
+                                                        (secondPart * player.duration).toLong() / 100 + SPONSOR_BLOCK_SKIP_MARGIN_MS,
+                                                    )
                                                 }
                                             }
                                         }

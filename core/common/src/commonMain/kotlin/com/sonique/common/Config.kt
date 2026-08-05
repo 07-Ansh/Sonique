@@ -352,6 +352,9 @@ object LIMIT_CACHE_SIZE {
     }
 }
 
+const val SPONSOR_BLOCK_MIN_SEGMENT_SECONDS = 1.0
+const val SPONSOR_BLOCK_SKIP_MARGIN_MS = 500L
+
 sealed class SponsorBlockType(
     val value: String,
 ) {

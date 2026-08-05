@@ -56,6 +56,9 @@ import sonique.composeapp.generated.resources.baseline_arrow_back_ios_new_24
 import sonique.composeapp.generated.resources.error
 import sonique.composeapp.generated.resources.recently_added
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.snapshotFlow
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalHazeMaterialsApi::class)
 @Composable
 fun RecentlySongsScreen(
@@ -63,8 +66,17 @@ fun RecentlySongsScreen(
     navController: NavController,
     viewModel: RecentlySongsViewModel = koinViewModel(),
     sharedViewModel: SharedViewModel = koinInject(),
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     val hazeState = rememberHazeState()
+    val lazyState = rememberLazyListState()
+
+    LaunchedEffect(lazyState) {
+        snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                onScrolling.invoke(isAtTop)
+            }
+    }
 
     val recentlyItems = viewModel.recentlySongs.collectAsLazyPagingItems()
     val playingTrack by sharedViewModel.nowPlayingState.map { it?.songEntity }.collectAsState(initial = null)
@@ -72,6 +84,7 @@ fun RecentlySongsScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         LazyColumn(
+            state = lazyState,
             modifier =
                 Modifier
                     .fillMaxSize()

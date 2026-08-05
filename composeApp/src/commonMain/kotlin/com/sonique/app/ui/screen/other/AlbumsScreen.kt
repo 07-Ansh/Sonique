@@ -45,11 +45,10 @@ fun AlbumsScreen(
     val gridState = rememberLazyGridState()
     val isScrollingUp by gridState.isScrollingUp()
 
-    LaunchedEffect(gridState, isScrollingUp) {
+    LaunchedEffect(gridState) {
         snapshotFlow { gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0 }
             .collect { isAtTop ->
-                val shouldBeVisible = if (isAtTop) true else isScrollingUp
-                onScrolling(shouldBeVisible)
+                onScrolling(isAtTop)
             }
     }
 

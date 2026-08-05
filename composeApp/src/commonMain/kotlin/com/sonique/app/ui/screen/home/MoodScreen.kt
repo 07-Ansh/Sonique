@@ -26,14 +26,26 @@ import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.*
 
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.snapshotFlow
+
 @Composable
 fun MoodScreen(
     navController: NavController,
     viewModel: MoodViewModel = koinViewModel(),
     params: String?,
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     val moodData by viewModel.moodsMomentObject.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
+
+    val lazyState = rememberLazyListState()
+    LaunchedEffect(lazyState) {
+        snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                onScrolling.invoke(isAtTop)
+            }
+    }
 
     LaunchedEffect(key1 = params) {
         if (params != null) {
@@ -60,6 +72,7 @@ fun MoodScreen(
         )
         AnimatedVisibility(visible = !loading) {
             LazyColumn(
+                state = lazyState,
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(moodData?.items ?: emptyList()) { item ->

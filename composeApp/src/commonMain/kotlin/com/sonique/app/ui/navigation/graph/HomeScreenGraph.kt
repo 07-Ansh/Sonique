@@ -28,6 +28,7 @@ fun NavGraphBuilder.homeScreenGraph(
     enablePageTransitions: Boolean = false,
     hideNavBar: () -> Unit = { },
     showNavBar: () -> Unit = { },
+    onScrolling: (Boolean) -> Unit = {},
 ) {
     composable<CreditDestination> {
         CreditScreen(
@@ -40,6 +41,7 @@ fun NavGraphBuilder.homeScreenGraph(
         MoodScreen(
             navController = navController,
             params = params,
+            onScrolling = onScrolling,
         )
     }
     composable<NotificationDestination> {
@@ -51,6 +53,7 @@ fun NavGraphBuilder.homeScreenGraph(
         RecentlySongsScreen(
             navController = navController,
             innerPadding = innerPadding,
+            onScrolling = onScrolling,
         )
     }
 

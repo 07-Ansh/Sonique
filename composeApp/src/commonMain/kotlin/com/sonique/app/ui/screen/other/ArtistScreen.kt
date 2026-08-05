@@ -157,6 +157,7 @@ fun ArtistScreen(
                     thumbnailUrl = state.data.imageUrl,
                     isCircleImage = true,
                     listColors = gradientColors,
+                    onScrolling = onScrolling,
                     onBack = { onBack?.invoke() ?: navController.navigateUp() },
                     playButtonContent = {
                         val firstQueue = state.data.popularSongs.firstOrNull()

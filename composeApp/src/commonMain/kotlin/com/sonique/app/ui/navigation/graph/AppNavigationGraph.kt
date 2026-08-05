@@ -171,7 +171,8 @@ fun AppNavigationGraph(
             navController = navController,
             enablePageTransitions = enablePageTransitions,
             hideNavBar = hideNavBar,
-            showNavBar = { showNavBar(true) }
+            showNavBar = { showNavBar(true) },
+            onScrolling = onScrolling,
         )
          
         libraryScreenGraph(

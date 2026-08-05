@@ -487,19 +487,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // Resolve file from DownloadManager directory or URI
-            val downloadsFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
-            val file = if (downloadsFile.exists()) {
-                downloadsFile
-            } else {
-                val uri = android.net.Uri.parse(uriString)
-                val path = if (uri.scheme == "file") uri.path else uriString
-                if (path != null) File(path) else downloadsFile
+            // Determine target file cleanly from private downloads or passed path
+            val privateFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+            val file = when {
+                uriString.isNotEmpty() && File(uriString).exists() && File(uriString).length() > 0 -> File(uriString)
+                privateFile.exists() && privateFile.length() > 0 -> privateFile
+                else -> {
+                    val uri = android.net.Uri.parse(uriString)
+                    val path = if (uri.scheme == "file") uri.path else uriString
+                    if (path != null) File(path) else privateFile
+                }
             }
 
-            if (!file.exists()) {
-                Logger.e("Update", "File not found for install: ${file.absolutePath}")
-                android.widget.Toast.makeText(this, "Update APK file not found.", android.widget.Toast.LENGTH_SHORT).show()
+            if (!file.exists() || file.length() == 0L) {
+                Logger.e("Update", "File not found or empty for install: ${file.absolutePath}")
+                android.widget.Toast.makeText(this, "Downloaded APK is invalid or empty. Please download again.", android.widget.Toast.LENGTH_SHORT).show()
                 return
             }
 
@@ -512,8 +514,13 @@ class MainActivity : AppCompatActivity() {
             val installIntent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(contentUri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val resInfoList = packageManager.queryIntentActivities(installIntent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+            for (resolveInfo in resInfoList) {
+                val pkgName = resolveInfo.activityInfo.packageName
+                grantUriPermission(pkgName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
 
             startActivity(installIntent)

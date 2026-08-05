@@ -312,45 +312,62 @@ fun HomeItemContentPlaylist(
                     is AlbumsResult -> data.thumbnails.lastOrNull()?.url
                     else -> null
                 }
-            AsyncImage(
-                model =
-                    ImageRequest
-                        .Builder(LocalPlatformContext.current)
-                        .data(thumb)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .diskCacheKey(thumb)
-                        .crossfade(550)
-                        .build(),
-                placeholder =
-                    if (data is LocalPlaylistEntity) {
-                        painterPlaylistThumbnail(
-                            data.title,
-                            style = typo().bodySmall,
-                            thumbSize * 0.9f to thumbSize * 0.9f,
-                        )
-                    } else {
-                        painterResource(Res.drawable.holder)
+            val isDownloadedPlaylist = (data is LocalPlaylistEntity && data.id == -999L) ||
+                (data is PlaylistEntity && data.id == com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED) ||
+                (thumb == "sonique://downloaded_songs_thumbnail")
+            val placeholderPainter = when {
+                isDownloadedPlaylist -> painterDownloadedSongsThumbnail(
+                    title = when (data) {
+                        is LocalPlaylistEntity -> data.title
+                        is PlaylistEntity -> data.title
+                        else -> "Downloads"
                     },
-                error =
-                    if (data is LocalPlaylistEntity) {
-                        painterPlaylistThumbnail(
-                            data.title,
-                            style = typo().bodySmall,
-                            thumbSize * 0.9f to thumbSize * 0.9f,
-                        )
-                    } else {
-                        painterResource(Res.drawable.holder)
-                    },
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier =
-                    Modifier
-                        .size(thumbSize)
-                        .aspectRatio(1f)
-                        .clip(
-                            RoundedCornerShape(6.dp),
-                        ),
-            )
+                    style = typo().bodySmall,
+                    sizeDp = thumbSize * 0.9f to thumbSize * 0.9f,
+                )
+                data is LocalPlaylistEntity -> painterPlaylistThumbnail(
+                    data.title,
+                    style = typo().bodySmall,
+                    sizeDp = thumbSize * 0.9f to thumbSize * 0.9f,
+                )
+                else -> painterResource(Res.drawable.holder)
+            }
+            if (isDownloadedPlaylist) {
+                androidx.compose.foundation.Image(
+                    painter = placeholderPainter,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .size(thumbSize)
+                            .aspectRatio(1f)
+                            .clip(
+                                RoundedCornerShape(6.dp),
+                            ),
+                )
+            } else {
+                AsyncImage(
+                    model =
+                        ImageRequest
+                            .Builder(LocalPlatformContext.current)
+                            .data(thumb)
+                            .diskCachePolicy(CachePolicy.ENABLED)
+                            .diskCacheKey(thumb)
+                            .crossfade(550)
+                            .build(),
+                    placeholder = placeholderPainter,
+                    error = placeholderPainter,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .size(thumbSize)
+                            .aspectRatio(1f)
+                            .clip(
+                                RoundedCornerShape(6.dp),
+                            ),
+                )
+            }
             Text(
                 text =
                     when (data) {

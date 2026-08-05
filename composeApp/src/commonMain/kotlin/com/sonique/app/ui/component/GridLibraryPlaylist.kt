@@ -617,13 +617,24 @@ fun HomeGridCardItem(
                 .background(Color.White.copy(alpha = 0.08f)),
             contentAlignment = Alignment.Center,
         ) {
-            val placeholderPainter = painterPlaylistThumbnail(
-                title = title,
-                style = typo().bodySmall,
-                sizeDp = 120.dp to 120.dp,
-            )
+            val isDownloadedTile = title.contains("Downloaded", ignoreCase = true) ||
+                title.equals("Downloads", ignoreCase = true) ||
+                thumbUrl == "sonique://downloaded_songs_thumbnail"
+            val placeholderPainter = if (isDownloadedTile) {
+                painterDownloadedSongsThumbnail(
+                    title = title,
+                    style = typo().bodySmall,
+                    sizeDp = 120.dp to 120.dp,
+                )
+            } else {
+                painterPlaylistThumbnail(
+                    title = title,
+                    style = typo().bodySmall,
+                    sizeDp = 120.dp to 120.dp,
+                )
+            }
 
-            if (!thumbUrl.isNullOrEmpty()) {
+            if (!thumbUrl.isNullOrEmpty() && !isDownloadedTile) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalPlatformContext.current)
                         .data(thumbUrl)

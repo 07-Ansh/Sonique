@@ -286,12 +286,10 @@ fun LibraryScreen(
                         when (filter) {
                             LibraryChipType.YOUR_LIBRARY -> {
                                 val state = rememberLazyListState()
-                                val scrollingUp by state.isScrollingUp()
-                                LaunchedEffect(state, scrollingUp) {
+                                LaunchedEffect(state) {
                                     snapshotFlow { state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0 }
                                         .collect { isAtTop ->
-                                            val shouldBeVisible = if (isAtTop) true else scrollingUp
-                                            handleScrolling(shouldBeVisible)
+                                            handleScrolling(isAtTop)
                                         }
                                 }
                                 LazyColumn(
@@ -499,6 +497,37 @@ fun LibraryScreen(
                                                              { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
                                                          } else null
                                                      )
+                                                 }
+                                             }
+
+                                             // New Playlist card — only shown in Local tab
+                                             if (selectedPlaylistTab == 0) {
+                                                 androidx.compose.material3.Card(
+                                                     onClick = { showCreateDialogTab = true },
+                                                     modifier = Modifier
+                                                         .fillMaxWidth()
+                                                         .padding(horizontal = 20.dp, vertical = 4.dp),
+                                                     shape = MaterialTheme.shapes.large,
+                                                     colors = androidx.compose.material3.CardDefaults.cardColors(
+                                                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                                                     )
+                                                 ) {
+                                                     Row(
+                                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                                                         verticalAlignment = Alignment.CenterVertically,
+                                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                                     ) {
+                                                         Icon(
+                                                             Icons.Rounded.Add,
+                                                             contentDescription = "New Playlist",
+                                                             tint = MaterialTheme.colorScheme.primary
+                                                         )
+                                                         Text(
+                                                             text = "New Playlist",
+                                                             style = MaterialTheme.typography.bodyLarge,
+                                                             color = MaterialTheme.colorScheme.onSurface
+                                                         )
+                                                     }
                                                  }
                                              }
 

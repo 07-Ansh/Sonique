@@ -301,14 +301,10 @@ fun HomeScreen(
 
 
 
-    LaunchedEffect(scrollState, isScrollingUp) {
+    LaunchedEffect(scrollState) {
         snapshotFlow { scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset == 0 }
             .collect { isAtTop ->
-                if (isAtTop) {
-                    onScrolling.invoke(true)
-                } else {
-                    onScrolling.invoke(isScrollingUp)
-                }
+                onScrolling.invoke(isAtTop)
             }
     }
 

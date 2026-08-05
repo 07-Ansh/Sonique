@@ -93,14 +93,10 @@ fun FavoriteCompositeScreen(
     var query by rememberSaveable { mutableStateOf("") }
     val hazeState = rememberHazeState(blurEnabled = true)
 
-    LaunchedEffect(state, isScrollingUp) {
+    LaunchedEffect(state) {
         snapshotFlow { state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0 }
             .collect { isAtTop ->
-                if (isAtTop) {
-                    onScrolling.invoke(true)
-                } else {
-                    onScrolling.invoke(isScrollingUp)
-                }
+                onScrolling.invoke(isAtTop)
             }
     }
 

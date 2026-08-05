@@ -174,14 +174,10 @@ fun AlbumScreen(
         shouldHideTopBar = !firstItemVisible
     }
     val isScrollingUp by lazyState.isScrollingUp()
-    LaunchedEffect(lazyState, isScrollingUp) {
+    LaunchedEffect(lazyState) {
         snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
             .collect { isAtTop ->
-                if (isAtTop) {
-                    onScrolling.invoke(true)
-                } else {
-                    onScrolling.invoke(isScrollingUp)
-                }
+                onScrolling.invoke(isAtTop)
             }
     }
     val paletteState = rememberPaletteState()

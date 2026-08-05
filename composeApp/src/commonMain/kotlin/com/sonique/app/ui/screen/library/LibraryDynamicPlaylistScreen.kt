@@ -86,14 +86,10 @@ fun LibraryDynamicPlaylistScreen(
 ) {
     val state = rememberLazyListState()
     val isScrollingUp by state.isScrollingUp()
-    LaunchedEffect(state, isScrollingUp) {
+    LaunchedEffect(state) {
         snapshotFlow { state.firstVisibleItemIndex == 0 && state.firstVisibleItemScrollOffset == 0 }
             .collect { isAtTop ->
-                if (isAtTop) {
-                    onScrolling.invoke(true)
-                } else {
-                    onScrolling.invoke(isScrollingUp)
-                }
+                onScrolling.invoke(isAtTop)
             }
     }
     val nowPlayingVideoId by viewModel.nowPlayingVideoId.collectAsStateWithLifecycle()

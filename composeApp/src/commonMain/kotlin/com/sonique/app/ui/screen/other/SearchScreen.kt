@@ -147,14 +147,10 @@ fun SearchScreen(
     val enableLiquidGlass by settingsViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val searchResultsListState = rememberLazyListState()
     val isScrollingUp by searchResultsListState.isScrollingUp()
-    LaunchedEffect(searchResultsListState, isScrollingUp) {
+    LaunchedEffect(searchResultsListState) {
         snapshotFlow { searchResultsListState.firstVisibleItemIndex == 0 && searchResultsListState.firstVisibleItemScrollOffset == 0 }
             .collect { isAtTop ->
-                if (isAtTop) {
-                    onScrolling.invoke(true)
-                } else {
-                    onScrolling.invoke(isScrollingUp)
-                }
+                onScrolling.invoke(isAtTop)
             }
     }
 

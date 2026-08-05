@@ -43,7 +43,8 @@ fun UpdateDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(text = stringResource(Res.string.new_update_available, releaseInfo.version))
+            val cleanVersion = releaseInfo.version.removePrefix("v").removePrefix("V")
+            Text(text = stringResource(Res.string.new_update_available, "v$cleanVersion"))
         },
         text = {
             Column(

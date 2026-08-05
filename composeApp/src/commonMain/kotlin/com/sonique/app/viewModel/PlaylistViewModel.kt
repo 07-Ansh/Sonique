@@ -234,7 +234,7 @@ class PlaylistViewModel(
                             id = id,
                             title = getString(Res.string.downloaded_songs),
                             author = getString(Res.string.sonique_lyrics),
-                            thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
+                            thumbnails = "sonique://downloaded_songs_thumbnail",
                             tracks = list.map { it.videoId },
                             trackCount = list.size,
                             favoriteAt = now(),

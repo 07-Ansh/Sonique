@@ -240,7 +240,7 @@ class LibraryViewModel(
                         LocalPlaylistEntity(
                             id = -999L,
                             title = downloadedSongsTitle,
-                            thumbnail = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
+                            thumbnail = "sonique://downloaded_songs_thumbnail",
                         )
                     )
 
@@ -364,7 +364,7 @@ class LibraryViewModel(
                         id = LOCAL_PLAYLIST_ID_DOWNLOADED,
                         title = getString(Res.string.downloaded_songs),
                         author = getString(Res.string.sonique_lyrics),
-                        thumbnails = "https://www.gstatic.com/youtube/media/ytm/images/pbg/liked-songs-delhi-1200.png",
+                        thumbnails = "sonique://downloaded_songs_thumbnail",
                         favoriteAt = now(),
                         inLibrary = now(),
                         downloadState = 0,

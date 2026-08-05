@@ -35,6 +35,8 @@ import com.sonique.logger.Logger
 import org.jetbrains.compose.resources.painterResource
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.app_icon_circle
+import sonique.composeapp.generated.resources.download_for_offline_white
+import com.sonique.app.ui.theme.typo
 import kotlin.math.abs
 
 @Composable
@@ -221,5 +223,98 @@ fun painterPlaylistThumbnail(
         iconPainter = painterRes,
         cornerRadiusPx = with(density) { 12.dp.toPx() }
     )
+}
+
+@Composable
+fun painterDownloadedSongsThumbnail(
+    title: String,
+    style: TextStyle = typo().bodySmall,
+    sizeDp: Pair<Dp, Dp> = 140.dp to 140.dp,
+): Painter {
+    val density = LocalDensity.current
+    val textMeasurer = rememberTextMeasurer()
+    val textLayoutResult =
+        remember(title, style, sizeDp) {
+            textMeasurer.measure(
+                title,
+                style.copy(
+                    color = Color.White,
+                    textAlign = TextAlign.Start,
+                    fontWeight = FontWeight.Bold,
+                ),
+                maxLines = 2,
+                softWrap = true,
+                overflow = TextOverflow.Ellipsis,
+                layoutDirection = LayoutDirection.Ltr,
+                constraints =
+                    Constraints(
+                        maxWidth = with(density) { (sizeDp.first - 32.dp).toPx().toInt() },
+                        maxHeight = with(density) { (sizeDp.second - 32.dp).toPx().toInt() },
+                    ),
+            )
+        }
+    val painterRes = painterResource(Res.drawable.download_for_offline_white)
+    return DownloadPlaylistThumbnailPainter(
+        size = Size(
+            width = with(density) { sizeDp.first.toPx() },
+            height = with(density) { sizeDp.second.toPx() },
+        ),
+        textLayoutResult = textLayoutResult,
+        iconPainter = painterRes,
+        cornerRadiusPx = with(density) { 12.dp.toPx() }
+    )
+}
+
+private class DownloadPlaylistThumbnailPainter(
+    private val size: Size,
+    private val textLayoutResult: TextLayoutResult,
+    private val iconPainter: Painter,
+    private val cornerRadiusPx: Float
+) : Painter() {
+    override val intrinsicSize: Size
+        get() = size
+
+    override fun DrawScope.onDraw() {
+        val colors = listOf(Color(0xFF00C6FF), Color(0xFF0072FF))
+        drawRoundRect(
+            brush = Brush.linearGradient(colors = colors),
+            size = size,
+            cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx),
+        )
+
+        drawText(
+            textLayoutResult,
+            topLeft = calculateTopLeft(
+                alignment = Alignment.BottomStart,
+                textSize = IntSize(
+                    width = textLayoutResult.size.width,
+                    height = textLayoutResult.size.height,
+                ),
+                containerSize = IntSize(
+                    size.width.toInt(),
+                    size.height.toInt(),
+                ),
+            )
+        )
+
+        val iconSize = size.width * 0.35f
+        val centerX = size.width / 2f
+        val centerY = size.height * 0.38f
+
+        drawCircle(
+            center = Offset(centerX, centerY),
+            color = Color.White.copy(alpha = 0.22f),
+            radius = iconSize * 0.65f
+        )
+
+        translate(
+            left = centerX - iconSize / 2f,
+            top = centerY - iconSize / 2f,
+        ) {
+            with(iconPainter) {
+                draw(Size(iconSize, iconSize), alpha = 1.0f)
+            }
+        }
+    }
 }
 

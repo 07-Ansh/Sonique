@@ -122,6 +122,7 @@ import com.sonique.app.extension.toImmersiveBackground
 import com.sonique.app.extension.isScrollingUp
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.CenterLoadingBox
+import com.sonique.app.ui.component.painterDownloadedSongsThumbnail
 import com.sonique.app.ui.component.DescriptionView
 import com.sonique.app.ui.component.EndOfPage
 import com.sonique.app.ui.component.HeartCheckBox
@@ -613,7 +614,22 @@ fun PlaylistScreen(
                                                     Spacer(modifier = Modifier.height(10.dp))
 
                                                     // Crisp square artwork centered on the blurred backdrop
-                                                    if (playlistId != LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                    if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) {
+                                                        androidx.compose.foundation.Image(
+                                                            painter = painterDownloadedSongsThumbnail(
+                                                                title = data.title,
+                                                                sizeDp = artworkSizeDp.dp to artworkSizeDp.dp,
+                                                            ),
+                                                            contentDescription = null,
+                                                            contentScale = ContentScale.Crop,
+                                                            modifier = Modifier
+                                                                .size(artworkSizeDp.dp)
+                                                                .aspectRatio(1f)
+                                                                .clip(RoundedCornerShape(8.dp)),
+                                                        )
+
+                                                        Spacer(modifier = Modifier.height(12.dp))
+                                                    } else {
                                                         AsyncImage(
                                                             model = ImageRequest.Builder(LocalPlatformContext.current)
                                                                 .data(data.thumbnail)

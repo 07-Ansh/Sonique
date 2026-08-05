@@ -373,7 +373,7 @@
     <string name="loading">Loading</string>
     <string name="updating">Updating</string>
     <string name="go_to_log_in_page">Go to log in page</string>
-    <string name="log_in_warning">Sign in to unlock personalized streaming &amp; seamless playback.</string>
+    <string name="log_in_warning">Log in to YouTube to unlock personalized streaming &amp; seamless playback.</string>
     <string name="spotify_canvas_cache">Spotify Canvas Cache</string>
     <string name="clear_canvas_cache">Clear canvas cache</string>
     <string name="proxy">Proxy</string>

@@ -2140,9 +2140,6 @@ class JvmMediaPlayerHandlerImpl(
             getDataOfNowPlayingTrackStateJob?.cancel()
             getDataOfNowPlayingTrackStateJob = null
 
-             
-            coroutineScope.cancel()
-
             Logger.w("ServiceHandler", "Handler released successfully. Scope active: ${coroutineScope.isActive}")
         } catch (e: Exception) {
             Logger.e("ServiceHandler", "Error during release ${e.message}")

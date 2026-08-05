@@ -243,7 +243,7 @@ android {
                 abi {
                     isEnable = true
                     reset()
-                    isUniversalApk = false
+                    isUniversalApk = true
                     include(*abis)
                 }
             }

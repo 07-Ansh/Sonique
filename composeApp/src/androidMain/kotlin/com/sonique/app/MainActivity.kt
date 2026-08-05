@@ -375,39 +375,53 @@ class MainActivity : AppCompatActivity() {
 
     private fun installPackage(uriString: String) {
         try {
-            val uri = android.net.Uri.parse(uriString)
-            val installIntent = Intent(Intent.ACTION_VIEW)
-            
-            if (uri.scheme == "content") {
-                installIntent.setDataAndType(uri, "application/vnd.android.package-archive")
-            } else {
-                // Determine file path
-                val path = if (uri.scheme == "file") uri.path else uriString
-                if (path == null) {
-                    Logger.e("Update", "Invalid path from URI: $uriString")
+            // Check Android 8.0+ unknown apps installation permission
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (!packageManager.canRequestPackageInstalls()) {
+                    val intent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                        data = android.net.Uri.parse("package:$packageName")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(intent)
+                    android.widget.Toast.makeText(this, "Please allow 'Install from this source' and click Install again.", android.widget.Toast.LENGTH_LONG).show()
                     return
                 }
-                
-                val file = File(path)
-                if (!file.exists()) {
-                    Logger.e("Update", "File not found: $path")
-                    return
-                }
-                
-                val contentUri = FileProvider.getUriForFile(
-                    this,
-                    "${applicationContext.packageName}.update_provider",
-                    file
-                )
-                installIntent.setDataAndType(contentUri, "application/vnd.android.package-archive")
             }
-            
-            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            // Resolve file from DownloadManager directory or URI
+            val downloadsFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+            val file = if (downloadsFile.exists()) {
+                downloadsFile
+            } else {
+                val uri = android.net.Uri.parse(uriString)
+                val path = if (uri.scheme == "file") uri.path else uriString
+                if (path != null) File(path) else downloadsFile
+            }
+
+            if (!file.exists()) {
+                Logger.e("Update", "File not found for install: ${file.absolutePath}")
+                android.widget.Toast.makeText(this, "Update APK file not found.", android.widget.Toast.LENGTH_SHORT).show()
+                return
+            }
+
+            val contentUri = FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.update_provider",
+                file
+            )
+
+            val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(contentUri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
             startActivity(installIntent)
         } catch (e: Exception) {
             Logger.e("Update", "Install failed: ${e.message}")
             e.printStackTrace()
+            android.widget.Toast.makeText(this, "Failed to start installer: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 

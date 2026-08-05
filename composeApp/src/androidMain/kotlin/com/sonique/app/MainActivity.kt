@@ -38,6 +38,7 @@ import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
 import androidx.core.content.FileProvider
 import java.io.File
+import java.io.FileOutputStream
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import org.koin.android.ext.android.inject
@@ -274,102 +275,200 @@ class MainActivity : AppCompatActivity() {
     private var currentDownloadId: Long? = null
 
     private fun downloadAppUpdate(url: String, title: String) {
-        val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
-        val uri = android.net.Uri.parse(url)
-        val request = android.app.DownloadManager.Request(uri)
-            .setTitle(title)
-            .setDescription("Downloading app update...")
-            .setMimeType("application/vnd.android.package-archive")
-            .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, "SoniqueUpdate.apk")
-            .setAllowedOverMetered(true)
-            .setAllowedOverRoaming(true)
+        try {
+            viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(0.01f))
 
-        val downloadId = downloadManager.enqueue(request)
-        currentDownloadId = downloadId
-        Logger.d("Update", "Download started with ID: $downloadId")
-        
-        // Start progress polling
-        lifecycleScope.launch {
-            var downloading = true
-            while (downloading && currentDownloadId == downloadId) {
-                val query = android.app.DownloadManager.Query().setFilterById(downloadId)
-                val cursor = downloadManager.query(query)
-                if (cursor.moveToFirst()) {
-                    val bytesDownloadedIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
-                    val bytesTotalIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
-                    
-                     if (bytesDownloadedIndex != -1 && bytesTotalIndex != -1) {
-                         val downloaded = cursor.getInt(bytesDownloadedIndex)
-                         val total = cursor.getInt(bytesTotalIndex)
-                         if (total > 0) {
-                             if (downloaded == total) {
-                                 viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Verifying)
-                             } else {
-                                 val progress = downloaded.toFloat() / total.toFloat()
-                                 viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(progress))
-                             }
-                         }
-                    }
-                    
-                    val statusIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_STATUS)
-                    val status = cursor.getInt(statusIndex)
-                    if (status == android.app.DownloadManager.STATUS_SUCCESSFUL) {
-                        downloading = false
-                         downloading = false
-                         val fileUri = downloadManager.getUriForDownloadedFile(downloadId)
-                         if (fileUri != null) {
-                             viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(fileUri.toString()))
-                         }
-                    } else if (status == android.app.DownloadManager.STATUS_FAILED) {
-                        downloading = false
-                        viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
-                    }
-                } else {
-                    // Cursor empty usually means download cancelled/removed
-                    downloading = false
-                    viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
-                }
-                cursor.close()
-                kotlinx.coroutines.delay(500)
+            // 1. Clean up any previous update APK files to prevent collision or permission errors
+            try {
+                val publicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val oldPublicFile = File(publicDir, "SoniqueUpdate.apk")
+                if (oldPublicFile.exists()) oldPublicFile.delete()
+            } catch (e: Exception) {
+                Logger.e("Update", "Could not delete old public APK: ${e.message}")
             }
-        }
 
-        val onComplete = object : android.content.BroadcastReceiver() {
-            override fun onReceive(ctxt: android.content.Context?, intent: Intent?) {
-                if (intent?.action == android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
-                    val id = intent.getLongExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, -1)
-                    if (id == downloadId) {
-                        Logger.d("Update", "Download complete: $id")
+            try {
+                val privateDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val oldPrivateFile = File(privateDir, "SoniqueUpdate.apk")
+                if (oldPrivateFile?.exists() == true) oldPrivateFile.delete()
+            } catch (e: Exception) {
+                Logger.e("Update", "Could not delete old private APK: ${e.message}")
+            }
+
+            val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as? android.app.DownloadManager
+            if (downloadManager == null) {
+                Logger.e("Update", "DownloadManager service null, starting fallback direct download")
+                startFallbackDirectDownload(url, title)
+                return
+            }
+
+            val uri = android.net.Uri.parse(url)
+            val request = android.app.DownloadManager.Request(uri)
+                .setTitle(title)
+                .setDescription("Downloading app update...")
+                .setMimeType("application/vnd.android.package-archive")
+                .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setDestinationInExternalFilesDir(this, android.os.Environment.DIRECTORY_DOWNLOADS, "SoniqueUpdate.apk")
+                .setAllowedOverMetered(true)
+                .setAllowedOverRoaming(true)
+
+            val downloadId = try {
+                downloadManager.enqueue(request)
+            } catch (e: Exception) {
+                Logger.e("Update", "DownloadManager enqueue failed: ${e.message}, falling back to direct download")
+                startFallbackDirectDownload(url, title)
+                return
+            }
+
+            currentDownloadId = downloadId
+            Logger.d("Update", "Download started with ID: $downloadId")
+            
+            // Start progress polling
+            lifecycleScope.launch {
+                var downloading = true
+                while (downloading && currentDownloadId == downloadId) {
+                    try {
                         val query = android.app.DownloadManager.Query().setFilterById(downloadId)
                         val cursor = downloadManager.query(query)
-                        if (cursor.moveToFirst()) {
-                            val statusIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_STATUS)
-                            if (android.app.DownloadManager.STATUS_SUCCESSFUL == cursor.getInt(statusIndex)) {
-                                val fileUri = downloadManager.getUriForDownloadedFile(id)
-                                if (fileUri != null) {
-                                    Logger.d("Update", "Downloaded URI: $fileUri")
-                                    viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(fileUri.toString()))
-                                    viewModel.insertNotification(
-                                        "System Update",
-                                        "New version downloaded. Ready to install.",
-                                        "SYSTEM_UPDATE"
-                                    )
+                        if (cursor != null && cursor.moveToFirst()) {
+                            val bytesDownloadedIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR)
+                            val bytesTotalIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_TOTAL_SIZE_BYTES)
+                            
+                            if (bytesDownloadedIndex != -1 && bytesTotalIndex != -1) {
+                                val downloaded = cursor.getInt(bytesDownloadedIndex)
+                                val total = cursor.getInt(bytesTotalIndex)
+                                if (total > 0) {
+                                    if (downloaded >= total) {
+                                        viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Verifying)
+                                    } else {
+                                        val progress = (downloaded.toFloat() / total.toFloat()).coerceIn(0.01f, 0.99f)
+                                        viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(progress))
+                                    }
                                 }
                             }
+                            
+                            val statusIndex = cursor.getColumnIndex(android.app.DownloadManager.COLUMN_STATUS)
+                            val status = cursor.getInt(statusIndex)
+                            if (status == android.app.DownloadManager.STATUS_SUCCESSFUL) {
+                                downloading = false
+                                val targetFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+                                val finalPath = if (targetFile.exists()) targetFile.absolutePath else (downloadManager.getUriForDownloadedFile(downloadId)?.toString() ?: "")
+                                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(finalPath))
+                            } else if (status == android.app.DownloadManager.STATUS_FAILED) {
+                                downloading = false
+                                Logger.e("Update", "DownloadManager failed status, falling back to direct download")
+                                startFallbackDirectDownload(url, title)
+                                return@launch
+                            }
+                            cursor.close()
+                        } else {
+                            cursor?.close()
+                            downloading = false
                         }
-                        cursor.close()
-                        unregisterReceiver(this)
+                    } catch (e: Exception) {
+                        Logger.e("Update", "Polling error: ${e.message}")
+                    }
+                    kotlinx.coroutines.delay(500)
+                }
+            }
+
+            val onComplete = object : android.content.BroadcastReceiver() {
+                override fun onReceive(ctxt: android.content.Context?, intent: Intent?) {
+                    if (intent?.action == android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE) {
+                        val id = intent.getLongExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, -1)
+                        if (id == downloadId) {
+                            Logger.d("Update", "Download complete: $id")
+                            val targetFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+                            val finalPath = if (targetFile.exists()) targetFile.absolutePath else ""
+                            if (finalPath.isNotEmpty()) {
+                                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(finalPath))
+                                viewModel.insertNotification(
+                                    "System Update",
+                                    "New version downloaded. Ready to install.",
+                                    "SYSTEM_UPDATE"
+                                )
+                            }
+                            try { unregisterReceiver(this) } catch (e: Exception) {}
+                        }
                     }
                 }
             }
+            
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(onComplete, android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE),
+                    android.content.Context.RECEIVER_EXPORTED)
+            } else {
+                registerReceiver(onComplete, android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+            }
+        } catch (e: Exception) {
+            Logger.e("Update", "Download process error: ${e.message}, falling back to direct download")
+            startFallbackDirectDownload(url, title)
         }
-        
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(onComplete, android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE),
-                android.content.Context.RECEIVER_EXPORTED)
+    }
+
+    private fun startFallbackDirectDownload(url: String, title: String) {
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(0.05f))
+                val targetFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+                if (targetFile.exists()) targetFile.delete()
+
+                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
+                connection.instanceFollowRedirects = true
+                connection.connectTimeout = 15000
+                connection.readTimeout = 15000
+                connection.connect()
+
+                var responseCode = connection.responseCode
+                if (responseCode == java.net.HttpURLConnection.HTTP_MOVED_PERM || responseCode == java.net.HttpURLConnection.HTTP_MOVED_TEMP) {
+                    val redirectUrl = connection.getHeaderField("Location")
+                    if (!redirectUrl.isNullOrEmpty()) {
+                        val redirectConn = java.net.URL(redirectUrl).openConnection() as java.net.HttpURLConnection
+                        redirectConn.connectTimeout = 15000
+                        redirectConn.readTimeout = 15000
+                        redirectConn.connect()
+                        streamToFile(redirectConn, targetFile)
+                        return@launch
+                    }
+                }
+                streamToFile(connection, targetFile)
+            } catch (e: Exception) {
+                Logger.e("Update", "Direct download failed: ${e.message}")
+                e.printStackTrace()
+                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
+            }
+        }
+    }
+
+    private suspend fun streamToFile(connection: java.net.HttpURLConnection, targetFile: File) {
+        val totalLength = connection.contentLength
+        val inputStream = connection.inputStream
+        val outputStream = FileOutputStream(targetFile)
+        val buffer = ByteArray(8192)
+        var bytesRead: Int
+        var totalRead = 0L
+
+        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+            outputStream.write(buffer, 0, bytesRead)
+            totalRead += bytesRead
+            if (totalLength > 0) {
+                val progress = (totalRead.toFloat() / totalLength.toFloat()).coerceIn(0.05f, 0.99f)
+                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(progress))
+            }
+        }
+        outputStream.flush()
+        outputStream.close()
+        inputStream.close()
+
+        if (targetFile.exists() && targetFile.length() > 0) {
+            viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(targetFile.absolutePath))
+            viewModel.insertNotification(
+                "System Update",
+                "New version downloaded. Ready to install.",
+                "SYSTEM_UPDATE"
+            )
         } else {
-            registerReceiver(onComplete, android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+            viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
         }
     }
 

@@ -337,7 +337,7 @@ fun SearchScreen(
             expanded = false,
             onExpandedChange = {},
             colors = SearchBarDefaults.colors(
-                containerColor = if (enableLiquidGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                containerColor = if (enableLiquidGlass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh
             ),
             modifier =
                 Modifier
@@ -355,8 +355,7 @@ fun SearchScreen(
                                 interactive = false
                             )
                         } else {
-                            it.background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f), CircleShape)
-                              .border(1.dp, Color.White.copy(alpha = 0.08f), CircleShape)
+                            it.clip(CircleShape)
                         }
                     },
             shape = CircleShape,

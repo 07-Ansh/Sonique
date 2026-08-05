@@ -146,6 +146,7 @@ fun SharedDetailTemplate(
     onHeartClick: (@Composable () -> Unit)? = null,
     downloadButtonContent: (@Composable () -> Unit)? = null,
     onPaletteGenerated: (List<Color>) -> Unit = {},
+    onScrolling: (Boolean) -> Unit = {},
     lazyState: androidx.compose.foundation.lazy.LazyListState = rememberLazyListState(),
     listModifier: Modifier = Modifier,
     additionalActions: @Composable RowScope.() -> Unit = {},
@@ -163,6 +164,13 @@ fun SharedDetailTemplate(
         paletteState.palette?.let {
             onPaletteGenerated(listOf(it.getColorFromPalette(), md_theme_dark_background))
         }
+    }
+
+    LaunchedEffect(lazyState) {
+        snapshotFlow { lazyState.firstVisibleItemIndex == 0 && lazyState.firstVisibleItemScrollOffset == 0 }
+            .collect { isAtTop ->
+                onScrolling.invoke(isAtTop)
+            }
     }
 
     val firstItemVisible by remember {

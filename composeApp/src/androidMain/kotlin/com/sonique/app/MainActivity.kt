@@ -278,21 +278,13 @@ class MainActivity : AppCompatActivity() {
         try {
             viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(0.01f))
 
-            // 1. Clean up any previous update APK files to prevent collision or permission errors
+            // 1. Clean up any previous update APK file in public Downloads directory
+            val publicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
             try {
-                val publicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                 val oldPublicFile = File(publicDir, "SoniqueUpdate.apk")
                 if (oldPublicFile.exists()) oldPublicFile.delete()
             } catch (e: Exception) {
                 Logger.e("Update", "Could not delete old public APK: ${e.message}")
-            }
-
-            try {
-                val privateDir = getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS)
-                val oldPrivateFile = File(privateDir, "SoniqueUpdate.apk")
-                if (oldPrivateFile?.exists() == true) oldPrivateFile.delete()
-            } catch (e: Exception) {
-                Logger.e("Update", "Could not delete old private APK: ${e.message}")
             }
 
             val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as? android.app.DownloadManager
@@ -308,7 +300,7 @@ class MainActivity : AppCompatActivity() {
                 .setDescription("Downloading app update...")
                 .setMimeType("application/vnd.android.package-archive")
                 .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                .setDestinationInExternalFilesDir(this, android.os.Environment.DIRECTORY_DOWNLOADS, "SoniqueUpdate.apk")
+                .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, "SoniqueUpdate.apk")
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
 
@@ -351,7 +343,7 @@ class MainActivity : AppCompatActivity() {
                             val status = cursor.getInt(statusIndex)
                             if (status == android.app.DownloadManager.STATUS_SUCCESSFUL) {
                                 downloading = false
-                                val targetFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+                                val targetFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
                                 val finalPath = if (targetFile.exists()) targetFile.absolutePath else (downloadManager.getUriForDownloadedFile(downloadId)?.toString() ?: "")
                                 viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(finalPath))
                             } else if (status == android.app.DownloadManager.STATUS_FAILED) {
@@ -378,7 +370,7 @@ class MainActivity : AppCompatActivity() {
                         val id = intent.getLongExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                         if (id == downloadId) {
                             Logger.d("Update", "Download complete: $id")
-                            val targetFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+                            val targetFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
                             val finalPath = if (targetFile.exists()) targetFile.absolutePath else ""
                             if (finalPath.isNotEmpty()) {
                                 viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(finalPath))
@@ -410,7 +402,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(0.05f))
-                val targetFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+                val targetFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
                 if (targetFile.exists()) targetFile.delete()
 
                 val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
@@ -500,15 +492,15 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // Determine target file cleanly from private downloads or passed path
-            val privateFile = File(getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
+            // Determine target file cleanly from public Downloads directory or passed path
+            val publicFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
             val file = when {
                 uriString.isNotEmpty() && File(uriString).exists() && File(uriString).length() > 0 -> File(uriString)
-                privateFile.exists() && privateFile.length() > 0 -> privateFile
+                publicFile.exists() && publicFile.length() > 0 -> publicFile
                 else -> {
                     val uri = android.net.Uri.parse(uriString)
                     val path = if (uri.scheme == "file") uri.path else uriString
-                    if (path != null) File(path) else privateFile
+                    if (path != null) File(path) else publicFile
                 }
             }
 

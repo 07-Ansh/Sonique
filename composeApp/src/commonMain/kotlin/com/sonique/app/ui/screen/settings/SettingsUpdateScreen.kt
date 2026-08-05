@@ -176,14 +176,13 @@ fun SettingsUpdateScreen(
                 val greenColor = Color(0xFF10B981)
                 val actionItem = if (updateAvailable != null) {
                     val release = updateAvailable!!
-                    val cleanVersion = release.version.removePrefix("v").removePrefix("V")
                     when (downloadStatus) {
                         is SharedViewModel.DownloadStatus.Idle -> {
                             Material3SettingsItem(
                                 icon = Icons.Default.Refresh,
                                 title = {
                                     Text(
-                                        text = "Download Update (v$cleanVersion)",
+                                        text = "Download Update (${release.version})",
                                         color = greenColor,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -267,10 +266,7 @@ fun SettingsUpdateScreen(
                 } else {
                     val titleText = when {
                         isChecking -> stringResource(Res.string.checking_for_updates)
-                        latestReleaseInfo != null -> {
-                            val cleanVersion = latestReleaseInfo!!.version.removePrefix("v").removePrefix("V")
-                            stringResource(Res.string.latest_version_format, "v$cleanVersion")
-                        }
+                        latestReleaseInfo != null -> stringResource(Res.string.latest_version_format, latestReleaseInfo!!.version)
                         else -> stringResource(Res.string.check_for_updates_button)
                     }
                     Material3SettingsItem(
@@ -327,10 +323,8 @@ fun SettingsUpdateScreen(
                                 color = MaterialTheme.colorScheme.primary
                             )
 
-                            val latestReleaseUrl = updateAvailable?.let { 
-                                val cleanVersion = it.version.removePrefix("v").removePrefix("V")
-                                "https://github.com/07-Ansh/Sonique/releases/tag/v$cleanVersion" 
-                            } ?: "https://github.com/07-Ansh/Sonique/releases/latest"
+                            val latestReleaseUrl = updateAvailable?.let { "https://github.com/07-Ansh/Sonique/releases/tag/${it.version}" }
+                                ?: "https://github.com/07-Ansh/Sonique/releases/latest"
 
                             Text(
                                 text = "If automatic downloading or installation is not working on your device, follow these steps:\n\n" +

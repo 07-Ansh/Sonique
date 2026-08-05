@@ -28,6 +28,9 @@ import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.*
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +55,8 @@ fun SettingsUpdateScreen(
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
     var showChangelog by remember { mutableStateOf(false) }
+    var showTroubleshooting by remember { mutableStateOf(false) }
+    val uriHandler = LocalUriHandler.current
 
     Scaffold(
         topBar = {
@@ -245,6 +250,76 @@ fun SettingsUpdateScreen(
                                         text = MaterialTheme.typography.bodyMedium
                                     )
                                 )
+                            }
+                        }
+                    }
+                }
+
+                // Troubleshooting / Manual Install
+                item {
+                    Material3SettingsGroup(
+                        title = "Troubleshooting",
+                        items = listOf(
+                            Material3SettingsItem(
+                                title = { Text("Having trouble downloading?") },
+                                description = { Text("Click to view manual installation guide") },
+                                onClick = { showTroubleshooting = !showTroubleshooting }
+                            )
+                        )
+                    )
+                }
+
+                if (showTroubleshooting) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                contentColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = "Manual Installation Guide",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+
+                                val latestReleaseUrl = updateAvailable?.let { "https://github.com/07-Ansh/Sonique/releases/tag/v${it.version}" }
+                                    ?: "https://github.com/07-Ansh/Sonique/releases/latest"
+
+                                Text(
+                                    text = "If automatic downloading or installation is not working on your device, follow these steps:\n\n" +
+                                            "1. Open GitHub Releases\n" +
+                                            "Tap the button below to visit the official GitHub Releases page.\n\n" +
+                                            "2. Download the APK file\n" +
+                                            "Under the 'Assets' section of the release, tap the '.apk' file to download it.\n\n" +
+                                            "3. Install Update\n" +
+                                            "Open the downloaded APK file from your browser downloads or File Manager.\n\n" +
+                                            "4. Allow Unknown Apps\n" +
+                                            "If Android prompts for permission, tap Settings -> enable 'Allow from this source' and proceed with installation.",
+                                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp)
+                                )
+
+                                Button(
+                                    onClick = { uriHandler.openUri(latestReleaseUrl) },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                ) {
+                                    Text(
+                                        text = "Open Latest GitHub Release",
+                                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
+                                    )
+                                }
                             }
                         }
                     }

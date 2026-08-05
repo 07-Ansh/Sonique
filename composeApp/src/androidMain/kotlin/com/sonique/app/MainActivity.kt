@@ -472,6 +472,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isValidApk(file: File): Boolean {
+        if (!file.exists() || file.length() < 100) return false
+        return try {
+            java.io.FileInputStream(file).use { input ->
+                val header = ByteArray(4)
+                val read = input.read(header)
+                read == 4 && header[0] == 0x50.toByte() && header[1] == 0x4B.toByte() && header[2] == 0x03.toByte() && header[3] == 0x04.toByte()
+            }
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private fun installPackage(uriString: String) {
         try {
             // Check Android 8.0+ unknown apps installation permission
@@ -499,9 +512,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            if (!file.exists() || file.length() == 0L) {
-                Logger.e("Update", "File not found or empty for install: ${file.absolutePath}")
-                android.widget.Toast.makeText(this, "Downloaded APK is invalid or empty. Please download again.", android.widget.Toast.LENGTH_SHORT).show()
+            if (!isValidApk(file)) {
+                Logger.e("Update", "File is not a valid APK package: ${file.absolutePath} (size: ${file.length()})")
+                android.widget.Toast.makeText(this, "Downloaded file is invalid. Opening GitHub Release...", android.widget.Toast.LENGTH_LONG).show()
+                try {
+                    val browserIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/07-Ansh/Sonique/releases/latest"))
+                    startActivity(browserIntent)
+                } catch (e: Exception) {}
                 return
             }
 

@@ -52,6 +52,9 @@ internal class UpdateRepositoryImpl(
              
             val apkAsset = assets?.firstOrNull { 
                 val assetName = it.jsonObject["name"]?.jsonPrimitive?.content ?: ""
+                assetName.endsWith(".apk", ignoreCase = true)
+            }?.jsonObject ?: assets?.firstOrNull { 
+                val assetName = it.jsonObject["name"]?.jsonPrimitive?.content ?: ""
                 assetName.contains("universal", ignoreCase = true) || assetName.contains("arm64", ignoreCase = true)
             }?.jsonObject
             

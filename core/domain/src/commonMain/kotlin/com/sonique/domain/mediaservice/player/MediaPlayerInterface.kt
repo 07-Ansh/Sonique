@@ -1,6 +1,5 @@
 package com.sonique.domain.mediaservice.player
 
-import com.sonique.domain.data.player.AudioEffects
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericPlaybackParameters
 
@@ -89,16 +88,6 @@ interface MediaPlayerInterface {
     val audioSessionId: Int
     var volume: Float
     var skipSilenceEnabled: Boolean
-
-    fun setAudioEffects(effects: AudioEffects) = Unit
-
-    var albumTrackIds: Set<String>
-        get() = emptySet()
-        set(_) {}
-
-    var crossfadeSuppressed: Boolean
-        get() = false
-        set(_) {}
 
      
     fun addListener(listener: MediaPlayerListener)

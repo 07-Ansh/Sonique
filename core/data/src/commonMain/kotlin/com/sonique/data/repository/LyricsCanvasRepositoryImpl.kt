@@ -25,11 +25,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import com.sonique.lyrics.SoniqueLyricsClient
-import com.sonique.lyrics.parser.parseTtmlLyrics
 import kotlin.math.abs
 import kotlin.time.Clock
-import com.sonique.lyrics.ai.AIHost
-import com.sonique.lyrics.ai.AiLyricsTranslator
 import kotlin.time.ExperimentalTime
 
 internal class LyricsCanvasRepositoryImpl(
@@ -37,8 +34,6 @@ internal class LyricsCanvasRepositoryImpl(
     private val youTube: YouTube,
     private val spotify: Spotify,
     private val lyricsClient: SoniqueLyricsClient,
-    private val dataStoreManager: DataStoreManager,
-    private val aiLyricsTranslator: AiLyricsTranslator = AiLyricsTranslator(),
 ) : LyricsCanvasRepository {
     override fun getSavedLyrics(videoId: String): Flow<LyricsEntity?> = flow { emit(localDataSource.getSavedLyrics(videoId)) }.flowOn(Dispatchers.IO)
 
@@ -394,81 +389,15 @@ internal class LyricsCanvasRepositoryImpl(
             }
         }.flowOn(Dispatchers.IO)
 
-    override fun getBetterLyrics(
-        artist: String,
-        track: String,
-        duration: Int?,
-    ): Flow<Resource<Lyrics>> =
-        flow {
-            Logger.w("Lyrics", "getBetterLyrics: $artist $track")
-            val qartist =
-                artist
-                    .replace(
-                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
-                        " ",
-                    ).replace(
-                        Regex("( và | & | и | e | und |, |和| dan)"),
-                        " ",
-                    ).replace("  ", " ")
-                    .replace(Regex("([()])"), "")
-                    .replace(".", " ")
-            val qtrack =
-                track
-                    .replace(
-                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
-                        " ",
-                    ).replace(
-                        Regex("( và | & | и | e | und |, |和| dan)"),
-                        " ",
-                    ).replace("  ", " ")
-                    .replace(Regex("([()])"), "")
-                    .replace(".", " ")
-            lyricsClient
-                .searchBetterLyrics(qtrack, qartist, duration)
-                .onSuccess { ttml ->
-                    if (ttml.isNullOrEmpty()) {
-                        emit(Resource.Error("No BetterLyrics found"))
-                        return@onSuccess
-                    }
-                    val lyrics = parseTtmlLyrics(ttml).toLyrics()
-                    emit(Resource.Success(lyrics))
-                }.onFailure {
-                    it.printStackTrace()
-                    emit(Resource.Error("BetterLyrics search failed"))
-                }
-        }.flowOn(Dispatchers.IO)
-
     override fun getAITranslationLyrics(
         lyrics: Lyrics,
         targetLanguage: String,
     ): Flow<Resource<Lyrics>> =
         flow {
-            val providerStr = dataStoreManager.aiProvider.first()
-            val host = AIHost.fromString(providerStr)
-            val apiKey = dataStoreManager.aiApiKey.first()
-            if (apiKey.isBlank()) {
-                emit(Resource.Error("AI API key is missing"))
-                return@flow
-            }
-            val customModelId = dataStoreManager.customModelId.first().takeIf { it.isNotBlank() }
-            val customBaseUrl = dataStoreManager.customOpenAIBaseUrl.first().takeIf { it.isNotBlank() }
-            val customHeaders = dataStoreManager.customOpenAIHeaders.first().takeIf { it.isNotBlank() }
-
-            aiLyricsTranslator.translateLyrics(
-                inputLyrics = lyrics,
-                targetLanguage = targetLanguage,
-                host = host,
-                apiKey = apiKey,
-                customModelId = customModelId,
-                customBaseUrl = customBaseUrl,
-                customHeaders = customHeaders,
-            ).onSuccess { translatedLyrics ->
-                emit(Resource.Success(translatedLyrics))
-            }.onFailure { throwable ->
-                Logger.e("AITranslation", "Translation failed: ${throwable.message}")
-                emit(Resource.Error(throwable.message ?: "Translation failed"))
-            }
+            emit(Resource.Error<Lyrics>("AI Translation is no longer supported."))
         }.flowOn(Dispatchers.IO)
+
+
 }
 
 

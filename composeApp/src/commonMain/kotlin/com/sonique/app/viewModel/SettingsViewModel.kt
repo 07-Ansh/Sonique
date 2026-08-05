@@ -11,7 +11,6 @@ import com.sonique.common.SELECTED_LANGUAGE
 import com.sonique.common.VIDEO_QUALITY
 import com.sonique.domain.data.entities.DownloadState
 import com.sonique.domain.data.entities.GoogleAccountEntity
-import com.sonique.domain.data.player.ReverbPreset
 import com.sonique.domain.extension.toNetScapeString
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.mediaservice.handler.DownloadHandler
@@ -51,8 +50,6 @@ import sonique.composeapp.generated.resources.clear_player_cache
 import sonique.composeapp.generated.resources.clear_thumbnail_cache
 import sonique.composeapp.generated.resources.restore_failed
 import sonique.composeapp.generated.resources.restore_in_progress
-import sonique.composeapp.generated.resources.romanization_japanese_dict_failed
-import sonique.composeapp.generated.resources.romanization_japanese_dict_ready
 
 class SettingsViewModel(
     private val dataStoreManager: DataStoreManager,
@@ -65,27 +62,6 @@ class SettingsViewModel(
 ) : BaseViewModel() {
     private val databasePath: String? = commonRepository.getDatabasePath()
     private val downloadUtils: DownloadHandler by inject()
-    private val lyricsRomanizerRepository: com.sonique.domain.repository.LyricsRomanizerRepository by inject()
-
-    val japaneseDictionaryState: StateFlow<com.sonique.domain.data.model.lyrics.RomanizationDictionaryState>
-        get() = lyricsRomanizerRepository.japaneseDictionaryState
-
-    fun downloadJapaneseDictionaryIfNeeded() {
-        val state = japaneseDictionaryState.value
-        if (state == com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.READY ||
-            state == com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.DOWNLOADING
-        ) return
-        viewModelScope.launch {
-            lyricsRomanizerRepository.downloadJapaneseDictionary()
-            when (japaneseDictionaryState.value) {
-                com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.READY ->
-                    makeToast(org.jetbrains.compose.resources.getString(sonique.composeapp.generated.resources.Res.string.romanization_japanese_dict_ready))
-                com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.FAILED ->
-                    makeToast(org.jetbrains.compose.resources.getString(sonique.composeapp.generated.resources.Res.string.romanization_japanese_dict_failed))
-                else -> {}
-            }
-        }
-    }
 
     private var _location: MutableStateFlow<String?> = MutableStateFlow(null)
     val location: StateFlow<String?> = _location
@@ -137,8 +113,6 @@ class SettingsViewModel(
     val crossfadeDuration: StateFlow<Int> = _crossfadeDuration
     private val _crossfadeDjMode = MutableStateFlow<Boolean>(true)
     val crossfadeDjMode: StateFlow<Boolean> = _crossfadeDjMode
-    private val _crossfadeSkipAlbum = MutableStateFlow<Boolean>(false)
-    val crossfadeSkipAlbum: StateFlow<Boolean> = _crossfadeSkipAlbum
     private val _youtubeSubtitleLanguage = MutableStateFlow<String>("")
     val youtubeSubtitleLanguage: StateFlow<String> = _youtubeSubtitleLanguage
 
@@ -232,30 +206,6 @@ class SettingsViewModel(
     private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("list")
     val continueListeningLayout: StateFlow<String> = _continueListeningLayout
 
-    private val _lyricsOffsetMs = MutableStateFlow<Int>(0)
-    val lyricsOffsetMs: StateFlow<Int> = _lyricsOffsetMs
-
-    private val _lyricsProvider = MutableStateFlow(DataStoreManager.LRCLIB)
-    val lyricsProvider: StateFlow<String> = _lyricsProvider
-
-    private val _useAITranslation = MutableStateFlow(false)
-    val useAITranslation: StateFlow<Boolean> = _useAITranslation
-
-    private val _aiProvider = MutableStateFlow(DataStoreManager.AI_PROVIDER_GEMINI)
-    val aiProvider: StateFlow<String> = _aiProvider
-
-    private val _aiApiKey = MutableStateFlow("")
-    val aiApiKey: StateFlow<String> = _aiApiKey
-
-    private val _customModelId = MutableStateFlow("")
-    val customModelId: StateFlow<String> = _customModelId
-
-    private val _customOpenAIBaseUrl = MutableStateFlow("")
-    val customOpenAIBaseUrl: StateFlow<String> = _customOpenAIBaseUrl
-
-    private val _customOpenAIHeaders = MutableStateFlow("")
-    val customOpenAIHeaders: StateFlow<String> = _customOpenAIHeaders
-
     init {
         getYoutubeSubtitleLanguage()
 
@@ -322,7 +272,6 @@ class SettingsViewModel(
         getCrossfadeEnabled()
         getCrossfadeDuration()
         getCrossfadeDjMode()
-        getCrossfadeSkipAlbum()
         getBackupDownloaded()
 
         getSpotifyLogIn()
@@ -331,15 +280,6 @@ class SettingsViewModel(
         
         getSponsorBlockEnabled()
         getSponsorBlockCategories()
-        getAudioEffects()
-        getLyricsOffsetMs()
-        getLyricsProvider()
-        getUseAITranslation()
-        getAIProvider()
-        getAIApiKey()
-        getCustomModelId()
-        getCustomOpenAIBaseUrl()
-        getCustomOpenAIHeaders()
 
         viewModelScope.launch {
             calculateDataFraction(
@@ -1215,9 +1155,9 @@ class SettingsViewModel(
     }
 
     fun setLiquidGlassGlassiness(glassiness: Float) {
-        _liquidGlassGlassiness.value = glassiness
         viewModelScope.launch {
             dataStoreManager.setLiquidGlassGlassiness(glassiness)
+            getLiquidGlassGlassiness()
         }
     }
 
@@ -1313,21 +1253,6 @@ class SettingsViewModel(
         }
     }
 
-    private fun getCrossfadeSkipAlbum() {
-        viewModelScope.launch {
-            dataStoreManager.crossfadeSkipAlbum.collect { skipAlbum ->
-                _crossfadeSkipAlbum.value = skipAlbum == DataStoreManager.TRUE
-            }
-        }
-    }
-
-    fun setCrossfadeSkipAlbum(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setCrossfadeSkipAlbum(enabled)
-            getCrossfadeSkipAlbum()
-        }
-    }
-
     fun getYoutubeSubtitleLanguage() {
         viewModelScope.launch {
             dataStoreManager.youtubeSubtitleLanguage.collect { language ->
@@ -1343,195 +1268,6 @@ class SettingsViewModel(
         }
     }
 
-    private var _delayEnabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val delayEnabled: StateFlow<Boolean> = _delayEnabled
-
-    private var _delayTimeMs: MutableStateFlow<Int> = MutableStateFlow(DEFAULT_DELAY_TIME_MS)
-    val delayTimeMs: StateFlow<Int> = _delayTimeMs
-
-    private var _delayFeedback: MutableStateFlow<Float> = MutableStateFlow(DEFAULT_DELAY_FEEDBACK)
-    val delayFeedback: StateFlow<Float> = _delayFeedback
-
-    private var _delayMix: MutableStateFlow<Float> = MutableStateFlow(DEFAULT_DELAY_MIX)
-    val delayMix: StateFlow<Float> = _delayMix
-
-    private var _reverbEnabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val reverbEnabled: StateFlow<Boolean> = _reverbEnabled
-
-    private var _reverbPreset: MutableStateFlow<ReverbPreset> = MutableStateFlow(ReverbPreset.HALL)
-    val reverbPreset: StateFlow<ReverbPreset> = _reverbPreset
-
-    private var _reverbMix: MutableStateFlow<Float> = MutableStateFlow(DEFAULT_REVERB_MIX)
-    val reverbMix: StateFlow<Float> = _reverbMix
-
-    private var audioEffectCollectorsStarted = false
-
-    fun getAudioEffects() {
-        if (audioEffectCollectorsStarted) return
-        audioEffectCollectorsStarted = true
-        viewModelScope.launch {
-            launch { dataStoreManager.delayEnabled.collect { _delayEnabled.emit(it == DataStoreManager.TRUE) } }
-            launch { dataStoreManager.delayTimeMs.collect { _delayTimeMs.emit(it) } }
-            launch { dataStoreManager.delayFeedback.collect { _delayFeedback.emit(it) } }
-            launch { dataStoreManager.delayMix.collect { _delayMix.emit(it) } }
-            launch { dataStoreManager.reverbEnabled.collect { _reverbEnabled.emit(it == DataStoreManager.TRUE) } }
-            launch {
-                dataStoreManager.reverbPreset.collect { stored ->
-                    _reverbPreset.emit(runCatching { ReverbPreset.valueOf(stored) }.getOrDefault(ReverbPreset.HALL))
-                }
-            }
-            launch { dataStoreManager.reverbMix.collect { _reverbMix.emit(it) } }
-        }
-    }
-
-    fun setDelayEnabled(enabled: Boolean) {
-        viewModelScope.launch { dataStoreManager.setDelayEnabled(enabled) }
-    }
-
-    fun setDelayTimeMs(timeMs: Int) {
-        viewModelScope.launch { dataStoreManager.setDelayTimeMs(timeMs) }
-    }
-
-    fun setDelayFeedback(feedback: Float) {
-        viewModelScope.launch { dataStoreManager.setDelayFeedback(feedback) }
-    }
-
-    fun setDelayMix(mix: Float) {
-        viewModelScope.launch { dataStoreManager.setDelayMix(mix) }
-    }
-
-    fun setReverbEnabled(enabled: Boolean) {
-        viewModelScope.launch { dataStoreManager.setReverbEnabled(enabled) }
-    }
-
-    fun setReverbPreset(preset: ReverbPreset) {
-        viewModelScope.launch { dataStoreManager.setReverbPreset(preset) }
-    }
-
-    fun setReverbMix(mix: Float) {
-        viewModelScope.launch { dataStoreManager.setReverbMix(mix) }
-    }
-
-    fun applyDelayPreset(
-        timeMs: Int,
-        feedback: Float,
-        mix: Float,
-    ) {
-        viewModelScope.launch {
-            dataStoreManager.setDelayTimeMs(timeMs)
-            dataStoreManager.setDelayFeedback(feedback)
-            dataStoreManager.setDelayMix(mix)
-        }
-    }
-
-    private fun getLyricsOffsetMs() {
-        viewModelScope.launch {
-            dataStoreManager.lyricsOffsetMs.collect { offsetMs ->
-                _lyricsOffsetMs.emit(offsetMs)
-            }
-        }
-    }
-
-    fun setLyricsOffsetMs(offsetMs: Int) {
-        viewModelScope.launch {
-            dataStoreManager.setLyricsOffsetMs(offsetMs)
-        }
-    }
-
-    private fun getLyricsProvider() {
-        viewModelScope.launch {
-            dataStoreManager.lyricsProvider.collect { v ->
-                _lyricsProvider.emit(v)
-            }
-        }
-    }
-
-    fun setLyricsProvider(provider: String) {
-        viewModelScope.launch {
-            dataStoreManager.setLyricsProvider(provider)
-            getLyricsProvider()
-        }
-    }
-
-    private fun getUseAITranslation() {
-        viewModelScope.launch {
-            dataStoreManager.useAITranslation.collect { v ->
-                _useAITranslation.emit(v == DataStoreManager.TRUE)
-            }
-        }
-    }
-
-    fun setUseAITranslation(use: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setUseAITranslation(use)
-            getUseAITranslation()
-        }
-    }
-
-    private fun getAIProvider() {
-        viewModelScope.launch {
-            dataStoreManager.aiProvider.collect { v -> _aiProvider.emit(v) }
-        }
-    }
-
-    fun setAIProvider(provider: String) {
-        viewModelScope.launch {
-            dataStoreManager.setAIProvider(provider)
-            getAIProvider()
-        }
-    }
-
-    private fun getAIApiKey() {
-        viewModelScope.launch {
-            dataStoreManager.aiApiKey.collect { v -> _aiApiKey.emit(v) }
-        }
-    }
-
-    fun setAIApiKey(key: String) {
-        viewModelScope.launch {
-            dataStoreManager.setAIApiKey(key)
-            getAIApiKey()
-        }
-    }
-
-    private fun getCustomModelId() {
-        viewModelScope.launch {
-            dataStoreManager.customModelId.collect { v -> _customModelId.emit(v) }
-        }
-    }
-
-    fun setCustomModelId(modelId: String) {
-        viewModelScope.launch {
-            dataStoreManager.setCustomModelId(modelId)
-            getCustomModelId()
-        }
-    }
-
-    private fun getCustomOpenAIBaseUrl() {
-        viewModelScope.launch {
-            dataStoreManager.customOpenAIBaseUrl.collect { v -> _customOpenAIBaseUrl.emit(v) }
-        }
-    }
-
-    fun setCustomOpenAIBaseUrl(baseUrl: String) {
-        viewModelScope.launch {
-            dataStoreManager.setCustomOpenAIBaseUrl(baseUrl)
-            getCustomOpenAIBaseUrl()
-        }
-    }
-
-    private fun getCustomOpenAIHeaders() {
-        viewModelScope.launch {
-            dataStoreManager.customOpenAIHeaders.collect { v -> _customOpenAIHeaders.emit(v) }
-        }
-    }
-
-    fun setCustomOpenAIHeaders(headers: String) {
-        viewModelScope.launch {
-            dataStoreManager.setCustomOpenAIHeaders(headers)
-            getCustomOpenAIHeaders()
-        }
-    }
 }
 
 data class SettingsStorageSectionFraction(
@@ -1599,7 +1335,3 @@ expect fun getFileDir(): String
 
 expect fun changeLanguageNative(code: String)
 
-const val DEFAULT_DELAY_TIME_MS = 400
-const val DEFAULT_DELAY_FEEDBACK = 0.45f
-const val DEFAULT_DELAY_MIX = 0.3f
-const val DEFAULT_REVERB_MIX = 0.35f

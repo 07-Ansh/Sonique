@@ -4,7 +4,6 @@ import com.eygraber.uri.toKmpUri
 import com.sonique.common.ITAG
 import com.sonique.kotlinytmusicscraper.YouTube.Companion.DEFAULT_VISITOR_DATA
 import com.sonique.kotlinytmusicscraper.extension.toListFormat
-import com.sonique.kotlinytmusicscraper.extractor.ExtractSource
 import com.sonique.kotlinytmusicscraper.models.AccountInfo
 import com.sonique.kotlinytmusicscraper.models.AlbumItem
 import com.sonique.kotlinytmusicscraper.models.Artist
@@ -1961,12 +1960,6 @@ class YouTube {
         runCatching {
             ytMusic.removeFromLiked(mediaId).status.value
         }
-
-    /**
-     * Which extractor and cipher decoder produced this video's URLs in THIS run of the app, or null
-     * if it has not been extracted yet.
-     */
-    fun getExtractSource(videoId: String): String? = ExtractSource.of(videoId)
 
     private fun getNParam(listFormat: List<PlayerResponse.StreamingData.Format>): String? =
         listFormat

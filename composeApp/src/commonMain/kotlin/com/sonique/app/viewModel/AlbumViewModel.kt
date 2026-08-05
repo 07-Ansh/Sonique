@@ -216,7 +216,7 @@ class AlbumViewModel(
                     firstPlayedTrack = track,
                     playlistId = uiState.value.browseId.replaceFirst("VL", ""),
                     playlistName = "${getString(Res.string.album)} \"${uiState.value.title}\"",
-                    playlistType = PlaylistType.ALBUM,
+                    playlistType = PlaylistType.PLAYLIST,
                     continuation = null,
                 ),
             )
@@ -239,7 +239,7 @@ class AlbumViewModel(
                     firstPlayedTrack = shuffleList[randomIndex],
                     playlistId = uiState.value.browseId.replaceFirst("VL", ""),
                     playlistName = "${getString(Res.string.album)} \"${uiState.value.title}\"",
-                    playlistType = PlaylistType.ALBUM,
+                    playlistType = PlaylistType.PLAYLIST,
                     continuation = null,
                 ),
             )

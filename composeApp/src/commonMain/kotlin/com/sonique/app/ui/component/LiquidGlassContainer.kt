@@ -81,27 +81,3 @@ fun LiquidGlassIconButton(
         )
     }
 }
-
-@Composable
-fun LiquidGlassIconButton(
-    backdrop: PlatformBackdrop,
-    imageVector: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier.size(48.dp),
-    shape: Shape = CircleShape,
-    tint: Color = Color.White,
-    interactive: Boolean = true,
-    onClick: () -> Unit,
-) {
-    LiquidGlassContainer(
-        backdrop = backdrop,
-        modifier = modifier,
-        shape = shape,
-        interactive = interactive,
-    ) {
-        RippleIconButton(
-            imageVector = imageVector,
-            tint = tint,
-            onClick = onClick,
-        )
-    }
-}

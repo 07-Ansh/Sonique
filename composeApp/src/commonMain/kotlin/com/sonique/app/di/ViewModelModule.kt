@@ -157,17 +157,5 @@ val viewModelModule =
                 get(),
             )
         }
-        viewModel {
-            com.sonique.app.viewModel.ListenTogetherViewModel(
-                repository = get(),
-                dataStore = get(),
-                bridge = get(),
-            )
-        }
-        viewModel {
-            com.sonique.app.viewModel.ListenTogetherSettingsViewModel(
-                dataStore = get(),
-            )
-        }
     }
 

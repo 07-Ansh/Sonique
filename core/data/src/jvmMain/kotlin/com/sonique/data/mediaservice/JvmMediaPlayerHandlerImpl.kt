@@ -1,7 +1,5 @@
 package com.sonique.data.mediaservice
 
-import kotlin.math.pow
-
 import com.sonique.common.ASC
 import com.sonique.common.CUSTOM_ORDER
 import com.sonique.common.Config.ALBUM_CLICK
@@ -15,8 +13,6 @@ import com.sonique.common.DESC
 import com.sonique.common.LOCAL_PLAYLIST_ID
 import com.sonique.common.LOCAL_PLAYLIST_ID_SAVED_QUEUE
 import com.sonique.common.MERGING_DATA_TYPE
-import com.sonique.common.SPONSOR_BLOCK_MIN_SEGMENT_SECONDS
-import com.sonique.common.SPONSOR_BLOCK_SKIP_MARGIN_MS
 import com.sonique.common.TITLE
 import com.sonique.data.db.Converters
 import com.sonique.data.mediaservice.mac.MacOSMediaIntegration
@@ -28,8 +24,6 @@ import com.sonique.domain.data.model.browse.album.Track
 import com.sonique.domain.data.model.mediaService.SponsorSkipSegments
 import com.sonique.domain.data.model.searchResult.songs.Artist
 import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
-import com.sonique.domain.data.player.AudioEffects
-import com.sonique.domain.data.player.DelayEffect
 import com.sonique.domain.data.player.GenericCommandButton
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericMediaMetadata
@@ -37,8 +31,6 @@ import com.sonique.domain.data.player.GenericPlaybackParameters
 import com.sonique.domain.data.player.GenericTracks
 import com.sonique.domain.data.player.PlayerConstants
 import com.sonique.domain.data.player.PlayerError
-import com.sonique.domain.data.player.ReverbEffect
-import com.sonique.domain.data.player.ReverbPreset
 import com.sonique.domain.extension.isVideo
 import com.sonique.domain.extension.now
 import com.sonique.domain.extension.toGenericMediaItem
@@ -85,7 +77,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
@@ -358,18 +349,13 @@ class JvmMediaPlayerHandlerImpl(
                                     if (skipSegments != null) {
                                         for (skip in skipSegments) {
                                             if (listCategory.contains(skip.category)) {
-                                                if (skip.segment[1] - skip.segment[0] < SPONSOR_BLOCK_MIN_SEGMENT_SECONDS) {
-                                                    continue
-                                                }
                                                 val firstPart = ((skip.segment[0] / skip.videoDuration) * 100).toFloat()
                                                 val secondPart =
                                                     ((skip.segment[1] / skip.videoDuration) * 100).toFloat()
                                                 if (current in firstPart..secondPart) {
                                                     Logger.w(TAG, "Seek to $secondPart")
                                                     Logger.d(TAG, "Seek to Cr: $current, First: $firstPart, Second: $secondPart")
-                                                    skipSegment(
-                                                        (secondPart * player.duration).toLong() / 100 + SPONSOR_BLOCK_SKIP_MARGIN_MS,
-                                                    )
+                                                    skipSegment((secondPart * player.duration).toLong() / 100)
                                                 }
                                             }
                                         }
@@ -418,36 +404,6 @@ class JvmMediaPlayerHandlerImpl(
             playbackSpeedPitchJob.join()
 
         }
-
-        coroutineScope.launch {
-            val delayEffects =
-                combine(
-                    dataStoreManager.delayEnabled,
-                    dataStoreManager.delayTimeMs,
-                    dataStoreManager.delayFeedback,
-                    dataStoreManager.delayMix,
-                ) { enabled, timeMs, feedback, mix ->
-                    if (enabled == TRUE) DelayEffect(timeMs = timeMs, feedback = feedback, mix = mix) else null
-                }
-            val reverbEffects =
-                combine(
-                    dataStoreManager.reverbEnabled,
-                    dataStoreManager.reverbPreset,
-                    dataStoreManager.reverbMix,
-                ) { enabled, presetName, mix ->
-                    if (enabled == TRUE) {
-                        ReverbEffect(
-                            preset = runCatching { ReverbPreset.valueOf(presetName) }.getOrDefault(ReverbPreset.HALL),
-                            mix = mix,
-                        )
-                    } else {
-                        null
-                    }
-                }
-            combine(delayEffects, reverbEffects) { echo, room -> AudioEffects(delay = echo, reverb = room) }
-                .distinctUntilChanged()
-                .collect { effects -> player.setAudioEffects(effects) }
-        }
     }
 
     private fun getDataOfNowPlayingState(mediaItem: GenericMediaItem) {
@@ -472,48 +428,42 @@ class JvmMediaPlayerHandlerImpl(
         getDataOfNowPlayingTrackStateJob =
             coroutineScope.launch {
                 Logger.w(TAG, "getDataOfNowPlayingState: $videoId")
-                val songEntity = runCatching {
-                    songRepository.getSongById(videoId).cancellable().firstOrNull()
-                }.getOrNull()
-
-                if (songEntity != null) {
-                    _controlState.update { it.copy(isLiked = songEntity.liked) }
-                    var thumbUrl =
-                        track?.thumbnails?.lastOrNull()?.url
-                            ?: "http://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg"
-                    if (thumbUrl.contains("w120")) {
-                        thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-                    }
-                    runCatching {
+                songRepository.getSongById(videoId).cancellable().singleOrNull().let { songEntity ->
+                    if (songEntity != null) {
+                        _controlState.update { it.copy(isLiked = songEntity.liked) }
+                        var thumbUrl =
+                            track?.thumbnails?.lastOrNull()?.url
+                                ?: "http://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg"
+                        if (thumbUrl.contains("w120")) {
+                            thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
+                        }
                         if (songEntity.thumbnails != thumbUrl) {
-                            songRepository.updateThumbnailsSongEntity(thumbUrl, songEntity.videoId).firstOrNull()?.let {
+                            songRepository.updateThumbnailsSongEntity(thumbUrl, songEntity.videoId).singleOrNull()?.let {
                                 Logger.w(TAG, "getDataOfNowPlayingState: Updated thumbs $it")
                             }
                         }
-                        songRepository.updateSongInLibrary(now(), songEntity.videoId).firstOrNull().let {
+                        songRepository.updateSongInLibrary(now(), songEntity.videoId).singleOrNull().let {
                             Logger.w(TAG, "getDataOfNowPlayingState: $it")
                         }
                         songRepository.updateListenCount(songEntity.videoId)
-                    }
-                } else {
-                    _controlState.update { it.copy(isLiked = false) }
-                    runCatching {
+                    } else {
+                        _controlState.update { it.copy(isLiked = false) }
                         songRepository
                             .insertSong(
                                 track?.toSongEntity() ?: mediaItem.toSongEntity(),
-                            ).firstOrNull()
+                            ).singleOrNull()
                             ?.let {
                                 Logger.w(TAG, "getDataOfNowPlayingState: $it")
                             }
                     }
-                }
-                Logger.w(TAG, "getDataOfNowPlayingState: $songEntity")
-                Logger.w(TAG, "getDataOfNowPlayingState: $track")
-                _nowPlayingState.update {
-                    it.copy(
-                        songEntity = songEntity ?: track?.toSongEntity() ?: mediaItem.toSongEntity(),
-                    )
-                }    val song =
+                    Logger.w(TAG, "getDataOfNowPlayingState: $songEntity")
+                    Logger.w(TAG, "getDataOfNowPlayingState: $track")
+                    _nowPlayingState.update {
+                        it.copy(
+                            songEntity = songEntity ?: track?.toSongEntity() ?: mediaItem.toSongEntity(),
+                        )
+                    }
+                    val song =
                         songEntity ?: track?.toSongEntity() ?: mediaItem.toSongEntity()
 
                     nypc.setNowPlaying(
@@ -1399,12 +1349,6 @@ class JvmMediaPlayerHandlerImpl(
                 data = queueData,
             )
         }
-        player.albumTrackIds =
-            if (queueData.playlistType == PlaylistType.ALBUM) {
-                queueData.listTracks.map { it.videoId }.toSet()
-            } else {
-                emptySet()
-            }
         Logger.w(TAG, "setQueueData: $queueData")
     }
 
@@ -2021,39 +1965,77 @@ class JvmMediaPlayerHandlerImpl(
     }
 
     override fun mayBeNormalizeVolume() {
-        runBlocking {
-            normalizeVolume = dataStoreManager.normalizeVolume.first() == TRUE
-        }
-        if (!normalizeVolume) {
-            volumeNormalizationJob?.cancel()
-            player.volume = 1f
-            return
-        }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 
-        player.currentMediaItem?.mediaId?.let { songId ->
-            val videoId =
-                if (songId.contains("Video")) {
-                    songId.removePrefix("Video")
-                } else {
-                    songId
-                }
-            volumeNormalizationJob?.cancel()
-            volumeNormalizationJob =
-                coroutineScope.launch(Dispatchers.Main) {
-                    streamRepository
-                        .getFormatFlow(videoId)
-                        .cancellable()
-                        .distinctUntilChanged()
-                        .collectLatest { format ->
-                            if (format != null) {
-                                val loudnessDb = format.loudnessDb ?: 0f
-                                val factor = 10f.pow(-loudnessDb / 20f).coerceIn(0.2f, 1.5f)
-                                player.volume = factor.coerceIn(0f, 1f)
-                                Logger.d(TAG, "Desktop volume normalization: factor=$factor for $loudnessDb dB")
-                            }
-                        }
-                }
-        }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
     }
 
     override fun mayBeSavePlaybackState() {
@@ -2241,25 +2223,25 @@ class JvmMediaPlayerHandlerImpl(
         if (mediaItem?.mediaId != _nowPlaying.value?.mediaId) {
             _nowPlaying.value = mediaItem
         }
-        if (mediaItem != null) {
-            Logger.w(TAG, "onMediaItemTransition: ${mediaItem.mediaId}")
-            getDataOfNowPlayingState(mediaItem)
-        } else {
-            _nowPlayingState.update {
-                NowPlayingTrackState.initial()
+        if (mediaItem?.mediaId != nowPlayingState.value.mediaItem.mediaId) {
+            Logger.w(TAG, "onMediaItemTransition: ${mediaItem?.mediaId}")
+            if (mediaItem != null) {
+                getDataOfNowPlayingState(mediaItem)
+            } else {
+                _nowPlayingState.update {
+                    NowPlayingTrackState
+                        .initial()
+                }
             }
         }
         queueData.value.data.listTracks.let { list ->
-            coroutineScope.launch(Dispatchers.IO) {
-                val isEndless = runCatching { dataStoreManager.endlessQueue.first() == TRUE }.getOrDefault(false)
-                if ((list.size > 3 || isEndless) &&
-                    list.size - player.currentMediaItemIndex < 3 &&
-                    list.size - player.currentMediaItemIndex >= 0 &&
-                    queueData.value.queueState == QueueData.StateSource.STATE_INITIALIZED
-                ) {
-                    Logger.d("Check loadMore", "loadMore")
-                    loadMore()
-                }
+            if ((list.size > 3 || runBlocking { dataStoreManager.endlessQueue.first() == TRUE }) &&
+                list.size - player.currentMediaItemIndex < 3 &&
+                list.size - player.currentMediaItemIndex >= 0 &&
+                queueData.value.queueState == QueueData.StateSource.STATE_INITIALIZED
+            ) {
+                Logger.d("Check loadMore", "loadMore")
+                loadMore()
             }
         }
         updateNextPreviousTrackAvailability()
@@ -2273,12 +2255,6 @@ class JvmMediaPlayerHandlerImpl(
 
     override fun onTracksChanged(tracks: GenericTracks) {
         Logger.d(TAG, "onTracksChanged: ${tracks.groups.size}")
-    }
-
-    override fun onCrossfadeStateChanged(isCrossfading: Boolean) {
-        if (!isCrossfading) {
-            mayBeNormalizeVolume()
-        }
     }
 
     override fun onPlayerError(error: PlayerError) {

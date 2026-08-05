@@ -25,11 +25,6 @@ tasks.register<Delete>("Clean") {
 }
 
 subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
-        compilerOptions {
-            freeCompilerArgs.add("-Xskip-metadata-version-check")
-        }
-    }
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             if (project.findProperty("enableComposeCompilerReports") == "true") {

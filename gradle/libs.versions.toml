@@ -49,7 +49,7 @@ json = "1.9.0"
 slf4j = "1.7.36"
 newpipe = "v0.26.1"
 brave-newpipe = "v0.26.3"
-pipepipe = "f8982ca9e7"
+pipepipe = "c3139c584d"
 webkit = "1.14.0"
 kermit = "2.0.8"
 paging-common = "3.3.6"
@@ -58,8 +58,6 @@ liquid-glass = "1.0.2"
 ytdlp = "0.18.1"
 ffmpeg-kit-audio="6.0.1"
 composeHotReload = "1.0.0"
-kuromoji-ipadic = "0.9.0"
-pinyin4j = "2.5.1"
 composeMultiplatform = "1.10.0-rc02"
 datetime = "0.7.1"
 sqlite = "2.6.2"
@@ -75,7 +73,6 @@ componentsResources="1.10.0-rc02"
 foundation="1.10.0-rc02"
 runtime="1.10.0-rc02"
 compottie = "2.0.2"
-quickjs = "1.0.14"
 cmptoast = "1.0.71"
 uri = "0.0.21"
 buildkonfig = "0.17.1"
@@ -84,7 +81,6 @@ jnaPlatform="5.18.1"
 calf = "0.9.0"
 material = "1.13.0"
 osdetector = "1.7.3"
-atomicfu = "0.27.0"
 
 [libraries]
 desugaring = { group = "com.android.tools", name = "desugar_jdk_libs_nio", version.ref = "desugaring"}
@@ -148,20 +144,15 @@ ktor-client-okhttp = { group = "io.ktor", name = "ktor-client-okhttp", version.r
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-encoding = { group = "io.ktor", name = "ktor-client-encoding", version.ref = "ktor" }
 ktor-client-logging = { group = "io.ktor", name = "ktor-client-logging", version.ref = "ktor" }
-ktor-client-websockets = { group = "io.ktor", name = "ktor-client-websockets", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { group = "io.ktor", name = "ktor-serialization-kotlinx-json", version.ref = "ktor" }
 ktor-client-content-negotiation = { group = "io.ktor", name = "ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-xml = { group = "io.ktor", name = "ktor-serialization-kotlinx-xml", version.ref = "ktor" }
 ktor-serialization-kotlinx-protobuf = { group = "io.ktor", name = "ktor-serialization-kotlinx-protobuf", version.ref = "ktor" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json" }
-kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "json" }
-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "atomicfu" }
 brotli-dec = { group = "org.brotli", name = "dec", version.ref = "brotli" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test"}
-kuromoji-ipadic = { module = "com.atilika.kuromoji:kuromoji-ipadic", version.ref = "kuromoji-ipadic" }
-pinyin4j = { module = "com.belerweb:pinyin4j", version.ref = "pinyin4j" }
 ksoup-html = { group = "com.mohamedrejeb.ksoup", name = "ksoup-html", version.ref = "ksoup" }
 ksoup-entities = { group = "com.mohamedrejeb.ksoup", name = "ksoup-entities", version.ref = "ksoup" }
 markdown = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "md" }
@@ -202,7 +193,6 @@ compottie-network = { module = "io.github.alexzhirkevich:compottie-network", ver
 compottie-resources = { module = "io.github.alexzhirkevich:compottie-resources", version.ref = "compottie" }
 cmptoast = { module = "network.chaintech:cmptoast", version.ref = "cmptoast" }
 file-picker = { module = "com.mohamedrejeb.calf:calf-file-picker", version.ref = "calf"}
-quickjs = { module = "io.github.dokar3:quickjs-kt", version.ref = "quickjs" }
 
 #JVM
 gst1-java-core = { module = "org.freedesktop.gstreamer:gst1-java-core", version.ref = "gst1JavaCore" }

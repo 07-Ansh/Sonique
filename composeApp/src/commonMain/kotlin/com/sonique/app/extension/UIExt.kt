@@ -1,4 +1,4 @@
-package com.sonique.app.extension
+﻿package com.sonique.app.extension
 
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -524,29 +524,4 @@ fun Palette?.toImmersiveBackground(): Color {
     val darkenFactor = 0.35f + 0.45f * luminance
     return androidx.compose.ui.graphics.lerp(base, md_theme_dark_background, darkenFactor)
 }
-
-fun smoothScrimBrush(
-    from: Color,
-    to: Color,
-    startFraction: Float = 0f,
-    endFraction: Float = 1f,
-    startY: Float = 0f,
-    endY: Float = Float.POSITIVE_INFINITY,
-    steps: Int = 24,
-): Brush =
-    Brush.verticalGradient(
-        colorStops =
-            Array(steps + 1) { i ->
-                val t = i / steps.toFloat()
-                val position = startFraction + (endFraction - startFraction) * t
-                position to androidx.compose.ui.graphics.lerp(from, to, t * t * (3f - 2f * t))
-            },
-        startY = startY,
-        endY = endY,
-    )
-
-fun artworkScrimBrush(
-    color: Color,
-    steps: Int = 24,
-): Brush = smoothScrimBrush(from = color.copy(alpha = 0f), to = color, steps = steps)
 

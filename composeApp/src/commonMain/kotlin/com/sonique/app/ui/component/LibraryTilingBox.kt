@@ -127,7 +127,7 @@ fun LibraryTilingItem(
     val cardModifier = if (enableLiquidGlass) {
         Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.06f))
+            .background(Color.White.copy(alpha = 0.05f))
             .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(20.dp))
             .liquidGlass(backdrop, shape = RoundedCornerShape(20.dp), interactive = true)
             .clickable { onClick.invoke() }

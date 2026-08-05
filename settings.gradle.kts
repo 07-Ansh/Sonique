@@ -83,7 +83,7 @@ include(
     ":sharedutils",
     ":media3",
     ":media3-ui",
-    ":listenTogether",
+
 )
 project(":mediaserviceinterfaces").projectDir = File(mediaServiceCore, "mediaserviceinterfaces")
 project(":youtubeapi").projectDir = File(mediaServiceCore, "youtubeapi")
@@ -101,7 +101,6 @@ project(":ktorExt").projectDir = File(serviceDir, "ktorExt")
 project(":lyricsService").projectDir = File(serviceDir, "lyricsService")
 project(":kotlinYtmusicScraper").projectDir = File(serviceDir, "kotlinYtmusicScraper")
 project(":spotify").projectDir = File(serviceDir, "spotify")
-project(":listenTogether").projectDir = File(serviceDir, "listenTogether")
 
 // media modules
 project(":media3").projectDir = File(mediaDir, "media3")

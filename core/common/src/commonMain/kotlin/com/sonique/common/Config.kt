@@ -305,8 +305,8 @@ object QUALITY {
         arrayOf(
             "Low - 66kps",
             "Medium - 129kps",
-            "High Opus - 256kps",
-            "High AAC - 256kps",
+            "High Opus - 256kps (YT Premium)",
+            "High AAC - 256kps (YT Premium)",
         )
 
     val itags: Array<Int> =
@@ -321,8 +321,6 @@ object QUALITY {
         mapOf(
             "High - 256kps (you may experience buffer)" to items[2].toString(),
             "High - 256kps (YT Premium)" to items[2].toString(),
-            "High Opus - 256kps (YT Premium)" to items[2].toString(),
-            "High AAC - 256kps (YT Premium)" to items[3].toString(),
         )
 
     fun normalize(saved: String?): String {
@@ -353,9 +351,6 @@ object LIMIT_CACHE_SIZE {
         return items.getOrNull(index) ?: "∞"
     }
 }
-
-const val SPONSOR_BLOCK_MIN_SEGMENT_SECONDS = 1.0
-const val SPONSOR_BLOCK_SKIP_MARGIN_MS = 500L
 
 sealed class SponsorBlockType(
     val value: String,

@@ -130,9 +130,6 @@
     <string name="itag">Itag</string>
     <string name="mime_type">Mime Type</string>
     <string name="bitrate">Bitrate</string>
-    <string name="bpm">BPM</string>
-    <string name="key">Key</string>
-    <string name="scale">Scale</string>
     <string name="warning">Login required</string>
     <string name="change_language_warning">Changing language will close your app. Are you sure?</string>
     <string name="this_link_is_not_supported">This link is not supported</string>
@@ -286,10 +283,6 @@
     <string name="five_seconds">Five seconds</string>
     <string name="lrclib" translatable="false">LRCLIB</string>
     <string name="lyrics_provider_lrc">Lyrics provided by LRCLIB</string>
-    <string name="better_lyrics" translatable="false">BetterLyrics</string>
-    <string name="lyrics_provider_betterlyrics">Lyrics provided by BetterLyrics</string>
-    <string name="main_lyrics_provider">Main lyrics provider</string>
-    <string name="youtube_transcript">YouTube Transcript</string>
     <string name="sync_first">Sync this playlist to YouTube Music first</string>
     <string name="endless_queue">Endless queue</string>
     <string name="playback_speed_pitch"><![CDATA[Playback speed & pitch]]></string>
@@ -356,8 +349,6 @@
     <string name="crossfade_auto">Auto</string>
     <string name="crossfade_dj_mode">DJ-style transition</string>
     <string name="crossfade_dj_mode_description">Apply low-pass and high-pass filter sweep during crossfade for a smoother, DJ-like transition (similar to Apple Music Automix).</string>
-    <string name="crossfade_skip_album">Keep albums continuous</string>
-    <string name="crossfade_skip_album_description">Skip the crossfade between tracks of the same album, so albums meant to run without gaps still do. The transition out of the album still crossfades.</string>
     <string name="enjoying_sonique">Enjoying Sonique?</string>
     <string name="checking">Checking...</string>
     <string name="auto_check_for_update">Auto check for updates</string>
@@ -389,129 +380,4 @@
     <string name="top_artists">Top artists</string>
     <string name="created_at">Created at %1$s</string>
     <string name="shuffle_not_available">Shuffle endpoint is not available</string>
-    <string name="extract_source">Extraction Source</string>
-    <string name="audio_delay">Delay</string>
-    <string name="audio_delay_description">Echo the sound with a repeating delay</string>
-    <string name="audio_reverb">Reverb</string>
-    <string name="audio_reverb_description">Place the music in a room, hall or plate</string>
-    <string name="effect_time">Time</string>
-    <string name="effect_feedback">Feedback</string>
-    <string name="effect_mix">Mix</string>
-    <string name="delay_preset_slapback">Slapback</string>
-    <string name="delay_preset_quarter">Quarter</string>
-    <string name="delay_preset_dub">Dub</string>
-    <string name="reverb_preset_room">Room</string>
-    <string name="reverb_preset_hall">Hall</string>
-    <string name="reverb_preset_plate">Plate</string>
-    <string name="reverb_preset_cathedral">Cathedral</string>
-    <string name="reverb_help_title">Reverb presets</string>
-    <string name="reverb_help_intro">Each preset is a synthetic room generated from three numbers and matched in loudness, so switching rooms changes the space, not the volume.</string>
-    <string name="reverb_help_rt60">Tail (RT60): %1$s</string>
-    <string name="reverb_help_predelay">Pre-delay: %1$s</string>
-    <string name="reverb_help_damping">Damping from: %1$s</string>
-    <string name="reverb_help_room">Small and tight. Adds a sense of space without smearing the sound.</string>
-    <string name="reverb_help_hall">A concert hall. Long but clear, the classic slowed-and-reverb sound.</string>
-    <string name="reverb_help_plate">A studio plate. No gap before the reverb, bright and dense, sits well on vocals.</string>
-    <string name="reverb_help_cathedral">A cathedral. Very long and dark, the sound dissolves into the space.</string>
-    <string name="reverb_help_rt60_meaning">RT60 is how long the tail takes to fade by 60 dB: how big the room feels.</string>
-    <string name="reverb_help_predelay_meaning">Pre-delay is the silence before the reverb starts. A longer gap keeps the dry sound clear and pushes the walls further away.</string>
-    <string name="reverb_help_damping_meaning">Damping is where the tail starts losing treble. It darkens further as it decays, the way air and soft surfaces absorb highs.</string>
-    <string name="reverb_help_mix">Mix is the wet share: the slider sets how much of the room you hear against the dry signal, identically on Android and Desktop.</string>
-    <string name="lyrics_offset">Lyrics timing offset</string>
-    <string name="lyrics_offset_message">Shift every lyric line by this many milliseconds. Use a positive number when you hear the audio later than you see it, which is what Bluetooth headphones do, and a negative number to make the lyrics appear earlier.</string>
-    <string name="lyrics_offset_value">%1$s ms</string>
-    <string name="lyrics_offset_invalid">Enter a whole number of milliseconds</string>
-    <string name="lyrics_sync_adjust">Adjust lyrics timing</string>
-    <string name="lyrics_offset_reset">Reset</string>
-    <string name="lyrics_romanization">Lyrics romanization</string>
-    <string name="lyrics_romanization_description">Show lyrics in Latin script for the languages you pick</string>
-    <string name="romanization_japanese" translatable="false">Japanese</string>
-    <string name="romanization_korean" translatable="false">Korean</string>
-    <string name="romanization_chinese" translatable="false">Chinese</string>
-    <string name="romanization_hindi" translatable="false">Hindi</string>
-    <string name="romanization_punjabi" translatable="false">Punjabi</string>
-    <string name="romanization_russian" translatable="false">Russian</string>
-    <string name="romanization_ukrainian" translatable="false">Ukrainian</string>
-    <string name="romanization_serbian" translatable="false">Serbian</string>
-    <string name="romanization_bulgarian" translatable="false">Bulgarian</string>
-    <string name="romanization_belarusian" translatable="false">Belarusian</string>
-    <string name="romanization_kyrgyz" translatable="false">Kyrgyz</string>
-    <string name="romanization_macedonian" translatable="false">Macedonian</string>
-    <string name="romanization_japanese_dict_downloading">Downloading the Japanese dictionary…</string>
-    <string name="romanization_japanese_dict_ready">Japanese dictionary downloaded</string>
-    <string name="romanization_japanese_dict_failed">Couldn\'t download the Japanese dictionary. Check your connection and select Japanese again to retry.</string>
-    <string name="share_lyrics">Share lyrics</string>
-    <string name="share_lyrics_select_title">Select lines</string>
-    <string name="share_lyrics_selected_count">%1$d lines selected</string>
-    <string name="share_lyrics_continue">Continue</string>
-    <string name="share_lyrics_max_reached">You can share up to %1$d lines</string>
-    <string name="share_lyrics_save">Save image</string>
-    <string name="share_lyrics_share_action">Share</string>
-    <string name="share_lyrics_saved">Saved to your photos</string>
-    <string name="share_lyrics_saved_desktop">Saved to your downloads folder</string>
-    <string name="share_lyrics_save_failed">Could not save the image</string>
-    <string name="share_lyrics_share_failed">Could not share the image</string>
-    <string name="share_lyrics_background">Background</string>
-    <string name="share_lyrics_permission_denied">Storage permission is needed to save the image</string>
-    <string name="share_lyrics_no_lyrics">This song has no lyrics to share</string>
-    <string name="ai_translation">AI Lyrics Translation</string>
-    <string name="ai_translation_enable">Enable AI Lyrics Translation</string>
-    <string name="ai_provider">AI Provider</string>
-    <string name="ai_provider_gemini">Gemini</string>
-    <string name="ai_provider_openai">OpenAI</string>
-    <string name="ai_provider_custom">Custom (OpenAI-compatible)</string>
-    <string name="ai_api_key">API Key</string>
-    <string name="ai_api_key_placeholder">Enter API key…</string>
-    <string name="ai_model_id">Model ID</string>
-    <string name="ai_model_id_placeholder">e.g. gemini-2.0-flash</string>
-    <string name="ai_custom_base_url">Custom Base URL</string>
-    <string name="ai_custom_base_url_placeholder">https://…</string>
-    <string name="ai_custom_headers">Extra Headers (JSON object)</string>
-    <string name="ai_custom_headers_placeholder">{"Authorization":"Bearer …"}</string>
-    <!-- Listen Together -->
-    <string name="listen_together">Listen Together</string>
-    <string name="lt_tagline">One song, one position, together. Create a room and share the code with friends.</string>
-    <string name="lt_not_connected">Not connected</string>
-    <string name="lt_connected">Connected</string>
-    <string name="lt_connecting">Connecting…</string>
-    <string name="lt_connect">Connect</string>
-    <string name="lt_display_name">Display name</string>
-    <string name="lt_display_name_hint">The name everyone in the room sees</string>
-    <string name="lt_create_room">Create room</string>
-    <string name="lt_or_join_with_code">or join with a code</string>
-    <string name="lt_join_room">Join room</string>
-    <string name="lt_background_warning">Leaving the app or switching away for too long will disconnect you from the room.</string>
-    <string name="lt_disconnect">Disconnect</string>
-    <string name="lt_room_code">Room code</string>
-    <string name="lt_in_room">In the room</string>
-    <string name="lt_host_badge">host</string>
-    <string name="lt_you">you</string>
-    <string name="lt_join_requests">Asking to join</string>
-    <string name="lt_just_asked">just asked to join</string>
-    <string name="lt_suggestions">Suggested tracks</string>
-    <string name="lt_leave_room">Leave room</string>
-    <string name="lt_credit_protocol">Listen Together protocol</string>
-    <string name="lt_credit_compatible">Synchronized shared listening room</string>
-    <string name="lt_server">Server</string>
-    <string name="lt_default_server_name" translatable="false">The Meowery</string>
-    <string name="lt_default_server_location" translatable="false">Poland · run by Nyx</string>
-    <string name="lt_custom_server">Custom server</string>
-    <string name="lt_custom_server_desc">Enter your own wss:// address</string>
-    <string name="lt_save_server">Save server</string>
-    <string name="lt_as_host">When you host</string>
-    <string name="lt_auto_approve_joins">Auto-approve joins</string>
-    <string name="lt_auto_approve_joins_desc">Anyone with the code gets in without asking</string>
-    <string name="lt_blocked">Blocked</string>
-    <string name="lt_blocked_empty">Nobody is blocked</string>
-    <string name="lt_unblock">Unblock</string>
-    <string name="lt_transfer_host">Make host</string>
-    <string name="lt_transfer_host_desc">They will control playback</string>
-    <string name="lt_kick">Remove from room</string>
-    <string name="lt_kick_desc">They can rejoin with the code</string>
-    <string name="lt_block">Block permanently</string>
-    <string name="lt_block_desc">They cannot rejoin, even with the code</string>
-    <string name="lt_waiting_approval">Waiting for the host</string>
-    <string name="lt_waiting_approval_desc">They need to let you in. If the code is wrong you will get an error instead.</string>
-    <string name="lt_cancel_join">Cancel</string>
 </resources>
-

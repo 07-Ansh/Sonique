@@ -1,4 +1,4 @@
-package com.maxrave.common
+package com.sonique.common
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -8,14 +8,11 @@ import org.junit.runner.RunWith
 
 import org.junit.Assert.*
 
- 
 @RunWith(AndroidJUnit4::class)
 class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
-         
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.maxrave.common.test", appContext.packageName)
+        assertEquals("com.sonique.common.test", appContext.packageName)
     }
 }
-

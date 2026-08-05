@@ -179,21 +179,27 @@ fun MiniPlayer(
         animationSpec = tween(500),
     )
 
-    val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
+    var title by remember { mutableStateOf("") }
+    var artistName by remember { mutableStateOf("") }
+    var thumbnailURL by remember { mutableStateOf<String?>(null) }
+    var isExplicit by remember { mutableStateOf(false) }
+    val (liked, setLiked) =
+        remember {
+            mutableStateOf(false)
+        }
+    val (isPlaying, setIsPlaying) =
+        remember {
+            mutableStateOf(false)
+        }
+    val (progress, setProgress) =
+        remember {
+            mutableFloatStateOf(0f)
+        }
+    val (isCrossfading, setIsCrossfading) =
+        remember {
+            mutableStateOf(false)
+        }
 
-    val title = screenDataState.nowPlayingTitle
-    val artistName = screenDataState.artistName
-    val thumbnailURL = screenDataState.thumbnailURL
-    val isExplicit = screenDataState.isExplicit
-    val liked = controllerState.isLiked
-    val isPlaying = controllerState.isPlaying
-    val isCrossfading = controllerState.isCrossfading
-    val loading = timelineState.loading
-    val progress = if (timelineState.total > 0L && timelineState.current >= 0L) {
-        timelineState.current.toFloat() / timelineState.total
-    } else {
-        0f
-    }
     val coroutineScope = rememberCoroutineScope()
 
     val animatedProgress by animateFloatAsState(
@@ -202,6 +208,7 @@ fun MiniPlayer(
         label = "",
     )
 
+     
     val paletteState = rememberPaletteState()
     val background =
         remember {
@@ -210,6 +217,10 @@ fun MiniPlayer(
 
     val offsetX = remember { Animatable(initialValue = 0f) }
     val offsetY = remember { Animatable(0f) }
+
+    var loading by rememberSaveable {
+        mutableStateOf(true)
+    }
 
     var bitmap by remember {
         mutableStateOf<ImageBitmap?>(null)
@@ -228,6 +239,42 @@ fun MiniPlayer(
             .collectLatest {
                 background.animateTo(it.getColorFromPalette())
             }
+    }
+
+    LaunchedEffect(key1 = true) {
+        val job1 =
+            launch {
+                sharedViewModel.nowPlayingScreenData.collect { data ->
+                    title = data.nowPlayingTitle
+                    artistName = data.artistName
+                    thumbnailURL = data.thumbnailURL
+                    isExplicit = data.isExplicit
+                }
+            }
+        val job2 =
+            launch {
+                sharedViewModel.controllerState.collectLatest { state ->
+                    setLiked(state.isLiked)
+                    setIsPlaying(state.isPlaying)
+                    setIsCrossfading(state.isCrossfading)
+                }
+            }
+        val job4 =
+            launch {
+                sharedViewModel.timeline.collect { timeline ->
+                    loading = timeline.loading
+                    val prog =
+                        if (timeline.total > 0L && timeline.current >= 0L) {
+                            timeline.current.toFloat() / timeline.total
+                        } else {
+                            0f
+                        }
+                    setProgress(prog)
+                }
+            }
+        job1.join()
+        job2.join()
+        job4.join()
     }
 
     if (getPlatform() == Platform.Android) {

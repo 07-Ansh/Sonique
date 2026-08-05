@@ -5,7 +5,5 @@ import coil3.Image
 
 expect fun ImageBitmap.toByteArray(): ByteArray?
 
-expect fun ImageBitmap.toPngByteArray(): ByteArray?
-
 expect fun Image.toImageBitmap(): ImageBitmap
 

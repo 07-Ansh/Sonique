@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.home
+﻿package com.sonique.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -103,8 +103,6 @@ import kotlinx.datetime.format
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import com.sonique.domain.data.model.lyrics.RomanizationDictionaryState
-import com.sonique.domain.data.model.lyrics.RomanizationLanguage
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.*
@@ -641,8 +639,6 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
         viewModel.skipSilent.map { it == TRUE }
     }
     val skipSilent by skipSilentFlow.collectAsStateWithLifecycle(initialValue = false)
-    val delayEnabled by viewModel.delayEnabled.collectAsStateWithLifecycle()
-    val reverbEnabled by viewModel.reverbEnabled.collectAsStateWithLifecycle()
     val resultLauncher = openEqResult(viewModel.getAudioSessionId())
 
     LazyColumn(
@@ -704,7 +700,7 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
 
         item {
             Material3SettingsGroup(
-                title = "Audio Effects & Playback",
+                title = "Audio Effects",
                 items = buildList {
                     add(
                         Material3SettingsItem(
@@ -724,24 +720,6 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
                             onCheckedChange = { viewModel.setSkipSilent(it) }
                         )
                     )
-                    add(
-                        Material3SettingsItem(
-                            title = { Text(stringResource(Res.string.audio_delay)) },
-                            description = { Text(stringResource(Res.string.audio_delay_description)) },
-                            isSwitch = true,
-                            checked = delayEnabled,
-                            onCheckedChange = { viewModel.setDelayEnabled(it) }
-                        )
-                    )
-                    add(
-                        Material3SettingsItem(
-                            title = { Text(stringResource(Res.string.audio_reverb)) },
-                            description = { Text(stringResource(Res.string.audio_reverb_description)) },
-                            isSwitch = true,
-                            checked = reverbEnabled,
-                            onCheckedChange = { viewModel.setReverbEnabled(it) }
-                        )
-                    )
                     if (getPlatform() == Platform.Android) {
                         add(
                             Material3SettingsItem(
@@ -758,26 +736,11 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
                 }
             )
         }
-
-        item {
-            AnimatedVisibility(visible = delayEnabled) {
-                DelaySection(viewModel)
-            }
-        }
-
-        item {
-            AnimatedVisibility(visible = reverbEnabled) {
-                ReverbSection(viewModel)
-            }
-        }
     }
 }
 
 @Composable
-private fun PlaybackSettingsContent(
-    viewModel: SettingsViewModel,
-    sharedViewModel: SharedViewModel = koinInject(),
-) {
+private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
     val savePlaybackStateFlow = remember(viewModel.savedPlaybackState) {
         viewModel.savedPlaybackState.map { it == TRUE }
     }
@@ -797,30 +760,6 @@ private fun PlaybackSettingsContent(
     val crossfadeDuration by viewModel.crossfadeDuration.collectAsStateWithLifecycle()
     val crossfadeEnabled by viewModel.crossfadeEnabled.collectAsStateWithLifecycle()
     val crossfadeDjMode by viewModel.crossfadeDjMode.collectAsStateWithLifecycle()
-    val crossfadeSkipAlbum by viewModel.crossfadeSkipAlbum.collectAsStateWithLifecycle()
-    val lyricsOffsetMs by viewModel.lyricsOffsetMs.collectAsStateWithLifecycle()
-    val lyricsProvider by viewModel.lyricsProvider.collectAsStateWithLifecycle()
-    val coroutineScope = rememberCoroutineScope()
-
-    val romanizationStored by sharedViewModel.getRomanizationLanguages().collectAsStateWithLifecycle("")
-    val japaneseDictionaryState by viewModel.japaneseDictionaryState.collectAsStateWithLifecycle()
-
-    val romanizationLabels =
-        listOf(
-            RomanizationLanguage.JAPANESE to stringResource(Res.string.romanization_japanese),
-            RomanizationLanguage.KOREAN to stringResource(Res.string.romanization_korean),
-            RomanizationLanguage.CHINESE to stringResource(Res.string.romanization_chinese),
-            RomanizationLanguage.HINDI to stringResource(Res.string.romanization_hindi),
-            RomanizationLanguage.PUNJABI to stringResource(Res.string.romanization_punjabi),
-            RomanizationLanguage.RUSSIAN to stringResource(Res.string.romanization_russian),
-            RomanizationLanguage.UKRAINIAN to stringResource(Res.string.romanization_ukrainian),
-            RomanizationLanguage.SERBIAN to stringResource(Res.string.romanization_serbian),
-            RomanizationLanguage.BULGARIAN to stringResource(Res.string.romanization_bulgarian),
-            RomanizationLanguage.BELARUSIAN to stringResource(Res.string.romanization_belarusian),
-            RomanizationLanguage.KYRGYZ to stringResource(Res.string.romanization_kyrgyz),
-            RomanizationLanguage.MACEDONIAN to stringResource(Res.string.romanization_macedonian),
-        )
-    val romanizationSelected = RomanizationLanguage.parse(romanizationStored)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -953,148 +892,8 @@ private fun PlaybackSettingsContent(
                                 )
                             )
                         }
-                        add(
-                            Material3SettingsItem(
-                                title = { Text(stringResource(Res.string.crossfade_skip_album)) },
-                                description = { Text(stringResource(Res.string.crossfade_skip_album_description)) },
-                                isSwitch = true,
-                                checked = crossfadeSkipAlbum,
-                                onCheckedChange = { viewModel.setCrossfadeSkipAlbum(it) }
-                            )
-                        )
                     }
                 }
-            )
-        }
-
-        item {
-            Material3SettingsGroup(
-                title = "Lyrics Settings",
-                items = listOf(
-                    Material3SettingsItem(
-                        title = { Text(stringResource(Res.string.main_lyrics_provider)) },
-                        description = {
-                            val label = when (lyricsProvider) {
-                                DataStoreManager.BETTER_LYRICS -> stringResource(Res.string.better_lyrics)
-                                DataStoreManager.YOUTUBE -> stringResource(Res.string.youtube_transcript)
-                                else -> stringResource(Res.string.lrclib)
-                            }
-                            Text(label)
-                        },
-                        onClick = {
-                            coroutineScope.launch {
-                                val labelLrclib = getString(Res.string.lrclib)
-                                val labelBetterLyrics = getString(Res.string.better_lyrics)
-                                val labelYouTube = getString(Res.string.youtube_transcript)
-                                viewModel.setAlertData(
-                                    SettingAlertState(
-                                        title = getString(Res.string.main_lyrics_provider),
-                                        selectOne = SettingAlertState.SelectData(
-                                            listSelect = listOf(
-                                                (lyricsProvider == DataStoreManager.LRCLIB) to labelLrclib,
-                                                (lyricsProvider == DataStoreManager.BETTER_LYRICS) to labelBetterLyrics,
-                                                (lyricsProvider == DataStoreManager.YOUTUBE) to labelYouTube,
-                                            )
-                                        ),
-                                        confirm = getString(Res.string.change) to { state ->
-                                            val sel = state.selectOne?.getSelected()
-                                            val provider = when (sel) {
-                                                labelBetterLyrics -> DataStoreManager.BETTER_LYRICS
-                                                labelYouTube -> DataStoreManager.YOUTUBE
-                                                else -> DataStoreManager.LRCLIB
-                                            }
-                                            viewModel.setLyricsProvider(provider)
-                                        },
-                                        dismiss = getString(Res.string.cancel),
-                                    )
-                                )
-                            }
-                        }
-                    ),
-                    Material3SettingsItem(
-                        title = { Text(stringResource(Res.string.lyrics_offset)) },
-                        description = {
-                            Text(
-                                stringResource(
-                                    Res.string.lyrics_offset_value,
-                                    if (lyricsOffsetMs > 0) "+$lyricsOffsetMs" else lyricsOffsetMs.toString(),
-                                )
-                            )
-                        },
-                        onClick = {
-                            viewModel.setAlertData(
-                                SettingAlertState(
-                                    title = runBlocking { getString(Res.string.lyrics_offset) },
-                                    message = runBlocking { getString(Res.string.lyrics_offset_message) },
-                                    textField =
-                                        SettingAlertState.TextFieldData(
-                                            label = runBlocking { getString(Res.string.lyrics_offset) },
-                                            value = lyricsOffsetMs.toString(),
-                                            verifyCodeBlock = {
-                                                (it.trim().toIntOrNull() != null) to
-                                                    runBlocking { getString(Res.string.lyrics_offset_invalid) }
-                                            },
-                                        ),
-                                    confirm =
-                                        runBlocking { getString(Res.string.change) } to { state ->
-                                            state.textField
-                                                ?.value
-                                                ?.trim()
-                                                ?.toIntOrNull()
-                                                ?.let { viewModel.setLyricsOffsetMs(it) }
-                                        },
-                                    dismiss = runBlocking { getString(Res.string.cancel) },
-                                )
-                            )
-                        }
-                    ),
-                    Material3SettingsItem(
-                        title = { Text(stringResource(Res.string.lyrics_romanization)) },
-                        description = {
-                            Text(
-                                if (romanizationSelected.isEmpty()) {
-                                    stringResource(Res.string.lyrics_romanization_description)
-                                } else {
-                                    val selectedNames =
-                                        romanizationLabels.filter { it.first in romanizationSelected }.joinToString(", ") { it.second }
-                                    when {
-                                        RomanizationLanguage.JAPANESE !in romanizationSelected -> selectedNames
-                                        japaneseDictionaryState == RomanizationDictionaryState.DOWNLOADING ->
-                                            "$selectedNames — ${stringResource(Res.string.romanization_japanese_dict_downloading)}"
-                                        japaneseDictionaryState == RomanizationDictionaryState.FAILED ->
-                                            "$selectedNames — ${stringResource(Res.string.romanization_japanese_dict_failed)}"
-                                        else -> selectedNames
-                                    }
-                                }
-                            )
-                        },
-                        onClick = {
-                            viewModel.setAlertData(
-                                SettingAlertState(
-                                    title = runBlocking { getString(Res.string.lyrics_romanization) },
-                                    multipleSelect =
-                                        SettingAlertState.SelectData(
-                                            listSelect =
-                                                romanizationLabels.map { (language, label) ->
-                                                    (language in romanizationSelected) to label
-                                                },
-                                        ),
-                                    confirm =
-                                        runBlocking { getString(Res.string.save) } to { state ->
-                                            val chosen = state.multipleSelect?.getListSelected().orEmpty()
-                                            val languages =
-                                                romanizationLabels.filter { it.second in chosen }.map { it.first }.toSet()
-                                            sharedViewModel.setRomanizationLanguages(languages)
-                                            if (RomanizationLanguage.JAPANESE in languages) {
-                                                viewModel.downloadJapaneseDictionaryIfNeeded()
-                                            }
-                                        },
-                                    dismiss = runBlocking { getString(Res.string.cancel) },
-                                ),
-                            )
-                        }
-                    )
-                )
             )
         }
     }
@@ -1285,8 +1084,8 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
                             Text(
                                 when (backupState) {
                                     is SettingsViewModel.BackupRestoreState.InProgress -> "Backing up data..."
-                                    is SettingsViewModel.BackupRestoreState.Success -> "\u2713 Backup complete!"
-                                    is SettingsViewModel.BackupRestoreState.Error -> "\u2717 Backup failed"
+                                    is SettingsViewModel.BackupRestoreState.Success -> "âœ“ Backup complete!"
+                                    is SettingsViewModel.BackupRestoreState.Error -> "âœ— Backup failed"
                                     else -> stringResource(Res.string.save_all_your_playlist_data)
                                 }
                             )
@@ -1303,8 +1102,8 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
                             Text(
                                 when (restoreState) {
                                     is SettingsViewModel.BackupRestoreState.InProgress -> "Restoring data..."
-                                    is SettingsViewModel.BackupRestoreState.Success -> "\u2713 Restore complete!"
-                                    is SettingsViewModel.BackupRestoreState.Error -> "\u2717 Restore failed"
+                                    is SettingsViewModel.BackupRestoreState.Success -> "âœ“ Restore complete!"
+                                    is SettingsViewModel.BackupRestoreState.Error -> "âœ— Restore failed"
                                     else -> stringResource(Res.string.restore_your_saved_data)
                                 }
                             )
@@ -1591,14 +1390,14 @@ private fun AboutSettingsContent(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Made with \u2764\uFE0F and Kotlin",
+                        text = "Made with â¤ï¸ and Kotlin",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "\u00A9 2025 Sonique",
+                        text = "Â© 2025 Sonique",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                     )
@@ -1666,12 +1465,6 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
     val explicitContentEnabled by viewModel.explicitContentEnabled.collectAsStateWithLifecycle()
     val keepYoutubePlaylistOffline by viewModel.keepYouTubePlaylistOffline.collectAsStateWithLifecycle()
     val showMostPlayed by sharedViewModel.showMostPlayed.collectAsStateWithLifecycle()
-    val useAITranslation by viewModel.useAITranslation.collectAsStateWithLifecycle()
-    val aiProvider by viewModel.aiProvider.collectAsStateWithLifecycle()
-    val aiApiKey by viewModel.aiApiKey.collectAsStateWithLifecycle()
-    val customModelId by viewModel.customModelId.collectAsStateWithLifecycle()
-    val customOpenAIBaseUrl by viewModel.customOpenAIBaseUrl.collectAsStateWithLifecycle()
-    val customOpenAIHeaders by viewModel.customOpenAIHeaders.collectAsStateWithLifecycle()
 
     var showYouTubeAccountDialog by rememberSaveable {
         mutableStateOf(false)
@@ -1791,173 +1584,6 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                             onCheckedChange = { viewModel.setSendBackToGoogle(it) }
                         )
                     )
-                )
-            }
-
-            item {
-                Material3SettingsGroup(
-                    title = stringResource(Res.string.ai_translation),
-                    items = buildList {
-                        add(
-                            Material3SettingsItem(
-                                title = { Text(stringResource(Res.string.ai_translation_enable)) },
-                                description = { Text("Translate lyrics using an AI language model") },
-                                isSwitch = true,
-                                checked = useAITranslation,
-                                onCheckedChange = { viewModel.setUseAITranslation(it) }
-                            )
-                        )
-                        if (useAITranslation) {
-                            add(
-                                Material3SettingsItem(
-                                    title = { Text(stringResource(Res.string.ai_provider)) },
-                                    description = {
-                                        val label = when (aiProvider) {
-                                            DataStoreManager.AI_PROVIDER_GEMINI -> stringResource(Res.string.ai_provider_gemini)
-                                            DataStoreManager.AI_PROVIDER_OPENAI -> stringResource(Res.string.ai_provider_openai)
-                                            else -> stringResource(Res.string.ai_provider_custom)
-                                        }
-                                        Text(label)
-                                    },
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            val labelGemini = getString(Res.string.ai_provider_gemini)
-                                            val labelOpenAI = getString(Res.string.ai_provider_openai)
-                                            val labelCustom = getString(Res.string.ai_provider_custom)
-                                            viewModel.setAlertData(
-                                                SettingAlertState(
-                                                    title = getString(Res.string.ai_provider),
-                                                    selectOne = SettingAlertState.SelectData(
-                                                        listSelect = listOf(
-                                                            (aiProvider == DataStoreManager.AI_PROVIDER_GEMINI) to labelGemini,
-                                                            (aiProvider == DataStoreManager.AI_PROVIDER_OPENAI) to labelOpenAI,
-                                                            (aiProvider == DataStoreManager.AI_PROVIDER_CUSTOM_OPENAI) to labelCustom,
-                                                        )
-                                                    ),
-                                                    confirm = getString(Res.string.change) to { state ->
-                                                        val sel = state.selectOne?.getSelected()
-                                                        val provider = when (sel) {
-                                                            labelOpenAI -> DataStoreManager.AI_PROVIDER_OPENAI
-                                                            labelCustom -> DataStoreManager.AI_PROVIDER_CUSTOM_OPENAI
-                                                            else -> DataStoreManager.AI_PROVIDER_GEMINI
-                                                        }
-                                                        viewModel.setAIProvider(provider)
-                                                    },
-                                                    dismiss = getString(Res.string.cancel),
-                                                )
-                                            )
-                                        }
-
-                                    }
-                                )
-                            )
-                            add(
-                                Material3SettingsItem(
-                                    title = { Text(stringResource(Res.string.ai_api_key)) },
-                                    description = {
-                                        val masked = if (aiApiKey.isBlank()) stringResource(Res.string.ai_api_key_placeholder)
-                                        else "•".repeat(minOf(aiApiKey.length, 12))
-                                        Text(masked)
-                                    },
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            viewModel.setAlertData(
-                                                SettingAlertState(
-                                                    title = getString(Res.string.ai_api_key),
-                                                    textField = SettingAlertState.TextFieldData(
-                                                        label = getString(Res.string.ai_api_key),
-                                                        value = aiApiKey,
-                                                    ),
-                                                    confirm = getString(Res.string.change) to { state ->
-                                                        val newKey = state.textField?.value ?: ""
-                                                        viewModel.setAIApiKey(newKey)
-                                                    },
-                                                    dismiss = getString(Res.string.cancel),
-                                                )
-                                            )
-                                        }
-                                    }
-                                )
-                            )
-                            add(
-                                Material3SettingsItem(
-                                    title = { Text(stringResource(Res.string.ai_model_id)) },
-                                    description = {
-                                        Text(customModelId.ifBlank { stringResource(Res.string.ai_model_id_placeholder) })
-                                    },
-                                    onClick = {
-                                        coroutineScope.launch {
-                                            viewModel.setAlertData(
-                                                SettingAlertState(
-                                                    title = getString(Res.string.ai_model_id),
-                                                    textField = SettingAlertState.TextFieldData(
-                                                        label = getString(Res.string.ai_model_id),
-                                                        value = customModelId,
-                                                    ),
-                                                    confirm = getString(Res.string.change) to { state ->
-                                                        viewModel.setCustomModelId(state.textField?.value ?: "")
-                                                    },
-                                                    dismiss = getString(Res.string.cancel),
-                                                )
-                                            )
-                                        }
-                                    }
-                                )
-                            )
-                            if (aiProvider == DataStoreManager.AI_PROVIDER_CUSTOM_OPENAI) {
-                                add(
-                                    Material3SettingsItem(
-                                        title = { Text(stringResource(Res.string.ai_custom_base_url)) },
-                                        description = {
-                                            Text(customOpenAIBaseUrl.ifBlank { stringResource(Res.string.ai_custom_base_url_placeholder) })
-                                        },
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                viewModel.setAlertData(
-                                                    SettingAlertState(
-                                                        title = getString(Res.string.ai_custom_base_url),
-                                                        textField = SettingAlertState.TextFieldData(
-                                                            label = getString(Res.string.ai_custom_base_url),
-                                                            value = customOpenAIBaseUrl,
-                                                        ),
-                                                        confirm = getString(Res.string.change) to { state ->
-                                                            viewModel.setCustomOpenAIBaseUrl(state.textField?.value ?: "")
-                                                        },
-                                                        dismiss = getString(Res.string.cancel),
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    )
-                                )
-                                add(
-                                    Material3SettingsItem(
-                                        title = { Text(stringResource(Res.string.ai_custom_headers)) },
-                                        description = {
-                                            Text(customOpenAIHeaders.ifBlank { stringResource(Res.string.ai_custom_headers_placeholder) })
-                                        },
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                viewModel.setAlertData(
-                                                    SettingAlertState(
-                                                        title = getString(Res.string.ai_custom_headers),
-                                                        textField = SettingAlertState.TextFieldData(
-                                                            label = getString(Res.string.ai_custom_headers),
-                                                            value = customOpenAIHeaders,
-                                                        ),
-                                                        confirm = getString(Res.string.change) to { state ->
-                                                            viewModel.setCustomOpenAIHeaders(state.textField?.value ?: "")
-                                                        },
-                                                        dismiss = getString(Res.string.cancel),
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    )
-                                )
-                            }
-                        }
-                    }
                 )
             }
         }

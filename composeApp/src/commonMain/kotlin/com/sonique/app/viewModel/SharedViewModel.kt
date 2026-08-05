@@ -50,13 +50,11 @@ import com.sonique.domain.repository.PlaylistRepository
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.repository.StreamRepository
 import com.sonique.domain.repository.UpdateRepository
-import com.sonique.domain.data.entities.TranslatedLyricsEntity
 import com.sonique.domain.utils.Resource
 import com.sonique.domain.utils.toListName
 import com.sonique.domain.utils.toLyrics
 import com.sonique.domain.utils.toLyricsEntity
 import com.sonique.domain.utils.toSongEntity
-import com.sonique.domain.utils.toSyncedLyrics
 import com.sonique.domain.utils.toTrack
 import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
@@ -69,7 +67,6 @@ import com.sonique.app.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -83,7 +80,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
@@ -139,9 +135,6 @@ class SharedViewModel(
 
     private var _format: MutableStateFlow<NewFormatEntity?> = MutableStateFlow(null)
     val format: SharedFlow<NewFormatEntity?> = _format.asSharedFlow()
-
-    private val _extractSource: MutableStateFlow<String?> = MutableStateFlow(null)
-    val extractSource: StateFlow<String?> = _extractSource.asStateFlow()
 
     private var _canvas: MutableStateFlow<CanvasResult?> = MutableStateFlow(null)
     val canvas: StateFlow<CanvasResult?> = _canvas
@@ -416,30 +409,38 @@ class SharedViewModel(
                         ?: state.track?.thumbnails?.lastOrNull()?.url
                         ?: state.mediaItem.metadata.artworkUri?.toString()
 
-                    _nowPlayingScreenData.update { currentData ->
-                        currentData.copy(
+                    _nowPlayingScreenData.value =
+                        NowPlayingScreenData(
                             nowPlayingTitle = resolvedTitle,
                             artistName = resolvedArtist,
                             isVideo = false,
                             thumbnailURL = resolvedThumbnail,
-                            isExplicit = currentSongEntity?.isExplicit ?: false,
+                            canvasData = null,
+                            lyricsData = null,
+                            songInfoData = null,
                             playlistName =
                                 mediaPlayerHandler.queueData.value
                                     ?.data
                                     ?.playlistName ?: "",
                         )
-                    }
-
-                    if (currentSongEntity != null) {
-                        _liked.value = currentSongEntity.liked == true
-                    }
-
                     state.mediaItem.let { now ->
                         _canvas.value = null
-                        if (now.mediaId.isNotEmpty()) {
-                            launch { getLikeStatus(now.mediaId) }
-                            launch { getSongInfo(now.mediaId) }
-                            launch { getFormat(now.mediaId) }
+                        getLikeStatus(now.mediaId)
+                        getSongInfo(now.mediaId)
+                        getFormat(now.mediaId)
+                        _nowPlayingScreenData.update {
+                            it.copy(
+                                isVideo = false,
+                            )
+                        }
+                    }
+                    currentSongEntity?.let { song ->
+                        _liked.value = song.liked == true
+                        _nowPlayingScreenData.update {
+                            it.copy(
+                                thumbnailURL = song.thumbnails,
+                                isExplicit = song.isExplicit,
+                            )
                         }
                     }
                 }
@@ -722,7 +723,7 @@ class SharedViewModel(
                         false,
                         LyricsProvider.OFFLINE,
                     )
-                    getAITranslationLyrics(track.videoId, lyricsData)
+
                 }
             }
         }
@@ -969,7 +970,6 @@ class SharedViewModel(
     private fun getFormat(mediaId: String?) {
         if (mediaId != _format.value?.videoId && !mediaId.isNullOrEmpty()) {
             _format.value = null
-            _extractSource.value = streamRepository.getExtractSource(mediaId)
             getFormatFlowJob?.cancel()
             getFormatFlowJob =
                 viewModelScope.launch {
@@ -980,7 +980,6 @@ class SharedViewModel(
                         } else {
                             _format.emit(null)
                         }
-                        _extractSource.value = streamRepository.getExtractSource(mediaId)
                     }
                 }
         }
@@ -1166,21 +1165,7 @@ class SharedViewModel(
                         )
                     }
 
-                    DataStoreManager.BETTER_LYRICS -> {
-                        getBetterLyrics(
-                            song,
-                            (artist ?: "").toString(),
-                            duration,
-                        )
-                    }
-
                     DataStoreManager.YOUTUBE -> {
-                        getYouTubeCaption(
-                            videoId,
-                            song,
-                            (artist ?: "").toString(),
-                            duration,
-                        )
                     }
                 }
             }
@@ -1219,75 +1204,19 @@ class SharedViewModel(
                                 LyricsProvider.YOUTUBE,
                             )
                         } else {
-                            getAITranslationLyrics(videoId, lyrics)
+
                         }
                     }
 
                     else -> {
-                        val pref = dataStoreManager.lyricsProvider.first()
-                        if (pref == DataStoreManager.BETTER_LYRICS) {
-                            getBetterLyrics(
-                                song,
-                                (artist ?: ""),
-                                duration,
-                            )
-                        } else {
-                            getLrclibLyrics(
-                                song,
-                                (artist ?: ""),
-                                duration,
-                            )
-                        }
+                        getLrclibLyrics(
+                            song,
+                            (artist ?: ""),
+                            duration,
+                        )
                     }
                 }
             }
-    }
-
-    private fun getBetterLyrics(
-        song: SongEntity,
-        artist: String,
-        duration: Int,
-    ) {
-        viewModelScope.launch {
-            lyricsCanvasRepository
-                .getBetterLyrics(
-                    artist,
-                    song.title,
-                    duration,
-                ).collectLatest { res ->
-                    val data = res.data
-                    when (res) {
-                        is Resource.Success if (data != null) -> {
-                            Logger.d(tag, "Get BetterLyrics Success")
-                            updateLyrics(
-                                song.videoId,
-                                duration,
-                                data,
-                                false,
-                                LyricsProvider.BETTER_LYRICS,
-                            )
-                            insertLyrics(
-                                data.toLyricsEntity(
-                                    song.videoId,
-                                ),
-                            )
-                            getAITranslationLyrics(
-                                song.videoId,
-                                data,
-                            )
-                        }
-
-                        else -> {
-                            Logger.w(tag, "Get BetterLyrics Error: ${res.message}, falling back to LRCLIB")
-                            getLrclibLyrics(
-                                song,
-                                artist,
-                                duration,
-                            )
-                        }
-                    }
-                }
-        }
     }
 
     private fun getLrclibLyrics(
@@ -1309,16 +1238,16 @@ class SharedViewModel(
                             updateLyrics(
                                 song.videoId,
                                 duration,
-                                data,
+                                res.data,
                                 false,
                                 LyricsProvider.LRCLIB,
                             )
                             insertLyrics(
-                                data?.toLyricsEntity(
+                                res.data?.toLyricsEntity(
                                     song.videoId,
                                 ) ?: return@collectLatest,
                             )
-                            getAITranslationLyrics(song.videoId, data)
+
                         }
 
                         else -> {
@@ -1358,7 +1287,7 @@ class SharedViewModel(
                                 false,
                                 LyricsProvider.SPOTIFY,
                             )
-                            getAITranslationLyrics(track.videoId, data)
+
                         }
                     }
 
@@ -1548,118 +1477,9 @@ class SharedViewModel(
             initialValue = false
         )
 
+    suspend fun isUserLoggedInSus(): Boolean = dataStoreManager.cookie.first().isNotEmpty()
+
     fun isCombineFavoriteAndYTLiked(): Boolean = runBlocking { dataStoreManager.combineLocalAndYouTubeLiked.first() == TRUE }
-
-    fun getLyricsOffsetMs(): Flow<Int> = dataStoreManager.lyricsOffsetMs
-
-    fun setLyricsOffsetMs(offsetMs: Int) {
-        viewModelScope.launch {
-            dataStoreManager.setLyricsOffsetMs(offsetMs)
-        }
-    }
-
-    fun getRomanizationLanguages() = dataStoreManager.romanizationLanguages
-
-    fun setRomanizationLanguages(languages: Set<com.sonique.domain.data.model.lyrics.RomanizationLanguage>) {
-        viewModelScope.launch {
-            dataStoreManager.setRomanizationLanguages(languages.map { it.name }.sorted().joinToString(","))
-        }
-    }
-
-    private fun getAITranslationLyrics(
-        videoId: String,
-        lyrics: Lyrics,
-    ) {
-        viewModelScope.launch {
-            if (dataStoreManager.useAITranslation.first() == TRUE &&
-                dataStoreManager.aiApiKey.first().isNotBlank()
-            ) {
-                val targetLang = dataStoreManager.translationLanguage.first()
-                val savedTranslated =
-                    lyricsCanvasRepository
-                        .getSavedTranslatedLyrics(videoId, targetLang)
-                        .firstOrNull()
-
-                if (savedTranslated != null) {
-                    updateLyrics(
-                        videoId,
-                        0,
-                        savedTranslated.toLyrics(),
-                        true,
-                        LyricsProvider.AI,
-                    )
-                } else {
-                    val lyricsForAi =
-                        if (lyrics.syncType == "RICH_SYNCED") {
-                            lyrics.toSyncedLyrics()
-                        } else {
-                            lyrics
-                        }
-
-                    lyricsCanvasRepository
-                        .getAITranslationLyrics(lyricsForAi, targetLang)
-                        .cancellable()
-                        .collectLatest { res ->
-                            val data = res.data
-                            if (res is Resource.Success && data != null) {
-                                lyricsCanvasRepository.insertTranslatedLyrics(
-                                    TranslatedLyricsEntity(
-                                        videoId = videoId,
-                                        language = targetLang,
-                                        error = false,
-                                        lines = data.lines,
-                                        syncType = data.syncType,
-                                    ),
-                                )
-                                updateLyrics(
-                                    videoId,
-                                    0,
-                                    data,
-                                    true,
-                                    LyricsProvider.AI,
-                                )
-                            }
-                        }
-                }
-            }
-        }
-    }
-
-    fun setUseAITranslation(use: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setUseAITranslation(use)
-        }
-    }
-
-    fun setAIProvider(provider: String) {
-        viewModelScope.launch {
-            dataStoreManager.setAIProvider(provider)
-        }
-    }
-
-    fun setAIApiKey(apiKey: String) {
-        viewModelScope.launch {
-            dataStoreManager.setAIApiKey(apiKey)
-        }
-    }
-
-    fun setCustomModelId(modelId: String) {
-        viewModelScope.launch {
-            dataStoreManager.setCustomModelId(modelId)
-        }
-    }
-
-    fun setCustomOpenAIBaseUrl(baseUrl: String) {
-        viewModelScope.launch {
-            dataStoreManager.setCustomOpenAIBaseUrl(baseUrl)
-        }
-    }
-
-    fun setCustomOpenAIHeaders(headers: String) {
-        viewModelScope.launch {
-            dataStoreManager.setCustomOpenAIHeaders(headers)
-        }
-    }
 }
 
 sealed class UIEvent {
@@ -1701,7 +1521,6 @@ enum class LyricsProvider {
     YOUTUBE,
     SPOTIFY,
     LRCLIB,
-    BETTER_LYRICS,
     AI,
     OFFLINE,
 }

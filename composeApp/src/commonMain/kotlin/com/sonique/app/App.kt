@@ -351,7 +351,7 @@ fun App(
                     onDownload = {
                         val release = updateAvailable!!
                         viewModel.downloadAppUpdate(release.downloadUrl, release.title)
-                        navController.navigate(com.sonique.app.ui.navigation.destination.home.SettingsUpdateDestination)
+                        navController.navigate(com.sonique.app.ui.navigation.destination.home.SettingsDestination)
                         updateViewModel.dismissUpdate()
                     }
                 )

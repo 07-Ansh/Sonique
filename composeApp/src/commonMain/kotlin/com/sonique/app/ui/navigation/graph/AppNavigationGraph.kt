@@ -157,10 +157,12 @@ fun AppNavigationGraph(
                 },
             )
         }
-        composable<SettingsDestination> {
+        composable<SettingsDestination> { entry ->
+            val destination = entry.toRoute<SettingsDestination>()
             SettingScreen(
                 innerPadding = innerPadding,
                 navController = navController,
+                startCategory = destination.startCategory,
             )
         }
          

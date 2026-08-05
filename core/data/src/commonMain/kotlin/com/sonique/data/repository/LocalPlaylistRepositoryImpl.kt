@@ -62,13 +62,7 @@ internal class LocalPlaylistRepositoryImpl(
         }
 
     override fun getAllLocalPlaylists(): Flow<List<LocalPlaylistEntity>> =
-        flow {
-            val list =
-                getFullDataFromDB { limit, offset ->
-                    localDataSource.getAllLocalPlaylists(limit, offset)
-                }
-            emit(list)
-        }.flowOn(Dispatchers.IO)
+        localDataSource.getAllLocalPlaylistsFlow().flowOn(Dispatchers.IO)
 
     override suspend fun updateLocalPlaylistTracks(
         tracks: List<String>,

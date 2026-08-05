@@ -660,7 +660,7 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
             }
              Spacer(modifier = Modifier.width(8.dp))
              RippleIconButton(resId = Res.drawable.baseline_settings_24) {
-                 navController.navigate(SettingsDestination)
+                 navController.navigate(SettingsDestination())
              }
         }
     }

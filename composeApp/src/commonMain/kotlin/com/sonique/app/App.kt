@@ -349,9 +349,7 @@ fun App(
                     releaseInfo = updateAvailable!!,
                     onDismiss = { updateViewModel.dismissUpdate() },
                     onDownload = {
-                        val release = updateAvailable!!
-                        viewModel.downloadAppUpdate(release.downloadUrl, release.title)
-                        navController.navigate(com.sonique.app.ui.navigation.destination.home.SettingsDestination)
+                        navController.navigate(com.sonique.app.ui.navigation.destination.home.SettingsDestination(startCategory = "UPDATES"))
                         updateViewModel.dismissUpdate()
                     }
                 )

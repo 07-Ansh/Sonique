@@ -1827,12 +1827,20 @@ internal class MediaServiceHandlerImpl(
             showToast(ToastType.ExplicitContent)
             return
         }
-        songRepository.insertSong(track.toSongEntity()).singleOrNull()?.let {
-            Logger.d(TAG, "Inserted song: ${track.title}")
+        try {
+            songRepository.insertSong(track.toSongEntity()).singleOrNull()?.let {
+                Logger.d(TAG, "Inserted song: ${track.title}")
+            }
+        } catch (e: Exception) {
+            Logger.e(TAG, "Failed to insert song into DB: ${e.message}")
         }
         clearMediaItems()
         track.durationSeconds?.let {
-            songRepository.updateDurationSeconds(it, track.videoId)
+            try {
+                songRepository.updateDurationSeconds(it, track.videoId)
+            } catch (e: Exception) {
+                Logger.e(TAG, "Failed to update duration: ${e.message}")
+            }
         }
         addMediaItem(track.toGenericMediaItem(), playWhenReady = type != RECOVER_TRACK_QUEUE)
         when (type) {
@@ -2053,9 +2061,6 @@ internal class MediaServiceHandlerImpl(
             jobWatchtime = null
             getDataOfNowPlayingTrackStateJob?.cancel()
             getDataOfNowPlayingTrackStateJob = null
-
-             
-            coroutineScope.cancel()
 
             Logger.w("ServiceHandler", "Handler released successfully. Scope active: ${coroutineScope.isActive}")
         } catch (e: Exception) {

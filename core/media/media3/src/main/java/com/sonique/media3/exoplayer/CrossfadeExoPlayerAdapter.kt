@@ -987,7 +987,6 @@ internal class CrossfadeExoPlayerAdapter(
         isCrossfading = false
 
         abandonAudioFocusInternal()
-        coroutineScope.cancel()
         cleanupCurrentPlayerInternal()
         clearAllPrecacheInternal()
         listeners.clear()

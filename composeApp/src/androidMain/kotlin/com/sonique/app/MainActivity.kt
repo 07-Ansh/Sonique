@@ -277,23 +277,7 @@ class MainActivity : AppCompatActivity() {
     private fun downloadAppUpdate(url: String, title: String) {
         try {
             viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(0.01f))
-
-            // 1. Clean up any previous update APK file in public Downloads directory
-            val publicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-            try {
-                val oldPublicFile = File(publicDir, "SoniqueUpdate.apk")
-                if (oldPublicFile.exists()) oldPublicFile.delete()
-            } catch (e: Exception) {
-                Logger.e("Update", "Could not delete old public APK: ${e.message}")
-            }
-
-            val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as? android.app.DownloadManager
-            if (downloadManager == null) {
-                Logger.e("Update", "DownloadManager service null, starting fallback direct download")
-                startFallbackDirectDownload(url, title)
-                return
-            }
-
+            val downloadManager = getSystemService(android.content.Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
             val uri = android.net.Uri.parse(url)
             val request = android.app.DownloadManager.Request(uri)
                 .setTitle(title)
@@ -304,14 +288,7 @@ class MainActivity : AppCompatActivity() {
                 .setAllowedOverMetered(true)
                 .setAllowedOverRoaming(true)
 
-            val downloadId = try {
-                downloadManager.enqueue(request)
-            } catch (e: Exception) {
-                Logger.e("Update", "DownloadManager enqueue failed: ${e.message}, falling back to direct download")
-                startFallbackDirectDownload(url, title)
-                return
-            }
-
+            val downloadId = downloadManager.enqueue(request)
             currentDownloadId = downloadId
             Logger.d("Update", "Download started with ID: $downloadId")
             
@@ -343,14 +320,13 @@ class MainActivity : AppCompatActivity() {
                             val status = cursor.getInt(statusIndex)
                             if (status == android.app.DownloadManager.STATUS_SUCCESSFUL) {
                                 downloading = false
-                                val targetFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
-                                val finalPath = if (targetFile.exists()) targetFile.absolutePath else (downloadManager.getUriForDownloadedFile(downloadId)?.toString() ?: "")
-                                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(finalPath))
+                                val fileUri = downloadManager.getUriForDownloadedFile(downloadId)
+                                if (fileUri != null) {
+                                    viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(fileUri.toString()))
+                                }
                             } else if (status == android.app.DownloadManager.STATUS_FAILED) {
                                 downloading = false
-                                Logger.e("Update", "DownloadManager failed status, falling back to direct download")
-                                startFallbackDirectDownload(url, title)
-                                return@launch
+                                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
                             }
                             cursor.close()
                         } else {
@@ -370,10 +346,10 @@ class MainActivity : AppCompatActivity() {
                         val id = intent.getLongExtra(android.app.DownloadManager.EXTRA_DOWNLOAD_ID, -1)
                         if (id == downloadId) {
                             Logger.d("Update", "Download complete: $id")
-                            val targetFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
-                            val finalPath = if (targetFile.exists()) targetFile.absolutePath else ""
-                            if (finalPath.isNotEmpty()) {
-                                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(finalPath))
+                            val fileUri = downloadManager.getUriForDownloadedFile(id)
+                            if (fileUri != null) {
+                                Logger.d("Update", "Downloaded URI: $fileUri")
+                                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(fileUri.toString()))
                                 viewModel.insertNotification(
                                     "System Update",
                                     "New version downloaded. Ready to install.",
@@ -393,93 +369,12 @@ class MainActivity : AppCompatActivity() {
                 registerReceiver(onComplete, android.content.IntentFilter(android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE))
             }
         } catch (e: Exception) {
-            Logger.e("Update", "Download process error: ${e.message}, falling back to direct download")
-            startFallbackDirectDownload(url, title)
-        }
-    }
-
-    private fun startFallbackDirectDownload(url: String, title: String) {
-        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
-            try {
-                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(0.05f))
-                val targetFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
-                if (targetFile.exists()) targetFile.delete()
-
-                val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
-                connection.instanceFollowRedirects = true
-                connection.connectTimeout = 15000
-                connection.readTimeout = 15000
-                connection.connect()
-
-                var responseCode = connection.responseCode
-                if (responseCode == java.net.HttpURLConnection.HTTP_MOVED_PERM || responseCode == java.net.HttpURLConnection.HTTP_MOVED_TEMP) {
-                    val redirectUrl = connection.getHeaderField("Location")
-                    if (!redirectUrl.isNullOrEmpty()) {
-                        val redirectConn = java.net.URL(redirectUrl).openConnection() as java.net.HttpURLConnection
-                        redirectConn.connectTimeout = 15000
-                        redirectConn.readTimeout = 15000
-                        redirectConn.connect()
-                        streamToFile(redirectConn, targetFile)
-                        return@launch
-                    }
-                }
-                streamToFile(connection, targetFile)
-            } catch (e: Exception) {
-                Logger.e("Update", "Direct download failed: ${e.message}")
-                e.printStackTrace()
-                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
-            }
-        }
-    }
-
-    private suspend fun streamToFile(connection: java.net.HttpURLConnection, targetFile: File) {
-        val totalLength = connection.contentLength
-        val inputStream = connection.inputStream
-        val outputStream = FileOutputStream(targetFile)
-        val buffer = ByteArray(8192)
-        var bytesRead: Int
-        var totalRead = 0L
-
-        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-            outputStream.write(buffer, 0, bytesRead)
-            totalRead += bytesRead
-            if (totalLength > 0) {
-                val progress = (totalRead.toFloat() / totalLength.toFloat()).coerceIn(0.05f, 0.99f)
-                viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloading(progress))
-            }
-        }
-        outputStream.flush()
-        outputStream.close()
-        inputStream.close()
-
-        if (targetFile.exists() && targetFile.length() > 0) {
-            viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Downloaded(targetFile.absolutePath))
-            viewModel.insertNotification(
-                "System Update",
-                "New version downloaded. Ready to install.",
-                "SYSTEM_UPDATE"
-            )
-        } else {
-            viewModel.updateDownloadStatus(SharedViewModel.DownloadStatus.Idle)
-        }
-    }
-
-    private fun isValidApk(file: File): Boolean {
-        if (!file.exists() || file.length() < 100) return false
-        return try {
-            java.io.FileInputStream(file).use { input ->
-                val header = ByteArray(4)
-                val read = input.read(header)
-                read == 4 && header[0] == 0x50.toByte() && header[1] == 0x4B.toByte() && header[2] == 0x03.toByte() && header[3] == 0x04.toByte()
-            }
-        } catch (e: Exception) {
-            false
+            Logger.e("Update", "Download process error: ${e.message}")
         }
     }
 
     private fun installPackage(uriString: String) {
         try {
-            // Check Android 8.0+ unknown apps installation permission
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 if (!packageManager.canRequestPackageInstalls()) {
                     val intent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
@@ -492,51 +387,38 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // Determine target file cleanly from public Downloads directory or passed path
-            val publicFile = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SoniqueUpdate.apk")
-            val file = when {
-                uriString.isNotEmpty() && File(uriString).exists() && File(uriString).length() > 0 -> File(uriString)
-                publicFile.exists() && publicFile.length() > 0 -> publicFile
-                else -> {
-                    val uri = android.net.Uri.parse(uriString)
-                    val path = if (uri.scheme == "file") uri.path else uriString
-                    if (path != null) File(path) else publicFile
+            val uri = android.net.Uri.parse(uriString)
+            val installIntent = Intent(Intent.ACTION_VIEW)
+            
+            if (uri.scheme == "content") {
+                installIntent.setDataAndType(uri, "application/vnd.android.package-archive")
+            } else {
+                val path = if (uri.scheme == "file") uri.path else uriString
+                if (path == null) {
+                    Logger.e("Update", "Invalid path from URI: $uriString")
+                    return
                 }
+                
+                val file = File(path)
+                if (!file.exists()) {
+                    Logger.e("Update", "File not found: $path")
+                    return
+                }
+                
+                val contentUri = FileProvider.getUriForFile(
+                    this,
+                    "${applicationContext.packageName}.update_provider",
+                    file
+                )
+                installIntent.setDataAndType(contentUri, "application/vnd.android.package-archive")
             }
-
-            if (!isValidApk(file)) {
-                Logger.e("Update", "File is not a valid APK package: ${file.absolutePath} (size: ${file.length()})")
-                android.widget.Toast.makeText(this, "Downloaded file is invalid. Opening GitHub Release...", android.widget.Toast.LENGTH_LONG).show()
-                try {
-                    val browserIntent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("https://github.com/07-Ansh/Sonique/releases/latest"))
-                    startActivity(browserIntent)
-                } catch (e: Exception) {}
-                return
-            }
-
-            val contentUri = FileProvider.getUriForFile(
-                this,
-                "${applicationContext.packageName}.update_provider",
-                file
-            )
-
-            val installIntent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(contentUri, "application/vnd.android.package-archive")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-
-            val resInfoList = packageManager.queryIntentActivities(installIntent, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
-            for (resolveInfo in resInfoList) {
-                val pkgName = resolveInfo.activityInfo.packageName
-                grantUriPermission(pkgName, contentUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-
+            
+            installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(installIntent)
         } catch (e: Exception) {
             Logger.e("Update", "Install failed: ${e.message}")
             e.printStackTrace()
-            android.widget.Toast.makeText(this, "Failed to start installer: ${e.message}", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 

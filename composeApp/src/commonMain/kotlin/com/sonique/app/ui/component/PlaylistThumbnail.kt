@@ -227,47 +227,26 @@ fun painterPlaylistThumbnail(
 
 @Composable
 fun painterDownloadedSongsThumbnail(
-    title: String,
+    title: String = "",
     style: TextStyle = typo().bodySmall,
     sizeDp: Pair<Dp, Dp> = 140.dp to 140.dp,
 ): Painter {
     val density = LocalDensity.current
-    val textMeasurer = rememberTextMeasurer()
-    val textLayoutResult =
-        remember(title, style, sizeDp) {
-            textMeasurer.measure(
-                title,
-                style.copy(
-                    color = Color.White,
-                    textAlign = TextAlign.Start,
-                    fontWeight = FontWeight.Bold,
-                ),
-                maxLines = 2,
-                softWrap = true,
-                overflow = TextOverflow.Ellipsis,
-                layoutDirection = LayoutDirection.Ltr,
-                constraints =
-                    Constraints(
-                        maxWidth = with(density) { (sizeDp.first - 32.dp).toPx().toInt() },
-                        maxHeight = with(density) { (sizeDp.second - 32.dp).toPx().toInt() },
-                    ),
-            )
-        }
     val painterRes = painterResource(Res.drawable.download_for_offline_white)
-    return DownloadPlaylistThumbnailPainter(
-        size = Size(
-            width = with(density) { sizeDp.first.toPx() },
-            height = with(density) { sizeDp.second.toPx() },
-        ),
-        textLayoutResult = textLayoutResult,
-        iconPainter = painterRes,
-        cornerRadiusPx = with(density) { 12.dp.toPx() }
-    )
+    return remember(density, sizeDp) {
+        DownloadPlaylistThumbnailPainter(
+            size = Size(
+                width = with(density) { sizeDp.first.toPx() },
+                height = with(density) { sizeDp.second.toPx() },
+            ),
+            iconPainter = painterRes,
+            cornerRadiusPx = with(density) { 12.dp.toPx() }
+        )
+    }
 }
 
 private class DownloadPlaylistThumbnailPainter(
     private val size: Size,
-    private val textLayoutResult: TextLayoutResult,
     private val iconPainter: Painter,
     private val cornerRadiusPx: Float
 ) : Painter() {
@@ -282,29 +261,14 @@ private class DownloadPlaylistThumbnailPainter(
             cornerRadius = CornerRadius(cornerRadiusPx, cornerRadiusPx),
         )
 
-        drawText(
-            textLayoutResult,
-            topLeft = calculateTopLeft(
-                alignment = Alignment.BottomStart,
-                textSize = IntSize(
-                    width = textLayoutResult.size.width,
-                    height = textLayoutResult.size.height,
-                ),
-                containerSize = IntSize(
-                    size.width.toInt(),
-                    size.height.toInt(),
-                ),
-            )
-        )
-
-        val iconSize = size.width * 0.35f
+        val iconSize = size.width * 0.42f
         val centerX = size.width / 2f
-        val centerY = size.height * 0.38f
+        val centerY = size.height / 2f
 
         drawCircle(
             center = Offset(centerX, centerY),
             color = Color.White.copy(alpha = 0.22f),
-            radius = iconSize * 0.65f
+            radius = iconSize * 0.7f
         )
 
         translate(

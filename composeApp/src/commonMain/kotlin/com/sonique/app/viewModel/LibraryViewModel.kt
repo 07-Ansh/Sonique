@@ -49,6 +49,9 @@ import sonique.composeapp.generated.resources.sonique_lyrics
 import sonique.composeapp.generated.resources.your_youtube_playlists
 import sonique.composeapp.generated.resources.youtube_albums
 import sonique.composeapp.generated.resources.mix_for_you
+import sonique.composeapp.generated.resources.updated
+import sonique.composeapp.generated.resources.updated_to_youtube_playlist
+import sonique.composeapp.generated.resources.error
 import com.sonique.domain.extension.now
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED

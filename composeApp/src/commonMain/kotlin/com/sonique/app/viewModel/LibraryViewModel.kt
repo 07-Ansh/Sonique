@@ -283,22 +283,6 @@ class LibraryViewModel(
                 }
                 .collect { merged ->
                     _yourLocalPlaylist.value = LocalResource.Success(merged)
-
-                    // Keep pinned items in sync (user-created local playlists only)
-                    val localOnly = merged.filter { it.youtubePlaylistId == null && it.id != -999L }
-                    val currentPinned = _pinnedItems.value.filter { it.description == "PIN" }.toMutableList()
-                    localOnly.forEach { local ->
-                        currentPinned.add(
-                            PlaylistEntity(
-                                id = local.id.toString(),
-                                title = local.title,
-                                author = "Local Playlist",
-                                description = "LOCAL_PIN",
-                                thumbnails = local.thumbnail ?: ""
-                            )
-                        )
-                    }
-                    _pinnedItems.value = currentPinned
                 }
         }
 

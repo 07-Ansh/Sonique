@@ -169,8 +169,8 @@ actual fun LiquidGlassAppBottomNavigationBar(
         }
     }
 
-    LaunchedEffect(isScrolledToTop) {
-        isExpanded = isScrolledToTop
+    LaunchedEffect(isScrolledToTop, isInSearchDestination) {
+        isExpanded = isScrolledToTop && !isInSearchDestination
     }
 
     fun selectTab(index: Int) {

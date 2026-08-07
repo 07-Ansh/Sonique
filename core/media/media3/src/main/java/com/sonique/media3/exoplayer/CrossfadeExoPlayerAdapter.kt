@@ -1226,9 +1226,16 @@ internal class CrossfadeExoPlayerAdapter(
 
                     val isRetryableSourceError =
                         error.errorCode == PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED ||
-                            error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ||
+                            error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
 
                     val currentVideoId = playlist.getOrNull(localCurrentMediaItemIndex)?.mediaId
+                    if (error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND) {
+                        Logger.w(
+                            TAG,
+                            "Cache disappeared mid-read for $currentVideoId — retrying to resolve a real URL.",
+                        )
+                    }
                     if (isRetryableSourceError && currentVideoId != null) {
                         if (retryVideoId != currentVideoId) {
                             retryVideoId = currentVideoId

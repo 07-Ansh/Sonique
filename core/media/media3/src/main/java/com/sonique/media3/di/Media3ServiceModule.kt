@@ -20,7 +20,9 @@ import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.ResolvingDataSource
+import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.ContentMetadata
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.NoOpCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
@@ -210,6 +212,15 @@ private val mediaServiceModule =
     }
 
 @UnstableApi
+private fun Cache.isFullyCached(
+    key: String,
+    position: Long,
+): Boolean {
+    val total = ContentMetadata.getContentLength(getContentMetadata(key))
+    return total > 0L && position < total && isCached(key, 0L, total)
+}
+
+@UnstableApi
 private fun provideResolvingDataSourceFactory(
     cacheDataSourceFactory: CacheDataSource.Factory,
     downloadCache: SimpleCache,
@@ -223,37 +234,35 @@ private fun provideResolvingDataSourceFactory(
         val mediaId = dataSpec.key ?: error("No media id")
         Logger.w("Stream", mediaId)
         Logger.w("Stream", mediaId.startsWith(MERGING_DATA_TYPE.VIDEO).toString())
-        val length = if (dataSpec.length >= 0) dataSpec.length else 1
-        if (downloadCache.isCached(
-                mediaId,
-                dataSpec.position,
-                length,
-            )
-        ) {
-            coroutineScope.launch(Dispatchers.IO) {
-                streamRepository.updateFormat(
-                    if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                        mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                    } else {
-                        mediaId
-                    },
-                )
+        if (downloadCache.isFullyCached(mediaId, dataSpec.position)) {
+            if (dataSpec.position == 0L) {
+                coroutineScope.launch(Dispatchers.IO) {
+                    streamRepository.updateFormat(
+                        if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
+                            mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
+                        } else {
+                            mediaId
+                        },
+                    )
+                }
             }
             Logger.w("Stream", "Downloaded $mediaId")
-            return@Factory dataSpec
+            return@Factory dataSpec.subrange(dataSpec.uriPositionOffset, chunkLength)
         }
-        val playerCached = playerCache.isCached(mediaId, dataSpec.position, chunkLength)
-        if (playerCached) {
-            coroutineScope.launch(Dispatchers.IO) {
-                streamRepository.updateFormat(
-                    if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                        mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                    } else {
-                        mediaId
-                    },
-                )
+        if (playerCache.isFullyCached(mediaId, dataSpec.position)) {
+            if (dataSpec.position == 0L) {
+                coroutineScope.launch(Dispatchers.IO) {
+                    streamRepository.updateFormat(
+                        if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
+                            mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
+                        } else {
+                            mediaId
+                        },
+                    )
+                }
             }
             Logger.w("Stream", "Cached $mediaId")
+            return@Factory dataSpec.subrange(dataSpec.uriPositionOffset, chunkLength)
         }
         var dataSpecReturn: DataSpec = dataSpec
         var resolved = false

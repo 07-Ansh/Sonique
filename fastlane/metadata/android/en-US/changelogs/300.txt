@@ -1,0 +1,12 @@
+Sonique v3.0.0 — Major Feature Update
+
+• New: Real-time synced lyrics powered by 7-provider fallback engine
+• New: DJ-style audio crossfade with adjustable duration
+• New: Dynamic volume normalization across all songs
+• New: Local playlist creation with rename and delete support
+• New: In-app updater — check for new releases directly from settings
+• New: Liquid Glass UI with Material 3 Expressive design system
+• Improved: Android Auto integration with full library and queue controls
+• Improved: Offline download stability and playback performance
+• Fixed: Newly created local playlists no longer appear in Quick Access
+• Fixed: Mini player and dock correctly collapse in Search screen

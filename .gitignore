@@ -27,6 +27,7 @@ local.properties
 # Log and Text Files
 *.log
 *.txt
+!fastlane/**/*.txt
 
 # Android Studio Navigation editor temp files
 .navigation/

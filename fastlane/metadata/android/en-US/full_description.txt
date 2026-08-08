@@ -1,0 +1,29 @@
+Sonique is a modern, minimal, and ad-free music streaming app for Android, powered by YouTube Music. Built with Jetpack Compose and Kotlin Multiplatform.
+
+<b>Core Music &amp; Playback</b>
+• 100% ad-free streaming with zero audio interruptions
+• Built-in SponsorBlock to automatically skip non-music segments and intros
+• Seamless background playback with screen-off support
+• Smart audio crossfade for gap-free listening between tracks
+• Dynamic volume normalization across all songs
+• Offline downloads for songs, albums, and full playlists
+
+<b>Synced Lyrics</b>
+• Real-time line-by-line synchronized lyrics powered by 7 providers (LyricsPlus, LRCLIB, KuGou, BetterLyrics, Paxsenix, and YouTube)
+• Tap any lyric line to jump playback to that exact moment
+
+<b>Library &amp; Playlist Management</b>
+• Create, rename, and organize custom local playlists on your device
+• Optional YouTube Music sign-in to sync existing playlists, favorites, and mixes
+
+<b>Connected &amp; Smart Features</b>
+• Full Android Auto integration for in-car listening
+• Bedtime sleep timer with automatic playback pause
+• One-tap in-app updates directly from the app settings
+• Multi-language support for 25+ languages
+
+<b>Privacy &amp; Control</b>
+• Zero analytics, no trackers, no third-party telemetry
+• All data stored locally on your device
+• Optional opt-in listening history sync with YouTube Music
+• Content filtering to skip off-topic music segments

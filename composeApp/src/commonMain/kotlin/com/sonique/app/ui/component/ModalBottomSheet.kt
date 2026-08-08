@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.component
+package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -11,6 +11,8 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.MarqueeAnimationMode
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -198,6 +200,7 @@ import sonique.composeapp.generated.resources.edit_thumbnail
 import sonique.composeapp.generated.resources.edit_title
 import sonique.composeapp.generated.resources.endless_queue
 import sonique.composeapp.generated.resources.error_occurred
+import sonique.composeapp.generated.resources.extract_source
 import sonique.composeapp.generated.resources.holder
 import sonique.composeapp.generated.resources.itag
 import sonique.composeapp.generated.resources.like
@@ -285,6 +288,7 @@ fun InfoPlayerBottomSheet(
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
     val songEntity by sharedViewModel.nowPlayingState.map { it?.songEntity }.collectAsState(null)
     val format by sharedViewModel.format.collectAsState(null)
+    val extractSource by sharedViewModel.extractSource.collectAsState()
     val downloadProgress by sharedViewModel.downloadFileProgress.collectAsStateWithLifecycle()
 
     if (downloadProgress != DownloadProgress.INIT) {
@@ -632,6 +636,31 @@ fun InfoPlayerBottomSheet(
                         Modifier
                             .fillMaxWidth()
                             .wrapContentHeight(align = Alignment.CenterVertically).focusable()
+                            .padding(horizontal = 10.dp),
+                    style = typo().bodyMedium,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(Res.string.extract_source),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                    textAlign = TextAlign.Center,
+                    style = typo().labelMedium,
+                    color = white,
+                )
+                Text(
+                    text = extractSource ?: stringResource(Res.string.unknown),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(align = Alignment.CenterVertically)
+                            .basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                animationMode = MarqueeAnimationMode.Immediately,
+                            ).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,

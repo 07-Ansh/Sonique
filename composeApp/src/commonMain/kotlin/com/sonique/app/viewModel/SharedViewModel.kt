@@ -136,6 +136,9 @@ class SharedViewModel(
     private var _format: MutableStateFlow<NewFormatEntity?> = MutableStateFlow(null)
     val format: SharedFlow<NewFormatEntity?> = _format.asSharedFlow()
 
+    private val _extractSource: MutableStateFlow<String?> = MutableStateFlow(null)
+    val extractSource: StateFlow<String?> = _extractSource.asStateFlow()
+
     private var _canvas: MutableStateFlow<CanvasResult?> = MutableStateFlow(null)
     val canvas: StateFlow<CanvasResult?> = _canvas
 
@@ -970,6 +973,7 @@ class SharedViewModel(
     private fun getFormat(mediaId: String?) {
         if (mediaId != _format.value?.videoId && !mediaId.isNullOrEmpty()) {
             _format.value = null
+            _extractSource.value = streamRepository.getExtractSource(mediaId)
             getFormatFlowJob?.cancel()
             getFormatFlowJob =
                 viewModelScope.launch {
@@ -980,6 +984,7 @@ class SharedViewModel(
                         } else {
                             _format.emit(null)
                         }
+                        _extractSource.value = streamRepository.getExtractSource(mediaId)
                     }
                 }
         }

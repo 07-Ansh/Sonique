@@ -380,4 +380,5 @@
     <string name="top_artists">Top artists</string>
     <string name="created_at">Created at %1$s</string>
     <string name="shuffle_not_available">Shuffle endpoint is not available</string>
+    <string name="extract_source">Extraction Source</string>
 </resources>

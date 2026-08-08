@@ -1,0 +1,14 @@
+Sonique v3.0.0 — Major Update! 🎉
+
+✨ What's New:
+• Seamless Audio Playback: Overhauled player engine for smooth, continuous, gapless music playback without interruptions.
+• Smart Audio Controls: Added DJ-style track crossfading and automatic volume balancing across quiet and loud songs.
+• Synced Lyrics: Real-time, line-by-line synchronized lyrics with interactive seeking — tap any line to jump right to it.
+• Dedicated Albums & Playlists: Brand new Albums section in your library, plus full support for creating, renaming, and managing offline playlists.
+• Android Auto: Access your recently played tracks directly from your car's dashboard with full steering wheel controls.
+
+⚡ Improvements & Fixes:
+• Fixed playback stopping randomly between songs for a completely uninterrupted listening experience.
+• Fixed mini-player and bottom navigation dock behavior on the Search screen.
+• Enhanced in-app updater screen with download troubleshooting guides.
+• Improved offline downloads stability and overall app speed.

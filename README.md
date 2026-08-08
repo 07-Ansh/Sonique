@@ -22,11 +22,11 @@
 <div align="center">
 
 <a href="https://github.com/07-Ansh/Sonique/releases/latest">
-  <img src="https://img.shields.io/badge/Get_it_on-GitHub-24292E?style=for-the-badge&logo=github&logoColor=white&labelColor=1E293B" height="44" alt="Get it on GitHub">
+  <img src="https://img.shields.io/badge/Download_Latest_APK-v3.0.0-2563EB?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Download APK">
 </a>
-&nbsp;&nbsp;
+&nbsp;
 <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/07-Ansh/Sonique">
-  <img src="https://img.shields.io/badge/Get_it_on-Obtainium-10B981?style=for-the-badge&logo=android&logoColor=white&labelColor=1E293B" height="44" alt="Get it on Obtainium">
+  <img src="https://img.shields.io/badge/Add_to_Obtainium-Direct_Updates-10B981?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Add to Obtainium">
 </a>
 
 </div>
@@ -185,6 +185,24 @@ See [LICENSE](LICENSE) file for full details.
 - **[InnerTune](https://github.com/z-huang/InnerTune/)** — Architecture and inspiration
 - **[LRCLIB](https://lrclib.net/)** — Synced lyrics database
 - **[SponsorBlock](https://sponsor.ajay.app/)** — Sponsored segment database
+
+---
+
+## 👨‍💻 Author & Developer
+
+**Sonique** is designed, developed, and maintained with ❤️ by **[Ansh Sharma](https://github.com/07-Ansh)**.
+
+<div align="center">
+
+<a href="https://github.com/07-Ansh">
+  <img src="https://img.shields.io/badge/Developer-Ansh_Sharma-181717?style=for-the-badge&logo=github&logoColor=white" height="46" alt="Developer Ansh Sharma">
+</a>
+&nbsp;
+<a href="https://github.com/07-Ansh">
+  <img src="https://img.shields.io/github/followers/07-Ansh?style=for-the-badge&label=Follow%20%4007-Ansh&color=2563EB" height="46" alt="Follow @07-Ansh">
+</a>
+
+</div>
 
 ---
 

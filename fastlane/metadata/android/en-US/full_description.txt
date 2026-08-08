@@ -22,3 +22,7 @@ Sonique is a modern, ad-free music player built with Material 3 design, offering
 <b>Privacy &amp; Control</b>
 • Zero analytics, telemetry, or user tracking.
 • Local-first data architecture for privacy.
+
+<b>Developer &amp; Credits</b>
+Created and maintained by Ansh Sharma (@07-Ansh).
+

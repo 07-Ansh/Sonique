@@ -25,7 +25,7 @@
   <img src="https://img.shields.io/badge/Download_Latest_APK-v3.0.0-2563EB?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Download APK">
 </a>
 &nbsp;
-<a href="https://apps.obtainium.imranr98.me/add?r=https://github.com/07-Ansh/Sonique">
+<a href="obtainium://app/https://github.com/07-Ansh/Sonique">
   <img src="https://img.shields.io/badge/Add_to_Obtainium-Direct_Updates-10B981?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Add to Obtainium">
 </a>
 

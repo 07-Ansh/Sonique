@@ -22,11 +22,11 @@
 <div align="center">
 
 <a href="https://github.com/07-Ansh/Sonique/releases/latest">
-  <img src="https://img.shields.io/badge/Download_Latest_APK-v3.0.0-2563EB?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Download APK">
+  <img src="https://img.shields.io/badge/Get_it_on-GitHub-24292E?style=for-the-badge&logo=github&logoColor=white&labelColor=1E293B" height="44" alt="Get it on GitHub">
 </a>
-&nbsp;
+&nbsp;&nbsp;
 <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/07-Ansh/Sonique">
-  <img src="https://img.shields.io/badge/Add_to_Obtainium-Direct_Updates-10B981?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Add to Obtainium">
+  <img src="https://img.shields.io/badge/Get_it_on-Obtainium-10B981?style=for-the-badge&logo=android&logoColor=white&labelColor=1E293B" height="44" alt="Get it on Obtainium">
 </a>
 
 </div>

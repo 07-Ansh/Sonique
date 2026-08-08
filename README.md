@@ -49,9 +49,9 @@
 | | |
 | :---: | :---: |
 | <img src="asset/Sonique-Graphics/Home&player.png" width="400" alt="Home & Player"> | <img src="asset/Sonique-Graphics/player&lyrics.png" width="400" alt="Player & Synced Lyrics"> |
-| **Home & Mini Player** | **Now Playing & Synced Lyrics** |
-| <img src="asset/Sonique-Graphics/Album&Search.png" width="400" alt="Albums & Search"> | <img src="asset/Sonique-Graphics/Mix.png" width="400" alt="Mix For You"> |
-| **Albums & Search View** | **Mix For You** |
+| **Home & Now Playing** | **Now Playing Canvas & Synced Lyrics** |
+| <img src="asset/Sonique-Graphics/Mix.png" width="400" alt="Mix For You"> | <img src="asset/Sonique-Graphics/Album&Search.png" width="400" alt="Albums & Search"> |
+| **Mix For You** | **Albums & Search View** |
 | <img src="asset/Sonique-Graphics/Home.png" width="400" alt="Home Screen"> | <img src="asset/Sonique-Graphics/Player.png" width="400" alt="Player Screen"> |
 | **Home Dashboard** | **Player Controls** |
 | <img src="asset/Sonique-Graphics/Search.png" width="400" alt="Search Screen"> | <img src="asset/Sonique-Graphics/Library.png" width="400" alt="Library View"> |

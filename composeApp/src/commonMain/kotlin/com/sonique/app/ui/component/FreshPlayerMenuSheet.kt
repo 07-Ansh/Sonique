@@ -28,6 +28,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -86,14 +89,23 @@ fun FreshPlayerMenuSheet(
         }
     }
 
+    val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
+    val activeSong = song ?: nowPlayingState?.songEntity
+
+    LaunchedEffect(activeSong) {
+        activeSong?.let { songEntity ->
+            viewModel.setSongEntity(songEntity)
+        }
+    }
+
     val extractedArtworkColor = paletteState.palette?.getColorFromPalette()
 
     val songUIState = uiState.songUIState
-    val isLiked = songUIState.liked
-    val songTitle = song?.title ?: songUIState.title
-    val artistName = song?.artistName?.joinToString(", ") ?: songUIState.listArtists.joinToString(", ") { it.name }
-    val thumbnailUrl = song?.thumbnails ?: songUIState.thumbnails ?: ""
-    val videoId = song?.videoId ?: songUIState.videoId
+    val isLiked = songUIState.liked || activeSong?.liked == true
+    val songTitle = activeSong?.title ?: songUIState.title
+    val artistName = activeSong?.artistName?.joinToString(", ") ?: songUIState.listArtists.joinToString(", ") { it.name }
+    val thumbnailUrl = activeSong?.thumbnails ?: songUIState.thumbnails ?: ""
+    val videoId = activeSong?.videoId ?: songUIState.videoId
 
     val defaultSheetBg = extractedArtworkColor?.copy(alpha = 0.92f) ?: MaterialTheme.colorScheme.surfaceContainerHigh
     val finalBg = backgroundColor ?: defaultSheetBg
@@ -107,6 +119,43 @@ fun FreshPlayerMenuSheet(
         animationSpec = tween(300),
         label = "sheetBg"
     )
+
+    val targetArtistId = songUIState.listArtists.firstOrNull()?.id ?: song?.artistId?.firstOrNull()
+    val targetAlbumId = songUIState.album?.id ?: song?.albumId
+
+    var showAddToPlaylistSheet by remember { mutableStateOf(false) }
+
+    if (showAddToPlaylistSheet) {
+        AddToPlaylistModalBottomSheet(
+            isBottomSheetVisible = true,
+            listLocalPlaylist = uiState.listLocalPlaylist,
+            listYouTubePlaylist = uiState.listYouTubePlaylist,
+            videoId = videoId,
+            onDismiss = { showAddToPlaylistSheet = false },
+            onClick = { localPlaylist ->
+                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.AddToPlaylist(localPlaylist.id))
+                showAddToPlaylistSheet = false
+                onDismiss()
+            },
+            onYTPlaylistClick = { ytPlaylist ->
+                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.AddToYouTubePlaylist(ytPlaylist.browseId))
+                showAddToPlaylistSheet = false
+                onDismiss()
+            }
+        )
+    }
+
+    var showArtistPickerSheet by remember { mutableStateOf(false) }
+
+    if (showArtistPickerSheet && songUIState.listArtists.isNotEmpty()) {
+        ArtistModalBottomSheet(
+            isBottomSheetVisible = true,
+            artists = songUIState.listArtists,
+            navController = navController,
+            onDismiss = { showArtistPickerSheet = false },
+            onNavigateToOtherScreen = onDismiss
+        )
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -164,45 +213,11 @@ fun FreshPlayerMenuSheet(
                 }
             }
 
-            // Quick Actions Grid (translucent dynamic artwork cards)
+            // Quick Actions Grid (4 clean actions for currently playing track)
             item {
                 Spacer(modifier = Modifier.height(12.dp))
                 NewActionGrid(
                     actions = listOf(
-                        NewAction(
-                            icon = {
-                                Icon(
-                                    painter = painterResource(Res.drawable.baseline_queue_music_24),
-                                    contentDescription = null,
-                                    tint = finalContent,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            },
-                            text = "Play Next",
-                            backgroundColor = cardBg,
-                            contentColor = finalContent,
-                            onClick = {
-                                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.PlayNext)
-                                onDismiss()
-                            }
-                        ),
-                        NewAction(
-                            icon = {
-                                Icon(
-                                    painter = painterResource(Res.drawable.baseline_playlist_add_24),
-                                    contentDescription = null,
-                                    tint = finalContent,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            },
-                            text = "Add to Queue",
-                            backgroundColor = cardBg,
-                            contentColor = finalContent,
-                            onClick = {
-                                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.AddToQueue)
-                                onDismiss()
-                            }
-                        ),
                         NewAction(
                             icon = {
                                 Icon(
@@ -273,7 +288,7 @@ fun FreshPlayerMenuSheet(
                             }
                         )
                     ),
-                    columns = 3,
+                    columns = 4,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
@@ -295,13 +310,13 @@ fun FreshPlayerMenuSheet(
                         title = { Text("Add to playlist", color = finalContent) },
                         cardColors = androidx.compose.material3.CardDefaults.cardColors(containerColor = cardBg),
                         onClick = {
-                            viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.AddToPlaylist(0L))
-                            onDismiss()
+                            showAddToPlaylistSheet = true
                         }
                     )
                 )
 
-                songUIState.listArtists.firstOrNull()?.id?.let { artistId ->
+                val artistsList = songUIState.listArtists
+                if (targetArtistId != null || artistsList.isNotEmpty()) {
                     menuItems.add(
                         Material3MenuItemData(
                             icon = {
@@ -315,14 +330,18 @@ fun FreshPlayerMenuSheet(
                             title = { Text("Go to artist", color = finalContent) },
                             cardColors = androidx.compose.material3.CardDefaults.cardColors(containerColor = cardBg),
                             onClick = {
-                                navController.navigate(ArtistDestination(artistId))
-                                onDismiss()
+                                if (artistsList.size > 1) {
+                                    showArtistPickerSheet = true
+                                } else if (targetArtistId != null) {
+                                    navController.navigate(ArtistDestination(targetArtistId))
+                                    onDismiss()
+                                }
                             }
                         )
                     )
                 }
 
-                songUIState.album?.id?.let { albumId ->
+                targetAlbumId?.let { albumId ->
                     menuItems.add(
                         Material3MenuItemData(
                             icon = {

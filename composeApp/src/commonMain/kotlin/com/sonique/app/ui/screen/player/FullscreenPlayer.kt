@@ -78,13 +78,16 @@ import com.sonique.common.Config.MAIN_PLAYER
 import com.sonique.app.expect.ui.MediaPlayerViewWithSubtitle
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.extension.rememberIsInPipMode
+import com.sonique.app.ui.component.FreshPlayerMenuSheet
 import com.sonique.app.ui.component.NowPlayingBottomSheet
 import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.overlay
 import com.sonique.app.ui.theme.typo
+import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
+import org.koin.compose.viewmodel.koinViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
@@ -120,6 +123,7 @@ fun FullscreenPlayer(
     )
 
     val nowPlayingState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
+    val trackState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
 
@@ -747,11 +751,14 @@ fun FullscreenPlayer(
                 }
             }
             if (showBottom) {
-                NowPlayingBottomSheet(
+                val nowPlayingBottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
+                FreshPlayerMenuSheet(
                     onDismiss = { showBottom = false },
                     navController = navController,
-                    setSleepTimerEnable = true,
-                    song = null,
+                    song = trackState?.songEntity,
+                    viewModel = nowPlayingBottomSheetViewModel,
+                    backgroundColor = Color(0xFF1C1B1F).copy(alpha = 0.95f),
+                    contentColor = Color.White
                 )
             }
         }

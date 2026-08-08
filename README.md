@@ -24,6 +24,10 @@
 <a href="https://github.com/07-Ansh/Sonique/releases/latest">
   <img src="https://img.shields.io/badge/Download_Latest_APK-v3.0.0-2563EB?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Download APK">
 </a>
+&nbsp;
+<a href="obtainium://app/https://github.com/07-Ansh/Sonique">
+  <img src="https://img.shields.io/badge/Add_to_Obtainium-Direct_Updates-10B981?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Add to Obtainium">
+</a>
 
 </div>
 
@@ -33,8 +37,8 @@
 - **Universal APK** (compatible with ARM64, ARMv7, x86, and x86_64 devices)
 
 ### **Installation**
-1. Download the latest **`Sonique-v3.0.0.apk`** from [GitHub Releases](https://github.com/07-Ansh/Sonique/releases/latest)
-2. Tap the downloaded file to install and enjoy ad-free music! 🎵
+- **Option A (Direct APK)**: Download the latest **`Sonique-v3.0.0.apk`** from [GitHub Releases](https://github.com/07-Ansh/Sonique/releases/latest) and tap to install.
+- **Option B (Auto-Updates via Obtainium)**: Open [Obtainium](https://github.com/ImranR98/Obtainium) on your phone and tap **Add to Obtainium** above for seamless automatic updates directly from GitHub.
 
 ---
 

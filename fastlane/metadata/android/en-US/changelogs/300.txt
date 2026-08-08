@@ -1,14 +1,14 @@
-Sonique v3.0.0
+Sonique v3.0.0 — Major Update! 🎉
 
-What's New:
-• Audio Engine: Redesigned player architecture for smooth, uninterrupted music playback, featuring smart DJ crossfade, dynamic volume normalization, and Media3 1.10.1 backend updates.
-• Library & Albums: Dedicated Albums tab with a 3-column ambient grid view, custom local playlist creation, rename/delete capabilities, and Downloaded Songs quick access.
-• Android Auto: Added Recents tab to car dashboard, improved MediaSession steering wheel controls, and full queue browsing.
-• In-App Updates: Direct release checking, changelog preview, and APK downloading directly within settings.
-• Design & UX: Material 3 Expressive components, dynamic Download artwork tiles, and spring physics press micro-animations.
+✨ What's New:
+• Seamless Audio Playback: Overhauled player engine for smooth, continuous, gapless music playback without interruptions.
+• Smart Audio Controls: Added DJ-style track crossfading and automatic volume balancing across quiet and loud songs.
+• Synced Lyrics: Real-time, line-by-line synchronized lyrics with interactive seeking — tap any line to jump right to it.
+• Dedicated Albums & Playlists: Brand new Albums section in your library, plus full support for creating, renaming, and managing offline playlists.
+• Android Auto: Access your recently played tracks directly from your car's dashboard with full steering wheel controls.
+• Built-In App Updates: Check for new releases and update Sonique directly from the app settings.
 
-Fixes & Performance:
-• Fixed media service scope cancellation bugs to prevent playback interruptions between tracks.
-• Fixed mini player and dock collapse behavior on Search screen.
-• Fixed local playlist filtering and Quick Access state sync.
-• Optimized release builds with R8 minification, resource shrinking, and ABI splits.
+⚡ Improvements & Fixes:
+• Fixed playback stopping randomly between songs for a completely uninterrupted listening experience.
+• Fixed mini-player and bottom navigation dock behavior on the Search screen.
+• Improved offline downloads stability and overall app speed.

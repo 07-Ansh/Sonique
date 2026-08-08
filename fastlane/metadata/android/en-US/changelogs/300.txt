@@ -1,9 +1,13 @@
 Sonique v3.0.0
 
-• Added multi-engine real-time synchronized lyrics
-• Added audio crossfade and dynamic volume normalization
-• Added local playlist creation and management
-• Added in-app updater for direct release checks
-• Improved Android Auto integration and playback performance
-• Updated UI with Material 3 Expressive design system
-• Fixed dock collapse in Search screen
+What's New:
+• Library & Albums: Dedicated Albums tab with a 3-column ambient grid view, custom local playlist creation, rename/delete capabilities, and Downloaded Songs quick access.
+• Audio Engine: Smart DJ crossfade with configurable duration, dynamic audio volume normalization, and Media3 1.10.1 backend update.
+• Android Auto: Added Recents tab to car dashboard, improved MediaSession steering wheel controls, and full queue browsing.
+• In-App Updates: Direct release checking, changelog preview, and APK downloading directly within settings.
+• Design & UX: Material 3 Expressive components, dynamic Download artwork tiles, and spring physics press micro-animations.
+
+Fixes & Performance:
+• Fixed mini player and dock collapse behavior on Search screen.
+• Fixed local playlist filtering and Quick Access state sync.
+• Optimized release builds with R8 minification, resource shrinking, and ABI splits.

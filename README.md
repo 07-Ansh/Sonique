@@ -1,19 +1,57 @@
 # Sonique
 
-![Sonique Banner](asset/Sonique-Graphic-main.png)
+![Sonique Banner](asset/Banner.png)
 
 <div align="center">
 
-**A powerful, minimal, and ad-free YouTube Music client for Android**
+**A powerful, minimal, and ad-free music streaming experience for Android**
 
-[![Version](https://img.shields.io/badge/version-1.0.1-blue.svg)](https://github.com/07-Ansh/Sonique)
+[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/07-Ansh/Sonique/releases/latest)
 [![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-purple.svg)](https://kotlinlang.org/)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.10.0-orange.svg)](https://developer.android.com/jetpack/compose)
 
-Built with **Jetpack Compose** and **Kotlin Multiplatform** for a premium music streaming experience
+[Download](#-download) • [Screenshots](#-screenshots) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Architecture](#-architecture) • [Legal](#%EF%B8%8F-legal-disclaimer--compliance) • [Support](#-support-the-project)
 
-[Features](#-features) • [Tech Stack](#-tech-stack) • [Architecture](#-architecture) • [Download](#-download) • [Building](#-building-from-source)
+</div>
+
+---
+
+## 📥 Download
+
+<div align="center">
+
+<a href="https://github.com/07-Ansh/Sonique/releases/latest">
+  <img src="https://img.shields.io/badge/Download_Latest_APK-v3.0.0-2563EB?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Download APK">
+</a>
+
+</div>
+
+### **Requirements**
+- **Android 8.0 (API 26)** or higher
+- **~37MB** storage space
+- **Universal APK** (compatible with ARM64, ARMv7, x86, and x86_64 devices)
+
+### **Installation**
+1. Download the latest **`Sonique-v3.0.0.apk`** from [GitHub Releases](https://github.com/07-Ansh/Sonique/releases/latest)
+2. Tap the downloaded file to install and enjoy ad-free music! 🎵
+
+---
+
+## 📸 Screenshots
+
+<div align="center">
+
+| | |
+| :---: | :---: |
+| <img src="asset/Sonique-Graphics/Home&player.png" width="400" alt="Home & Player"> | <img src="asset/Sonique-Graphics/player&lyrics.png" width="400" alt="Player & Synced Lyrics"> |
+| **Home & Mini Player** | **Now Playing & Synced Lyrics** |
+| <img src="asset/Sonique-Graphics/Album&Search.png" width="400" alt="Albums & Search"> | <img src="asset/Sonique-Graphics/Mix.png" width="400" alt="Mix For You"> |
+| **Albums & Search View** | **Mix For You** |
+| <img src="asset/Sonique-Graphics/Home.png" width="400" alt="Home Screen"> | <img src="asset/Sonique-Graphics/Player.png" width="400" alt="Player Screen"> |
+| **Home Dashboard** | **Player Controls** |
+| <img src="asset/Sonique-Graphics/Search.png" width="400" alt="Search Screen"> | <img src="asset/Sonique-Graphics/Library.png" width="400" alt="Library View"> |
+| **Music Search** | **Music Library** |
 
 </div>
 
@@ -21,36 +59,34 @@ Built with **Jetpack Compose** and **Kotlin Multiplatform** for a premium music 
 
 ## ✨ Features
 
-### 🎵 **Core Music Features**
-- **🚫 Ad-Free Experience** - Enjoy uninterrupted music without any advertisements
-- **🎧 Background Playback** - Continue listening while using other apps or with screen off
-- **📥 Offline Downloads** - Save songs and playlists for offline listening
-- **🎬 Video Mode** - Toggle between high-quality audio and 1080p music videos
-- **📜 Synced Lyrics** - Real-time lyrics from multiple sources (YouTube, Spotify, LRCLIB)
-- **🎼 Queue Management** - Smart playlist and queue controls
+### 🎵 **Core Music & Playback**
+- **🚫 100% Ad-Free Streaming** — Enjoy completely uninterrupted music with zero ads or audio breaks
+- **🔒 Built-in SponsorBlock** — Automatically skips non-music intros, promotional talk, and silent outros
+- **🎧 Seamless Background Playback** — Keep listening while using other apps or with your screen turned off
+- **🎚️ Smart Audio Crossfade** — Smoothly blend tracks together without abrupt silence between songs
+- **🔊 Dynamic Volume Normalizer** — Automatically balances audio levels so quiet and loud songs match
+- **📥 Offline Downloads** — Save your favorite songs, full albums, and playlists directly to your device
 
-### 🎨 **User Interface**
-- **Dynamic Material You Design** - Adaptive theming based on album artwork
-- **Tablet Support** - Optimized UI for tablets with navigation rail
-- **Landscape Mode** - Seamless experience in all orientations
-- **Mini Player** - Swipeable compact player with drag gestures
-- **Dark Mode** - Beautiful dark theme optimized for OLED displays
+### 📜 **Synced Lyrics**
+- **🎤 Real-Time Synced Lyrics** — Sing along with live, line-by-line synchronized lyrics powered by 7 engines (**LyricsPlus, LRCLIB, KuGou, BetterLyrics, Paxsenix, and YouTube**)
+- **👆 Interactive Seeking** — Tap on any lyric line to jump playback directly to that exact moment
 
-### 📊 **Advanced Features**
-- **Music Analytics** - Track listening habits and most played tracks
-- **🚗 Android Auto** - Full Android Auto integration for in-car usage
-- **🌚 Sleep Timer** - Built-in timer to automatically stop playback
-- **🔒 SponsorBlock Integration** - Skip sponsored segments automatically
-- **📱 Home Screen Widget** - Control playback from your home screen
-- **🌐 Multi-Language** - Support for 25+ languages
+### 📂 **Library & Playlist Management**
+- **➕ Local Playlist Creator** — Create custom offline playlists on your device anytime
+- **✏️ Rename & Organize** — Easily rename, reorganize, or delete local playlists with a simple long-press
+- **🔄 YouTube Music Sync** — Optional sign-in to sync your existing YouTube Music playlists, favorites, and mixes
+
+### 🚗 **Connected & Smart Features**
+- **🚗 Full Android Auto Support** — Access your recently played tracks, playlists, and downloads on your car's dashboard with steering wheel controls
+- **🌚 Bedtime Sleep Timer** — Set an automatic timer to pause playback gently when you fall asleep
+- **🔄 One-Tap In-App Updates** — Check for new releases, view changelogs, and update directly from within the app
+- **🌐 Multi-Language Support** — Available in 25+ languages
 
 ### 🔐 **Privacy & Control**
-- **Zero Trackers** - No analytics or third-party tracking
-- **Local-First Storage** - All data stored locally on your device
-- **Optional Google Sync** - Opt-in listening history sync with YouTube Music
-- **Content Filtering** - Skip "Music Off-topic" segments
-
-> **⚠️ Note:** This app uses undocumented YouTube Music APIs. While generally stable, occasional playback issues may occur due to API changes.
+- **🛡️ Zero Trackers** — No analytics or third-party tracking
+- **💾 Local-First Storage** — All data stored locally on your device
+- **🔄 Optional Google Sync** — Opt-in listening history sync with YouTube Music
+- **🎯 Content Filtering** — Skip "Music Off-topic" segments
 
 ---
 
@@ -59,163 +95,56 @@ Built with **Jetpack Compose** and **Kotlin Multiplatform** for a premium music 
 ### **Core Technologies**
 
 | Component | Technology | Version |
-|-----------|-----------|---------|
+|---|---|---|
 | 🎨 **UI Framework** | Jetpack Compose Multiplatform | 1.10.0 |
 | 💜 **Language** | Kotlin | 2.2.21 |
-| 🎭 **Material Design** | Material 3 | 1.10.0 |
-| 🏗️ **Architecture** | MVVM / MVI | - |
+| 🎭 **Material Design** | Material 3 & Expressive | 1.10.0 |
+| 🏗️ **Architecture** | Clean Architecture (MVVM / MVI) | - |
 | 💉 **Dependency Injection** | Koin | 4.1.1 |
 | 🧭 **Navigation** | Navigation Compose | 2.9.1 |
 
 ### **Media & Networking**
-
-- **🎵 Media Playback:** Media3/ExoPlayer 1.8.0
-- **🌐 HTTP Client:** Ktor 3.3.3
+- **🎵 Media Playback:** AndroidX Media3 / ExoPlayer 1.10.1
+- **🌐 HTTP Client:** Ktor 3.3.3 & OkHttp 5.3.2
 - **🖼️ Image Loading:** Coil 3.3.0
-- **🎥 Video Extraction:** ytdlp-android 0.18.1
-- **🔊 Audio Processing:** FFmpeg Kit Audio 6.0.1
-
-### **Data & Storage**
-
-- **💾 Database:** Room 2.8.4
-- **⚙️ Preferences:** DataStore 1.2.0
-- **📄 Pagination:** Paging 3 (3.4.0)
-- **🔄 Serialization:** Kotlinx Serialization
-
-### **UI Enhancements**
-
-- **🎨 Color Extraction:** KMPalette 3.1.0
-- **✨ Animations:** Compottie (Lottie) 2.0.2
-- **🌫️ Blur Effects:** Haze 1.7.1
-- **📊 Markdown:** Multiplatform Markdown Renderer
+- **🎥 Media Extraction:** NewPipe Extractor & ytdlp-android 0.18.1
+- **🔊 Audio Processing:** FFmpeg Kit Audio 6.0.1 & Custom Crossfade Adapter
 
 ---
 
 ## 🏗️ Architecture
 
-**Architecture Pattern:** **MVVM (Model-View-ViewModel)** with elements of **MVI (Model-View-Intent)**
-- **Views:** Jetpack Compose screens and components
-- **ViewModels:** State management with Kotlin StateFlows
-- **Models:** Domain entities and data transfer objects
-- **Repository Pattern:** Data layer abstraction
-
-### **Module Structure**
-
-Sonique follows **Clean Architecture** principles with a multi-module structure:
+Sonique follows **Clean Architecture** principles with a modular structure:
 
 ```
 sonique/
-├── composeApp/          # Main Android app with UI
+├── composeApp/          # Android app UI, screens, navigation & ViewModels
 ├── core/
-│   ├── common/          # Shared utilities
-│   ├── data/            # Repository implementations
-│   ├── domain/          # Business logic & use cases
-│   ├── media/           # Media3 integration
-│   └── service/         # External service integrations
-│       ├── ktorExt/     # Ktor extensions
-│       ├── kotlinYtmusicScraper/  # YouTube Music API
-│       ├── spotify/     # Spotify integration
-│       └── lyricsService/  # Lyrics fetching
-└── MediaServiceCore/    # Shared media service modules
+│   ├── common/          # Shared models, constants & cross-cutting utilities
+│   ├── data/            # Room KMP database, DataStore & multi-source repositories
+│   ├── domain/          # Business logic, entities & reactive use-cases
+│   ├── media/           # Media3 ExoPlayer, Crossfade Adapter & Audio Session
+│   └── service/         # YouTube scraper, 7-Tier Lyrics Engine & external APIs
+└── MediaServiceCore/    # Low-level audio streaming modules & Android Auto services
 ```
-
-### **Design Patterns**
-- **MVVM/MVI:** Unidirectional data flow with ViewModels
-- **Repository Pattern:** Abstract data sources
-- **Dependency Injection:** Koin for loose coupling
-- **Clean Architecture:** Separation of concerns across layers
-
----
-
-## 📊 Data Sources
-
-### **Music Streaming**
-- **YouTube Music** (Undocumented APIs) - Primary music source
-- **NewPipe Extractor** - YouTube data extraction
-- **SmartTube** techniques - Streaming URL extraction
-
-### **Lyrics & Metadata**
-- **YouTube Music** - Official lyrics when available
-- **Spotify Web API** - Canvas animations and lyrics
-- **LRCLIB** - Synced lyrics database
-
-### **Enhancements**
-- **SponsorBlock** - Skip sponsored video segments
-- **Return YouTube Dislike** - Community voting data
-
-> 💡 **Credits:** Inspired by [InnerTune](https://github.com/z-huang/InnerTune/) and [SmartTube](https://github.com/yuliskov/SmartTube)
-
----
-
-## 🔒 Privacy Policy
-
-**Your privacy matters.**
-
-- ✅ **No tracking or analytics** - Zero telemetry
-- ✅ **No ads or ad networks** - Completely ad-free
-- ✅ **Local data storage** - Everything stored on device
-- ✅ **Open source** - Transparent codebase
-- ⚙️ **Optional YouTube sync** - Opt-in listening history (helps recommendations)
-
-When "Send back to Google" is enabled, Sonique uses the official YouTube Music API to sync playback history, supporting artists and improving recommendations.
-
----
-
-## 📥 Download
-
-### **Requirements**
-- **Android 8.0 (API 26)** or higher
-- **~50MB** storage space
-- **Internet connection** for streaming
-
-### **Installation**
-1. Download the latest APK from [Releases](../../releases)
-2. Enable "Install from Unknown Sources" in Android settings
-3. Install the APK
-4. Enjoy ad-free music! 🎵
-
-> **Note:** This app is not available on Google Play Store due to its nature of bypassing YouTube Music's official client.
-
----
-
-## 🛠️ Building from Source
-
-### **Prerequisites**
-```bash
-- Android Studio Ladybug or later
-- JDK 17
-- Android SDK 36
-- Kotlin 2.2.21
-```
-
-### **Build Variants**
-- **Debug:** Development build with logging (`app-debug.apk`)
-- **Release:** Optimized production build with ProGuard
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here's how you can help:
+Contributions are welcome! Here is how you can help:
 
-1. 🐛 **Report Bugs** - Open an issue with detailed reproduction steps
-2. 💡 **Suggest Features** - Share your ideas in discussions
-3. 🔧 **Submit PRs** - Fix bugs or implement features
-4. 📖 **Improve Docs** - Help with documentation
-5. 🌐 **Translations** - Add support for more languages
-
-### **Development Guidelines**
-- Follow Kotlin coding conventions
-- Use Jetpack Compose best practices
-- Write meaningful commit messages
-- Test on multiple Android versions
+1. 🐛 **Report Bugs** — Open an issue with reproduction steps and device details
+2. 💡 **Suggest Features** — Share your ideas in GitHub discussions
+3. 🔧 **Submit PRs** — Fork the repo, create a feature branch, and open a Pull Request
+4. 🌐 **Translations** — Help translate Sonique into more languages
 
 ---
 
 ## 📄 License
 
 ```
-Copyright (C) 2025 Ansh Sharma
+Copyright (C) 2025-2026 Ansh Sharma
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -232,19 +161,28 @@ See [LICENSE](LICENSE) file for full details.
 
 ---
 
-## 🙏 Acknowledgments
+## ⚠️ Legal Disclaimer & Compliance
 
-- **[InnerTune](https://github.com/z-huang/InnerTune/)** - Inspiration for YouTube Music API extraction
-- **[SmartTube](https://github.com/yuliskov/SmartTube)** - Streaming URL extraction techniques
-- **[NewPipe](https://github.com/TeamNewPipe/NewPipeExtractor)** - YouTube data extraction
-- **[SponsorBlock](https://sponsor.ajay.app/)** - Sponsored segment database
-- **[LRCLIB](https://lrclib.net/)** - Lyrics database
+> [!IMPORTANT]
+> **Educational & Non-Commercial Notice**: Sonique is an open-source client application developed solely for personal, educational, and research purposes.
+
+- **Non-Affiliation**: Sonique and its maintainers are **not** affiliated, associated, authorized, endorsed by, or in any way officially connected with YouTube, YouTube Music, Google LLC, Spotify, or any of their subsidiaries or affiliates.
+- **No Media Hosting**: Sonique **does not host, store, archive, broadcast, or distribute** any audio streams, music videos, or copyrighted media content. All content displayed or played within the app is fetched dynamically from public web endpoints at the direction of the end user.
+- **User Responsibility**: End users are solely responsible for ensuring that their use of this software complies with all applicable local, national, and international laws, regulations, copyright statutes, and third-party terms of service in their jurisdiction. The developers assume no legal liability for any misuse of this software or violation of applicable laws.
+- **Trademarks & Fair Use**: All product names, logos, brands, trademarks, and registered trademarks referenced in this repository belong to their respective copyright holders. Usage in this repository is strictly for identification and descriptive purposes under fair use principles.
+- **No Warranty**: As stated under the GNU General Public License v3.0, this program is distributed **"as-is" without warranty of any kind**, express or implied, including but not limited to merchantability, fitness for a particular purpose, or non-infringement.
 
 ---
 
-## 👨‍💻 Developer
+## 🙏 Acknowledgments
 
-**Ansh Sharma**
+- **[NewPipe](https://github.com/TeamNewPipe/NewPipeExtractor)** — YouTube data extraction
+- **[SmartTube](https://github.com/yuliskov/SmartTube)** — Streaming URL extraction techniques
+- **[InnerTune](https://github.com/z-huang/InnerTune/)** — Architecture and inspiration
+- **[LRCLIB](https://lrclib.net/)** — Synced lyrics database
+- **[SponsorBlock](https://sponsor.ajay.app/)** — Sponsored segment database
+
+---
 
 ## ☕ Support the Project
 
@@ -260,11 +198,7 @@ If you find Sonique useful and want to support its development:
 
 Your support helps keep this project alive! ❤️
 
-</div>
-
----
-
-<div align="center">
+<br>
 
 **Built with ❤️ using [Kotlin](https://kotlinlang.org/) • Fueled by coffee ☕**
 

@@ -395,4 +395,17 @@
     <string name="reverb_preset_hall">Hall</string>
     <string name="reverb_preset_plate">Plate</string>
     <string name="reverb_preset_cathedral">Cathedral</string>
+    <string name="reverb_help_title">Reverb presets</string>
+    <string name="reverb_help_intro">Each preset is a synthetic room generated from three numbers and matched in loudness, so switching rooms changes the space, not the volume.</string>
+    <string name="reverb_help_rt60">Tail (RT60): %1$s</string>
+    <string name="reverb_help_predelay">Pre-delay: %1$s</string>
+    <string name="reverb_help_damping">Damping from: %1$s</string>
+    <string name="reverb_help_room">Small and tight. Adds a sense of space without smearing the sound.</string>
+    <string name="reverb_help_hall">A concert hall. Long but clear, the classic slowed-and-reverb sound.</string>
+    <string name="reverb_help_plate">A studio plate. No gap before the reverb, bright and dense, sits well on vocals.</string>
+    <string name="reverb_help_cathedral">A cathedral. Very long and dark, the sound dissolves into the space.</string>
+    <string name="reverb_help_rt60_meaning">RT60 is how long the tail takes to fade by 60 dB: how big the room feels.</string>
+    <string name="reverb_help_predelay_meaning">Pre-delay is the silence before the reverb starts. A longer gap keeps the dry sound clear and pushes the walls further away.</string>
+    <string name="reverb_help_damping_meaning">Damping is where the tail starts losing treble. It darkens further as it decays, the way air and soft surfaces absorb highs.</string>
+    <string name="reverb_help_mix">Mix is the wet share: the slider sets how much of the room you hear against the dry signal, identically on Android and Desktop.</string>
 </resources>

@@ -640,6 +640,7 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
     }
     val skipSilent by skipSilentFlow.collectAsStateWithLifecycle(initialValue = false)
     val delayEnabled by viewModel.delayEnabled.collectAsStateWithLifecycle()
+    val reverbEnabled by viewModel.reverbEnabled.collectAsStateWithLifecycle()
     val resultLauncher = openEqResult(viewModel.getAudioSessionId())
 
     LazyColumn(
@@ -701,7 +702,7 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
 
         item {
             Material3SettingsGroup(
-                title = "Audio Effects",
+                title = "Audio Effects & Playback",
                 items = buildList {
                     add(
                         Material3SettingsItem(
@@ -730,6 +731,15 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
                             onCheckedChange = { viewModel.setDelayEnabled(it) }
                         )
                     )
+                    add(
+                        Material3SettingsItem(
+                            title = { Text(stringResource(Res.string.audio_reverb)) },
+                            description = { Text(stringResource(Res.string.audio_reverb_description)) },
+                            isSwitch = true,
+                            checked = reverbEnabled,
+                            onCheckedChange = { viewModel.setReverbEnabled(it) }
+                        )
+                    )
                     if (getPlatform() == Platform.Android) {
                         add(
                             Material3SettingsItem(
@@ -750,6 +760,12 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
         item {
             AnimatedVisibility(visible = delayEnabled) {
                 DelaySection(viewModel)
+            }
+        }
+
+        item {
+            AnimatedVisibility(visible = reverbEnabled) {
+                ReverbSection(viewModel)
             }
         }
     }

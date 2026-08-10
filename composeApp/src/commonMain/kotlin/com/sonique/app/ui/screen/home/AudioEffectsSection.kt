@@ -2,6 +2,7 @@ package com.sonique.app.ui.screen.home
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -9,11 +10,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.app.viewModel.SettingsViewModel
 import com.sonique.domain.data.player.DelayEffect
+import com.sonique.domain.data.player.ReverbPreset
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import sonique.composeapp.generated.resources.Res
@@ -36,6 +45,24 @@ import sonique.composeapp.generated.resources.delay_preset_slapback
 import sonique.composeapp.generated.resources.effect_feedback
 import sonique.composeapp.generated.resources.effect_mix
 import sonique.composeapp.generated.resources.effect_time
+import sonique.composeapp.generated.resources.ok
+import sonique.composeapp.generated.resources.reverb_help_cathedral
+import sonique.composeapp.generated.resources.reverb_help_damping
+import sonique.composeapp.generated.resources.reverb_help_damping_meaning
+import sonique.composeapp.generated.resources.reverb_help_hall
+import sonique.composeapp.generated.resources.reverb_help_intro
+import sonique.composeapp.generated.resources.reverb_help_mix
+import sonique.composeapp.generated.resources.reverb_help_plate
+import sonique.composeapp.generated.resources.reverb_help_predelay
+import sonique.composeapp.generated.resources.reverb_help_predelay_meaning
+import sonique.composeapp.generated.resources.reverb_help_room
+import sonique.composeapp.generated.resources.reverb_help_rt60
+import sonique.composeapp.generated.resources.reverb_help_rt60_meaning
+import sonique.composeapp.generated.resources.reverb_help_title
+import sonique.composeapp.generated.resources.reverb_preset_cathedral
+import sonique.composeapp.generated.resources.reverb_preset_hall
+import sonique.composeapp.generated.resources.reverb_preset_plate
+import sonique.composeapp.generated.resources.reverb_preset_room
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -114,6 +141,129 @@ fun DelaySection(viewModel: SettingsViewModel) {
             modifier = Modifier.padding(top = 12.dp),
         )
     }
+}
+
+@Composable
+fun ReverbSection(viewModel: SettingsViewModel) {
+    val preset by viewModel.reverbPreset.collectAsStateWithLifecycle()
+    val mix by viewModel.reverbMix.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) { viewModel.getAudioEffects() }
+
+    var showHelp by remember { mutableStateOf(false) }
+
+    EffectCard {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(modifier = Modifier.weight(1f)) {
+                EffectPresetRow {
+                    ReverbPreset.entries.forEach { option ->
+                        FilterChip(
+                            selected = option == preset,
+                            onClick = { viewModel.setReverbPreset(option) },
+                            label = { Text(stringResource(reverbPresetLabel(option)), style = MaterialTheme.typography.labelMedium) },
+                        )
+                    }
+                }
+            }
+            IconButton(
+                onClick = { showHelp = true },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = stringResource(Res.string.reverb_help_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        EffectSlider(
+            label = stringResource(Res.string.effect_mix),
+            value = mix,
+            valueRange = 0f..1f,
+            readout = { "${(it * 100).roundToInt()}%" },
+            onCommit = { viewModel.setReverbMix(it) },
+            modifier = Modifier.padding(top = 12.dp),
+        )
+    }
+
+    if (showHelp) {
+        ReverbHelpDialog(onDismiss = { showHelp = false })
+    }
+}
+
+@Composable
+private fun ReverbHelpDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(Res.string.reverb_help_title),
+                style = MaterialTheme.typography.titleSmall,
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Text(text = stringResource(Res.string.reverb_help_intro), style = MaterialTheme.typography.bodySmall)
+                ReverbPreset.entries.forEach { preset ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = stringResource(reverbPresetLabel(preset)),
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                        Text(
+                            text =
+                                stringResource(Res.string.reverb_help_rt60, formatSeconds(preset.rt60Ms)) + " · " +
+                                    stringResource(Res.string.reverb_help_predelay, "${preset.preDelayMs} ms") + " · " +
+                                    stringResource(Res.string.reverb_help_damping, formatKiloHertz(preset.dampingHz)),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(text = stringResource(reverbPresetHelp(preset)), style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Text(text = stringResource(Res.string.reverb_help_rt60_meaning), style = MaterialTheme.typography.bodySmall)
+                Text(text = stringResource(Res.string.reverb_help_predelay_meaning), style = MaterialTheme.typography.bodySmall)
+                Text(text = stringResource(Res.string.reverb_help_damping_meaning), style = MaterialTheme.typography.bodySmall)
+                Text(text = stringResource(Res.string.reverb_help_mix), style = MaterialTheme.typography.bodySmall)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(Res.string.ok))
+            }
+        },
+    )
+}
+
+private fun reverbPresetLabel(preset: ReverbPreset): StringResource =
+    when (preset) {
+        ReverbPreset.ROOM -> Res.string.reverb_preset_room
+        ReverbPreset.HALL -> Res.string.reverb_preset_hall
+        ReverbPreset.PLATE -> Res.string.reverb_preset_plate
+        ReverbPreset.CATHEDRAL -> Res.string.reverb_preset_cathedral
+    }
+
+private fun reverbPresetHelp(preset: ReverbPreset): StringResource =
+    when (preset) {
+        ReverbPreset.ROOM -> Res.string.reverb_help_room
+        ReverbPreset.HALL -> Res.string.reverb_help_hall
+        ReverbPreset.PLATE -> Res.string.reverb_help_plate
+        ReverbPreset.CATHEDRAL -> Res.string.reverb_help_cathedral
+    }
+
+private fun formatSeconds(ms: Int): String {
+    val tenths = (ms + 50) / 100
+    return "${tenths / 10}.${tenths % 10} s"
+}
+
+private fun formatKiloHertz(hz: Int): String {
+    val tenths = (hz + 50) / 100
+    return if (tenths % 10 == 0) "${tenths / 10} kHz" else "${tenths / 10}.${tenths % 10} kHz"
 }
 
 @Composable

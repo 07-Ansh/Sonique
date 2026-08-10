@@ -31,6 +31,7 @@ import com.sonique.domain.repository.StreamRepository
 import com.sonique.logger.Logger
 import com.sonique.media3.audio.BiquadFilter
 import com.sonique.media3.audio.CrossfadeFilterAudioProcessor
+import com.sonique.media3.audio.ConvolutionReverbAudioProcessor
 import com.sonique.media3.audio.EchoAudioProcessor
 import com.sonique.media3.exoplayer.CrossfadeExoPlayerAdapter.Companion.SPEED_PITCH_STEP
 import com.sonique.media3.service.mediasourcefactory.MergingMediaSourceFactory
@@ -314,6 +315,7 @@ internal class CrossfadeExoPlayerAdapter(
     private fun createExoPlayerInstance(): PlayerWithFilter {
         val crossfadeFilter = CrossfadeFilterAudioProcessor()
         val echo = EchoAudioProcessor { internalAudioEffects }
+        val reverb = ConvolutionReverbAudioProcessor { internalAudioEffects }
 
         val perPlayerRenderers =
             object : DefaultRenderersFactory(context) {
@@ -328,7 +330,7 @@ internal class CrossfadeExoPlayerAdapter(
                         .setEnableAudioOutputPlaybackParameters(enableAudioTrackPlaybackParams)
                         .setAudioProcessorChain(
                             DefaultAudioSink.DefaultAudioProcessorChain(
-                                arrayOf(echo, crossfadeFilter),
+                                arrayOf(echo, reverb, crossfadeFilter),
                                 SilenceSkippingAudioProcessor(
                                     2_000_000,
                                     (20_000 / 2_000_000).toFloat(),

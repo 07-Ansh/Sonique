@@ -30,6 +30,8 @@ import com.sonique.domain.data.model.browse.album.Track
 import com.sonique.domain.data.model.mediaService.SponsorSkipSegments
 import com.sonique.domain.data.model.searchResult.songs.Artist
 import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
+import com.sonique.domain.data.player.AudioEffects
+import com.sonique.domain.data.player.DelayEffect
 import com.sonique.domain.data.player.GenericCommandButton
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericMediaMetadata
@@ -37,6 +39,8 @@ import com.sonique.domain.data.player.GenericPlaybackParameters
 import com.sonique.domain.data.player.GenericTracks
 import com.sonique.domain.data.player.PlayerConstants
 import com.sonique.domain.data.player.PlayerError
+import com.sonique.domain.data.player.ReverbEffect
+import com.sonique.domain.data.player.ReverbPreset
 import com.sonique.domain.extension.isVideo
 import com.sonique.domain.extension.now
 import com.sonique.domain.extension.toGenericMediaItem
@@ -343,6 +347,36 @@ internal class MediaServiceHandlerImpl(
             playbackJob.join()
             playbackSpeedPitchJob.join()
 
+        }
+
+        coroutineScope.launch {
+            val delayEffects =
+                combine(
+                    dataStoreManager.delayEnabled,
+                    dataStoreManager.delayTimeMs,
+                    dataStoreManager.delayFeedback,
+                    dataStoreManager.delayMix,
+                ) { enabled, timeMs, feedback, mix ->
+                    if (enabled == TRUE) DelayEffect(timeMs = timeMs, feedback = feedback, mix = mix) else null
+                }
+            val reverbEffects =
+                combine(
+                    dataStoreManager.reverbEnabled,
+                    dataStoreManager.reverbPreset,
+                    dataStoreManager.reverbMix,
+                ) { enabled, presetName, mix ->
+                    if (enabled == TRUE) {
+                        ReverbEffect(
+                            preset = runCatching { ReverbPreset.valueOf(presetName) }.getOrDefault(ReverbPreset.HALL),
+                            mix = mix,
+                        )
+                    } else {
+                        null
+                    }
+                }
+            combine(delayEffects, reverbEffects) { echo, room -> AudioEffects(delay = echo, reverb = room) }
+                .distinctUntilChanged()
+                .collect { effects -> player.setAudioEffects(effects) }
         }
     }
 

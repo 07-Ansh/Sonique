@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.home
+package com.sonique.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -639,6 +639,7 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
         viewModel.skipSilent.map { it == TRUE }
     }
     val skipSilent by skipSilentFlow.collectAsStateWithLifecycle(initialValue = false)
+    val delayEnabled by viewModel.delayEnabled.collectAsStateWithLifecycle()
     val resultLauncher = openEqResult(viewModel.getAudioSessionId())
 
     LazyColumn(
@@ -720,6 +721,15 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
                             onCheckedChange = { viewModel.setSkipSilent(it) }
                         )
                     )
+                    add(
+                        Material3SettingsItem(
+                            title = { Text(stringResource(Res.string.audio_delay)) },
+                            description = { Text(stringResource(Res.string.audio_delay_description)) },
+                            isSwitch = true,
+                            checked = delayEnabled,
+                            onCheckedChange = { viewModel.setDelayEnabled(it) }
+                        )
+                    )
                     if (getPlatform() == Platform.Android) {
                         add(
                             Material3SettingsItem(
@@ -735,6 +745,12 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
                     }
                 }
             )
+        }
+
+        item {
+            AnimatedVisibility(visible = delayEnabled) {
+                DelaySection(viewModel)
+            }
         }
     }
 }

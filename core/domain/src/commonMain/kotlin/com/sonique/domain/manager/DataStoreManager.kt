@@ -1,6 +1,7 @@
 package com.sonique.domain.manager
 
 import com.sonique.domain.data.model.network.ProxyConfiguration
+import com.sonique.domain.data.player.ReverbPreset
 import kotlinx.coroutines.flow.Flow
 
 interface DataStoreManager {
@@ -305,8 +306,27 @@ interface DataStoreManager {
 
     val showMostPlayed: Flow<String>
     suspend fun setShowMostPlayed(show: Boolean)
-    
 
+    val delayEnabled: Flow<String>
+    suspend fun setDelayEnabled(enabled: Boolean)
+
+    val delayTimeMs: Flow<Int>
+    suspend fun setDelayTimeMs(timeMs: Int)
+
+    val delayFeedback: Flow<Float>
+    suspend fun setDelayFeedback(feedback: Float)
+
+    val delayMix: Flow<Float>
+    suspend fun setDelayMix(mix: Float)
+
+    val reverbEnabled: Flow<String>
+    suspend fun setReverbEnabled(enabled: Boolean)
+
+    val reverbPreset: Flow<String>
+    suspend fun setReverbPreset(preset: ReverbPreset)
+
+    val reverbMix: Flow<Float>
+    suspend fun setReverbMix(mix: Float)
 
     enum class ProxyType {
         PROXY_TYPE_HTTP,

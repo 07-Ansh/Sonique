@@ -12,6 +12,7 @@ import com.sonique.common.SELECTED_LANGUAGE
 import com.sonique.common.SUPPORTED_LANGUAGE
 import com.sonique.common.SponsorBlockType
 import com.sonique.domain.data.model.network.ProxyConfiguration
+import com.sonique.domain.data.player.ReverbPreset
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.manager.DataStoreManager.Values.FALSE
 import com.sonique.domain.manager.DataStoreManager.Values.GITHUB
@@ -1265,7 +1266,96 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val delayEnabled: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[DELAY_ENABLED] ?: FALSE
+        }
 
+    override suspend fun setDelayEnabled(enabled: Boolean) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[DELAY_ENABLED] = if (enabled) TRUE else FALSE
+            }
+        }
+    }
+
+    override val delayTimeMs: Flow<Int> =
+        settingsDataStore.data.map { preferences ->
+            preferences[DELAY_TIME_MS]?.toIntOrNull() ?: 400
+        }
+
+    override suspend fun setDelayTimeMs(timeMs: Int) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[DELAY_TIME_MS] = timeMs.toString()
+            }
+        }
+    }
+
+    override val delayFeedback: Flow<Float> =
+        settingsDataStore.data.map { preferences ->
+            preferences[DELAY_FEEDBACK]?.toFloatOrNull() ?: 0.45f
+        }
+
+    override suspend fun setDelayFeedback(feedback: Float) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[DELAY_FEEDBACK] = feedback.toString()
+            }
+        }
+    }
+
+    override val delayMix: Flow<Float> =
+        settingsDataStore.data.map { preferences ->
+            preferences[DELAY_MIX]?.toFloatOrNull() ?: 0.3f
+        }
+
+    override suspend fun setDelayMix(mix: Float) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[DELAY_MIX] = mix.toString()
+            }
+        }
+    }
+
+    override val reverbEnabled: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[REVERB_ENABLED] ?: FALSE
+        }
+
+    override suspend fun setReverbEnabled(enabled: Boolean) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[REVERB_ENABLED] = if (enabled) TRUE else FALSE
+            }
+        }
+    }
+
+    override val reverbPreset: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[REVERB_PRESET] ?: ReverbPreset.HALL.name
+        }
+
+    override suspend fun setReverbPreset(preset: ReverbPreset) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[REVERB_PRESET] = preset.name
+            }
+        }
+    }
+
+    override val reverbMix: Flow<Float> =
+        settingsDataStore.data.map { preferences ->
+            preferences[REVERB_MIX]?.toFloatOrNull() ?: 0.35f
+        }
+
+    override suspend fun setReverbMix(mix: Float) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[REVERB_MIX] = mix.toString()
+            }
+        }
+    }
 
     companion object Settings {
         val APP_VERSION = stringPreferencesKey("app_version")
@@ -1351,6 +1441,14 @@ internal class DataStoreManagerImpl(
         val GITHUB_POPUP_SHOWN_COUNT = intPreferencesKey("github_popup_shown_count")
         val NEVER_SHOW_GITHUB_POPUP = booleanPreferencesKey("never_show_github_popup")
         val LAST_VERSION_CODE = intPreferencesKey("last_version_code")
+
+        val DELAY_ENABLED = stringPreferencesKey("delay_enabled")
+        val DELAY_TIME_MS = stringPreferencesKey("delay_time_ms")
+        val DELAY_FEEDBACK = stringPreferencesKey("delay_feedback")
+        val DELAY_MIX = stringPreferencesKey("delay_mix")
+        val REVERB_ENABLED = stringPreferencesKey("reverb_enabled")
+        val REVERB_PRESET = stringPreferencesKey("reverb_preset")
+        val REVERB_MIX = stringPreferencesKey("reverb_mix")
     }
 
 

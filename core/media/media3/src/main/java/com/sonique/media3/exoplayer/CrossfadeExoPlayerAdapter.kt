@@ -19,6 +19,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.SilenceSkippingAudioProcessor
+import com.sonique.domain.data.player.AudioEffects
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericPlaybackParameters
 import com.sonique.domain.data.player.PlayerConstants
@@ -30,6 +31,7 @@ import com.sonique.domain.repository.StreamRepository
 import com.sonique.logger.Logger
 import com.sonique.media3.audio.BiquadFilter
 import com.sonique.media3.audio.CrossfadeFilterAudioProcessor
+import com.sonique.media3.audio.EchoAudioProcessor
 import com.sonique.media3.exoplayer.CrossfadeExoPlayerAdapter.Companion.SPEED_PITCH_STEP
 import com.sonique.media3.service.mediasourcefactory.MergingMediaSourceFactory
 import kotlinx.coroutines.CancellationException
@@ -125,6 +127,9 @@ internal class CrossfadeExoPlayerAdapter(
 
     @Volatile
     private var internalSkipSilence = false
+
+    @Volatile
+    private var internalAudioEffects: AudioEffects = AudioEffects.NONE
 
     @Volatile
     private var cachedPosition = 0L
@@ -308,6 +313,7 @@ internal class CrossfadeExoPlayerAdapter(
 
     private fun createExoPlayerInstance(): PlayerWithFilter {
         val crossfadeFilter = CrossfadeFilterAudioProcessor()
+        val echo = EchoAudioProcessor { internalAudioEffects }
 
         val perPlayerRenderers =
             object : DefaultRenderersFactory(context) {
@@ -322,7 +328,7 @@ internal class CrossfadeExoPlayerAdapter(
                         .setEnableAudioOutputPlaybackParameters(enableAudioTrackPlaybackParams)
                         .setAudioProcessorChain(
                             DefaultAudioSink.DefaultAudioProcessorChain(
-                                arrayOf(crossfadeFilter),
+                                arrayOf(echo, crossfadeFilter),
                                 SilenceSkippingAudioProcessor(
                                     2_000_000,
                                     (20_000 / 2_000_000).toFloat(),
@@ -431,6 +437,10 @@ internal class CrossfadeExoPlayerAdapter(
                 notifyEqualizerIntent(false)
             }
         }
+    }
+
+    override fun setAudioEffects(effects: AudioEffects) {
+        internalAudioEffects = effects
     }
 
     override fun seekTo(positionMs: Long) {

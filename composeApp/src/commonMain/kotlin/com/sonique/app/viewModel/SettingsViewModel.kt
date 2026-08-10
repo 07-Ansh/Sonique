@@ -11,6 +11,7 @@ import com.sonique.common.SELECTED_LANGUAGE
 import com.sonique.common.VIDEO_QUALITY
 import com.sonique.domain.data.entities.DownloadState
 import com.sonique.domain.data.entities.GoogleAccountEntity
+import com.sonique.domain.data.player.ReverbPreset
 import com.sonique.domain.extension.toNetScapeString
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.mediaservice.handler.DownloadHandler
@@ -280,6 +281,7 @@ class SettingsViewModel(
         
         getSponsorBlockEnabled()
         getSponsorBlockCategories()
+        getAudioEffects()
 
         viewModelScope.launch {
             calculateDataFraction(
@@ -1268,6 +1270,86 @@ class SettingsViewModel(
         }
     }
 
+    private var _delayEnabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val delayEnabled: StateFlow<Boolean> = _delayEnabled
+
+    private var _delayTimeMs: MutableStateFlow<Int> = MutableStateFlow(DEFAULT_DELAY_TIME_MS)
+    val delayTimeMs: StateFlow<Int> = _delayTimeMs
+
+    private var _delayFeedback: MutableStateFlow<Float> = MutableStateFlow(DEFAULT_DELAY_FEEDBACK)
+    val delayFeedback: StateFlow<Float> = _delayFeedback
+
+    private var _delayMix: MutableStateFlow<Float> = MutableStateFlow(DEFAULT_DELAY_MIX)
+    val delayMix: StateFlow<Float> = _delayMix
+
+    private var _reverbEnabled: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val reverbEnabled: StateFlow<Boolean> = _reverbEnabled
+
+    private var _reverbPreset: MutableStateFlow<ReverbPreset> = MutableStateFlow(ReverbPreset.HALL)
+    val reverbPreset: StateFlow<ReverbPreset> = _reverbPreset
+
+    private var _reverbMix: MutableStateFlow<Float> = MutableStateFlow(DEFAULT_REVERB_MIX)
+    val reverbMix: StateFlow<Float> = _reverbMix
+
+    private var audioEffectCollectorsStarted = false
+
+    fun getAudioEffects() {
+        if (audioEffectCollectorsStarted) return
+        audioEffectCollectorsStarted = true
+        viewModelScope.launch {
+            launch { dataStoreManager.delayEnabled.collect { _delayEnabled.emit(it == DataStoreManager.TRUE) } }
+            launch { dataStoreManager.delayTimeMs.collect { _delayTimeMs.emit(it) } }
+            launch { dataStoreManager.delayFeedback.collect { _delayFeedback.emit(it) } }
+            launch { dataStoreManager.delayMix.collect { _delayMix.emit(it) } }
+            launch { dataStoreManager.reverbEnabled.collect { _reverbEnabled.emit(it == DataStoreManager.TRUE) } }
+            launch {
+                dataStoreManager.reverbPreset.collect { stored ->
+                    _reverbPreset.emit(runCatching { ReverbPreset.valueOf(stored) }.getOrDefault(ReverbPreset.HALL))
+                }
+            }
+            launch { dataStoreManager.reverbMix.collect { _reverbMix.emit(it) } }
+        }
+    }
+
+    fun setDelayEnabled(enabled: Boolean) {
+        viewModelScope.launch { dataStoreManager.setDelayEnabled(enabled) }
+    }
+
+    fun setDelayTimeMs(timeMs: Int) {
+        viewModelScope.launch { dataStoreManager.setDelayTimeMs(timeMs) }
+    }
+
+    fun setDelayFeedback(feedback: Float) {
+        viewModelScope.launch { dataStoreManager.setDelayFeedback(feedback) }
+    }
+
+    fun setDelayMix(mix: Float) {
+        viewModelScope.launch { dataStoreManager.setDelayMix(mix) }
+    }
+
+    fun setReverbEnabled(enabled: Boolean) {
+        viewModelScope.launch { dataStoreManager.setReverbEnabled(enabled) }
+    }
+
+    fun setReverbPreset(preset: ReverbPreset) {
+        viewModelScope.launch { dataStoreManager.setReverbPreset(preset) }
+    }
+
+    fun setReverbMix(mix: Float) {
+        viewModelScope.launch { dataStoreManager.setReverbMix(mix) }
+    }
+
+    fun applyDelayPreset(
+        timeMs: Int,
+        feedback: Float,
+        mix: Float,
+    ) {
+        viewModelScope.launch {
+            dataStoreManager.setDelayTimeMs(timeMs)
+            dataStoreManager.setDelayFeedback(feedback)
+            dataStoreManager.setDelayMix(mix)
+        }
+    }
 }
 
 data class SettingsStorageSectionFraction(
@@ -1335,3 +1417,7 @@ expect fun getFileDir(): String
 
 expect fun changeLanguageNative(code: String)
 
+const val DEFAULT_DELAY_TIME_MS = 400
+const val DEFAULT_DELAY_FEEDBACK = 0.45f
+const val DEFAULT_DELAY_MIX = 0.3f
+const val DEFAULT_REVERB_MIX = 0.35f

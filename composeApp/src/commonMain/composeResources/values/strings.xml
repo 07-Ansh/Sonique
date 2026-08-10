@@ -381,4 +381,18 @@
     <string name="created_at">Created at %1$s</string>
     <string name="shuffle_not_available">Shuffle endpoint is not available</string>
     <string name="extract_source">Extraction Source</string>
+    <string name="audio_delay">Delay</string>
+    <string name="audio_delay_description">Echo the sound with a repeating delay</string>
+    <string name="audio_reverb">Reverb</string>
+    <string name="audio_reverb_description">Place the music in a room, hall or plate</string>
+    <string name="effect_time">Time</string>
+    <string name="effect_feedback">Feedback</string>
+    <string name="effect_mix">Mix</string>
+    <string name="delay_preset_slapback">Slapback</string>
+    <string name="delay_preset_quarter">Quarter</string>
+    <string name="delay_preset_dub">Dub</string>
+    <string name="reverb_preset_room">Room</string>
+    <string name="reverb_preset_hall">Hall</string>
+    <string name="reverb_preset_plate">Plate</string>
+    <string name="reverb_preset_cathedral">Cathedral</string>
 </resources>

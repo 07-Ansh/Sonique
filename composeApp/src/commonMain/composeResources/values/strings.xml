@@ -349,6 +349,8 @@
     <string name="crossfade_auto">Auto</string>
     <string name="crossfade_dj_mode">DJ-style transition</string>
     <string name="crossfade_dj_mode_description">Apply low-pass and high-pass filter sweep during crossfade for a smoother, DJ-like transition (similar to Apple Music Automix).</string>
+    <string name="crossfade_skip_album">Keep albums continuous</string>
+    <string name="crossfade_skip_album_description">Skip the crossfade between tracks of the same album, so albums meant to run without gaps still do. The transition out of the album still crossfades.</string>
     <string name="enjoying_sonique">Enjoying Sonique?</string>
     <string name="checking">Checking...</string>
     <string name="auto_check_for_update">Auto check for updates</string>

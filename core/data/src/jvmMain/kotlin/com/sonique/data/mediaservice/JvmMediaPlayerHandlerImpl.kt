@@ -1390,6 +1390,12 @@ class JvmMediaPlayerHandlerImpl(
                 data = queueData,
             )
         }
+        player.albumTrackIds =
+            if (queueData.playlistType == PlaylistType.ALBUM) {
+                queueData.listTracks.map { it.videoId }.toSet()
+            } else {
+                emptySet()
+            }
         Logger.w(TAG, "setQueueData: $queueData")
     }
 

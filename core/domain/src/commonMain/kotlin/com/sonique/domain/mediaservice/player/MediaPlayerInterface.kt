@@ -92,6 +92,10 @@ interface MediaPlayerInterface {
 
     fun setAudioEffects(effects: AudioEffects) = Unit
 
+    var albumTrackIds: Set<String>
+        get() = emptySet()
+        set(_) {}
+
      
     fun addListener(listener: MediaPlayerListener)
 

@@ -263,6 +263,10 @@ interface DataStoreManager {
 
     suspend fun setCrossfadeDjMode(enabled: Boolean)
 
+    val crossfadeSkipAlbum: Flow<String>
+
+    suspend fun setCrossfadeSkipAlbum(enabled: Boolean)
+
 
 
     val youtubeSubtitleLanguage: Flow<String>

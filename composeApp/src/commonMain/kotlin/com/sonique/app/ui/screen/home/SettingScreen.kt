@@ -792,6 +792,7 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
     val crossfadeDuration by viewModel.crossfadeDuration.collectAsStateWithLifecycle()
     val crossfadeEnabled by viewModel.crossfadeEnabled.collectAsStateWithLifecycle()
     val crossfadeDjMode by viewModel.crossfadeDjMode.collectAsStateWithLifecycle()
+    val crossfadeSkipAlbum by viewModel.crossfadeSkipAlbum.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -924,6 +925,15 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
                                 )
                             )
                         }
+                        add(
+                            Material3SettingsItem(
+                                title = { Text(stringResource(Res.string.crossfade_skip_album)) },
+                                description = { Text(stringResource(Res.string.crossfade_skip_album_description)) },
+                                isSwitch = true,
+                                checked = crossfadeSkipAlbum,
+                                onCheckedChange = { viewModel.setCrossfadeSkipAlbum(it) }
+                            )
+                        )
                     }
                 }
             )

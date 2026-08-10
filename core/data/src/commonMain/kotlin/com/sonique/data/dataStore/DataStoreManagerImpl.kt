@@ -1069,6 +1069,25 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val crossfadeSkipAlbum: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[CROSSFADE_SKIP_ALBUM] ?: FALSE
+        }
+
+    override suspend fun setCrossfadeSkipAlbum(enabled: Boolean) {
+        withContext(Dispatchers.IO) {
+            if (enabled) {
+                settingsDataStore.edit { settings ->
+                    settings[CROSSFADE_SKIP_ALBUM] = TRUE
+                }
+            } else {
+                settingsDataStore.edit { settings ->
+                    settings[CROSSFADE_SKIP_ALBUM] = FALSE
+                }
+            }
+        }
+    }
+
     override val youtubeSubtitleLanguage =
         settingsDataStore.data.map { preferences ->
             val languageValue = language.first()
@@ -1385,6 +1404,7 @@ internal class DataStoreManagerImpl(
         val CROSSFADE_ENABLED = stringPreferencesKey("crossfade_enabled")
         val CROSSFADE_DURATION = intPreferencesKey("crossfade_duration")
         val CROSSFADE_DJ_MODE = stringPreferencesKey("crossfade_dj_mode")
+        val CROSSFADE_SKIP_ALBUM = stringPreferencesKey("crossfade_skip_album")
         val LYRICS_PROVIDER = stringPreferencesKey("lyrics_provider")
         val TRANSLATION_LANGUAGE = stringPreferencesKey("translation_language")
         val USE_TRANSLATION_LANGUAGE = stringPreferencesKey("use_translation_language")

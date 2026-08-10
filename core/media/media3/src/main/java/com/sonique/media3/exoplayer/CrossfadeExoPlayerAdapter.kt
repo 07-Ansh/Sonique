@@ -97,6 +97,12 @@ internal class CrossfadeExoPlayerAdapter(
                 Logger.d(TAG, "DJ crossfade mode: $djCrossfadeEnabled")
             }
         }
+        coroutineScope.launch {
+            dataStoreManager.crossfadeSkipAlbum.collect { enabled ->
+                skipCrossfadeInAlbum = (enabled == DataStoreManager.TRUE)
+                Logger.d(TAG, "Skip crossfade inside album: $skipCrossfadeInAlbum")
+            }
+        }
     }
 
 
@@ -242,6 +248,12 @@ internal class CrossfadeExoPlayerAdapter(
 
     @Volatile
     private var djCrossfadeEnabled = true
+
+    @Volatile
+    private var skipCrossfadeInAlbum = false
+
+    @Volatile
+    private var internalAlbumTrackIds: Set<String> = emptySet()
 
     @Volatile
     private var secondaryPlayer: ExoPlayer? = null
@@ -958,6 +970,12 @@ internal class CrossfadeExoPlayerAdapter(
             secondaryPlayer?.skipSilenceEnabled = value
         }
 
+    override var albumTrackIds: Set<String>
+        get() = internalAlbumTrackIds
+        set(value) {
+            internalAlbumTrackIds = value
+        }
+
 
     override fun addListener(listener: MediaPlayerListener) {
         listeners.add(listener)
@@ -1378,11 +1396,37 @@ internal class CrossfadeExoPlayerAdapter(
     }
 
 
+    private fun isCurrentTrackTooShortForCrossfade(): Boolean {
+        val duration = currentPlayer?.duration ?: return false
+        if (duration <= 0L) return false
+        val fadeMs =
+            if (crossfadeDurationMs == DataStoreManager.CROSSFADE_DURATION_AUTO) {
+                resolveAutoCrossfadeDurationMs(
+                    currentMediaItem?.mediaId ?: "",
+                    playlist.getOrNull(getNextMediaItemIndex())?.mediaId ?: "",
+                )
+            } else {
+                crossfadeDurationMs
+            }
+        return duration < maxOf(MIN_CROSSFADE_TRACK_MS, fadeMs * 3L)
+    }
+
+    private fun isWithinAlbum(): Boolean {
+        if (!skipCrossfadeInAlbum) return false
+        val ids = internalAlbumTrackIds
+        if (ids.isEmpty()) return false
+        val current = currentMediaItem?.mediaId ?: return false
+        val next = playlist.getOrNull(getNextMediaItemIndex())?.mediaId ?: return false
+        return current in ids && next in ids
+    }
+
     private fun handleTrackEndInternal() {
         val shouldCrossfade =
             crossfadeEnabled &&
                 hasNextMediaItem() &&
-                !isCrossfading
+                !isCrossfading &&
+                !isCurrentTrackTooShortForCrossfade() &&
+                !isWithinAlbum()
 
         if (shouldCrossfade) {
             val nextIndex = getNextMediaItemIndex()
@@ -1901,6 +1945,8 @@ internal class CrossfadeExoPlayerAdapter(
     companion object {
         private const val DJ_FILTER_SIGMOID_K = 6f
 
+        private const val MIN_CROSSFADE_TRACK_MS = 20_000L
+
         private const val LPF_START_HZ = 20000f
         private const val LPF_END_HZ = 200f
         private const val HPF_START_HZ = 2000f
@@ -1990,7 +2036,9 @@ internal class CrossfadeExoPlayerAdapter(
                                     !isCrossfading &&
                                     player.isPlaying &&
                                     dur > 0 &&
-                                    pos > 0
+                                    pos > 0 &&
+                                    !isCurrentTrackTooShortForCrossfade() &&
+                                    !isWithinAlbum()
                                 ) {
                                     val speed = internalPlaybackSpeed.coerceAtLeast(0.1f)
                                     val timeRemaining = ((dur - pos) / speed).toLong()

@@ -1,5 +1,7 @@
 package com.sonique.data.mediaservice
 
+import kotlin.math.pow
+
 import com.sonique.common.ASC
 import com.sonique.common.CUSTOM_ORDER
 import com.sonique.common.Config.ALBUM_CLICK
@@ -2012,77 +2014,39 @@ class JvmMediaPlayerHandlerImpl(
     }
 
     override fun mayBeNormalizeVolume() {
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+        runBlocking {
+            normalizeVolume = dataStoreManager.normalizeVolume.first() == TRUE
+        }
+        if (!normalizeVolume) {
+            volumeNormalizationJob?.cancel()
+            player.volume = 1f
+            return
+        }
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+        player.currentMediaItem?.mediaId?.let { songId ->
+            val videoId =
+                if (songId.contains("Video")) {
+                    songId.removePrefix("Video")
+                } else {
+                    songId
+                }
+            volumeNormalizationJob?.cancel()
+            volumeNormalizationJob =
+                coroutineScope.launch(Dispatchers.Main) {
+                    streamRepository
+                        .getFormatFlow(videoId)
+                        .cancellable()
+                        .distinctUntilChanged()
+                        .collectLatest { format ->
+                            if (format != null) {
+                                val loudnessDb = format.loudnessDb ?: 0f
+                                val factor = 10f.pow(-loudnessDb / 20f).coerceIn(0.2f, 1.5f)
+                                player.volume = factor.coerceIn(0f, 1f)
+                                Logger.d(TAG, "Desktop volume normalization: factor=$factor for $loudnessDb dB")
+                            }
+                        }
+                }
+        }
     }
 
     override fun mayBeSavePlaybackState() {
@@ -2302,6 +2266,12 @@ class JvmMediaPlayerHandlerImpl(
 
     override fun onTracksChanged(tracks: GenericTracks) {
         Logger.d(TAG, "onTracksChanged: ${tracks.groups.size}")
+    }
+
+    override fun onCrossfadeStateChanged(isCrossfading: Boolean) {
+        if (!isCrossfading) {
+            mayBeNormalizeVolume()
+        }
     }
 
     override fun onPlayerError(error: PlayerError) {

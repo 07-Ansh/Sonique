@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
 import android.media.audiofx.LoudnessEnhancer
+import kotlin.math.pow
 import com.sonique.common.ASC
 import com.sonique.common.CUSTOM_ORDER
 import com.sonique.common.Config.ALBUM_CLICK
@@ -174,7 +175,6 @@ internal class MediaServiceHandlerImpl(
      
 
     private var loudnessEnhancer: LoudnessEnhancer? = null
-    private var secondLoudnessEnhancer: LoudnessEnhancer? = null
 
     private var skipSilent = false
 
@@ -1948,12 +1948,15 @@ internal class MediaServiceHandlerImpl(
             return
         }
 
-        if (loudnessEnhancer == null && player.audioSessionId != PlayerConstants.AUDIO_SESSION_ID_UNSET) {
+        if (player.audioSessionId != PlayerConstants.AUDIO_SESSION_ID_UNSET) {
+            try {
+                loudnessEnhancer?.release()
+            } catch (_: Exception) {
+            }
             try {
                 loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
             } catch (e: Exception) {
                 Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
-                e.printStackTrace()
             }
         }
 
@@ -1967,43 +1970,35 @@ internal class MediaServiceHandlerImpl(
             volumeNormalizationJob?.cancel()
             volumeNormalizationJob =
                 coroutineScope.launch(Dispatchers.Main) {
-                    fun Float?.toMb() = ((this ?: 0f) * 100).toInt()
                     streamRepository
                         .getFormatFlow(videoId)
                         .cancellable()
                         .distinctUntilChanged()
                         .collectLatest { format ->
                             if (format != null) {
-                                val loudnessMb =
-                                    format.loudnessDb.toMb().let {
-                                        if (it !in -2000..2000) {
-                                            0
-                                        } else {
-                                            it
-                                        }
+                                val loudnessDb = format.loudnessDb ?: 0f
+                                val loudnessMb = (loudnessDb * 100).toInt().coerceIn(-2000, 2000)
+                                Logger.d(TAG, "Loudness: $loudnessDb db, $loudnessMb mb")
+
+                                if (loudnessDb > 0f) {
+                                    try {
+                                        loudnessEnhancer?.setTargetGain(0)
+                                        loudnessEnhancer?.enabled = false
+                                    } catch (_: Exception) {
                                     }
-                                Logger.d(TAG, "Loudness: ${format.loudnessDb} db, $loudnessMb")
-                                try {
-                                    loudnessEnhancer?.setTargetGain(0f.toMb() - loudnessMb)
-                                    loudnessEnhancer?.enabled = true
-                                    Logger.w(
-                                        TAG,
-                                        "mayBeNormalizeVolume: ${loudnessEnhancer?.targetGain}",
-                                    )
-                                } catch (e: Exception) {
-                                    Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
-                                    e.printStackTrace()
-                                }
-                                try {
-                                    secondLoudnessEnhancer?.setTargetGain(0f.toMb() - loudnessMb)
-                                    secondLoudnessEnhancer?.enabled = true
-                                    Logger.w(
-                                        TAG,
-                                        "mayBeNormalizeVolume: ${secondLoudnessEnhancer?.targetGain}",
-                                    )
-                                } catch (e: Exception) {
-                                    Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
-                                    e.printStackTrace()
+                                    val attenuationFactor = 10f.pow(-loudnessDb / 20f).coerceIn(0.3f, 1.0f)
+                                    player.volume = attenuationFactor
+                                    Logger.d(TAG, "Normalized attenuation: volume=$attenuationFactor for +$loudnessDb dB")
+                                } else {
+                                    player.volume = 1f
+                                    val boostMb = (-loudnessMb).coerceIn(0, 2000)
+                                    try {
+                                        loudnessEnhancer?.setTargetGain(boostMb)
+                                        loudnessEnhancer?.enabled = boostMb > 0
+                                        Logger.d(TAG, "Normalized boost: +${boostMb}mB gain")
+                                    } catch (e: Exception) {
+                                        Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
+                                    }
                                 }
                             }
                         }
@@ -2072,10 +2067,6 @@ internal class MediaServiceHandlerImpl(
                 loudnessEnhancer?.enabled = false
                 loudnessEnhancer?.release()
                 loudnessEnhancer = null
-
-                secondLoudnessEnhancer?.enabled = false
-                secondLoudnessEnhancer?.release()
-                secondLoudnessEnhancer = null
             } catch (e: Exception) {
                 Logger.e("ServiceHandler", "Error releasing audio effects ${e.message}")
             }
@@ -2214,6 +2205,12 @@ internal class MediaServiceHandlerImpl(
 
     override fun onTracksChanged(tracks: GenericTracks) {
         Logger.d(TAG, "onTracksChanged: ${tracks.groups.size}")
+    }
+
+    override fun onCrossfadeStateChanged(isCrossfading: Boolean) {
+        if (!isCrossfading) {
+            mayBeNormalizeVolume()
+        }
     }
 
     override fun onPlayerError(error: PlayerError) {

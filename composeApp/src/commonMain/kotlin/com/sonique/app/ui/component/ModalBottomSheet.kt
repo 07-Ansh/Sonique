@@ -180,6 +180,9 @@ import sonique.composeapp.generated.resources.baseline_sync_24
 import sonique.composeapp.generated.resources.baseline_sync_disabled_24
 import sonique.composeapp.generated.resources.baseline_update_24
 import sonique.composeapp.generated.resources.bitrate
+import sonique.composeapp.generated.resources.bpm
+import sonique.composeapp.generated.resources.key
+import sonique.composeapp.generated.resources.scale
 import sonique.composeapp.generated.resources.can_not_be_empty
 import sonique.composeapp.generated.resources.cancel
 import sonique.composeapp.generated.resources.codec
@@ -636,6 +639,81 @@ fun InfoPlayerBottomSheet(
                         Modifier
                             .fillMaxWidth()
                             .wrapContentHeight(align = Alignment.CenterVertically).focusable()
+                            .padding(horizontal = 10.dp),
+                    style = typo().bodyMedium,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(Res.string.bpm),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                    textAlign = TextAlign.Center,
+                    style = typo().labelMedium,
+                    color = white,
+                )
+                Text(
+                    text = format?.bpm?.toString() ?: stringResource(Res.string.unknown),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(align = Alignment.CenterVertically)
+                            .basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                animationMode = MarqueeAnimationMode.Immediately,
+                            ).focusable()
+                            .padding(horizontal = 10.dp),
+                    style = typo().bodyMedium,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(Res.string.key),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                    textAlign = TextAlign.Center,
+                    style = typo().labelMedium,
+                    color = white,
+                )
+                Text(
+                    text = format?.musicKey ?: stringResource(Res.string.unknown),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(align = Alignment.CenterVertically)
+                            .basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                animationMode = MarqueeAnimationMode.Immediately,
+                            ).focusable()
+                            .padding(horizontal = 10.dp),
+                    style = typo().bodyMedium,
+                    maxLines = 1,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = stringResource(Res.string.scale),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                    textAlign = TextAlign.Center,
+                    style = typo().labelMedium,
+                    color = white,
+                )
+                Text(
+                    text = format?.keyScale ?: stringResource(Res.string.unknown),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(align = Alignment.CenterVertically)
+                            .basicMarquee(
+                                iterations = Int.MAX_VALUE,
+                                animationMode = MarqueeAnimationMode.Immediately,
+                            ).focusable()
                             .padding(horizontal = 10.dp),
                     style = typo().bodyMedium,
                     maxLines = 1,

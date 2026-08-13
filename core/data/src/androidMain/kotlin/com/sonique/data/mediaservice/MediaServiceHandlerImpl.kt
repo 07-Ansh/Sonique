@@ -627,22 +627,33 @@ internal class MediaServiceHandlerImpl(
         }
     }
 
+    private var lastEqualizerSessionId: Int = 0
+
     private fun sendOpenEqualizerIntent() {
+        val sessionId = player.audioSessionId
+        if (sessionId == 0) return
+        if (lastEqualizerSessionId != 0 && lastEqualizerSessionId != sessionId) {
+            sendCloseEqualizerIntent()
+        }
         context.sendBroadcast(
             Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
-                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
+                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
                 putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
                 putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
             },
         )
+        lastEqualizerSessionId = sessionId
     }
 
     private fun sendCloseEqualizerIntent() {
+        val sessionId = if (lastEqualizerSessionId != 0) lastEqualizerSessionId else player.audioSessionId
+        if (sessionId == 0) return
         context.sendBroadcast(
             Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION).apply {
-                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
+                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
             },
         )
+        lastEqualizerSessionId = 0
     }
 
     @SuppressLint("PrivateResource")
@@ -2210,6 +2221,9 @@ internal class MediaServiceHandlerImpl(
     override fun onCrossfadeStateChanged(isCrossfading: Boolean) {
         if (!isCrossfading) {
             mayBeNormalizeVolume()
+            if (player.isPlaying) {
+                sendOpenEqualizerIntent()
+            }
         }
     }
 

@@ -13,7 +13,6 @@
     <string name="favorite">Afegir a preferits</string>
     <string name="followed">Seguits</string>
     <string name="most_played">Més reproduïdes</string>
-    <string name="Downloaded">Descarregat</string>
     <string name="favorite_playlists">Llistes preferides</string>
     <string name="no_favorite_playlists">No hi ha llistes de reproducció preferides</string>
     <string name="downloaded_playlists">Llistes de reproducció baixades</string>

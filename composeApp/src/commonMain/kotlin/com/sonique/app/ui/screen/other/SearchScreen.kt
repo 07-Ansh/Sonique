@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.other
+﻿package com.sonique.app.ui.screen.other
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -133,7 +133,6 @@ import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.ui.component.liquidGlass
 import com.sonique.app.extension.isScrollingUp
-import androidx.compose.foundation.lazy.rememberLazyListState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1040,4 +1039,3 @@ fun DefaultSearchContent(
         }
     }
 }
-

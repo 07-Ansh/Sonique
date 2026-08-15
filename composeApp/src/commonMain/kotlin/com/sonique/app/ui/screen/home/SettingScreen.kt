@@ -63,7 +63,6 @@ import com.sonique.app.ui.screen.settings.SettingsUpdateScreen
 import com.sonique.app.ui.component.SettingDialog
 import com.sonique.app.ui.component.liquidGlass
 import com.sonique.app.expect.ui.rememberBackdrop
-import androidx.compose.foundation.border
 import androidx.compose.foundation.BorderStroke
 import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.navigation.destination.login.SpotifyLoginDestination

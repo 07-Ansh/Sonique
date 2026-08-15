@@ -69,7 +69,6 @@ import com.sonique.app.ui.theme.typo
 import com.sonique.app.ui.theme.white
 import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.GridView
-import androidx.compose.material3.IconButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.app.viewModel.LibraryViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -921,4 +920,3 @@ fun NavigationHeader(
         )
     }
 }
-

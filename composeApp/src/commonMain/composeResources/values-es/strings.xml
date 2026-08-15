@@ -13,7 +13,6 @@
     <string name="favorite">Favorito</string>
     <string name="followed">Seguido</string>
     <string name="most_played">Más reproducidas</string>
-    <string name="Downloaded">Descargado</string>
     <string name="favorite_playlists">Listas de reproducción favoritas</string>
     <string name="no_favorite_playlists">No hay listas de reproducción favoritas</string>
     <string name="downloaded_playlists">Listas de reproducción descargadas</string>

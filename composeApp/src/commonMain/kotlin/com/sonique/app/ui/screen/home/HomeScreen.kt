@@ -115,7 +115,6 @@ import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.component.InAppNotification
 import com.sonique.app.ui.component.OfflineScreen
 import com.sonique.app.ui.screen.home.SpeedDialSection
-import com.sonique.domain.utils.toTrack
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.MoodDestination
 import com.sonique.app.ui.navigation.destination.home.NotificationDestination
@@ -142,7 +141,6 @@ import com.sonique.app.viewModel.ListState
 import com.sonique.app.viewModel.SharedViewModel
 
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -853,4 +851,3 @@ fun MoodMomentAndGenre(
         }
     }
 }
-

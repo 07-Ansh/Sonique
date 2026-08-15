@@ -62,7 +62,6 @@ import com.sonique.app.expect.ui.MediaPlayerView
 import com.sonique.app.extension.getStringBlocking
 import com.sonique.app.extension.rgbFactor
 import com.sonique.app.ui.component.CenterLoadingBox
-import com.sonique.app.ui.component.CollapsingToolbarParallaxEffect
 import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.component.DescriptionView
 import com.sonique.app.ui.component.EndOfPage

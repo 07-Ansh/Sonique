@@ -41,22 +41,7 @@ import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlin.time.ExperimentalTime
 
-fun String?.removeDuplicateWords(): String {
-    if (this == null) {
-        return "null"
-    } else {
-        val regex = Regex("\\b(\\w+)\\b\\s*(?=.*\\b\\1\\b)")
-        return this.replace(regex, "")
-    }
-}
 
-fun <T> Iterable<T>.indexMap(): Map<T, Int> {
-    val map = mutableMapOf<T, Int>()
-    forEachIndexed { i, v ->
-        map[v] = i
-    }
-    return map
-}
 
 infix fun <E> Collection<E>.symmetricDifference(other: Collection<E>): Set<E> {
     val left = this subtract other
@@ -183,40 +168,7 @@ fun ArtistBrowse.toArtistScreenData(): ArtistScreenData =
         featuredOn = this.featuredOn ?: emptyList(),
     )
 
-fun isValidProxyHost(host: String): Boolean {
-     
-    val proxyHostRegex =
-        Regex(
-            pattern = "^(?!-)[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(?<!-)\$",
-            options = setOf(RegexOption.IGNORE_CASE),
-        )
 
-     
-    return proxyHostRegex.matches(host) || isIPAddress(host)
-}
-
-private fun isIPAddress(host: String): Boolean {
-     
-    val ipv4Regex =
-        Regex(
-            pattern = "^([0-9]{1,3}\\.){3}[0-9]{1,3}\$",
-        )
-    if (ipv4Regex.matches(host)) {
-        return host.split('.').all { it.toInt() in 0..255 }
-    }
-
-     
-    val ipv6Regex =
-        Regex(
-            pattern = "^[0-9a-fA-F:]+$",
-        )
-    return ipv6Regex.matches(host)
-}
-
-fun String.isTwoLetterCode(): Boolean {
-    val regex = "^[A-Za-z]{2}$".toRegex()
-    return regex.matches(this)
-}
 
 fun FilterState.displayNameRes(): StringResource =
     when (this) {

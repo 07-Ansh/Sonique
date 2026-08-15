@@ -13,7 +13,6 @@
     <string name="favorite">お気に入り</string>
     <string name="followed">フォロー中</string>
     <string name="most_played">最も再生した順</string>
-    <string name="Downloaded">ダウンロード済み</string>
     <string name="favorite_playlists">お気に入りの再生リスト</string>
     <string name="no_favorite_playlists">お気に入りの再生リストなし</string>
     <string name="downloaded_playlists">ダウンロード済みの再生リスト</string>

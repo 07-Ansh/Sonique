@@ -60,7 +60,6 @@ import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
 import com.sonique.app.Platform
 import com.sonique.app.expect.getDownloadFolderPath
-import com.sonique.app.expect.startWorker
 import com.sonique.app.expect.ui.toByteArray
 import com.sonique.app.getPlatform
 import com.sonique.app.utils.VersionManager
@@ -1565,4 +1564,3 @@ data class NowPlayingScreenData(
             )
     }
 }
-

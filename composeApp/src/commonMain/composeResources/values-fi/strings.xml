@@ -13,7 +13,6 @@
     <string name="favorite">Suosikki</string>
     <string name="followed">Seuratut</string>
     <string name="most_played">Toistetuimmat</string>
-    <string name="Downloaded">Ladattu</string>
     <string name="favorite_playlists">Suosikkisoittolistat</string>
     <string name="no_favorite_playlists">Ei suosikkisoittolistoja</string>
     <string name="downloaded_playlists">Ladatut soittolistat</string>

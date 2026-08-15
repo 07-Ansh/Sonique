@@ -1,4 +1,4 @@
-﻿package com.sonique.app
+package com.sonique.app
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -112,16 +112,16 @@ fun App(
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
 
      
-    var isShowMiniPlayer by rememberSaveable {
-        mutableStateOf(true)
+    val hasMedia = remember(nowPlayingData) {
+        nowPlayingData?.isNotEmpty() == true
     }
+    val isSettings = navBackStackEntry?.destination?.route?.contains("Settings") == true
+    val isShowMiniPlayer = hasMedia && !isSettings
 
-     
     var isShowNowPlaylistScreen by rememberSaveable {
         mutableStateOf(false)
     }
 
-     
     var isInFullscreen by rememberSaveable {
         mutableStateOf(false)
     }
@@ -177,10 +177,7 @@ fun App(
         }
     }
 
-    LaunchedEffect(nowPlayingData, navBackStackEntry) {
-        val hasMedia = !(nowPlayingData?.mediaItem == null || nowPlayingData?.mediaItem == GenericMediaItem.EMPTY)
-        val isSettings = navBackStackEntry?.destination?.route?.contains("Settings") == true
-        isShowMiniPlayer = hasMedia && !isSettings
+    LaunchedEffect(navBackStackEntry) {
         if (isSettings) {
             isNavBarVisible = false
         } else {

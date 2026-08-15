@@ -94,12 +94,8 @@ actual fun LiquidGlassAppBottomNavigationBar(
 
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
     val liquidGlassGlassiness by viewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
-    var isShowMiniPlayer by rememberSaveable {
-        mutableStateOf(true)
-    }
-
-    LaunchedEffect(nowPlayingData) {
-        isShowMiniPlayer = !(nowPlayingData?.mediaItem == null || nowPlayingData?.mediaItem == GenericMediaItem.EMPTY)
+    val isShowMiniPlayer = remember(nowPlayingData) {
+        nowPlayingData?.isNotEmpty() == true
     }
 
     val currentBackStackEntry by navController.currentBackStackEntryAsState()

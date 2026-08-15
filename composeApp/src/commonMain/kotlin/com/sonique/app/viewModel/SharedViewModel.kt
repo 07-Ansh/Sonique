@@ -1,4 +1,4 @@
-﻿package com.sonique.app.viewModel
+package com.sonique.app.viewModel
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.viewModelScope
@@ -381,9 +381,7 @@ class SharedViewModel(
         }
         viewModelScope.launch {
             mediaPlayerHandler.nowPlayingState
-                .distinctUntilChangedBy {
-                    Pair(it.mediaItem.mediaId, it.songEntity?.videoId)
-                }.collectLatest { state ->
+                .collectLatest { state ->
                     Logger.w(tag, "NowPlayingState is $state")
                     canvasJob?.cancel()
                     _nowPlayingState.value = state

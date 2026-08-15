@@ -1,4 +1,4 @@
-package com.sonique.app.viewModel
+﻿package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import com.sonique.domain.manager.DataStoreManager
@@ -67,7 +67,6 @@ class LogInViewModel(
             _fullYouTubeCookies.value = cookies
         }
     }
-
 
 }
 

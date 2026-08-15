@@ -76,7 +76,6 @@ fun DetailContentScreen(
     onScrolling: (Boolean) -> Unit = {},
     innerPadding: PaddingValues = PaddingValues()
 ) {
-    // Dynamic switching based on type selected
     when (type) {
         DetailType.ALBUM -> {
             AlbumScreen(
@@ -182,7 +181,6 @@ fun SharedDetailTemplate(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(md_theme_dark_background)) {
-        // dynamic ambient background gradient
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -212,7 +210,7 @@ fun SharedDetailTemplate(
                         .padding(horizontal = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(modifier = Modifier.height(56.dp)) // Status bar offset
+                    Spacer(modifier = Modifier.height(56.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -225,7 +223,6 @@ fun SharedDetailTemplate(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Centered Large Cover Art Image
                     AsyncImage(
                         model = ImageRequest.Builder(LocalPlatformContext.current)
                             .data(thumbnailUrl)
@@ -248,7 +245,6 @@ fun SharedDetailTemplate(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Centered Title
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleLarge.copy(
@@ -277,7 +273,6 @@ fun SharedDetailTemplate(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Centered Unified Action Row
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -303,7 +298,6 @@ fun SharedDetailTemplate(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // Play Button
                         playButtonContent()
 
                         Spacer(modifier = Modifier.width(16.dp))
@@ -335,7 +329,6 @@ fun SharedDetailTemplate(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Description if any
                     if (!description.isNullOrEmpty() && description != "null") {
                         DescriptionView(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
@@ -364,7 +357,6 @@ fun SharedDetailTemplate(
             }
         }
 
-        // Top sticky app bar when scrolled
         AnimatedVisibility(
             visible = shouldHideTopBar,
             enter = fadeIn(),

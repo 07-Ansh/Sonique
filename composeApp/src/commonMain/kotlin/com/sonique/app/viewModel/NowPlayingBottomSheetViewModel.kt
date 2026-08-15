@@ -1,4 +1,4 @@
-package com.sonique.app.viewModel
+﻿package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import com.sonique.common.Config
@@ -286,8 +286,6 @@ class NowPlayingBottomSheetViewModel(
                     makeToast(getString(Res.string.added_to_queue))
                 }
 
-
-
                 is NowPlayingBottomSheetUIEvent.SetSleepTimer -> {
                     if (ev.cancel) {
                         mediaPlayerHandler.sleepStop()
@@ -391,8 +389,6 @@ sealed class NowPlayingBottomSheetUIEvent {
     data object PlayNext : NowPlayingBottomSheetUIEvent()
 
     data object AddToQueue : NowPlayingBottomSheetUIEvent()
-
-
 
     data class SetSleepTimer(
         val cancel: Boolean = false,

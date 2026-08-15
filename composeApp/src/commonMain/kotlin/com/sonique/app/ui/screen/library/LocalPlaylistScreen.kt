@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.library
+﻿package com.sonique.app.ui.screen.library
 import androidx.compose.ui.platform.LocalUriHandler
 import com.sonique.app.ui.component.DescriptionView
 import sonique.composeapp.generated.resources.no_description
@@ -95,8 +95,6 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -632,8 +630,6 @@ fun LocalPlaylistScreen(
                                     }
 
                                     Spacer(modifier = Modifier.height(10.dp))
-
-                                    // Square artwork centered on blurred backdrop
                                     if (id == -999L) {
                                         Image(
                                             painter = painterDownloadedSongsThumbnail(
@@ -687,8 +683,6 @@ fun LocalPlaylistScreen(
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
                                     }
-
-                                    // Centered Title and Metadata
                                     Text(
                                         text = uiState.title,
                                         style = typo().titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -1459,4 +1453,3 @@ fun LocalPlaylistScreen(
         )
     }
 }
-

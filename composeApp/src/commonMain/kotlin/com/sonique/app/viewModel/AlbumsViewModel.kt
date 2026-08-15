@@ -1,4 +1,4 @@
-package com.sonique.app.viewModel
+﻿package com.sonique.app.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -62,8 +62,6 @@ class AlbumsViewModel(
             ) { homeRes, newReleaseRes, libraryAlbums, mixedForYou, localAlbums ->
                 val albumsList = mutableListOf<Content>()
                 val playlistsList = mutableListOf<Content>()
-
-                // 1. YouTube Music Library Albums
                 libraryAlbums?.forEach { item ->
                     albumsList.add(
                         Content(
@@ -80,8 +78,6 @@ class AlbumsViewModel(
                         )
                     )
                 }
-
-                // 2. Local Database Saved Albums
                 localAlbums.forEach { album ->
                     albumsList.add(
                         Content(
@@ -104,8 +100,6 @@ class AlbumsViewModel(
                         )
                     )
                 }
-
-                // 3. New Release Albums
                 if (newReleaseRes is Resource.Success) {
                     val newReleases = newReleaseRes.data ?: emptyList()
                     newReleases.forEach { item ->
@@ -119,8 +113,6 @@ class AlbumsViewModel(
                         albumsList.addAll(albumContents)
                     }
                 }
-
-                // 4. Home Feed Data (Categorize Albums vs Playlists)
                 if (homeRes is Resource.Success) {
                     val homeItems = homeRes.data?.second ?: emptyList()
                     homeItems.forEach { homeItem ->
@@ -138,8 +130,6 @@ class AlbumsViewModel(
                         }
                     }
                 }
-
-                // 5. Recommended Playlists (Mixed For You)
                 mixedForYou?.forEach { item ->
                     playlistsList.add(
                         Content(

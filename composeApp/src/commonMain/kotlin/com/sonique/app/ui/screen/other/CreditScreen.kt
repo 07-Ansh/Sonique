@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.other
+﻿package com.sonique.app.ui.screen.other
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -36,7 +36,7 @@ import sonique.composeapp.generated.resources.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreditScreen(
-    paddingValues: PaddingValues, // Keep for compatibility if needed, but logic handles it
+    paddingValues: PaddingValues,
     navController: NavController,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -75,7 +75,6 @@ fun CreditScreen(
             item {
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // App Icon
                 Image(
                     painter = painterResource(Res.drawable.app_icon),
                     contentDescription = "App Icon",
@@ -86,7 +85,6 @@ fun CreditScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // App Name & Version
                 Text(
                     text = stringResource(Res.string.app_name),
                     style = MaterialTheme.typography.headlineMedium,
@@ -100,7 +98,6 @@ fun CreditScreen(
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Developer Info
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp)
@@ -118,7 +115,7 @@ fun CreditScreen(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Ansh Sharma", // Using hardcoded if string resource not found, or use Res.string.ansh_sharma if verified
+                            text = "Ansh Sharma",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -127,7 +124,6 @@ fun CreditScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Social Links
                 Text(
                     text = "Connect with us",
                     style = MaterialTheme.typography.titleSmall,
@@ -136,16 +132,14 @@ fun CreditScreen(
                 )
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // GitHub
                 SocialItem(
                     icon = Icons.Rounded.Code,
                     text = "GitHub",
                     onClick = { uriHandler.openUri("https://github.com/07-Ansh/Sonique") }
                 )
                 
-                // Telegram (Support)
                 SocialItem(
-                    icon = Icons.Rounded.Support, // Using Support icon as placeholder for Telegram
+                    icon = Icons.Rounded.Support,
                     text = "Telegram / Support",
                     onClick = { 
                         scope.launch {
@@ -154,13 +148,11 @@ fun CreditScreen(
                     } 
                 )
 
-                // Website (if applicable) - Optional, maybe just Ko-fi or something?
-                // For now, let's Stick to GitHub and Telegram which are common.
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Text(
-                    text = "Made with ❤️",
+                    text = "Made with â¤ï¸",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )

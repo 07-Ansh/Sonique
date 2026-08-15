@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.library
+﻿package com.sonique.app.ui.screen.library
 
 import androidx.compose.foundation.layout.*
 import com.sonique.app.ui.screen.library.LibraryDynamicPlaylistType
@@ -66,7 +66,6 @@ import sonique.composeapp.generated.resources.baseline_close_24
 import sonique.composeapp.generated.resources.baseline_search_24
 import sonique.composeapp.generated.resources.liked
 import sonique.composeapp.generated.resources.search
-
 
 @OptIn(ExperimentalHazeMaterialsApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -307,6 +306,4 @@ fun FavoriteCompositeScreen(
         }
     }
 }
-
-
 

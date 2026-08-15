@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
@@ -564,7 +564,4 @@ data class LibraryItemState(
     val data: List<LibraryType>,
     val isLoading: Boolean = true,
 )
-
-
-
 

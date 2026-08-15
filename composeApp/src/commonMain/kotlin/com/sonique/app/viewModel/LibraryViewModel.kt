@@ -1,4 +1,4 @@
-package com.sonique.app.viewModel
+﻿package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import com.sonique.common.Config
@@ -55,8 +55,6 @@ import sonique.composeapp.generated.resources.error
 import com.sonique.domain.extension.now
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
-
-
 
 class LibraryViewModel(
     private val dataStoreManager: DataStoreManager,
@@ -237,8 +235,6 @@ class LibraryViewModel(
                     // getAllDownloadedPlaylist() returns List<PlaylistType>; cast to PlaylistEntity
                     val downloadedPlaylists = rawDownloaded.filterIsInstance<PlaylistEntity>()
                     val result = mutableListOf<LocalPlaylistEntity>()
-
-                    // 1. "Downloaded Songs" virtual entry always first
                     result.add(
                         LocalPlaylistEntity(
                             id = -999L,
@@ -246,11 +242,7 @@ class LibraryViewModel(
                             thumbnail = "sonique://downloaded_songs_thumbnail",
                         )
                     )
-
-                    // 2. User-created local playlists right after Downloaded Songs (newest first)
                     result.addAll(localPlaylists)
-
-                    // 3. Downloaded YouTube playlists (exclude virtual stubs and albums)
                     downloadedPlaylists
                         .filter { it.id != LOCAL_PLAYLIST_ID_DOWNLOADED && !it.id.startsWith("MPRE") }
                         .forEach { playlist ->
@@ -264,8 +256,6 @@ class LibraryViewModel(
                                 )
                             )
                         }
-
-                    // 4. Liked YouTube playlists (exclude already-downloaded ones and albums)
                     val downloadedIds = downloadedPlaylists.map { it.id }.toSet()
                     likedPlaylists
                         .filter { it.id !in downloadedIds && it.id != LOCAL_PLAYLIST_ID_DOWNLOADED && !it.id.startsWith("MPRE") }
@@ -285,8 +275,6 @@ class LibraryViewModel(
                     _yourLocalPlaylist.value = LocalResource.Success(merged)
                 }
         }
-
-
 
         viewModelScope.launch {
             val likedSongsTitle = getString(Res.string.liked_songs)
@@ -411,9 +399,6 @@ class LibraryViewModel(
             _followedArtists.value = LocalResource.Success(savedList)
         }
     }
-
-
-
 
     fun getPlaylistFavorite() {}
 

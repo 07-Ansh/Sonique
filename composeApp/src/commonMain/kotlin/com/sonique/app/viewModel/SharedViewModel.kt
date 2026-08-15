@@ -60,7 +60,6 @@ import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
 import com.sonique.app.Platform
 import com.sonique.app.expect.getDownloadFolderPath
-import com.sonique.app.expect.startWorker
 import com.sonique.app.expect.ui.toByteArray
 import com.sonique.app.getPlatform
 import com.sonique.app.utils.VersionManager
@@ -81,7 +80,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
@@ -195,7 +193,7 @@ class SharedViewModel(
                     dataStoreManager.setLastVersionCode(currentVersion)
                 } else {
                     val versionString = VersionManager.getVersionName()
-                    val fallback = "Updated to version ${versionString}\n• Bug fixes and performance improvements."
+                    val fallback = "Updated to version ${versionString}\nâ€¢ Bug fixes and performance improvements."
                     try {
                         val result = updateRepository.fetchChangelog(versionString)
                         if (!result.isNullOrBlank()) {
@@ -226,9 +224,6 @@ class SharedViewModel(
     private val _getVideo = MutableStateFlow<Boolean>(false)
     val getVideo: StateFlow<Boolean> = _getVideo.asStateFlow()
 
-
-
-
     private val _intent: MutableStateFlow<GenericIntent?> = MutableStateFlow(null)
     val intent: StateFlow<GenericIntent?> = _intent
 
@@ -244,8 +239,6 @@ class SharedViewModel(
     fun getQueueDataState() = mediaPlayerHandler.queueData
     val queueData = mediaPlayerHandler.queueData
 
-
-
     private var _controllerState =
         MutableStateFlow<ControlState>(
             ControlState(
@@ -260,7 +253,6 @@ class SharedViewModel(
             ),
         )
     val controllerState: StateFlow<ControlState> = _controllerState
-
 
     private var _timeline =
         MutableStateFlow<TimeLine>(
@@ -285,9 +277,6 @@ class SharedViewModel(
     val ambienceMode: StateFlow<Boolean> = dataStoreManager.ambienceMode
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
-
-    val playerScreenStyle: StateFlow<String> = dataStoreManager.playerScreenStyle
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "modern")
 
     val blurBg: StateFlow<Boolean> = dataStoreManager.blurPlayerBackground
         .map { it == DataStoreManager.TRUE }
@@ -380,7 +369,6 @@ class SharedViewModel(
                             }
                         }
 
-
             launch {
                 dataStoreManager.lyricsProvider.distinctUntilChanged().collectLatest {
                     setLyricsProvider()
@@ -393,9 +381,7 @@ class SharedViewModel(
         }
         viewModelScope.launch {
             mediaPlayerHandler.nowPlayingState
-                .distinctUntilChangedBy {
-                    Pair(it.mediaItem.mediaId, it.songEntity?.videoId)
-                }.collectLatest { state ->
+                .collectLatest { state ->
                     Logger.w(tag, "NowPlayingState is $state")
                     canvasJob?.cancel()
                     _nowPlayingState.value = state
@@ -570,8 +556,6 @@ class SharedViewModel(
         _intent.value = intent
     }
 
-
-
     private fun getLikeStatus(videoId: String?) {
         viewModelScope.launch {
             if (videoId != null) {
@@ -731,24 +715,16 @@ class SharedViewModel(
             lyricsCanvasRepository.getSavedLyrics(track.videoId).cancellable().collectLatest { lyrics ->
                 if (lyrics != null) {
                     val lyricsData = lyrics.toLyrics()
-                    val hasLyrics = !lyricsData.SoniqueLyricsId.isNullOrBlank() || !lyricsData.lines.isNullOrEmpty()
-                    if (hasLyrics) {
-                        Logger.d(tag, "Saved Lyrics $lyricsData")
-                        updateLyrics(
-                            track.videoId,
-                            track.durationSeconds ?: 0,
-                            lyricsData,
-                            false,
-                            LyricsProvider.OFFLINE,
-                        )
-                        return@collectLatest
-                    }
+                    Logger.d(tag, "Saved Lyrics $lyricsData")
+                    updateLyrics(
+                        track.videoId,
+                        track.durationSeconds ?: 0,
+                        lyricsData,
+                        false,
+                        LyricsProvider.OFFLINE,
+                    )
+
                 }
-                getLyricsFromFormat(
-                    false,
-                    track.toSongEntity(),
-                    (track.durationSeconds ?: 0)
-                )
             }
         }
     }
@@ -814,8 +790,6 @@ class SharedViewModel(
                 SONG_CLICK -> {
                     mediaPlayerHandler.getRelated(track.videoId)
                 }
-
-
 
                 SHARE -> {
                     mediaPlayerHandler.getRelated(track.videoId)
@@ -1029,10 +1003,6 @@ class SharedViewModel(
             }
     }
 
-
-
-
-
     fun stopPlayer() {
         _nowPlayingScreenData.value = NowPlayingScreenData.initial()
         _nowPlayingState.value = null
@@ -1112,7 +1082,6 @@ class SharedViewModel(
             }
         }
 
-
         if (_nowPlayingState.value?.songEntity?.videoId == videoId) {
             val track = _nowPlayingState.value?.track
             when (isTranslatedLyrics) {
@@ -1163,72 +1132,176 @@ class SharedViewModel(
         viewModelScope.launch {
             val videoId = song.videoId
             log("Get Lyrics From Format for $videoId", LogLevel.WARN)
-
-            // 1. Check local DB first
-            val saved = lyricsCanvasRepository.getSavedLyrics(videoId).cancellable().firstOrNull()
-            if (saved != null) {
-                val lyricsData = saved.toLyrics()
-                val hasLyrics = !lyricsData.SoniqueLyricsId.isNullOrBlank() || !lyricsData.lines.isNullOrEmpty()
-                if (hasLyrics) {
-                    Logger.d(tag, "Loaded saved lyrics from DB for $videoId")
-                    updateLyrics(
-                        videoId,
-                        duration,
-                        lyricsData,
-                        false,
-                        LyricsProvider.OFFLINE
-                    )
-                    return@launch
-                }
-            }
-
-            // 2. Fetch via sequential helper if not in DB
             val artistName = song.artistName
-            val artist = if (artistName?.firstOrNull() != null &&
-                artistName.firstOrNull()?.contains("Various Artists") == false
-            ) {
-                artistName.firstOrNull()
-            } else {
-                mediaPlayerHandler.nowPlaying.first()?.metadata?.artist ?: ""
-            }
-
-            val helper = com.sonique.data.lyrics.LyricsHelper()
-            val result = helper.getLyrics(
-                id = videoId,
-                title = song.title,
-                artist = (artist ?: "").toString(),
-                duration = duration,
-                album = song.albumName
-            )
-
-            if (result.lyrics.isNotBlank()) {
-                val lyricsData = com.sonique.domain.utils.parseRawLrcToLyrics(result.lyrics)
-
-                // Save to DB
-                lyricsCanvasRepository.insertLyrics(lyricsData.toLyricsEntity(videoId))
-
-                val providerEnum = when (result.provider) {
-                    "YouTube Music", "YouTube Subtitle" -> LyricsProvider.YOUTUBE
-                    "Spotify" -> LyricsProvider.SPOTIFY
-                    "LrcLib" -> LyricsProvider.LRCLIB
-                    "KuGou", "BetterLyrics", "Paxsenix", "LyricsPlus" -> LyricsProvider.LRCLIB
-                    else -> LyricsProvider.OFFLINE
+            val artist =
+                if (artistName?.firstOrNull() != null &&
+                    artistName
+                        .firstOrNull()
+                        ?.contains("Various Artists") == false
+                ) {
+                    artistName.firstOrNull()
+                } else {
+                    mediaPlayerHandler.nowPlaying
+                        .first()
+                        ?.metadata
+                        ?.artist
+                        ?: ""
                 }
-
-                // Update UI state
-                updateLyrics(
+            val lyricsProvider = dataStoreManager.lyricsProvider.first()
+            if (isVideo) {
+                getYouTubeCaption(
                     videoId,
+                    song,
+                    (artist ?: "").toString(),
                     duration,
-                    lyricsData,
-                    false,
-                    providerEnum
                 )
             } else {
-                Logger.w(tag, "No lyrics found from any provider for $videoId")
+                when (lyricsProvider) {
+                    DataStoreManager.LRCLIB -> {
+                        getLrclibLyrics(
+                            song,
+                            (artist ?: "").toString(),
+                            duration,
+                        )
+                    }
+
+                    DataStoreManager.YOUTUBE -> {
+                    }
+                }
             }
         }
     }
 
+    private suspend fun getYouTubeCaption(
+        videoId: String,
+        song: SongEntity,
+        artist: String?,
+        duration: Int,
+    ) {
+        lyricsCanvasRepository
+            .getYouTubeCaption(dataStoreManager.youtubeSubtitleLanguage.first(), videoId)
+            .cancellable()
+            .collect { response ->
+                val data = response.data
+                when (response) {
+                    is Resource.Success if (data != null) -> {
+                        val lyrics = data.first
+                        val translatedLyrics = data.second
+                        insertLyrics(lyrics.toLyricsEntity(videoId))
+                        updateLyrics(
+                            videoId,
+                            duration,
+                            lyrics,
+                            false,
+                            LyricsProvider.YOUTUBE,
+                        )
+                        if (translatedLyrics != null) {
+                            updateLyrics(
+                                videoId,
+                                duration,
+                                translatedLyrics,
+                                true,
+                                LyricsProvider.YOUTUBE,
+                            )
+                        } else {
+
+                        }
+                    }
+
+                    else -> {
+                        getLrclibLyrics(
+                            song,
+                            (artist ?: ""),
+                            duration,
+                        )
+                    }
+                }
+            }
+    }
+
+    private fun getLrclibLyrics(
+        song: SongEntity,
+        artist: String,
+        duration: Int,
+    ) {
+        viewModelScope.launch {
+            lyricsCanvasRepository
+                .getLrclibLyricsData(
+                    artist,
+                    song.title,
+                    duration,
+                ).collectLatest { res ->
+                    val data = res.data
+                    when (res) {
+                        is Resource.Success if (data != null) -> {
+                            Logger.d(tag, "Get Lyrics Data Success")
+                            updateLyrics(
+                                song.videoId,
+                                duration,
+                                res.data,
+                                false,
+                                LyricsProvider.LRCLIB,
+                            )
+                            insertLyrics(
+                                res.data?.toLyricsEntity(
+                                    song.videoId,
+                                ) ?: return@collectLatest,
+                            )
+
+                        }
+
+                        else -> {
+                            getSavedLyrics(
+                                song.toTrack().copy(
+                                    durationSeconds = duration,
+                                ),
+                            )
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun getSpotifyLyrics(
+        track: Track,
+        query: String,
+        duration: Int? = null,
+    ) {
+        viewModelScope.launch {
+            Logger.d("Check SpotifyLyrics", "SpotifyLyrics $query")
+            lyricsCanvasRepository.getSpotifyLyrics(dataStoreManager, query, duration).cancellable().collect { response ->
+                Logger.d("Check SpotifyLyrics", response.toString())
+                val data = response.data
+                when (response) {
+                    is Resource.Success -> {
+                        if (data != null) {
+                            insertLyrics(
+                                data.toLyricsEntity(
+                                    track.videoId,
+                                ),
+                            )
+                            updateLyrics(
+                                track.videoId,
+                                duration ?: 0,
+                                data,
+                                false,
+                                LyricsProvider.SPOTIFY,
+                            )
+
+                        }
+                    }
+
+                    else -> {
+                        getLrclibLyrics(
+                            track.toSongEntity(),
+                            track.artists.toListName().firstOrNull() ?: "",
+                            duration ?: 0,
+                        )
+                    }
+                }
+            }
+        }
+    }
 
     fun setLyricsProvider() {
         viewModelScope.launch {
@@ -1326,7 +1399,7 @@ class SharedViewModel(
 
     fun downloadAppUpdate(url: String, title: String) {
         viewModelScope.launch {
-            _shareSavedLyrics.emit(false) // Trigger UI Event
+            _shareSavedLyrics.emit(false)
             onUIEvent(UIEvent.DownloadUpdate(url, title))
         }
     }
@@ -1387,8 +1460,6 @@ class SharedViewModel(
     fun downloadFileDone() {
         _downloadFileProgress.value = DownloadProgress.INIT
     }
-
-
 
     fun setBitmap(bitmap: ImageBitmap?) {
         _nowPlayingScreenData.update {
@@ -1491,4 +1562,3 @@ data class NowPlayingScreenData(
             )
     }
 }
-

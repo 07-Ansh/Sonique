@@ -1,4 +1,4 @@
-package com.sonique.app.expect.ui
+﻿package com.sonique.app.expect.ui
 
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
@@ -35,6 +35,4 @@ expect fun PlatformWebView(
     aboveContent: @Composable (BoxScope.() -> Unit) = {},
     onPageFinished: (String) -> Unit,
 )
-
-
 

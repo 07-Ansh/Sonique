@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -96,8 +97,6 @@ import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class, ExperimentalFoundationApi::class)
 @Composable
 fun App(
@@ -107,7 +106,6 @@ fun App(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-
     val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
     val intent by viewModel.intent.collectAsStateWithLifecycle()
@@ -116,19 +114,17 @@ fun App(
     val updateViewModel: UpdateViewModel = koinInject()
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
 
-
-
      
-    var isShowMiniPlayer by rememberSaveable {
-        mutableStateOf(true)
+    val hasMedia = remember(nowPlayingData) {
+        nowPlayingData?.isNotEmpty() == true
     }
+    val isSettings = navBackStackEntry?.destination?.route?.contains("Settings") == true
+    val isShowMiniPlayer = hasMedia && !isSettings
 
-     
     var isShowNowPlaylistScreen by rememberSaveable {
         mutableStateOf(false)
     }
 
-     
     var isInFullscreen by rememberSaveable {
         mutableStateOf(false)
     }
@@ -168,14 +164,9 @@ fun App(
         }
     }
 
-
-
-
-
     val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
-
 
     LaunchedEffect(reloadDestination) {
         val destination = reloadDestination
@@ -189,10 +180,7 @@ fun App(
         }
     }
 
-    LaunchedEffect(nowPlayingData, navBackStackEntry) {
-        val hasMedia = !(nowPlayingData?.mediaItem == null || nowPlayingData?.mediaItem == GenericMediaItem.EMPTY)
-        val isSettings = navBackStackEntry?.destination?.route?.contains("Settings") == true
-        isShowMiniPlayer = hasMedia && !isSettings
+    LaunchedEffect(navBackStackEntry) {
         if (isSettings) {
             isNavBarVisible = false
         } else {
@@ -283,8 +271,6 @@ fun App(
             }
         }
     }
-
-
 
     var isScrolledToTop by rememberSaveable {
         mutableStateOf(true)
@@ -683,7 +669,6 @@ fun App(
                                 textContentColor = MaterialTheme.colorScheme.onSurface,
                             )
                         }
-
 
                     },
                 )

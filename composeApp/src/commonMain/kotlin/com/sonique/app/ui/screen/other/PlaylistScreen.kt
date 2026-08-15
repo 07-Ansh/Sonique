@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.other
+﻿package com.sonique.app.ui.screen.other
 
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.animation.core.Spring
@@ -87,7 +87,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.lerp
@@ -350,7 +349,7 @@ fun PlaylistScreen(
         mutableStateOf<ImageBitmap?>(null)
     }
     // Track which thumbnail URL we've already extracted a palette from.
-    // Prevents palette flash when LazyColumn recycles the header item on scroll —
+    // Prevents palette flash when LazyColumn recycles the header item on scroll â€”
     // AsyncImage re-mount fires onSuccess again, but we skip the regenerate.
     var paletteGeneratedFor by remember {
         mutableStateOf<String?>(null)
@@ -386,8 +385,6 @@ fun PlaylistScreen(
         } else {
             250
         }
-
-    // Loading dialog
     val showLoadingDialog by viewModel.showLoadingDialog.collectAsStateWithLifecycle()
     if (showLoadingDialog.first) {
         LoadingDialog(
@@ -395,7 +392,6 @@ fun PlaylistScreen(
             showLoadingDialog.second,
         )
     }
-//    Box {
     Crossfade(
         targetState = uiState,
     ) { state ->
@@ -543,8 +539,6 @@ fun PlaylistScreen(
                                                             ),
                                                         ),
                                                 )
-
-                                                // Column for the content overlaying the backdrop
                                                 Column(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
@@ -552,7 +546,6 @@ fun PlaylistScreen(
                                                         .padding(bottom = 16.dp),
                                                     horizontalAlignment = Alignment.CenterHorizontally
                                                 ) {
-                                                    // Header buttons (Back + Heart/Search/More) using liquid glass!
                                                     Row(
                                                         modifier = Modifier
                                                             .fillMaxWidth()
@@ -608,8 +601,6 @@ fun PlaylistScreen(
                                                     }
 
                                                     Spacer(modifier = Modifier.height(10.dp))
-
-                                                    // Crisp square artwork centered on the blurred backdrop
                                                     if (playlistId == LOCAL_PLAYLIST_ID_DOWNLOADED) {
                                                         androidx.compose.foundation.Image(
                                                             painter = painterDownloadedSongsThumbnail(
@@ -650,8 +641,6 @@ fun PlaylistScreen(
 
                                                         Spacer(modifier = Modifier.height(12.dp))
                                                     }
-
-                                                    // Centered Title and Metadata
                                                     Text(
                                                         text = data.title,
                                                         style = typo().titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -695,7 +684,7 @@ fun PlaylistScreen(
                                                             } else {
                                                                 stringResource(Res.string.playlist)
                                                             }
-                                                        } • ${data.year}",
+                                                        } â€¢ ${data.year}",
                                                         style = typo().bodyMedium,
                                                         color = Color.White.copy(alpha = 0.6f),
                                                         textAlign = TextAlign.Center,
@@ -779,7 +768,7 @@ fun PlaylistScreen(
                                                                 } else {
                                                                     stringResource(Res.string.playlist)
                                                                 }
-                                                            } • ${data.year}",
+                                                            } â€¢ ${data.year}",
                                                             style = typo().bodyMedium,
                                                         )
                                                     }
@@ -1245,7 +1234,6 @@ fun PlaylistScreen(
                     }
                     when (tracksListState) {
                         ListState.IDLE -> {
-                            // DO NOTHING
                             item {
                                 EndOfPage()
                             }

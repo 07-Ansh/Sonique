@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+﻿@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.sonique.app.ui.screen.player
 
@@ -267,25 +267,18 @@ fun NowPlayingScreenContent(
     val blurBg by sharedViewModel.blurBg.collectAsStateWithLifecycle()
 
     val hazeState = rememberHazeState()
-
-    // Inject the bottom-sheet VM to access songUIState.downloadState
     val bottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
     val bsUiState by bottomSheetViewModel.uiState.collectAsStateWithLifecycle()
     var showCancelDlDialog by rememberSaveable { mutableStateOf(false) }
 
-
     val mainScrollState = rememberScrollState()
-
-    // Fraction of scroll progress (0f = top, 1f = scrolled far down)
     val scrollFraction by remember {
         derivedStateOf {
             if (mainScrollState.maxValue == 0) 0f
             else (mainScrollState.value.toFloat() / mainScrollState.maxValue.toFloat()).coerceIn(0f, 1f)
         }
     }
-    // Album art contracts from full size to 70% as user scrolls
     val playerScale by remember { derivedStateOf { 1f - (scrollFraction * 0.30f) } }
-    // Player info alpha — always fully visible, no fade during scroll/slide
     val playerInfoAlpha = 1f
 
     var showHideMiddleLayout by rememberSaveable {
@@ -346,7 +339,9 @@ fun NowPlayingScreenContent(
         mutableStateOf(Color.White)
     }
 
-
+    LaunchedEffect(nowPlayingState?.songEntity) {
+        bottomSheetViewModel.setSongEntity(nowPlayingState?.songEntity)
+    }
 
     LaunchedEffect(nowPlayingState?.songEntity) {
         bottomSheetViewModel.setSongEntity(nowPlayingState?.songEntity)
@@ -536,8 +531,6 @@ fun NowPlayingScreenContent(
             },
         )
     }
-
-
 
     if (screenDataState.lyricsData != null && controllerState.isPlaying) {
         KeepScreenOn()
@@ -1080,7 +1073,6 @@ fun NowPlayingScreenContent(
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
 
-
                                         Column(Modifier.weight(1f)) {
                                             Text(
                                                 text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
@@ -1570,7 +1562,6 @@ fun NowPlayingScreenContent(
                                         Text(
                                             text =
                                                 when (screenDataState.lyricsData?.lyricsProvider) {
-
 
                                                     LyricsProvider.LRCLIB -> {
                                                         stringResource(Res.string.lyrics_provider_lrc)

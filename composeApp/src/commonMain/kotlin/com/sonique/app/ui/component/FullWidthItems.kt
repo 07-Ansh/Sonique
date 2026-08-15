@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -598,7 +598,7 @@ fun PlaylistFullWidthItems(
                         )
                     }
                     Text(
-                        text = "$firstSubtitle ${if (secondSubtitle.isNotEmpty()) " • $secondSubtitle" else ""}",
+                        text = "$firstSubtitle ${if (secondSubtitle.isNotEmpty()) " â€¢ $secondSubtitle" else ""}",
                         style = typo().labelSmall,
                         maxLines = 1,
                         color = Color(0xC4FFFFFF),
@@ -740,8 +740,4 @@ fun ArtistCircularItem(
         )
     }
 }
-
-
-
-
 

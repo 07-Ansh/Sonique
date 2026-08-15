@@ -1,4 +1,4 @@
-package com.sonique.app.ui.navigation.graph
+﻿package com.sonique.app.ui.navigation.graph
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -18,7 +18,6 @@ import com.sonique.app.ui.screen.home.NotificationScreen
 import com.sonique.app.ui.screen.home.RecentlySongsScreen
 import com.sonique.app.ui.screen.home.SettingScreen
 import com.sonique.app.ui.screen.other.CreditScreen
-import com.sonique.app.ui.screen.settings.*
 import com.sonique.app.viewModel.SharedViewModel
 import org.koin.compose.koinInject
 

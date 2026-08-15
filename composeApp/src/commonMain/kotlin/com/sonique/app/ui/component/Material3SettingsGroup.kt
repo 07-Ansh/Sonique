@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sonique Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -64,7 +64,6 @@ fun Material3SettingsGroup(
         modifier = Modifier
             .fillMaxWidth()
     ) {
-        // Section title
         title?.let {
             Text(
                 text = it,
@@ -73,8 +72,6 @@ fun Material3SettingsGroup(
                 modifier = Modifier.padding(bottom = 8.dp, top = 8.dp)
             )
         }
-
-        // Settings items
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -145,7 +142,6 @@ private fun Material3SettingsItemRow(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Custom leading content or Icon with background
         if (item.leadingContent != null) {
             item.leadingContent.invoke()
             Spacer(modifier = Modifier.width(16.dp))
@@ -203,12 +199,9 @@ private fun Material3SettingsItemRow(
 
             Spacer(modifier = Modifier.width(16.dp))
         }
-
-        // Title and description
         Column(
             modifier = Modifier.weight(1f)
         ) {
-            // Title content
             ProvideTextStyle(
                 MaterialTheme.typography.titleMedium.copy(
                     color = if (!item.enabled) 
@@ -219,8 +212,6 @@ private fun Material3SettingsItemRow(
             ) {
                 item.title()
             }
-
-            // Description if provided
             item.description?.let { desc ->
                 Spacer(modifier = Modifier.height(2.dp))
                 ProvideTextStyle(
@@ -235,8 +226,6 @@ private fun Material3SettingsItemRow(
                 }
             }
         }
-
-        // Trailing content
         val trailingContent = item.trailingContent ?: if (item.isSwitch && item.onCheckedChange != null) {
             @Composable {
                 Switch(

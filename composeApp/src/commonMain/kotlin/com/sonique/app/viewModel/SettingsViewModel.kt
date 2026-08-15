@@ -1,4 +1,4 @@
-package com.sonique.app.viewModel
+﻿package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import coil3.PlatformContext
@@ -86,15 +86,10 @@ class SettingsViewModel(
     private var _sendBackToGoogle: MutableStateFlow<String?> = MutableStateFlow(null)
     val sendBackToGoogle: StateFlow<String?> = _sendBackToGoogle
 
-
     private var _translationLanguage: MutableStateFlow<String?> = MutableStateFlow(null)
     val translationLanguage: StateFlow<String?> = _translationLanguage
     private var _useTranslation: MutableStateFlow<String?> = MutableStateFlow(null)
     val useTranslation: StateFlow<String?> = _useTranslation
-    private var _transliterateLyrics: MutableStateFlow<String?> = MutableStateFlow(null)
-    val transliterateLyrics: StateFlow<String?> = _transliterateLyrics
-    private var _playerScreenStyle: MutableStateFlow<String?> = MutableStateFlow(null)
-    val playerScreenStyle: StateFlow<String?> = _playerScreenStyle
     private var _playerCacheLimit: MutableStateFlow<Int?> = MutableStateFlow(null)
     val playerCacheLimit: StateFlow<Int?> = _playerCacheLimit
 
@@ -112,7 +107,6 @@ class SettingsViewModel(
     private var _proxyPort = MutableStateFlow(8000)
     val proxyPort: StateFlow<Int> = _proxyPort
 
-
     private val _crossfadeEnabled = MutableStateFlow<Boolean>(false)
     val crossfadeEnabled: StateFlow<Boolean> = _crossfadeEnabled
     private val _crossfadeDuration = MutableStateFlow<Int>(5000)
@@ -121,8 +115,6 @@ class SettingsViewModel(
     val crossfadeDjMode: StateFlow<Boolean> = _crossfadeDjMode
     private val _youtubeSubtitleLanguage = MutableStateFlow<String>("")
     val youtubeSubtitleLanguage: StateFlow<String> = _youtubeSubtitleLanguage
-
-
 
     private var _backupDownloaded: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val backupDownloaded: StateFlow<Boolean> = _backupDownloaded
@@ -140,14 +132,8 @@ class SettingsViewModel(
     private var _restoreState: MutableStateFlow<BackupRestoreState> = MutableStateFlow(BackupRestoreState.Idle)
     val restoreState: StateFlow<BackupRestoreState> = _restoreState
 
-
-
     private val _explicitContentEnabled = MutableStateFlow(false)
     val explicitContentEnabled: StateFlow<Boolean> = _explicitContentEnabled
-
-
-
-
 
     private val _likedSongsCount = MutableStateFlow(0)
     val likedSongsCount: StateFlow<Int> = _likedSongsCount
@@ -172,8 +158,6 @@ class SettingsViewModel(
 
     private val _downloadQuality = MutableStateFlow<String?>(null)
     val downloadQuality: StateFlow<String?> = _downloadQuality
-
-
 
     private var _alertData: MutableStateFlow<SettingAlertState?> = MutableStateFlow(null)
     val alertData: StateFlow<SettingAlertState?> = _alertData
@@ -221,8 +205,6 @@ class SettingsViewModel(
 
     private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("list")
     val continueListeningLayout: StateFlow<String> = _continueListeningLayout
-
-
 
     init {
         getYoutubeSubtitleLanguage()
@@ -342,8 +324,6 @@ class SettingsViewModel(
         }
     }
 
-
-
     private fun getKeepYouTubePlaylistOffline() {
         viewModelScope.launch {
             dataStoreManager.keepYouTubePlaylistOffline.collect { keep ->
@@ -389,8 +369,6 @@ class SettingsViewModel(
         }
     }
 
-
-
     private fun getExplicitContentEnabled() {
         viewModelScope.launch {
             dataStoreManager.explicitContentEnabled.collect { enabled ->
@@ -406,10 +384,6 @@ class SettingsViewModel(
         }
     }
 
-
-
-
-
     private fun getBackupDownloaded() {
         viewModelScope.launch {
             dataStoreManager.backupDownloaded.collect { backupDownloaded ->
@@ -424,14 +398,6 @@ class SettingsViewModel(
             getBackupDownloaded()
         }
     }
-
-
-
-
-
-
-
-
 
     private fun getCanvasCache() {
         viewModelScope.launch {
@@ -506,16 +472,12 @@ class SettingsViewModel(
         }
     }
 
-
-
     fun getThumbCacheSize(context: PlatformContext) {
         viewModelScope.launch {
             val diskCache = SingletonImageLoader.get(context).diskCache
             _thumbCacheSize.emit(diskCache?.size)
         }
     }
-
-
 
     fun getTranslationLanguage() {
         viewModelScope.launch {
@@ -546,38 +508,6 @@ class SettingsViewModel(
             getUseTranslation()
         }
     }
-
-    fun getTransliterateLyrics() {
-        viewModelScope.launch {
-            dataStoreManager.transliterateLyrics.collect { value ->
-                _transliterateLyrics.emit(value)
-            }
-        }
-    }
-
-    fun setTransliterateLyrics(enable: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setTransliterateLyrics(enable)
-            getTransliterateLyrics()
-        }
-    }
-
-    fun getPlayerScreenStyle() {
-        viewModelScope.launch {
-            dataStoreManager.playerScreenStyle.collect { value ->
-                _playerScreenStyle.emit(value)
-            }
-        }
-    }
-
-    fun setPlayerScreenStyle(style: String) {
-        viewModelScope.launch {
-            dataStoreManager.setPlayerScreenStyle(style)
-            getPlayerScreenStyle()
-        }
-    }
-
-
 
     fun getLocation() {
         viewModelScope.launch {
@@ -610,8 +540,6 @@ class SettingsViewModel(
         }
     }
 
-
-
     fun getSponsorBlockEnabled() {
         viewModelScope.launch {
             dataStoreManager.sponsorBlockEnabled.first().let { enabled ->
@@ -626,8 +554,6 @@ class SettingsViewModel(
             getSponsorBlockEnabled()
         }
     }
-
-
 
     fun getSponsorBlockCategories() {
         viewModelScope.launch {
@@ -648,8 +574,6 @@ class SettingsViewModel(
         }
     }
 
-
-
     private var _quality: MutableStateFlow<String?> = MutableStateFlow(null)
     val quality: StateFlow<String?> = _quality
 
@@ -668,8 +592,6 @@ class SettingsViewModel(
             }
         }
     }
-
-
 
     fun changeQuality(qualityItem: String?) {
         viewModelScope.launch {
@@ -1107,7 +1029,6 @@ class SettingsViewModel(
         }
     }
 
-
     fun getSpotifyLogIn() {
         viewModelScope.launch {
             dataStoreManager.spdc.collect { loggedIn ->
@@ -1136,8 +1057,6 @@ class SettingsViewModel(
             getSpotifyLogIn()
         }
     }
-
-
 
     fun getSpotifyLyrics() {
         viewModelScope.launch {
@@ -1226,7 +1145,6 @@ class SettingsViewModel(
         }
     }
 
-
     fun getEnableExpressivePlayerControls() {
         viewModelScope.launch {
             dataStoreManager.enableExpressivePlayerControls.collect {
@@ -1286,10 +1204,6 @@ class SettingsViewModel(
             getContinueListeningLayout()
         }
     }
-
-
-
-
 
      
     fun getKillServiceOnExit() {
@@ -1367,7 +1281,6 @@ class SettingsViewModel(
             getYoutubeSubtitleLanguage()
         }
     }
-
 
 }
 

@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.other
+﻿package com.sonique.app.ui.screen.other
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -92,7 +92,6 @@ fun AlbumsScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // --- SECTION 1: ALBUMS FOR YOU ---
                     if (albumsForYou.isNotEmpty()) {
                         item(span = { GridItemSpan(3) }) {
                             Text(
@@ -126,8 +125,6 @@ fun AlbumsScreen(
                             )
                         }
                     }
-
-                    // --- SECTION 2: PLAYLISTS FOR YOU ---
                     if (playlistsForYou.isNotEmpty()) {
                         item(span = { GridItemSpan(3) }) {
                             Text(

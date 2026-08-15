@@ -1,4 +1,4 @@
-package com.sonique.app.viewModel
+﻿package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import com.sonique.common.SELECTED_LANGUAGE
@@ -361,8 +361,6 @@ class HomeViewModel(
             "quick picks", "albums for you", "your daily discover",
             "long listens", "from your library", "featured playlists for you"
         )
-
-        // 1. Gather matching contents
         val priorityContents = mutableListOf<Content>()
         val generalContents = mutableListOf<Content>()
 
@@ -380,12 +378,8 @@ class HomeViewModel(
 
         val distinctPriority = priorityContents.distinctBy { it.title }.shuffled()
         val remainingGeneral = generalContents.filter { gen -> distinctPriority.none { pri -> pri.title == gen.title } }.distinctBy { it.title }.shuffled()
-
-        // 2. Combine and Shuffle
         // Prioritize Listen Again items at the very beginning
         val combined = (distinctPriority + remainingGeneral)
-        
-        // 3. Gather up to 54 unique items from the feed
         val targetSize = 54
         val finalList = combined.toMutableList()
         if (finalList.size < targetSize) {
@@ -401,8 +395,6 @@ class HomeViewModel(
         val finalContents = finalList.distinctBy { it.title }.take(targetSize)
 
         if (finalContents.isEmpty()) return null
-
-        // 4. Create the injected Speed Dial home item
         return HomeItem(
             title = "Continue Listening",
             contents = finalContents

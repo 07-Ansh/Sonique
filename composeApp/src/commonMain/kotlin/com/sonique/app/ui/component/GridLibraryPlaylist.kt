@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -69,7 +69,6 @@ import com.sonique.app.ui.theme.typo
 import com.sonique.app.ui.theme.white
 import androidx.compose.material.icons.automirrored.rounded.ViewList
 import androidx.compose.material.icons.rounded.GridView
-import androidx.compose.material3.IconButton
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.app.viewModel.LibraryViewModel
 import org.koin.compose.viewmodel.koinViewModel
@@ -507,7 +506,6 @@ internal inline fun <reified T> GridLibraryPlaylist(
                         }
                     }
                     } else {
-                        // List view
                         LazyColumn(
                             modifier = Modifier.hazeSource(hazeState).fillMaxSize(),
                             contentPadding = PaddingValues(
@@ -922,7 +920,3 @@ fun NavigationHeader(
         )
     }
 }
-
-
-
-

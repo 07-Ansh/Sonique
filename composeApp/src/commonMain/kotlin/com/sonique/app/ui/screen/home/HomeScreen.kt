@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.home
+﻿package com.sonique.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Animatable
@@ -115,7 +115,6 @@ import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.component.InAppNotification
 import com.sonique.app.ui.component.OfflineScreen
 import com.sonique.app.ui.screen.home.SpeedDialSection
-import com.sonique.domain.utils.toTrack
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.MoodDestination
 import com.sonique.app.ui.navigation.destination.home.NotificationDestination
@@ -142,7 +141,6 @@ import com.sonique.app.viewModel.ListState
 import com.sonique.app.viewModel.SharedViewModel
 
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -288,8 +286,6 @@ fun HomeScreen(
         }
     }
 
-
-
     var topAppBarHeightPx by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -298,8 +294,6 @@ fun HomeScreen(
     var topAppBarMaxHeightPx by rememberSaveable {
         mutableIntStateOf(0)
     }
-
-
 
     LaunchedEffect(scrollState) {
         snapshotFlow { scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset == 0 }
@@ -337,7 +331,6 @@ fun HomeScreen(
     LaunchedEffect(key1 = homeData) {
         accountShow = homeData.find { it.subtitle == accountInfo?.first } == null
     }
-
 
     val shouldStartPaginate =
         remember {
@@ -447,7 +440,6 @@ fun HomeScreen(
 
                             itemsIndexed(homeData, key = { index, item -> item.hashCode() + index }) { index, item ->
                                 if (index == 0) {
-                                     // Replace first section with Speed Dial
                                      SpeedDialSection(
                                          navController = navController,
                                          data = speedDialData ?: com.sonique.domain.data.model.home.HomeItem(title = "Continue Listening", contents = listOf()),
@@ -859,6 +851,3 @@ fun MoodMomentAndGenre(
         }
     }
 }
-
-
-

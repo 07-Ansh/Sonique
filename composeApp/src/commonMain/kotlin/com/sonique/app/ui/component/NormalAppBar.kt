@@ -1,5 +1,4 @@
-package com.sonique.app.ui.component
-
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ExperimentalMaterial3Api

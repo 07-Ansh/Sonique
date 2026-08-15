@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
@@ -258,5 +258,4 @@ fun ShimmerSearchItem() {
 fun ShimmerSearchItemPreview() {
     ShimmerSearchItem()
 }
-
 

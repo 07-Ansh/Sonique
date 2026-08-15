@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.other
+﻿package com.sonique.app.ui.screen.other
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -62,7 +62,6 @@ import com.sonique.app.expect.ui.MediaPlayerView
 import com.sonique.app.extension.getStringBlocking
 import com.sonique.app.extension.rgbFactor
 import com.sonique.app.ui.component.CenterLoadingBox
-import com.sonique.app.ui.component.CollapsingToolbarParallaxEffect
 import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.component.DescriptionView
 import com.sonique.app.ui.component.EndOfPage
@@ -187,8 +186,7 @@ fun ArtistScreen(
                     },
                     lazyState = lazyState
                 ) {
-                    // Popular Tracks header
-                    item {
+                            item {
                         if (state.data.popularSongs.isNotEmpty()) {
                             Text(
                                 text = stringResource(Res.string.popular),
@@ -199,8 +197,7 @@ fun ArtistScreen(
                         }
                     }
 
-                    // Popular Tracks list
-                    items(count = state.data.popularSongs.size, key = { index ->
+                            items(count = state.data.popularSongs.size, key = { index ->
                         state.data.popularSongs[index].videoId + "popular_$index"
                     }) { index ->
                         val track = state.data.popularSongs[index]
@@ -232,8 +229,7 @@ fun ArtistScreen(
                         )
                     }
 
-                    // Albums section
-                    item {
+                            item {
                         AnimatedVisibility(
                             state.data.albums != null && state.data.albums.results.isNotEmpty()
                         ) {
@@ -288,8 +284,7 @@ fun ArtistScreen(
                         }
                     }
 
-                    // Singles section
-                    item {
+                            item {
                         AnimatedVisibility(
                             state.data.singles != null && state.data.singles.results.isNotEmpty()
                         ) {
@@ -344,8 +339,7 @@ fun ArtistScreen(
                         }
                     }
 
-                    // Videos section
-                    item {
+                            item {
                         AnimatedVisibility(
                             state.data.video != null && state.data.video.video.isNotEmpty()
                         ) {
@@ -418,8 +412,7 @@ fun ArtistScreen(
                         }
                     }
 
-                    // Featured On section
-                    item {
+                            item {
                         AnimatedVisibility(state.data.featuredOn.isNotEmpty()) {
                             Column {
                                 Row(
@@ -452,8 +445,7 @@ fun ArtistScreen(
                         }
                     }
 
-                    // Related Artists section
-                    item {
+                            item {
                         AnimatedVisibility(
                             state.data.related != null && state.data.related.results.isNotEmpty(),
                         ) {
@@ -500,8 +492,7 @@ fun ArtistScreen(
                         }
                     }
 
-                    // Description and end of page
-                    item {
+                            item {
                         val urlHandler = LocalUriHandler.current
                         ElevatedCard(
                             modifier = Modifier.padding(horizontal = 20.dp),

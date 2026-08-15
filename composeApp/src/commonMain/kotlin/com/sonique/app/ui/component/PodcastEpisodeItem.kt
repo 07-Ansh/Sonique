@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.animateContentSize
 import com.sonique.app.ui.theme.textHighEmphasis
@@ -87,7 +87,7 @@ fun PodcastEpisodeFullWidthItem(
                 )
 
                 Text(
-                    text = "${episode.createdDay ?: ""}${if (!episode.durationString.isNullOrEmpty()) " • ${episode.durationString}" else ""}",
+                    text = "${episode.createdDay ?: ""}${if (!episode.durationString.isNullOrEmpty()) " â€¢ ${episode.durationString}" else ""}",
                     style = typo().bodyMedium,
                     maxLines = 1,
                     color = textHighEmphasis,
@@ -120,6 +120,4 @@ fun PodcastEpisodeFullWidthItem(
         }
     }
 }
-
-
 

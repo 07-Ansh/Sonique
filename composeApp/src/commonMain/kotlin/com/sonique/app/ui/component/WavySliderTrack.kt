@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -68,8 +68,6 @@ fun WavySliderTrack(
                 (sliderState.valueRange.endInclusive - sliderState.valueRange.start)).coerceIn(0f, 1f)
 
         val activeWidth = width * fraction
-
-        // 1. Draw Inactive Track (Straight Line)
         if (fraction < 1f) {
             drawLine(
                 color = inactiveColor,
@@ -79,8 +77,6 @@ fun WavySliderTrack(
                 cap = StrokeCap.Round
             )
         }
-
-        // 2. Draw Active Track (Wavy Line) using Auxio's exact Bezier-based logic
         if (fraction > 0f && width > 0f) {
             val wavelength = 40.dp.toPx()
             val amplitude = 3.5.dp.toPx()

@@ -76,7 +76,7 @@ object NotificationHandler {
         val builder =
             NotificationCompat
                 .Builder(context, CHANNEL_ID)
-                .setSmallIcon(R.drawable.mono)
+                .setSmallIcon(R.drawable.monochrome)
                 .setContentTitle(noti.name)
                 .setContentText(
                     if (noti.single.isNotEmpty()) {

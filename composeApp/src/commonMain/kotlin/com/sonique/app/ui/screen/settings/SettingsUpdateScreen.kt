@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.settings
+﻿package com.sonique.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -89,7 +89,6 @@ fun SettingsUpdateScreen(
             contentPadding = PaddingValues(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Current Version
             item {
                 Material3SettingsGroup(
                     title = stringResource(Res.string.current_version),
@@ -101,8 +100,6 @@ fun SettingsUpdateScreen(
                     )
                 )
             }
-
-            // 2. Changelog / Release Notes (Always placed after current version, before update settings)
             val releaseToDisplay = updateAvailable ?: latestReleaseInfo
             if (releaseToDisplay != null) {
                 item {
@@ -137,8 +134,6 @@ fun SettingsUpdateScreen(
                     }
                 }
             }
-
-            // 3. Update Settings
             item {
                 val updateSettingsItems = mutableListOf<Material3SettingsItem>()
                 updateSettingsItems.add(
@@ -170,8 +165,6 @@ fun SettingsUpdateScreen(
                     items = updateSettingsItems
                 )
             }
-
-            // 4. Action Button / Check For Updates (Turns into green Download/Install button when update is available)
             item {
                 val greenColor = Color(0xFF10B981)
                 val actionItem = if (updateAvailable != null) {
@@ -286,8 +279,6 @@ fun SettingsUpdateScreen(
                     items = listOf(actionItem)
                 )
             }
-
-            // 5. Troubleshooting / Manual Install Guide
             item {
                 Material3SettingsGroup(
                     title = "Troubleshooting",

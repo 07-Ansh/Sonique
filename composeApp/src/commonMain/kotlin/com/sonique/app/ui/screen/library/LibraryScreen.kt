@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.library
+﻿package com.sonique.app.ui.screen.library
 
 import androidx.compose.foundation.focusable
 import androidx.compose.material3.IconButton
@@ -501,8 +501,6 @@ fun LibraryScreen(
                                                      )
                                                  }
                                              }
-
-                                             // New Playlist card — only shown in Local tab
                                              if (selectedPlaylistTab == 0) {
                                                  androidx.compose.material3.Card(
                                                      onClick = { showCreateDialogTab = true },
@@ -646,7 +644,7 @@ fun LibraryScreen(
                             }
 
                             LibraryChipType.YOUTUBE_MUSIC_PLAYLIST -> {
-                                var selectedPlaylistTab by rememberSaveable { mutableStateOf(0) } // 0 = YouTube, 1 = Local
+                                var selectedPlaylistTab by rememberSaveable { mutableStateOf(0) }
                                 val currentPlaylistData: LocalResource<List<com.sonique.domain.data.type.PlaylistType>> = if (selectedPlaylistTab == 0) {
                                     (youTubePlaylist as? LocalResource.Success)?.let { success ->
                                         LocalResource.Success(success.data?.map { p -> p as com.sonique.domain.data.type.PlaylistType } ?: emptyList())

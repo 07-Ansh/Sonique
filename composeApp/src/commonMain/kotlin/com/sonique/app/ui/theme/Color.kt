@@ -2,9 +2,6 @@ package com.sonique.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ============================================
-// Base Palette
-// ============================================
 
 val musica_accent = Color(0xFFFFFFFF)  // White accent - modern, clean
 val musica_black = Color(0xFF000000)
@@ -13,17 +10,11 @@ val musica_light_grey = Color(0xFF2C2C2E)
 val musica_grey_text = Color(0xFFB3B3B3)
 val musica_white = Color(0xFFEEEEEE)
 
-// ============================================
-// Semantic Colors - Backgrounds
-// ============================================
 
 val backgroundPrimary = musica_dark_grey       // #1C1C1E - Main screen background
 val backgroundElevated = musica_light_grey     // #2C2C2E - Elevated surfaces
 var backgroundCard = Color(0xFF242424)         // Cards, dialogs
 
-// ============================================
-// Semantic Colors - Overlays
-// ============================================
 
 val overlayMedium = Color(0x80000000)     // 50% black - medium overlay
 
@@ -31,24 +22,15 @@ val overlayMedium = Color(0x80000000)     // 50% black - medium overlay
 val overlay = Color(0x32242424)           // ~20% overlay - legacy
 val blackMoreOverlay = Color(0x8f242424)  // ~56% overlay - legacy
 
-// ============================================
-// Semantic Colors - Text
-// ============================================
 
 val textPrimary = musica_white            // #FFFFFF - Primary text
 val textSecondary = musica_grey_text      // #B3B3B3 - Secondary text
 
 val textHighEmphasis = Color(0xC4FFFFFF)  // 77% white - High emphasis
 
-// ============================================
-// Semantic Colors - Interactive States
-// ============================================
 
 
 
-// ============================================
-// Material3 Theme Colors
-// ============================================
 
 val md_theme_dark_primary = musica_accent
 val md_theme_dark_onPrimary = musica_black
@@ -88,9 +70,6 @@ val md_theme_dark_surfaceTint = musica_accent
 val md_theme_dark_outlineVariant = backgroundElevated
 val md_theme_dark_scrim = musica_black
 
-// ============================================
-// Legacy/Specific Use Colors
-// ============================================
 
 
 val checkedFilterColor = Color(0xFF4D4848)   // Filter chip background

@@ -1,4 +1,4 @@
-package com.sonique.app.viewModel
+﻿package com.sonique.app.viewModel
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.viewModelScope
@@ -194,7 +194,7 @@ class SharedViewModel(
                     dataStoreManager.setLastVersionCode(currentVersion)
                 } else {
                     val versionString = VersionManager.getVersionName()
-                    val fallback = "Updated to version ${versionString}\n• Bug fixes and performance improvements."
+                    val fallback = "Updated to version ${versionString}\nâ€¢ Bug fixes and performance improvements."
                     try {
                         val result = updateRepository.fetchChangelog(versionString)
                         if (!result.isNullOrBlank()) {
@@ -1424,7 +1424,7 @@ class SharedViewModel(
 
     fun downloadAppUpdate(url: String, title: String) {
         viewModelScope.launch {
-            _shareSavedLyrics.emit(false) // Trigger UI Event
+            _shareSavedLyrics.emit(false)
             onUIEvent(UIEvent.DownloadUpdate(url, title))
         }
     }

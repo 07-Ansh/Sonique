@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.home
+﻿package com.sonique.app.ui.screen.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -76,7 +76,7 @@ import sonique.composeapp.generated.resources.holder
 fun SpeedDialSection(
     navController: NavController,
     data: HomeItem,
-    onPlayClick: (Any) -> Unit // Callback for playing
+    onPlayClick: (Any) -> Unit
 ) {
     if (data.contents.isEmpty()) return
 
@@ -151,7 +151,6 @@ fun SpeedDialSection(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // 2 Rows of 3 Items
                         val rows = pageItems.chunked(3)
                         rows.forEach { rowItems ->
                             Row(
@@ -168,7 +167,6 @@ fun SpeedDialSection(
                                         )
                                     }
                                 }
-                                // Fill empty spaces if last row has < 3 items
                                 repeat(3 - rowItems.size) {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
@@ -176,8 +174,6 @@ fun SpeedDialSection(
                         }
                     }
                 }
-
-                // Pager Indicator (Dots)
                 if (chunks.size > 1) {
                     Row(
                         modifier = Modifier
@@ -200,7 +196,6 @@ fun SpeedDialSection(
                 }
             }
             "list" -> {
-                // Horizontal pager of vertical lists (4 items per page with peek)
                 val chunks = data.contents.filterNotNull().chunked(4).filter { it.size == 4 }
                 if (chunks.isEmpty()) return
                 val pagerState = rememberPagerState(pageCount = { chunks.size })
@@ -270,7 +265,6 @@ fun SpeedDialSection(
                                         )
                                     }
                                 }
-                                // 3 dots menu button
                                 if (item.videoId != null && item.videoId != "") {
                                     Box(
                                         modifier = Modifier
@@ -296,12 +290,9 @@ fun SpeedDialSection(
                 }
             }
             else -> {
-                // Chunk items into groups of 9 (3x3 grid)
                 val chunks = data.contents.filterNotNull().chunked(9).filter { it.size == 9 }
                 if (chunks.isEmpty()) return
                 val pagerState = rememberPagerState(pageCount = { chunks.size })
-
-                // Pager
                 HorizontalPager(
                     state = pagerState,
                     modifier = Modifier.fillMaxWidth()
@@ -311,14 +302,12 @@ fun SpeedDialSection(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // 3 Rows
                         val rows = pageItems.chunked(3)
                         rows.forEach { rowItems ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
-                                // 3 Columns
                                 rowItems.forEach { item ->
                                     Box(modifier = Modifier.weight(1f)) {
                                         SpeedDialGridItem(
@@ -328,7 +317,6 @@ fun SpeedDialSection(
                                         )
                                     }
                                 }
-                                // Fill empty spaces if last row has < 3 items
                                 repeat(3 - rowItems.size) {
                                     Spacer(modifier = Modifier.weight(1f))
                                 }
@@ -336,8 +324,6 @@ fun SpeedDialSection(
                         }
                     }
                 }
-
-                // Pager Indicator (Dots)
                 if (chunks.size > 1) {
                     Row(
                         modifier = Modifier
@@ -409,8 +395,6 @@ fun SpeedDialBigItem(
             placeholder = painterResource(Res.drawable.holder),
             error = painterResource(Res.drawable.holder)
         )
-
-        // Title and Artists below the card
         Column(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -481,8 +465,6 @@ fun SpeedDialGridItem(
                 placeholder = painterResource(Res.drawable.holder),
                 error = painterResource(Res.drawable.holder)
             )
-            
-            // Text Overlay Gradient
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -493,8 +475,6 @@ fun SpeedDialGridItem(
                         )
                     )
             )
-
-            // Text overlaid inside
             Text(
                 text = item.title,
                 style = typo().labelMedium,

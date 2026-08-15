@@ -525,11 +525,11 @@
     <string name="verifying_update">Verifying update...</string>
     <string name="install_now">Install Now</string>
     <string name="download_and_install">Download &amp; Install</string>
-    <string name="whats_new">What\'s New</string>
+    <string name="whats_new">What's New</string>
     <string name="enjoying_sonique_description">If you like using Sonique, please consider giving us a star on GitHub! It helps us a lot.</string>
     <string name="new_update_available">New Update Available: %1$s</string>
     <string name="star_on_github">Star on GitHub</string>
-    <string name="dont_ask_again">Don\'t ask again</string>
+    <string name="dont_ask_again">Don't ask again</string>
     <string name="update">Update</string>
     <string name="current_version">Current version</string>
     <string name="update_settings">Update settings</string>

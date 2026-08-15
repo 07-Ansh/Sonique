@@ -6,7 +6,7 @@
 
 **A powerful, minimal, and ad-free music streaming experience for Android**
 
-[![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)](https://github.com/07-Ansh/Sonique/releases/latest)
+[![Version](https://img.shields.io/badge/version-3.0.1-blue.svg)](https://github.com/07-Ansh/Sonique/releases/latest)
 [![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)](LICENSE)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.2.21-purple.svg)](https://kotlinlang.org/)
 [![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.10.0-orange.svg)](https://developer.android.com/jetpack/compose)
@@ -22,7 +22,7 @@
 <div align="center">
 
 <a href="https://github.com/07-Ansh/Sonique/releases/latest">
-  <img src="https://img.shields.io/badge/Download_Latest_APK-v3.0.0-2563EB?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Download APK">
+  <img src="https://img.shields.io/badge/Download_Latest_APK-v3.0.1-2563EB?style=for-the-badge&logo=android&logoColor=white" height="46" alt="Download APK">
 </a>
 &nbsp;
 <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/07-Ansh/Sonique">
@@ -37,7 +37,7 @@
 - **Universal APK** (compatible with ARM64, ARMv7, x86, and x86_64 devices)
 
 ### **Installation**
-- **Option A (Direct APK)**: Download the latest **`Sonique-v3.0.0.apk`** from [GitHub Releases](https://github.com/07-Ansh/Sonique/releases/latest) and tap to install.
+- **Option A (Direct APK)**: Download the latest **`Sonique-v3.0.1.apk`** from [GitHub Releases](https://github.com/07-Ansh/Sonique/releases/latest) and tap to install.
 - **Option B (Auto-Updates via Obtainium)**: Open [Obtainium](https://github.com/ImranR98/Obtainium) on your phone and tap **Add to Obtainium** above for seamless automatic updates directly from GitHub.
 
 ---

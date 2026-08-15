@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.component
+package com.sonique.app.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -115,7 +115,82 @@ import sonique.composeapp.generated.resources.now_playing_upper
 import sonique.composeapp.generated.resources.unavailable
 import kotlin.math.abs
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.unit.TextUnit
+import kotlin.math.exp
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sqrt
+
 private const val TAG = "LyricsView"
+
+private const val PLAYHEAD_TICK_MS = 50L
+
+private const val EMP_AMOUNT_REF_MS = 2000f
+private const val EMP_BLUR_REF_MS = 3000f
+private const val EMP_MIN_DURATION_MS = 1000f
+private const val EMP_AMOUNT_GAIN = 0.6f
+private const val EMP_BLUR_GAIN = 0.5f
+private const val EMP_AMOUNT_CAP = 1.2f
+private const val EMP_BLUR_CAP = 0.8f
+private const val EMP_LAST_WORD_AMOUNT = 1.6f
+private const val EMP_LAST_WORD_BLUR = 1.5f
+private const val EMP_SCALE_EM = 0.1f
+private const val EMP_RISE_EM = 0.025f
+private const val EMP_GLOW_RADIUS_EM = 0.3f
+
+private const val FLARE_REACH_CHARS = 3.5f
+private const val FLARE_FADE_MS = 2500
+private const val FLARE_ATTACK_MS = 500
+private const val FLARE_TAIL_CHARS = 2.5f
+
+private const val CHAR_RISE_EM = 0.065f
+private const val CHAR_RISE_MS = 1000
+
+private const val SUNG_BASE_GLOW_ALPHA = 0.95f
+private const val SUNG_BASE_GLOW_EM = 0.26f
+
+private val EmpBezIn = CubicBezierEasing(0.2f, 0.4f, 0.58f, 1f)
+private val EmpBezOut = CubicBezierEasing(0.3f, 0f, 0.58f, 1f)
+
+private fun empEasing(x: Float): Float =
+    if (x < 0.5f) {
+        EmpBezIn.transform((x / 0.5f).coerceIn(0f, 1f))
+    } else {
+        1f - EmpBezOut.transform(((x - 0.5f) / 0.5f).coerceIn(0f, 1f))
+    }
+
+@Composable
+private fun rememberSmoothPlayhead(
+    rawMs: Long,
+    enabled: Boolean,
+): State<Long> {
+    val playhead = remember { mutableLongStateOf(rawMs) }
+    LaunchedEffect(rawMs, enabled) {
+        if (!enabled) {
+            playhead.longValue = rawMs
+            return@LaunchedEffect
+        }
+        var baseNanos = -1L
+        while (true) {
+            withFrameNanos { frameNanos ->
+                if (baseNanos < 0L) baseNanos = frameNanos
+                val elapsedMs = (frameNanos - baseNanos) / 1_000_000L
+                playhead.longValue = rawMs + elapsedMs.coerceIn(0L, PLAYHEAD_TICK_MS)
+            }
+        }
+    }
+    return playhead
+}
 
 @Composable
 fun LyricsView(
@@ -511,27 +586,32 @@ fun LyricsLineItem(
 fun RichSyncLyricsLineItem(
     parsedLine: ParsedRichSyncLine,
     translatedWords: String?,
+    romanizedWords: String? = null,
     currentTimeMs: Long,
     isCurrent: Boolean,
+    customFontSize: TextUnit? = null,
+    customPadding: Dp = 12.dp,
+    glow: Shadow? = Shadow(color = Color.White, offset = Offset.Zero, blurRadius = 0f),
+    pendingColorOverride: Color? = null,
+    translatedColorOverride: Color? = null,
+    wrappedLineSpacing: Dp = 0.dp,
     modifier: Modifier = Modifier,
     playerContentColor: Color = Color.White,
 ) {
-     
-    val currentWordIndex by remember(currentTimeMs, parsedLine.words) {
+    val playhead = rememberSmoothPlayhead(currentTimeMs, enabled = isCurrent)
+
+    val currentWordIndex by remember(parsedLine.words, isCurrent) {
         derivedStateOf {
             if (!isCurrent) return@derivedStateOf -1
-
-             
-            parsedLine.words.indexOfLast { it.startTimeMs <= currentTimeMs }
+            parsedLine.words.indexOfLast { it.startTimeMs <= playhead.value }
         }
     }
 
     Column(
         modifier = modifier,
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(customPadding))
 
-         
         FlowRow(
             modifier =
                 Modifier.then(
@@ -542,20 +622,59 @@ fun RichSyncLyricsLineItem(
                     },
                 ),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement =
+                if (wrappedLineSpacing > 0.dp) Arrangement.spacedBy(wrappedLineSpacing) else Arrangement.Center,
         ) {
             parsedLine.words.forEachIndexed { index, wordTiming ->
+                val wordEndTimeMs =
+                    if (index < parsedLine.words.size - 1) {
+                        parsedLine.words[index + 1].startTimeMs
+                    } else if (parsedLine.lineEndTimeMs == Long.MAX_VALUE || parsedLine.lineEndTimeMs <= wordTiming.startTimeMs) {
+                        if (index > 0 && parsedLine.words[index - 1].startTimeMs < wordTiming.startTimeMs) {
+                            val prevWordDuration = wordTiming.startTimeMs - parsedLine.words[index - 1].startTimeMs
+                            wordTiming.startTimeMs + prevWordDuration
+                        } else {
+                            wordTiming.startTimeMs + 500L
+                        }
+                    } else {
+                        parsedLine.lineEndTimeMs
+                    }
+
                 AnimatedWord(
                     word = wordTiming.text,
+                    wordIndex = index,
+                    wordStartTimeMs = wordTiming.startTimeMs,
+                    wordEndTimeMs = wordEndTimeMs,
+                    currentTimeMs = currentTimeMs,
+                    playheadMs = playhead,
                     isActive = isCurrent && index == currentWordIndex,
                     isPast = isCurrent && index < currentWordIndex,
                     isCurrent = isCurrent,
+                    customFontSize = customFontSize,
+                    glow = glow,
+                    isLastWord = index == parsedLine.words.lastIndex,
+                    pendingColorOverride = pendingColorOverride,
                     playerContentColor = playerContentColor,
                 )
             }
         }
 
-         
+        if (romanizedWords != null) {
+            Text(
+                modifier =
+                    Modifier.then(
+                        if (isCurrent) {
+                            Modifier
+                        } else {
+                            Modifier.blur(1.dp)
+                        },
+                    ),
+                text = romanizedWords,
+                style = typo().bodyMedium,
+                color = if (isCurrent) playerContentColor.copy(alpha = 0.62f) else playerContentColor.copy(alpha = 0.3f),
+            )
+        }
+
         if (translatedWords != null) {
             Text(
                 modifier =
@@ -569,46 +688,193 @@ fun RichSyncLyricsLineItem(
                 text = translatedWords,
                 style = typo().bodyMedium,
                 color =
-                    if (isCurrent) {
-                        musica_accent
-                    } else {
-                        musica_accent.copy(
-                            alpha = 0.3f,
-                        )
-                    },
+                    translatedColorOverride
+                        ?: if (isCurrent) {
+                            musica_accent
+                        } else {
+                            musica_accent.copy(alpha = 0.3f)
+                        },
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(customPadding))
     }
 }
 
 @Composable
 private fun AnimatedWord(
     word: String,
+    wordIndex: Int,
+    wordStartTimeMs: Long,
+    wordEndTimeMs: Long,
+    currentTimeMs: Long,
+    playheadMs: State<Long>,
     isActive: Boolean,
     isPast: Boolean,
     isCurrent: Boolean,
+    customFontSize: TextUnit? = null,
+    glow: Shadow? = null,
+    isLastWord: Boolean = false,
+    pendingColorOverride: Color? = null,
     playerContentColor: Color = Color.White,
 ) {
-     
-    val color by animateColorAsState(
-        targetValue =
-            when {
-                !isCurrent -> Color.LightGray.copy(alpha = 0.35f)  
-                isPast -> playerContentColor.copy(alpha = 0.7f)  
-                isActive -> playerContentColor  
-                else -> Color.LightGray.copy(alpha = 0.5f)  
-            },
-        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-        label = "wordColor",
+    val style =
+        typo().headlineLarge.copy(
+            fontSize = customFontSize ?: typo().headlineLarge.fontSize,
+        )
+
+    if (!isCurrent) {
+        Text(text = word, style = style, color = pendingColorOverride ?: playerContentColor.copy(alpha = 0.35f))
+        return
+    }
+
+    val wordDurationMs = (wordEndTimeMs - wordStartTimeMs).coerceAtLeast(1L)
+    val anim =
+        remember(wordStartTimeMs, wordEndTimeMs) {
+            val initial =
+                ((currentTimeMs - wordStartTimeMs).toFloat() / wordDurationMs.toFloat())
+                    .coerceIn(0f, 1f)
+            Animatable(initial)
+        }
+
+    LaunchedEffect(wordStartTimeMs, wordEndTimeMs, isActive, isPast) {
+        when {
+            isPast -> anim.snapTo(1f)
+            isActive -> {
+                val now = playheadMs.value
+                val current =
+                    ((now - wordStartTimeMs).toFloat() / wordDurationMs.toFloat())
+                        .coerceIn(0f, 1f)
+                anim.snapTo(current)
+                val remainingMs = (wordEndTimeMs - now).coerceAtLeast(0L).toInt().coerceAtLeast(1)
+                anim.animateTo(1f, tween(remainingMs, easing = LinearEasing))
+            }
+        }
+    }
+
+    val progress = anim.value
+    val wordProgress =
+        when {
+            isPast -> 1f
+            isActive -> progress
+            else -> 0f
+        }
+
+    val emphasisDurationMs = max(EMP_MIN_DURATION_MS, wordDurationMs.toFloat())
+    val amount =
+        if (glow == null) {
+            0f
+        } else {
+            val raw = emphasisDurationMs / EMP_AMOUNT_REF_MS
+            val shaped = if (raw > 1f) sqrt(raw) else raw * raw * raw
+            min(EMP_AMOUNT_CAP, shaped * EMP_AMOUNT_GAIN * if (isLastWord) EMP_LAST_WORD_AMOUNT else 1f)
+        }
+    val blurAmount =
+        if (glow == null) {
+            0f
+        } else {
+            val raw = emphasisDurationMs / EMP_BLUR_REF_MS
+            val shaped = if (raw > 1f) sqrt(raw) else raw * raw * raw
+            min(EMP_BLUR_CAP, shaped * EMP_BLUR_GAIN * if (isLastWord) EMP_LAST_WORD_BLUR else 1f)
+        }
+
+    val flareGate by animateFloatAsState(
+        targetValue = if (isActive) 1f else 0f,
+        animationSpec =
+            tween(
+                durationMillis = if (isActive) FLARE_ATTACK_MS else FLARE_FADE_MS,
+                easing = LinearEasing,
+            ),
+        label = "flareGate",
     )
 
-    Text(
-        text = word,
-        style = typo().headlineLarge,
-        color = color,
-    )
+    val eased = if (amount <= 0f && blurAmount <= 0f) 0f else empEasing(wordProgress)
+    val fontPx = with(LocalDensity.current) { style.fontSize.toPx() }
+    val heldGlow =
+        if (eased * blurAmount <= 0.01f) {
+            null
+        } else {
+            glow?.copy(
+                color = glow.color.copy(alpha = (eased * blurAmount).coerceIn(0f, 1f)),
+                blurRadius = min(EMP_GLOW_RADIUS_EM, blurAmount * EMP_GLOW_RADIUS_EM) * fontPx,
+            )
+        }
+
+    Box(
+        modifier =
+            Modifier.graphicsLayer {
+                val scale = 1f + eased * EMP_SCALE_EM * amount
+                scaleX = scale
+                scaleY = scale
+                translationY = -eased * EMP_RISE_EM * amount * fontPx
+            },
+    ) {
+        val chars = word.toCharArray()
+        val charCount = chars.size.coerceAtLeast(1)
+        Row {
+            chars.forEachIndexed { charIndex, ch ->
+                val charFrom = charIndex.toFloat() / charCount
+                val charTo = (charIndex + 1).toFloat() / charCount
+                val charProgress = ((wordProgress - charFrom) / (charTo - charFrom)).coerceIn(0f, 1f)
+                val charPast = wordProgress >= charTo
+                val charActive = isActive && wordProgress >= charFrom && wordProgress < charTo
+
+                val charCenter = (charFrom + charTo) / 2f
+                val reach = (FLARE_REACH_CHARS / charCount).coerceAtLeast(0.0001f)
+                val charFlare =
+                    if (flareGate <= 0f || glow == null) {
+                        0f
+                    } else {
+                        val delta = wordProgress - charCenter
+                        val shape =
+                            if (delta > 0f) {
+                                exp(-delta / (FLARE_TAIL_CHARS / charCount))
+                            } else {
+                                (1f - abs(delta) / reach).coerceIn(0f, 1f)
+                            }
+                        shape * flareGate
+                    }
+
+                val charRise by animateFloatAsState(
+                    targetValue = if (glow != null && charProgress > 0f) 1f else 0f,
+                    animationSpec = tween(CHAR_RISE_MS, easing = FastOutSlowInEasing),
+                    label = "charRise",
+                )
+                val restingColor = pendingColorOverride ?: playerContentColor.copy(alpha = 0.45f)
+                Box(
+                    modifier =
+                        Modifier.graphicsLayer {
+                            translationY = -charRise * CHAR_RISE_EM * fontPx
+                        },
+                ) {
+                    val glowShadow = heldGlow ?: glow?.copy(blurRadius = SUNG_BASE_GLOW_EM * fontPx)
+                    if (glowShadow != null) {
+                        Text(
+                            text = ch.toString(),
+                            style =
+                                style.copy(
+                                    shadow =
+                                        glowShadow.copy(
+                                            color = glowShadow.color.copy(alpha = SUNG_BASE_GLOW_ALPHA * charFlare),
+                                        ),
+                                ),
+                            color = Color.Transparent,
+                        )
+                    }
+                    Text(
+                        text = ch.toString(),
+                        style = style,
+                        color =
+                            when {
+                                charPast -> playerContentColor
+                                charActive -> lerp(restingColor, playerContentColor, charProgress)
+                                else -> restingColor
+                            },
+                    )
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalHazeMaterialsApi::class)

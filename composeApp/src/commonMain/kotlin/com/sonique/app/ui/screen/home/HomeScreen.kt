@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.home
+﻿package com.sonique.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Animatable
@@ -288,8 +288,6 @@ fun HomeScreen(
         }
     }
 
-
-
     var topAppBarHeightPx by rememberSaveable {
         mutableIntStateOf(0)
     }
@@ -298,8 +296,6 @@ fun HomeScreen(
     var topAppBarMaxHeightPx by rememberSaveable {
         mutableIntStateOf(0)
     }
-
-
 
     LaunchedEffect(scrollState) {
         snapshotFlow { scrollState.firstVisibleItemIndex == 0 && scrollState.firstVisibleItemScrollOffset == 0 }
@@ -337,7 +333,6 @@ fun HomeScreen(
     LaunchedEffect(key1 = homeData) {
         accountShow = homeData.find { it.subtitle == accountInfo?.first } == null
     }
-
 
     val shouldStartPaginate =
         remember {
@@ -447,7 +442,6 @@ fun HomeScreen(
 
                             itemsIndexed(homeData, key = { index, item -> item.hashCode() + index }) { index, item ->
                                 if (index == 0) {
-                                     // Replace first section with Speed Dial
                                      SpeedDialSection(
                                          navController = navController,
                                          data = speedDialData ?: com.sonique.domain.data.model.home.HomeItem(title = "Continue Listening", contents = listOf()),
@@ -859,6 +853,4 @@ fun MoodMomentAndGenre(
         }
     }
 }
-
-
 

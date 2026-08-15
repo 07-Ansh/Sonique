@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.home
+﻿package com.sonique.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -142,8 +142,6 @@ fun SettingScreen(
     ) {
         activeSubCategory = null
     }
-
-    // Dialog state handlers (shared across all sections)
     val alertData by viewModel.alertData.collectAsStateWithLifecycle()
     val basicAlertData by viewModel.basicAlertData.collectAsStateWithLifecycle()
 
@@ -1087,8 +1085,8 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
                             Text(
                                 when (backupState) {
                                     is SettingsViewModel.BackupRestoreState.InProgress -> "Backing up data..."
-                                    is SettingsViewModel.BackupRestoreState.Success -> "✓ Backup complete!"
-                                    is SettingsViewModel.BackupRestoreState.Error -> "✗ Backup failed"
+                                    is SettingsViewModel.BackupRestoreState.Success -> "âœ“ Backup complete!"
+                                    is SettingsViewModel.BackupRestoreState.Error -> "âœ— Backup failed"
                                     else -> stringResource(Res.string.save_all_your_playlist_data)
                                 }
                             )
@@ -1105,8 +1103,8 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
                             Text(
                                 when (restoreState) {
                                     is SettingsViewModel.BackupRestoreState.InProgress -> "Restoring data..."
-                                    is SettingsViewModel.BackupRestoreState.Success -> "✓ Restore complete!"
-                                    is SettingsViewModel.BackupRestoreState.Error -> "✗ Restore failed"
+                                    is SettingsViewModel.BackupRestoreState.Success -> "âœ“ Restore complete!"
+                                    is SettingsViewModel.BackupRestoreState.Error -> "âœ— Restore failed"
                                     else -> stringResource(Res.string.restore_your_saved_data)
                                 }
                             )
@@ -1393,14 +1391,14 @@ private fun AboutSettingsContent(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Made with ❤️ and Kotlin",
+                        text = "Made with â¤ï¸ and Kotlin",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "© 2025 Sonique",
+                        text = "Â© 2025 Sonique",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                     )
@@ -1414,7 +1412,6 @@ private fun AboutSettingsContent(navController: NavController) {
         )
     }
 }
-
 
 @Composable
 private fun MinimalLinkRow(
@@ -1610,7 +1607,6 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                     Column(
                         modifier = Modifier.padding(24.dp).fillMaxWidth()
                     ) {
-                        // Header
                         Row(
                             modifier = Modifier.fillMaxWidth().height(48.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -1630,8 +1626,6 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                         }
 
                         Spacer(Modifier.height(16.dp))
-
-                        // Accounts List / Active Profile
                         if (googleAccounts is LocalResource.Success) {
                             val data = (googleAccounts as LocalResource.Success).data
                             if (data.isNullOrEmpty()) {
@@ -1722,10 +1716,7 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                         Spacer(Modifier.height(24.dp))
                         HorizontalDivider(color = white.copy(0.08f))
                         Spacer(Modifier.height(12.dp))
-
-                        // Actions Menu (Guest, Log out, Add account)
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            // Guest Button
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1750,8 +1741,6 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                                     color = white.copy(0.85f)
                                 )
                             }
-
-                            // Add an Account Button
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1776,8 +1765,6 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
-
-                            // Log out Button
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1820,8 +1807,6 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
         }
     }
 }
-
-// UpdatesSettingsContent has been moved to SettingsUpdateScreen.kt
 
 @OptIn(coil3.annotation.ExperimentalCoilApi::class)
 @Composable

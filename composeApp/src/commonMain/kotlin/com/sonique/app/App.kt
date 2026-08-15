@@ -1,4 +1,4 @@
-package com.sonique.app
+﻿package com.sonique.app
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
@@ -95,8 +95,6 @@ import kotlin.time.ExperimentalTime
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class, ExperimentalFoundationApi::class)
 @Composable
 fun App(
@@ -106,15 +104,12 @@ fun App(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
 
-
     val sleepTimerState by viewModel.sleepTimerState.collectAsStateWithLifecycle()
     val nowPlayingData by viewModel.nowPlayingState.collectAsStateWithLifecycle()
     val intent by viewModel.intent.collectAsStateWithLifecycle()
     
     val updateViewModel: UpdateViewModel = koinInject()
     val updateAvailable by updateViewModel.updateAvailable.collectAsStateWithLifecycle()
-
-
 
      
     var isShowMiniPlayer by rememberSaveable {
@@ -166,14 +161,9 @@ fun App(
         }
     }
 
-
-
-
-
     val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
-
 
     LaunchedEffect(reloadDestination) {
         val destination = reloadDestination
@@ -281,8 +271,6 @@ fun App(
             }
         }
     }
-
-
 
     var isScrolledToTop by rememberSaveable {
         mutableStateOf(true)
@@ -675,7 +663,6 @@ fun App(
                                 textContentColor = MaterialTheme.colorScheme.onSurface,
                             )
                         }
-
 
                     },
                 )

@@ -225,9 +225,6 @@ class SharedViewModel(
     private val _getVideo = MutableStateFlow<Boolean>(false)
     val getVideo: StateFlow<Boolean> = _getVideo.asStateFlow()
 
-
-
-
     private val _intent: MutableStateFlow<GenericIntent?> = MutableStateFlow(null)
     val intent: StateFlow<GenericIntent?> = _intent
 
@@ -243,8 +240,6 @@ class SharedViewModel(
     fun getQueueDataState() = mediaPlayerHandler.queueData
     val queueData = mediaPlayerHandler.queueData
 
-
-
     private var _controllerState =
         MutableStateFlow<ControlState>(
             ControlState(
@@ -259,7 +254,6 @@ class SharedViewModel(
             ),
         )
     val controllerState: StateFlow<ControlState> = _controllerState
-
 
     private var _timeline =
         MutableStateFlow<TimeLine>(
@@ -375,7 +369,6 @@ class SharedViewModel(
                                 }
                             }
                         }
-
 
             launch {
                 dataStoreManager.lyricsProvider.distinctUntilChanged().collectLatest {
@@ -565,8 +558,6 @@ class SharedViewModel(
     fun setIntent(intent: GenericIntent?) {
         _intent.value = intent
     }
-
-
 
     private fun getLikeStatus(videoId: String?) {
         viewModelScope.launch {
@@ -803,8 +794,6 @@ class SharedViewModel(
                     mediaPlayerHandler.getRelated(track.videoId)
                 }
 
-
-
                 SHARE -> {
                     mediaPlayerHandler.getRelated(track.videoId)
                 }
@@ -1017,10 +1006,6 @@ class SharedViewModel(
             }
     }
 
-
-
-
-
     fun stopPlayer() {
         _nowPlayingScreenData.value = NowPlayingScreenData.initial()
         _nowPlayingState.value = null
@@ -1099,7 +1084,6 @@ class SharedViewModel(
                 }
             }
         }
-
 
         if (_nowPlayingState.value?.songEntity?.videoId == videoId) {
             val track = _nowPlayingState.value?.track
@@ -1191,8 +1175,6 @@ class SharedViewModel(
         }
     }
 
-
-
     private suspend fun getYouTubeCaption(
         videoId: String,
         song: SongEntity,
@@ -1282,10 +1264,6 @@ class SharedViewModel(
                 }
         }
     }
-
-
-
-
 
     private fun getSpotifyLyrics(
         track: Track,
@@ -1485,8 +1463,6 @@ class SharedViewModel(
     fun downloadFileDone() {
         _downloadFileProgress.value = DownloadProgress.INIT
     }
-
-
 
     fun setBitmap(bitmap: ImageBitmap?) {
         _nowPlayingScreenData.update {

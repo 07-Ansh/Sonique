@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -69,8 +69,6 @@ fun PlayerControlLayout(
             val playSize = if (isSmallSize) 48.dp else 80.dp
             val controlSize = if (isSmallSize) 32.dp else 48.dp
             val borderStroke = BorderStroke(1.dp, contentColor.copy(alpha = 0.2f))
-
-            // 1. Shuffle
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
@@ -90,8 +88,6 @@ fun PlayerControlLayout(
                     }
                 }
             }
-
-            // 2. Skip Previous
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
@@ -113,8 +109,6 @@ fun PlayerControlLayout(
                     )
                 }
             }
-
-            // 3. Play/Pause
             Box(Modifier.weight(1.2f), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
@@ -134,8 +128,6 @@ fun PlayerControlLayout(
                     }
                 }
             }
-
-            // 4. Skip Next
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
@@ -157,8 +149,6 @@ fun PlayerControlLayout(
                     )
                 }
             }
-
-            // 5. Repeat
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
                     modifier = Modifier
@@ -358,8 +348,6 @@ fun PlayerControlLayout(
         }
     }
 }
-
-
 
 fun Modifier.rubberyClick(
     onClick: () -> Unit

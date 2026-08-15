@@ -268,7 +268,6 @@ fun NowPlayingScreenContent(
     val bsUiState by bottomSheetViewModel.uiState.collectAsStateWithLifecycle()
     var showCancelDlDialog by rememberSaveable { mutableStateOf(false) }
 
-
     val mainScrollState = rememberScrollState()
     val scrollFraction by remember {
         derivedStateOf {
@@ -336,8 +335,6 @@ fun NowPlayingScreenContent(
     var spotShadowColor by remember {
         mutableStateOf(Color.White)
     }
-
-
 
     LaunchedEffect(nowPlayingState?.songEntity) {
         bottomSheetViewModel.setSongEntity(nowPlayingState?.songEntity)
@@ -531,8 +528,6 @@ fun NowPlayingScreenContent(
             },
         )
     }
-
-
 
     if (screenDataState.lyricsData != null && controllerState.isPlaying) {
         KeepScreenOn()
@@ -1075,7 +1070,6 @@ fun NowPlayingScreenContent(
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
 
-
                                         Column(Modifier.weight(1f)) {
                                             Text(
                                                 text = screenDataState.nowPlayingTitle.replace(Regex("\\s*\\([^)]*\\)"), "").trim(),
@@ -1565,7 +1559,6 @@ fun NowPlayingScreenContent(
                                         Text(
                                             text =
                                                 when (screenDataState.lyricsData?.lyricsProvider) {
-
 
                                                     LyricsProvider.LRCLIB -> {
                                                         stringResource(Res.string.lyrics_provider_lrc)

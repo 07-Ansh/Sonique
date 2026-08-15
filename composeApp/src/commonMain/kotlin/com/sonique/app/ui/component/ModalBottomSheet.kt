@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutLinearInEasing
@@ -1407,9 +1407,6 @@ fun NowPlayingBottomSheet(
             },
         )
     }
-
-
-
 
     if (isBottomSheetVisible) {
         ModalBottomSheet(
@@ -3016,7 +3013,4 @@ sealed class DevLogInType {
             is YouTube -> getString(Res.string.your_youtube_cookie)
         }
 }
-
-
-
 

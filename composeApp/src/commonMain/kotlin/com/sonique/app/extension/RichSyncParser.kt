@@ -1,4 +1,4 @@
-package com.sonique.app.extension
+﻿package com.sonique.app.extension
 
  
 data class WordTiming(
@@ -24,8 +24,6 @@ fun parseRichSyncWords(
 
         return null
     }
-
-
 
      
      
@@ -69,8 +67,6 @@ fun parseRichSyncWords(
         return null
     }
 
-
-
      
     val lineStart = lineStartTimeMs.toLongOrNull() ?: 0L
     val lineEnd = lineEndTimeMs.toLongOrNull() ?: Long.MAX_VALUE
@@ -81,5 +77,4 @@ fun parseRichSyncWords(
         lineEndTimeMs = lineEnd,
     )
 }
-
 

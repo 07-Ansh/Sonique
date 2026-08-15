@@ -1,4 +1,4 @@
-package com.sonique.app.extension
+﻿package com.sonique.app.extension
 
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
@@ -131,7 +131,6 @@ class GreyScaleModifier : DrawModifier {
         }
     }
 }
-
 
 fun Modifier.greyScale() = this.then(GreyScaleModifier())
 
@@ -403,7 +402,7 @@ fun LazyGridState.isScrollingUp(thresholdPx: Int = 12): State<Boolean> {
 fun Palette?.getColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    // Only use the darkest swatches — no fallback to Vibrant/Muted (which can be bright)
+    // Only use the darkest swatches â€” no fallback to Vibrant/Muted (which can be bright)
     val startColor = p.getDarkVibrantColor(defaultColor)
         .takeIf { it != defaultColor }
         ?: p.getDarkMutedColor(defaultColor)
@@ -417,7 +416,7 @@ fun Palette?.getColorFromPalette(): Color {
 fun Palette?.getSecondaryColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    // Only use the darkest swatches — prefer DarkMuted as a complement to DarkVibrant
+    // Only use the darkest swatches â€” prefer DarkMuted as a complement to DarkVibrant
     val secondaryColor = p.getDarkMutedColor(defaultColor)
         .takeIf { it != defaultColor }
         ?: p.getDarkVibrantColor(defaultColor)
@@ -475,7 +474,6 @@ fun TextStyle.greyScale(): TextStyle =
 
 @Composable
 expect fun rememberIsInPipMode(): Boolean
-
 
 @Composable
 fun PaddingValues.copy(

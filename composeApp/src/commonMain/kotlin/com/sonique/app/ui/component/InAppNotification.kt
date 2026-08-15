@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -78,5 +78,4 @@ fun InAppNotification(
         }
     }
 }
-
 

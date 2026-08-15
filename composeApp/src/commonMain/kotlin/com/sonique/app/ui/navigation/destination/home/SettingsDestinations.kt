@@ -1,4 +1,4 @@
-package com.sonique.app.ui.navigation.destination.home
+﻿package com.sonique.app.ui.navigation.destination.home
 
 import kotlinx.serialization.Serializable
 
@@ -9,8 +9,6 @@ data class SettingsGeneralDestination(
 
 @Serializable
 data object SettingsAudioDestination
-
-
 
 @Serializable
 data object SettingsPlaybackDestination

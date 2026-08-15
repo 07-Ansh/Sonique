@@ -393,7 +393,6 @@ fun PlaylistScreen(
             showLoadingDialog.second,
         )
     }
-//    Box {
     Crossfade(
         targetState = uiState,
     ) { state ->
@@ -1236,7 +1235,6 @@ fun PlaylistScreen(
                     }
                     when (tracksListState) {
                         ListState.IDLE -> {
-                            // DO NOTHING
                             item {
                                 EndOfPage()
                             }

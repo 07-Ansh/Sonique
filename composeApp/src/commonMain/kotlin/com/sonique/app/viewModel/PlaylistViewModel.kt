@@ -1,4 +1,4 @@
-@file:Suppress("ktlint:standard:no-wildcard-imports")
+﻿@file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package com.sonique.app.viewModel
 
@@ -62,7 +62,6 @@ import sonique.composeapp.generated.resources.downloaded_songs
 import sonique.composeapp.generated.resources.sonique_lyrics
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
-
 
 class PlaylistViewModel(
     private val songRepository: SongRepository,
@@ -185,7 +184,6 @@ class PlaylistViewModel(
         checkDownloadedPlaylist?.cancel()
         checkDownloadedPlaylist = null
     }
-
 
     fun getData(id: String, reset: Boolean = true): Job {
         if (reset) {

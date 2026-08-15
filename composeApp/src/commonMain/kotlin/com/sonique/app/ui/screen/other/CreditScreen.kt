@@ -1,4 +1,4 @@
-package com.sonique.app.ui.screen.other
+﻿package com.sonique.app.ui.screen.other
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -75,7 +75,6 @@ fun CreditScreen(
             item {
                 Spacer(modifier = Modifier.height(20.dp))
 
-
                 Image(
                     painter = painterResource(Res.drawable.app_icon),
                     contentDescription = "App Icon",
@@ -85,7 +84,6 @@ fun CreditScreen(
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
-
 
                 Text(
                     text = stringResource(Res.string.app_name),
@@ -99,7 +97,6 @@ fun CreditScreen(
                 )
 
                 Spacer(modifier = Modifier.height(32.dp))
-
 
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -127,7 +124,6 @@ fun CreditScreen(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-
                 Text(
                     text = "Connect with us",
                     style = MaterialTheme.typography.titleSmall,
@@ -135,7 +131,6 @@ fun CreditScreen(
                     textAlign = TextAlign.Start
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-
 
                 SocialItem(
                     icon = Icons.Rounded.Code,
@@ -153,12 +148,11 @@ fun CreditScreen(
                     } 
                 )
 
-
                 
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Text(
-                    text = "Made with ❤️",
+                    text = "Made with â¤ï¸",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )

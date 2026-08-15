@@ -56,8 +56,6 @@ import com.sonique.domain.extension.now
 import com.sonique.common.LOCAL_PLAYLIST_ID_LIKED
 import com.sonique.common.LOCAL_PLAYLIST_ID_DOWNLOADED
 
-
-
 class LibraryViewModel(
     private val dataStoreManager: DataStoreManager,
     private val songRepository: SongRepository,
@@ -278,8 +276,6 @@ class LibraryViewModel(
                 }
         }
 
-
-
         viewModelScope.launch {
             val likedSongsTitle = getString(Res.string.liked_songs)
             val soniqueLyricsAuthor = getString(Res.string.sonique_lyrics)
@@ -403,9 +399,6 @@ class LibraryViewModel(
             _followedArtists.value = LocalResource.Success(savedList)
         }
     }
-
-
-
 
     fun getPlaylistFavorite() {}
 

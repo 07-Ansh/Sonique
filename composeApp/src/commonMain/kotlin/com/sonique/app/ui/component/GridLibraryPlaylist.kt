@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -507,7 +507,6 @@ internal inline fun <reified T> GridLibraryPlaylist(
                         }
                     }
                     } else {
-                        // List view
                         LazyColumn(
                             modifier = Modifier.hazeSource(hazeState).fillMaxSize(),
                             contentPadding = PaddingValues(
@@ -922,7 +921,4 @@ fun NavigationHeader(
         )
     }
 }
-
-
-
 

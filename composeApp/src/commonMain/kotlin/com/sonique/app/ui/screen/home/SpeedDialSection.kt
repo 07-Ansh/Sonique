@@ -95,7 +95,6 @@ fun SpeedDialSection(
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Header
         Row(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -121,7 +120,6 @@ fun SpeedDialSection(
 
         when (continueListeningLayout) {
             "1_row" -> {
-                // Horizontal List of Big Boxes
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -137,7 +135,6 @@ fun SpeedDialSection(
                 }
             }
             "2_row" -> {
-                // Horizontal pager of 2-row grids (6 items per page: 2 rows of 3 items)
                 val chunks = data.contents.filterNotNull().chunked(6).filter { it.size == 6 }
                 if (chunks.isEmpty()) return
                 val pagerState = rememberPagerState(pageCount = { chunks.size })

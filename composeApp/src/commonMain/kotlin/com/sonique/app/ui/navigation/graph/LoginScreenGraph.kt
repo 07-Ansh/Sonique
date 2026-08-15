@@ -1,4 +1,4 @@
-package com.sonique.app.ui.navigation.graph
+﻿package com.sonique.app.ui.navigation.graph
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.navigation.NavController
@@ -32,7 +32,6 @@ fun NavGraphBuilder.loginScreenGraph(
             showBottomNavigation = showBottomBar,
         )
     }
-
 
 }
 

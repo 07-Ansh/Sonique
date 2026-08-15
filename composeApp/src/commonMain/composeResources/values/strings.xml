@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="subscribers">%1$s subscribers</string>
     <string name="album_length">%1$s tracks  %2$s</string>
@@ -367,4 +367,17 @@
     <string name="check_for_updates_button">Check for updates</string>
     <string name="update_notifications">Update notifications</string>
     <string name="app_updates">App Updates</string>
+    <string name="explicit_content_blocked">Explicit content is skipped</string>
+    <string name="time_out_check_internet_connection_or_change_piped_instance_in_settings">Time out, check internet connection (%1$s)</string>
+    <string name="no_equalizer">Your device doesn&#39;t have equalizer</string>
+    <string name="new_albums">New albums</string>
+    <string name="new_singles">New singles</string>
+    <string name="restore_success">Restore Success</string>
+    <string name="year_and_category">%1$s • %2$s</string>
+    <string name="clear_search_history">Clear search history</string>
+    <string name="retry">Retry</string>
+    <string name="quick_picks">Quick picks</string>
+    <string name="top_artists">Top artists</string>
+    <string name="created_at">Created at %1$s</string>
+    <string name="shuffle_not_available">Shuffle endpoint is not available</string>
 </resources>

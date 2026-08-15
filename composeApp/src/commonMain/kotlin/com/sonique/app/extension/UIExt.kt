@@ -132,12 +132,6 @@ class GreyScaleModifier : DrawModifier {
     }
 }
 
-fun LazyListState.visibilityPercent(info: LazyListItemInfo): Float {
-    val cutTop = max(0, layoutInfo.viewportStartOffset - info.offset)
-    val cutBottom = max(0, info.offset + info.size - layoutInfo.viewportEndOffset)
-
-    return max(0f, 100f - (cutTop + cutBottom) * 100f / info.size)
-}
 
 fun Modifier.greyScale() = this.then(GreyScaleModifier())
 
@@ -482,13 +476,6 @@ fun TextStyle.greyScale(): TextStyle =
 @Composable
 expect fun rememberIsInPipMode(): Boolean
 
-@Composable
-fun animateAlignmentAsState(targetAlignment: Alignment): State<Alignment> {
-    val biased = targetAlignment as BiasAlignment
-    val horizontal by animateFloatAsState(biased.horizontalBias)
-    val vertical by animateFloatAsState(biased.verticalBias)
-    return remember { derivedStateOf { BiasAlignment(horizontal, vertical) } }
-}
 
 @Composable
 fun PaddingValues.copy(

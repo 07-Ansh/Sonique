@@ -353,7 +353,7 @@ class MainAppWidget :
                                     .padding(end = 16.dp),
                         ) {
                             Image(
-                                provider = ImageProvider(R.drawable.mono),
+                                provider = ImageProvider(R.drawable.app_icon_circle),
                                 contentDescription = "Logo",
                                 modifier =
                                     GlanceModifier

@@ -1376,6 +1376,19 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val lyricsOffsetMs: Flow<Int> =
+        settingsDataStore.data.map { preferences ->
+            preferences[LYRICS_OFFSET] ?: 0
+        }
+
+    override suspend fun setLyricsOffsetMs(offsetMs: Int) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[LYRICS_OFFSET] = offsetMs
+            }
+        }
+    }
+
     companion object Settings {
         val APP_VERSION = stringPreferencesKey("app_version")
         val COOKIE = stringPreferencesKey("cookie")
@@ -1469,6 +1482,7 @@ internal class DataStoreManagerImpl(
         val REVERB_ENABLED = stringPreferencesKey("reverb_enabled")
         val REVERB_PRESET = stringPreferencesKey("reverb_preset")
         val REVERB_MIX = stringPreferencesKey("reverb_mix")
+        val LYRICS_OFFSET = intPreferencesKey("lyrics_offset")
     }
 
 

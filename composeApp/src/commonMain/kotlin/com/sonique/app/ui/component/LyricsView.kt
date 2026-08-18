@@ -111,10 +111,20 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.baseline_keyboard_arrow_down_24
-import sonique.composeapp.generated.resources.baseline_more_vert_24
 import sonique.composeapp.generated.resources.now_playing_upper
 import sonique.composeapp.generated.resources.unavailable
+import sonique.composeapp.generated.resources.lyrics_offset
+import sonique.composeapp.generated.resources.lyrics_offset_message
+import sonique.composeapp.generated.resources.lyrics_offset_value
+import sonique.composeapp.generated.resources.lyrics_sync_adjust
+import sonique.composeapp.generated.resources.lyrics_offset_reset
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.ui.text.font.FontWeight
+import com.sonique.domain.manager.DataStoreManager
+import org.koin.compose.koinInject
 import kotlin.math.abs
+import kotlin.math.roundToInt
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
@@ -294,6 +304,8 @@ fun LyricsView(
     var currentLineHeight by remember {
         mutableIntStateOf(0)
     }
+    val dataStoreManager: DataStoreManager = koinInject()
+    val lyricsOffsetMs by dataStoreManager.lyricsOffsetMs.collectAsStateWithLifecycle(0)
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val current by timeLine.collectAsStateWithLifecycle()
@@ -316,9 +328,9 @@ fun LyricsView(
             }
         }
 
-    val currentLineIndex by remember(timedLineIndexes, current) {
+    val currentLineIndex by remember(timedLineIndexes, current, lyricsOffsetMs) {
         derivedStateOf {
-            val now = current.current
+            val now = current.current - lyricsOffsetMs
             if (now <= 0L) -1 else timedLineIndexes.activeIndexAt(now)
         }
     }
@@ -470,7 +482,7 @@ fun LyricsView(
                                 RichSyncLyricsLineItem(
                                     parsedLine = parsedLine,
                                     translatedWords = translatedWords,
-                                    currentTimeMs = current.current,
+                                    currentTimeMs = current.current - lyricsOffsetMs,
                                     isCurrent = index == currentLineIndex,
                                     playerContentColor = playerContentColor,
                                     modifier =
@@ -1015,6 +1027,10 @@ fun FullscreenLyricsSheet(
         mutableStateOf(false)
     }
 
+    var showTimingAdjustSheet by rememberSaveable {
+        mutableStateOf(false)
+    }
+
     ModalBottomSheet(
         onDismissRequest = {
             onDismiss()
@@ -1109,10 +1125,10 @@ fun FullscreenLyricsSheet(
                             }
                         },
                         actions = {
-                            IconButton(onClick = {}, modifier = Modifier.alpha(0f)) {
+                            IconButton(onClick = { showTimingAdjustSheet = true }) {
                                 Icon(
-                                    painter = painterResource(Res.drawable.baseline_more_vert_24),
-                                    contentDescription = "",
+                                    painter = painterResource(Res.drawable.baseline_sync_24),
+                                    contentDescription = stringResource(Res.string.lyrics_sync_adjust),
                                     tint = playerContentColor,
                                 )
                             }
@@ -1433,6 +1449,93 @@ fun FullscreenLyricsSheet(
                 showInfoBottomSheet = false
             },
         )
+    }
+    if (showTimingAdjustSheet) {
+        val timingSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val lyricsOffsetMs by sharedViewModel.getLyricsOffsetMs().collectAsStateWithLifecycle(0)
+
+        ModalBottomSheet(
+            onDismissRequest = { showTimingAdjustSheet = false },
+            sheetState = timingSheetState,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+        ) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text(
+                    text = stringResource(Res.string.lyrics_sync_adjust),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                Text(
+                    text =
+                        stringResource(
+                            Res.string.lyrics_offset_value,
+                            if (lyricsOffsetMs > 0) "+$lyricsOffsetMs" else lyricsOffsetMs.toString(),
+                        ),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+
+                Text(
+                    text = stringResource(Res.string.lyrics_offset_message),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+
+                Slider(
+                    value = lyricsOffsetMs.coerceIn(-5000, 5000).toFloat(),
+                    onValueChange = { newValue ->
+                        sharedViewModel.setLyricsOffsetMs(newValue.roundToInt())
+                    },
+                    valueRange = -5000f..5000f,
+                    steps = 199,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    OutlinedButton(
+                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs - 500) },
+                    ) {
+                        Text("-500")
+                    }
+                    OutlinedButton(
+                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs - 100) },
+                    ) {
+                        Text("-100")
+                    }
+                    FilledTonalButton(
+                        onClick = { sharedViewModel.setLyricsOffsetMs(0) },
+                    ) {
+                        Text(stringResource(Res.string.lyrics_offset_reset))
+                    }
+                    OutlinedButton(
+                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs + 100) },
+                    ) {
+                        Text("+100")
+                    }
+                    OutlinedButton(
+                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs + 500) },
+                    ) {
+                        Text("+500")
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -793,7 +793,6 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
     val crossfadeEnabled by viewModel.crossfadeEnabled.collectAsStateWithLifecycle()
     val crossfadeDjMode by viewModel.crossfadeDjMode.collectAsStateWithLifecycle()
     val crossfadeSkipAlbum by viewModel.crossfadeSkipAlbum.collectAsStateWithLifecycle()
-    val lyricsOffsetMs by viewModel.lyricsOffsetMs.collectAsStateWithLifecycle()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -937,51 +936,6 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
                         )
                     }
                 }
-            )
-        }
-
-        item {
-            Material3SettingsGroup(
-                title = "Lyrics Timing",
-                items = listOf(
-                    Material3SettingsItem(
-                        title = { Text(stringResource(Res.string.lyrics_offset)) },
-                        description = {
-                            Text(
-                                stringResource(
-                                    Res.string.lyrics_offset_value,
-                                    if (lyricsOffsetMs > 0) "+$lyricsOffsetMs" else lyricsOffsetMs.toString(),
-                                )
-                            )
-                        },
-                        onClick = {
-                            viewModel.setAlertData(
-                                SettingAlertState(
-                                    title = runBlocking { getString(Res.string.lyrics_offset) },
-                                    message = runBlocking { getString(Res.string.lyrics_offset_message) },
-                                    textField =
-                                        SettingAlertState.TextFieldData(
-                                            label = runBlocking { getString(Res.string.lyrics_offset) },
-                                            value = lyricsOffsetMs.toString(),
-                                            verifyCodeBlock = {
-                                                (it.trim().toIntOrNull() != null) to
-                                                    runBlocking { getString(Res.string.lyrics_offset_invalid) }
-                                            },
-                                        ),
-                                    confirm =
-                                        runBlocking { getString(Res.string.change) } to { state ->
-                                            state.textField
-                                                ?.value
-                                                ?.trim()
-                                                ?.toIntOrNull()
-                                                ?.let { viewModel.setLyricsOffsetMs(it) }
-                                        },
-                                    dismiss = runBlocking { getString(Res.string.cancel) },
-                                )
-                            )
-                        }
-                    )
-                )
             )
         }
     }

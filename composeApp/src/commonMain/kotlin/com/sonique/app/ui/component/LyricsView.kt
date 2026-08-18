@@ -1,4 +1,4 @@
-package com.sonique.app.ui.component
+﻿package com.sonique.app.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -84,7 +84,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sonique.domain.data.model.metadata.Line
 import com.sonique.domain.data.model.streams.TimeLine
 import com.sonique.logger.Logger
 import com.sonique.app.extension.KeepScreenOn
@@ -111,185 +110,12 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.baseline_keyboard_arrow_down_24
+import sonique.composeapp.generated.resources.baseline_more_vert_24
 import sonique.composeapp.generated.resources.now_playing_upper
 import sonique.composeapp.generated.resources.unavailable
-import sonique.composeapp.generated.resources.lyrics_offset
-import sonique.composeapp.generated.resources.lyrics_offset_message
-import sonique.composeapp.generated.resources.lyrics_offset_value
-import sonique.composeapp.generated.resources.lyrics_sync_adjust
-import sonique.composeapp.generated.resources.lyrics_offset_reset
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.ui.text.font.FontWeight
-import com.sonique.domain.manager.DataStoreManager
-import org.koin.compose.koinInject
 import kotlin.math.abs
-import kotlin.math.roundToInt
-
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.lerp
-import androidx.compose.ui.unit.TextUnit
-import kotlin.math.exp
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sqrt
 
 private const val TAG = "LyricsView"
-
-private const val PLAYHEAD_TICK_MS = 50L
-
-private const val EMP_AMOUNT_REF_MS = 2000f
-private const val EMP_BLUR_REF_MS = 3000f
-private const val EMP_MIN_DURATION_MS = 1000f
-private const val EMP_AMOUNT_GAIN = 0.6f
-private const val EMP_BLUR_GAIN = 0.5f
-private const val EMP_AMOUNT_CAP = 1.2f
-private const val EMP_BLUR_CAP = 0.8f
-private const val EMP_LAST_WORD_AMOUNT = 1.6f
-private const val EMP_LAST_WORD_BLUR = 1.5f
-private const val EMP_SCALE_EM = 0.1f
-private const val EMP_RISE_EM = 0.025f
-private const val EMP_GLOW_RADIUS_EM = 0.3f
-
-private const val FLARE_REACH_CHARS = 3.5f
-private const val FLARE_FADE_MS = 2500
-private const val FLARE_ATTACK_MS = 500
-private const val FLARE_TAIL_CHARS = 2.5f
-
-private const val CHAR_RISE_EM = 0.065f
-private const val CHAR_RISE_MS = 1000
-
-private const val SUNG_BASE_GLOW_ALPHA = 0.95f
-private const val SUNG_BASE_GLOW_EM = 0.26f
-
-private val EmpBezIn = CubicBezierEasing(0.2f, 0.4f, 0.58f, 1f)
-private val EmpBezOut = CubicBezierEasing(0.3f, 0f, 0.58f, 1f)
-
-private fun empEasing(x: Float): Float =
-    if (x < 0.5f) {
-        EmpBezIn.transform((x / 0.5f).coerceIn(0f, 1f))
-    } else {
-        1f - EmpBezOut.transform(((x - 0.5f) / 0.5f).coerceIn(0f, 1f))
-    }
-
-@Composable
-private fun rememberSmoothPlayhead(
-    rawMs: Long,
-    enabled: Boolean,
-): State<Long> {
-    val playhead = remember { mutableLongStateOf(rawMs) }
-    LaunchedEffect(rawMs, enabled) {
-        if (!enabled) {
-            playhead.longValue = rawMs
-            return@LaunchedEffect
-        }
-        var baseNanos = -1L
-        while (true) {
-            withFrameNanos { frameNanos ->
-                if (baseNanos < 0L) baseNanos = frameNanos
-                val elapsedMs = (frameNanos - baseNanos) / 1_000_000L
-                playhead.longValue = rawMs + elapsedMs.coerceIn(0L, PLAYHEAD_TICK_MS)
-            }
-        }
-    }
-    return playhead
-}
-
-private const val INTERLUDE_MIN_GAP_MS = 3_000L
-private const val INTERLUDE_DOT_COUNT = 3
-private const val INTERLUDE_DOT = "\u2022"
-
-private data class DisplayLines(
-    val lines: List<Line>,
-    val interludeIndices: Set<Int>,
-)
-
-private fun buildDisplayLines(
-    lines: List<Line>?,
-    syncType: String?,
-): DisplayLines {
-    val source = lines.orEmpty()
-    if (syncType != "RICH_SYNCED" || source.size < 2) return DisplayLines(source, emptySet())
-
-    val out = ArrayList<Line>(source.size)
-    val inserted = mutableSetOf<Int>()
-    source.forEachIndexed { index, line ->
-        out += line
-        val nextStartMs = source.getOrNull(index + 1)?.startTimeMs?.toLongOrNull() ?: return@forEachIndexed
-        val lastWordStartMs =
-            parseRichSyncWords(line.words, line.startTimeMs, line.endTimeMs)
-                ?.words
-                ?.lastOrNull()
-                ?.startTimeMs
-                ?: return@forEachIndexed
-        val dotsStartMs = lastWordStartMs + INTERLUDE_MIN_GAP_MS
-        if (nextStartMs <= dotsStartMs) return@forEachIndexed
-        val interlude = interludeLine(dotsStartMs, nextStartMs) ?: return@forEachIndexed
-        inserted += out.size
-        out += interlude
-    }
-    return DisplayLines(out, inserted)
-}
-
-private fun interludeLine(
-    startMs: Long,
-    endMs: Long,
-): Line? {
-    val stepMs = (endMs - startMs) / INTERLUDE_DOT_COUNT
-    val words =
-        buildString {
-            repeat(INTERLUDE_DOT_COUNT) { dot ->
-                append(richSyncTimestamp(startMs + stepMs * dot) ?: return null)
-                append(INTERLUDE_DOT)
-            }
-        }
-    return Line(
-        startTimeMs = startMs.toString(),
-        endTimeMs = endMs.toString(),
-        syllables = null,
-        words = words,
-    )
-}
-
-private fun richSyncTimestamp(ms: Long): String? {
-    val centis = ms / 10
-    val minutes = centis / 6000
-    if (minutes > 99) return null
-    return "<${twoDigits(minutes)}:${twoDigits((centis / 100) % 60)}.${twoDigits(centis % 100)}>"
-}
-
-private fun twoDigits(value: Long): String = if (value < 10) "0$value" else value.toString()
-
-internal data class TimedLineIndex(
-    val index: Int,
-    val startTimeMs: Long,
-)
-
-internal fun List<TimedLineIndex>.activeIndexAt(nowMs: Long): Int {
-    if (isEmpty()) return -1
-    if (nowMs < first().startTimeMs) return -1
-    var lo = 0
-    var hi = size - 1
-    var ans = -1
-    while (lo <= hi) {
-        val mid = (lo + hi) ushr 1
-        if (this[mid].startTimeMs <= nowMs) {
-            ans = mid
-            lo = mid + 1
-        } else {
-            hi = mid - 1
-        }
-    }
-    return if (ans >= 0) this[ans].index else -1
-}
 
 @Composable
 fun LyricsView(
@@ -304,35 +130,11 @@ fun LyricsView(
     var currentLineHeight by remember {
         mutableIntStateOf(0)
     }
-    val dataStoreManager: DataStoreManager = koinInject()
-    val lyricsOffsetMs by dataStoreManager.lyricsOffsetMs.collectAsStateWithLifecycle(0)
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val current by timeLine.collectAsStateWithLifecycle()
-    val displayLines =
-        remember(lyricsData.lyrics.lines, lyricsData.lyrics.syncType) {
-            buildDisplayLines(lyricsData.lyrics.lines, lyricsData.lyrics.syncType)
-        }
-
-    val timedLineIndexes =
-        remember(displayLines) {
-            val timed =
-                displayLines.lines
-                    .mapIndexedNotNull { index, line ->
-                        line.startTimeMs.toLongOrNull()?.let { TimedLineIndex(index, it) }
-                    }
-            if (timed.distinctBy { it.startTimeMs }.size <= 1) {
-                emptyList()
-            } else {
-                timed.sortedBy { it.startTimeMs }
-            }
-        }
-
-    val currentLineIndex by remember(timedLineIndexes, current, lyricsOffsetMs) {
-        derivedStateOf {
-            val now = current.current - lyricsOffsetMs
-            if (now <= 0L) -1 else timedLineIndexes.activeIndexAt(now)
-        }
+    var currentLineIndex by rememberSaveable {
+        mutableIntStateOf(-1)
     }
 
     val showTopShadow by remember {
@@ -350,6 +152,42 @@ fun LyricsView(
             } else {
                 false
             }
+        }
+    }
+
+    LaunchedEffect(key1 = current) {
+        val lines = lyricsData.lyrics.lines
+        if (current.current > 0L) {
+            lines?.indices?.forEach { i ->
+                val sentence = lines[i]
+                val startTimeMs = sentence.startTimeMs.toLong()
+
+                 
+                val endTimeMs =
+                    if (i < lines.size - 1) {
+                        lines[i + 1].startTimeMs.toLong()
+                    } else {
+                         
+                        startTimeMs + 60000
+                    }
+                if (current.current in startTimeMs..endTimeMs) {
+                    currentLineIndex = i
+                }
+            }
+            if (!lines.isNullOrEmpty() &&
+                (
+                    current.current in (
+                        0..(
+                            lines.getOrNull(0)?.startTimeMs
+                                ?: "0"
+                        ).toLong()
+                    )
+                )
+            ) {
+                currentLineIndex = -1
+            }
+        } else {
+            currentLineIndex = -1
         }
     }
     var userIsScrolling by remember { mutableStateOf(false) }
@@ -449,13 +287,11 @@ fun LyricsView(
                         }
                     },
         ) {
-            items(displayLines.lines.size) { index ->
-                val line = displayLines.lines.getOrNull(index)
-                val isInterlude = index in displayLines.interludeIndices
+            items(lyricsData.lyrics.lines?.size ?: 0) { index ->
+                val line = lyricsData.lyrics.lines?.getOrNull(index)
+                 
                 val translatedWords =
-                    if (isInterlude) {
-                        null
-                    } else if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
+                    if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
                         line?.startTimeMs?.let { findClosestTranslatedLine(it) }
                     } else {
                         lyricsData.translatedLyrics
@@ -482,7 +318,7 @@ fun LyricsView(
                                 RichSyncLyricsLineItem(
                                     parsedLine = parsedLine,
                                     translatedWords = translatedWords,
-                                    currentTimeMs = current.current - lyricsOffsetMs,
+                                    currentTimeMs = current.current,
                                     isCurrent = index == currentLineIndex,
                                     playerContentColor = playerContentColor,
                                     modifier =
@@ -675,32 +511,27 @@ fun LyricsLineItem(
 fun RichSyncLyricsLineItem(
     parsedLine: ParsedRichSyncLine,
     translatedWords: String?,
-    romanizedWords: String? = null,
     currentTimeMs: Long,
     isCurrent: Boolean,
-    customFontSize: TextUnit? = null,
-    customPadding: Dp = 12.dp,
-    glow: Shadow? = Shadow(color = Color.White, offset = Offset.Zero, blurRadius = 0f),
-    pendingColorOverride: Color? = null,
-    translatedColorOverride: Color? = null,
-    wrappedLineSpacing: Dp = 0.dp,
     modifier: Modifier = Modifier,
     playerContentColor: Color = Color.White,
 ) {
-    val playhead = rememberSmoothPlayhead(currentTimeMs, enabled = isCurrent)
-
-    val currentWordIndex by remember(parsedLine.words, isCurrent) {
+     
+    val currentWordIndex by remember(currentTimeMs, parsedLine.words) {
         derivedStateOf {
             if (!isCurrent) return@derivedStateOf -1
-            parsedLine.words.indexOfLast { it.startTimeMs <= playhead.value }
+
+             
+            parsedLine.words.indexOfLast { it.startTimeMs <= currentTimeMs }
         }
     }
 
     Column(
         modifier = modifier,
     ) {
-        Spacer(modifier = Modifier.height(customPadding))
+        Spacer(modifier = Modifier.height(12.dp))
 
+         
         FlowRow(
             modifier =
                 Modifier.then(
@@ -711,59 +542,20 @@ fun RichSyncLyricsLineItem(
                     },
                 ),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalArrangement =
-                if (wrappedLineSpacing > 0.dp) Arrangement.spacedBy(wrappedLineSpacing) else Arrangement.Center,
+            verticalArrangement = Arrangement.Center,
         ) {
             parsedLine.words.forEachIndexed { index, wordTiming ->
-                val wordEndTimeMs =
-                    if (index < parsedLine.words.size - 1) {
-                        parsedLine.words[index + 1].startTimeMs
-                    } else if (parsedLine.lineEndTimeMs == Long.MAX_VALUE || parsedLine.lineEndTimeMs <= wordTiming.startTimeMs) {
-                        if (index > 0 && parsedLine.words[index - 1].startTimeMs < wordTiming.startTimeMs) {
-                            val prevWordDuration = wordTiming.startTimeMs - parsedLine.words[index - 1].startTimeMs
-                            wordTiming.startTimeMs + prevWordDuration
-                        } else {
-                            wordTiming.startTimeMs + 500L
-                        }
-                    } else {
-                        parsedLine.lineEndTimeMs
-                    }
-
                 AnimatedWord(
                     word = wordTiming.text,
-                    wordIndex = index,
-                    wordStartTimeMs = wordTiming.startTimeMs,
-                    wordEndTimeMs = wordEndTimeMs,
-                    currentTimeMs = currentTimeMs,
-                    playheadMs = playhead,
                     isActive = isCurrent && index == currentWordIndex,
                     isPast = isCurrent && index < currentWordIndex,
                     isCurrent = isCurrent,
-                    customFontSize = customFontSize,
-                    glow = glow,
-                    isLastWord = index == parsedLine.words.lastIndex,
-                    pendingColorOverride = pendingColorOverride,
                     playerContentColor = playerContentColor,
                 )
             }
         }
 
-        if (romanizedWords != null) {
-            Text(
-                modifier =
-                    Modifier.then(
-                        if (isCurrent) {
-                            Modifier
-                        } else {
-                            Modifier.blur(1.dp)
-                        },
-                    ),
-                text = romanizedWords,
-                style = typo().bodyMedium,
-                color = if (isCurrent) playerContentColor.copy(alpha = 0.62f) else playerContentColor.copy(alpha = 0.3f),
-            )
-        }
-
+         
         if (translatedWords != null) {
             Text(
                 modifier =
@@ -777,193 +569,46 @@ fun RichSyncLyricsLineItem(
                 text = translatedWords,
                 style = typo().bodyMedium,
                 color =
-                    translatedColorOverride
-                        ?: if (isCurrent) {
-                            musica_accent
-                        } else {
-                            musica_accent.copy(alpha = 0.3f)
-                        },
+                    if (isCurrent) {
+                        musica_accent
+                    } else {
+                        musica_accent.copy(
+                            alpha = 0.3f,
+                        )
+                    },
             )
         }
 
-        Spacer(modifier = Modifier.height(customPadding))
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 @Composable
 private fun AnimatedWord(
     word: String,
-    wordIndex: Int,
-    wordStartTimeMs: Long,
-    wordEndTimeMs: Long,
-    currentTimeMs: Long,
-    playheadMs: State<Long>,
     isActive: Boolean,
     isPast: Boolean,
     isCurrent: Boolean,
-    customFontSize: TextUnit? = null,
-    glow: Shadow? = null,
-    isLastWord: Boolean = false,
-    pendingColorOverride: Color? = null,
     playerContentColor: Color = Color.White,
 ) {
-    val style =
-        typo().headlineLarge.copy(
-            fontSize = customFontSize ?: typo().headlineLarge.fontSize,
-        )
-
-    if (!isCurrent) {
-        Text(text = word, style = style, color = pendingColorOverride ?: playerContentColor.copy(alpha = 0.35f))
-        return
-    }
-
-    val wordDurationMs = (wordEndTimeMs - wordStartTimeMs).coerceAtLeast(1L)
-    val anim =
-        remember(wordStartTimeMs, wordEndTimeMs) {
-            val initial =
-                ((currentTimeMs - wordStartTimeMs).toFloat() / wordDurationMs.toFloat())
-                    .coerceIn(0f, 1f)
-            Animatable(initial)
-        }
-
-    LaunchedEffect(wordStartTimeMs, wordEndTimeMs, isActive, isPast) {
-        when {
-            isPast -> anim.snapTo(1f)
-            isActive -> {
-                val now = playheadMs.value
-                val current =
-                    ((now - wordStartTimeMs).toFloat() / wordDurationMs.toFloat())
-                        .coerceIn(0f, 1f)
-                anim.snapTo(current)
-                val remainingMs = (wordEndTimeMs - now).coerceAtLeast(0L).toInt().coerceAtLeast(1)
-                anim.animateTo(1f, tween(remainingMs, easing = LinearEasing))
-            }
-        }
-    }
-
-    val progress = anim.value
-    val wordProgress =
-        when {
-            isPast -> 1f
-            isActive -> progress
-            else -> 0f
-        }
-
-    val emphasisDurationMs = max(EMP_MIN_DURATION_MS, wordDurationMs.toFloat())
-    val amount =
-        if (glow == null) {
-            0f
-        } else {
-            val raw = emphasisDurationMs / EMP_AMOUNT_REF_MS
-            val shaped = if (raw > 1f) sqrt(raw) else raw * raw * raw
-            min(EMP_AMOUNT_CAP, shaped * EMP_AMOUNT_GAIN * if (isLastWord) EMP_LAST_WORD_AMOUNT else 1f)
-        }
-    val blurAmount =
-        if (glow == null) {
-            0f
-        } else {
-            val raw = emphasisDurationMs / EMP_BLUR_REF_MS
-            val shaped = if (raw > 1f) sqrt(raw) else raw * raw * raw
-            min(EMP_BLUR_CAP, shaped * EMP_BLUR_GAIN * if (isLastWord) EMP_LAST_WORD_BLUR else 1f)
-        }
-
-    val flareGate by animateFloatAsState(
-        targetValue = if (isActive) 1f else 0f,
-        animationSpec =
-            tween(
-                durationMillis = if (isActive) FLARE_ATTACK_MS else FLARE_FADE_MS,
-                easing = LinearEasing,
-            ),
-        label = "flareGate",
+     
+    val color by animateColorAsState(
+        targetValue =
+            when {
+                !isCurrent -> Color.LightGray.copy(alpha = 0.35f)  
+                isPast -> playerContentColor.copy(alpha = 0.7f)  
+                isActive -> playerContentColor  
+                else -> Color.LightGray.copy(alpha = 0.5f)  
+            },
+        animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
+        label = "wordColor",
     )
 
-    val eased = if (amount <= 0f && blurAmount <= 0f) 0f else empEasing(wordProgress)
-    val fontPx = with(LocalDensity.current) { style.fontSize.toPx() }
-    val heldGlow =
-        if (eased * blurAmount <= 0.01f) {
-            null
-        } else {
-            glow?.copy(
-                color = glow.color.copy(alpha = (eased * blurAmount).coerceIn(0f, 1f)),
-                blurRadius = min(EMP_GLOW_RADIUS_EM, blurAmount * EMP_GLOW_RADIUS_EM) * fontPx,
-            )
-        }
-
-    Box(
-        modifier =
-            Modifier.graphicsLayer {
-                val scale = 1f + eased * EMP_SCALE_EM * amount
-                scaleX = scale
-                scaleY = scale
-                translationY = -eased * EMP_RISE_EM * amount * fontPx
-            },
-    ) {
-        val chars = word.toCharArray()
-        val charCount = chars.size.coerceAtLeast(1)
-        Row {
-            chars.forEachIndexed { charIndex, ch ->
-                val charFrom = charIndex.toFloat() / charCount
-                val charTo = (charIndex + 1).toFloat() / charCount
-                val charProgress = ((wordProgress - charFrom) / (charTo - charFrom)).coerceIn(0f, 1f)
-                val charPast = wordProgress >= charTo
-                val charActive = isActive && wordProgress >= charFrom && wordProgress < charTo
-
-                val charCenter = (charFrom + charTo) / 2f
-                val reach = (FLARE_REACH_CHARS / charCount).coerceAtLeast(0.0001f)
-                val charFlare =
-                    if (flareGate <= 0f || glow == null) {
-                        0f
-                    } else {
-                        val delta = wordProgress - charCenter
-                        val shape =
-                            if (delta > 0f) {
-                                exp(-delta / (FLARE_TAIL_CHARS / charCount))
-                            } else {
-                                (1f - abs(delta) / reach).coerceIn(0f, 1f)
-                            }
-                        shape * flareGate
-                    }
-
-                val charRise by animateFloatAsState(
-                    targetValue = if (glow != null && charProgress > 0f) 1f else 0f,
-                    animationSpec = tween(CHAR_RISE_MS, easing = FastOutSlowInEasing),
-                    label = "charRise",
-                )
-                val restingColor = pendingColorOverride ?: playerContentColor.copy(alpha = 0.45f)
-                Box(
-                    modifier =
-                        Modifier.graphicsLayer {
-                            translationY = -charRise * CHAR_RISE_EM * fontPx
-                        },
-                ) {
-                    val glowShadow = heldGlow ?: glow?.copy(blurRadius = SUNG_BASE_GLOW_EM * fontPx)
-                    if (glowShadow != null) {
-                        Text(
-                            text = ch.toString(),
-                            style =
-                                style.copy(
-                                    shadow =
-                                        glowShadow.copy(
-                                            color = glowShadow.color.copy(alpha = SUNG_BASE_GLOW_ALPHA * charFlare),
-                                        ),
-                                ),
-                            color = Color.Transparent,
-                        )
-                    }
-                    Text(
-                        text = ch.toString(),
-                        style = style,
-                        color =
-                            when {
-                                charPast -> playerContentColor
-                                charActive -> lerp(restingColor, playerContentColor, charProgress)
-                                else -> restingColor
-                            },
-                    )
-                }
-            }
-        }
-    }
+    Text(
+        text = word,
+        style = typo().headlineLarge,
+        color = color,
+    )
 }
 
 @OptIn(ExperimentalHazeMaterialsApi::class)
@@ -1024,10 +669,6 @@ fun FullscreenLyricsSheet(
     }
 
     var showInfoBottomSheet by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var showTimingAdjustSheet by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -1125,10 +766,10 @@ fun FullscreenLyricsSheet(
                             }
                         },
                         actions = {
-                            IconButton(onClick = { showTimingAdjustSheet = true }) {
+                            IconButton(onClick = {}, modifier = Modifier.alpha(0f)) {
                                 Icon(
-                                    painter = painterResource(Res.drawable.baseline_sync_24),
-                                    contentDescription = stringResource(Res.string.lyrics_sync_adjust),
+                                    painter = painterResource(Res.drawable.baseline_more_vert_24),
+                                    contentDescription = "",
                                     tint = playerContentColor,
                                 )
                             }
@@ -1449,93 +1090,6 @@ fun FullscreenLyricsSheet(
                 showInfoBottomSheet = false
             },
         )
-    }
-    if (showTimingAdjustSheet) {
-        val timingSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        val lyricsOffsetMs by sharedViewModel.getLyricsOffsetMs().collectAsStateWithLifecycle(0)
-
-        ModalBottomSheet(
-            onDismissRequest = { showTimingAdjustSheet = false },
-            sheetState = timingSheetState,
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-        ) {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Text(
-                    text = stringResource(Res.string.lyrics_sync_adjust),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-
-                Text(
-                    text =
-                        stringResource(
-                            Res.string.lyrics_offset_value,
-                            if (lyricsOffsetMs > 0) "+$lyricsOffsetMs" else lyricsOffsetMs.toString(),
-                        ),
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-
-                Text(
-                    text = stringResource(Res.string.lyrics_offset_message),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-
-                Slider(
-                    value = lyricsOffsetMs.coerceIn(-5000, 5000).toFloat(),
-                    onValueChange = { newValue ->
-                        sharedViewModel.setLyricsOffsetMs(newValue.roundToInt())
-                    },
-                    valueRange = -5000f..5000f,
-                    steps = 199,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    OutlinedButton(
-                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs - 500) },
-                    ) {
-                        Text("-500")
-                    }
-                    OutlinedButton(
-                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs - 100) },
-                    ) {
-                        Text("-100")
-                    }
-                    FilledTonalButton(
-                        onClick = { sharedViewModel.setLyricsOffsetMs(0) },
-                    ) {
-                        Text(stringResource(Res.string.lyrics_offset_reset))
-                    }
-                    OutlinedButton(
-                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs + 100) },
-                    ) {
-                        Text("+100")
-                    }
-                    OutlinedButton(
-                        onClick = { sharedViewModel.setLyricsOffsetMs(lyricsOffsetMs + 500) },
-                    ) {
-                        Text("+500")
-                    }
-                }
-            }
-        }
     }
 }
 

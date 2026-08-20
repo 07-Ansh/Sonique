@@ -84,6 +84,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sonique.domain.data.model.metadata.Line
 import com.sonique.domain.data.model.streams.TimeLine
 import com.sonique.logger.Logger
 import com.sonique.app.extension.KeepScreenOn
@@ -192,6 +193,94 @@ private fun rememberSmoothPlayhead(
     return playhead
 }
 
+private const val INTERLUDE_MIN_GAP_MS = 3_000L
+private const val INTERLUDE_DOT_COUNT = 3
+private const val INTERLUDE_DOT = "\u2022"
+
+private data class DisplayLines(
+    val lines: List<Line>,
+    val interludeIndices: Set<Int>,
+)
+
+private fun buildDisplayLines(
+    lines: List<Line>?,
+    syncType: String?,
+): DisplayLines {
+    val source = lines.orEmpty()
+    if (syncType != "RICH_SYNCED" || source.size < 2) return DisplayLines(source, emptySet())
+
+    val out = ArrayList<Line>(source.size)
+    val inserted = mutableSetOf<Int>()
+    source.forEachIndexed { index, line ->
+        out += line
+        val nextStartMs = source.getOrNull(index + 1)?.startTimeMs?.toLongOrNull() ?: return@forEachIndexed
+        val lastWordStartMs =
+            parseRichSyncWords(line.words, line.startTimeMs, line.endTimeMs)
+                ?.words
+                ?.lastOrNull()
+                ?.startTimeMs
+                ?: return@forEachIndexed
+        val dotsStartMs = lastWordStartMs + INTERLUDE_MIN_GAP_MS
+        if (nextStartMs <= dotsStartMs) return@forEachIndexed
+        val interlude = interludeLine(dotsStartMs, nextStartMs) ?: return@forEachIndexed
+        inserted += out.size
+        out += interlude
+    }
+    return DisplayLines(out, inserted)
+}
+
+private fun interludeLine(
+    startMs: Long,
+    endMs: Long,
+): Line? {
+    val stepMs = (endMs - startMs) / INTERLUDE_DOT_COUNT
+    val words =
+        buildString {
+            repeat(INTERLUDE_DOT_COUNT) { dot ->
+                append(richSyncTimestamp(startMs + stepMs * dot) ?: return null)
+                append(INTERLUDE_DOT)
+            }
+        }
+    return Line(
+        startTimeMs = startMs.toString(),
+        endTimeMs = endMs.toString(),
+        syllables = null,
+        words = words,
+    )
+}
+
+private fun richSyncTimestamp(ms: Long): String? {
+    val centis = ms / 10
+    val minutes = centis / 6000
+    if (minutes > 99) return null
+    return "<${twoDigits(minutes)}:${twoDigits((centis / 100) % 60)}.${twoDigits(centis % 100)}>"
+}
+
+private fun twoDigits(value: Long): String = if (value < 10) "0$value" else value.toString()
+
+internal data class TimedLineIndex(
+    val index: Int,
+    val startTimeMs: Long,
+)
+
+internal fun List<TimedLineIndex>.activeIndexAt(nowMs: Long): Int {
+    if (isEmpty()) return -1
+    if (nowMs < first().startTimeMs) return -1
+    var lo = 0
+    var hi = size - 1
+    var ans = -1
+    while (lo <= hi) {
+        val mid = (lo + hi) ushr 1
+        if (this[mid].startTimeMs <= nowMs) {
+            ans = mid
+            lo = mid + 1
+        } else {
+            hi = mid - 1
+        }
+    }
+    return if (ans >= 0) this[ans].index else -1
+}
+
 @Composable
 fun LyricsView(
     lyricsData: NowPlayingScreenData.LyricsData,
@@ -208,8 +297,30 @@ fun LyricsView(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val current by timeLine.collectAsStateWithLifecycle()
-    var currentLineIndex by rememberSaveable {
-        mutableIntStateOf(-1)
+    val displayLines =
+        remember(lyricsData.lyrics.lines, lyricsData.lyrics.syncType) {
+            buildDisplayLines(lyricsData.lyrics.lines, lyricsData.lyrics.syncType)
+        }
+
+    val timedLineIndexes =
+        remember(displayLines) {
+            val timed =
+                displayLines.lines
+                    .mapIndexedNotNull { index, line ->
+                        line.startTimeMs.toLongOrNull()?.let { TimedLineIndex(index, it) }
+                    }
+            if (timed.distinctBy { it.startTimeMs }.size <= 1) {
+                emptyList()
+            } else {
+                timed.sortedBy { it.startTimeMs }
+            }
+        }
+
+    val currentLineIndex by remember(timedLineIndexes, current) {
+        derivedStateOf {
+            val now = current.current
+            if (now <= 0L) -1 else timedLineIndexes.activeIndexAt(now)
+        }
     }
 
     val showTopShadow by remember {
@@ -227,42 +338,6 @@ fun LyricsView(
             } else {
                 false
             }
-        }
-    }
-
-    LaunchedEffect(key1 = current) {
-        val lines = lyricsData.lyrics.lines
-        if (current.current > 0L) {
-            lines?.indices?.forEach { i ->
-                val sentence = lines[i]
-                val startTimeMs = sentence.startTimeMs.toLong()
-
-                 
-                val endTimeMs =
-                    if (i < lines.size - 1) {
-                        lines[i + 1].startTimeMs.toLong()
-                    } else {
-                         
-                        startTimeMs + 60000
-                    }
-                if (current.current in startTimeMs..endTimeMs) {
-                    currentLineIndex = i
-                }
-            }
-            if (!lines.isNullOrEmpty() &&
-                (
-                    current.current in (
-                        0..(
-                            lines.getOrNull(0)?.startTimeMs
-                                ?: "0"
-                        ).toLong()
-                    )
-                )
-            ) {
-                currentLineIndex = -1
-            }
-        } else {
-            currentLineIndex = -1
         }
     }
     var userIsScrolling by remember { mutableStateOf(false) }
@@ -362,11 +437,13 @@ fun LyricsView(
                         }
                     },
         ) {
-            items(lyricsData.lyrics.lines?.size ?: 0) { index ->
-                val line = lyricsData.lyrics.lines?.getOrNull(index)
-                 
+            items(displayLines.lines.size) { index ->
+                val line = displayLines.lines.getOrNull(index)
+                val isInterlude = index in displayLines.interludeIndices
                 val translatedWords =
-                    if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
+                    if (isInterlude) {
+                        null
+                    } else if (lyricsData.lyrics.syncType == "LINE_SYNCED" || lyricsData.lyrics.syncType == "RICH_SYNCED") {
                         line?.startTimeMs?.let { findClosestTranslatedLine(it) }
                     } else {
                         lyricsData.translatedLyrics

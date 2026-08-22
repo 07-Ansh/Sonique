@@ -413,4 +413,10 @@
     <string name="reverb_help_predelay_meaning">Pre-delay is the silence before the reverb starts. A longer gap keeps the dry sound clear and pushes the walls further away.</string>
     <string name="reverb_help_damping_meaning">Damping is where the tail starts losing treble. It darkens further as it decays, the way air and soft surfaces absorb highs.</string>
     <string name="reverb_help_mix">Mix is the wet share: the slider sets how much of the room you hear against the dry signal, identically on Android and Desktop.</string>
+    <string name="lyrics_offset">Lyrics timing offset</string>
+    <string name="lyrics_offset_message">Shift every lyric line by this many milliseconds. Use a positive number when you hear the audio later than you see it, which is what Bluetooth headphones do, and a negative number to make the lyrics appear earlier.</string>
+    <string name="lyrics_offset_value">%1$s ms</string>
+    <string name="lyrics_offset_invalid">Enter a whole number of milliseconds</string>
+    <string name="lyrics_sync_adjust">Adjust lyrics timing</string>
+    <string name="lyrics_offset_reset">Reset</string>
 </resources>

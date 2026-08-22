@@ -67,6 +67,7 @@ import com.sonique.app.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -1482,9 +1483,15 @@ class SharedViewModel(
             initialValue = false
         )
 
-    suspend fun isUserLoggedInSus(): Boolean = dataStoreManager.cookie.first().isNotEmpty()
-
     fun isCombineFavoriteAndYTLiked(): Boolean = runBlocking { dataStoreManager.combineLocalAndYouTubeLiked.first() == TRUE }
+
+    fun getLyricsOffsetMs(): Flow<Int> = dataStoreManager.lyricsOffsetMs
+
+    fun setLyricsOffsetMs(offsetMs: Int) {
+        viewModelScope.launch {
+            dataStoreManager.setLyricsOffsetMs(offsetMs)
+        }
+    }
 }
 
 sealed class UIEvent {

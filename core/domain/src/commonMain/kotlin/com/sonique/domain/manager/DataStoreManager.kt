@@ -332,6 +332,9 @@ interface DataStoreManager {
     val reverbMix: Flow<Float>
     suspend fun setReverbMix(mix: Float)
 
+    val lyricsOffsetMs: Flow<Int>
+    suspend fun setLyricsOffsetMs(offsetMs: Int)
+
     enum class ProxyType {
         PROXY_TYPE_HTTP,
         PROXY_TYPE_SOCKS,

@@ -209,6 +209,9 @@ class SettingsViewModel(
     private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("list")
     val continueListeningLayout: StateFlow<String> = _continueListeningLayout
 
+    private val _lyricsOffsetMs = MutableStateFlow<Int>(0)
+    val lyricsOffsetMs: StateFlow<Int> = _lyricsOffsetMs
+
     init {
         getYoutubeSubtitleLanguage()
 
@@ -285,6 +288,7 @@ class SettingsViewModel(
         getSponsorBlockEnabled()
         getSponsorBlockCategories()
         getAudioEffects()
+        getLyricsOffsetMs()
 
         viewModelScope.launch {
             calculateDataFraction(
@@ -1366,6 +1370,20 @@ class SettingsViewModel(
             dataStoreManager.setDelayTimeMs(timeMs)
             dataStoreManager.setDelayFeedback(feedback)
             dataStoreManager.setDelayMix(mix)
+        }
+    }
+
+    private fun getLyricsOffsetMs() {
+        viewModelScope.launch {
+            dataStoreManager.lyricsOffsetMs.collect { offsetMs ->
+                _lyricsOffsetMs.emit(offsetMs)
+            }
+        }
+    }
+
+    fun setLyricsOffsetMs(offsetMs: Int) {
+        viewModelScope.launch {
+            dataStoreManager.setLyricsOffsetMs(offsetMs)
         }
     }
 }

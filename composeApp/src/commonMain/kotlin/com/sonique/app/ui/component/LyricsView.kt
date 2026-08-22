@@ -120,6 +120,10 @@ import sonique.composeapp.generated.resources.lyrics_offset_message
 import sonique.composeapp.generated.resources.lyrics_offset_value
 import sonique.composeapp.generated.resources.lyrics_sync_adjust
 import sonique.composeapp.generated.resources.lyrics_offset_reset
+import sonique.composeapp.generated.resources.share_lyrics
+import androidx.compose.material.icons.filled.Share
+import com.sonique.app.ui.component.lyrics.ShareLyricsSheet
+import com.sonique.app.ui.component.lyrics.toShareLyricsLines
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.ui.text.font.FontWeight
@@ -1086,6 +1090,21 @@ fun FullscreenLyricsSheet(
         mutableStateOf(false)
     }
 
+    var showShareLyricsSheet by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    val shareTimedLineIndexes =
+        remember(screenDataState.lyricsData?.lyrics?.lines) {
+            screenDataState.lyricsData
+                ?.lyrics
+                ?.lines
+                .orEmpty()
+                .mapIndexedNotNull { index, line ->
+                    line.startTimeMs.toLongOrNull()?.let { TimedLineIndex(index, it) }
+                }.sortedBy { it.startTimeMs }
+        }
+
     ModalBottomSheet(
         onDismissRequest = {
             onDismiss()
@@ -1180,6 +1199,15 @@ fun FullscreenLyricsSheet(
                             }
                         },
                         actions = {
+                            if (screenDataState.lyricsData != null) {
+                                IconButton(onClick = { showShareLyricsSheet = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Share,
+                                        contentDescription = stringResource(Res.string.share_lyrics),
+                                        tint = playerContentColor,
+                                    )
+                                }
+                            }
                             IconButton(onClick = { showTimingAdjustSheet = true }) {
                                 Icon(
                                     painter = painterResource(Res.drawable.baseline_sync_24),
@@ -1590,6 +1618,20 @@ fun FullscreenLyricsSheet(
                     }
                 }
             }
+        }
+    }
+
+    screenDataState.lyricsData?.let { lyricsData ->
+        if (showShareLyricsSheet) {
+            ShareLyricsSheet(
+                lines = lyricsData.toShareLyricsLines(),
+                songTitle = screenDataState.nowPlayingTitle,
+                artistName = screenDataState.artistName,
+                artwork = screenDataState.bitmap,
+                seedColor = color,
+                initialLineIndex = shareTimedLineIndexes.activeIndexAt(timelineState.current),
+                onDismiss = { showShareLyricsSheet = false },
+            )
         }
     }
 }

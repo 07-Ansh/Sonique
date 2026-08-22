@@ -51,6 +51,8 @@ import sonique.composeapp.generated.resources.clear_player_cache
 import sonique.composeapp.generated.resources.clear_thumbnail_cache
 import sonique.composeapp.generated.resources.restore_failed
 import sonique.composeapp.generated.resources.restore_in_progress
+import sonique.composeapp.generated.resources.romanization_japanese_dict_failed
+import sonique.composeapp.generated.resources.romanization_japanese_dict_ready
 
 class SettingsViewModel(
     private val dataStoreManager: DataStoreManager,
@@ -63,6 +65,27 @@ class SettingsViewModel(
 ) : BaseViewModel() {
     private val databasePath: String? = commonRepository.getDatabasePath()
     private val downloadUtils: DownloadHandler by inject()
+    private val lyricsRomanizerRepository: com.sonique.domain.repository.LyricsRomanizerRepository by inject()
+
+    val japaneseDictionaryState: StateFlow<com.sonique.domain.data.model.lyrics.RomanizationDictionaryState>
+        get() = lyricsRomanizerRepository.japaneseDictionaryState
+
+    fun downloadJapaneseDictionaryIfNeeded() {
+        val state = japaneseDictionaryState.value
+        if (state == com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.READY ||
+            state == com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.DOWNLOADING
+        ) return
+        viewModelScope.launch {
+            lyricsRomanizerRepository.downloadJapaneseDictionary()
+            when (japaneseDictionaryState.value) {
+                com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.READY ->
+                    makeToast(org.jetbrains.compose.resources.getString(sonique.composeapp.generated.resources.Res.string.romanization_japanese_dict_ready))
+                com.sonique.domain.data.model.lyrics.RomanizationDictionaryState.FAILED ->
+                    makeToast(org.jetbrains.compose.resources.getString(sonique.composeapp.generated.resources.Res.string.romanization_japanese_dict_failed))
+                else -> {}
+            }
+        }
+    }
 
     private var _location: MutableStateFlow<String?> = MutableStateFlow(null)
     val location: StateFlow<String?> = _location

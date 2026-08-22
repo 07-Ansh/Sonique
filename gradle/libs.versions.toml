@@ -58,6 +58,8 @@ liquid-glass = "1.0.2"
 ytdlp = "0.18.1"
 ffmpeg-kit-audio="6.0.1"
 composeHotReload = "1.0.0"
+kuromoji-ipadic = "0.9.0"
+pinyin4j = "2.5.1"
 composeMultiplatform = "1.10.0-rc02"
 datetime = "0.7.1"
 sqlite = "2.6.2"
@@ -154,6 +156,8 @@ brotli-dec = { group = "org.brotli", name = "dec", version.ref = "brotli" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test"}
+kuromoji-ipadic = { module = "com.atilika.kuromoji:kuromoji-ipadic", version.ref = "kuromoji-ipadic" }
+pinyin4j = { module = "com.belerweb:pinyin4j", version.ref = "pinyin4j" }
 ksoup-html = { group = "com.mohamedrejeb.ksoup", name = "ksoup-html", version.ref = "ksoup" }
 ksoup-entities = { group = "com.mohamedrejeb.ksoup", name = "ksoup-entities", version.ref = "ksoup" }
 markdown = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "md" }

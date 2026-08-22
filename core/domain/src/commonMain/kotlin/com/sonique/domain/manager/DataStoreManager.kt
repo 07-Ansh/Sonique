@@ -335,6 +335,9 @@ interface DataStoreManager {
     val lyricsOffsetMs: Flow<Int>
     suspend fun setLyricsOffsetMs(offsetMs: Int)
 
+    val romanizationLanguages: Flow<String>
+    suspend fun setRomanizationLanguages(languages: String)
+
     enum class ProxyType {
         PROXY_TYPE_HTTP,
         PROXY_TYPE_SOCKS,

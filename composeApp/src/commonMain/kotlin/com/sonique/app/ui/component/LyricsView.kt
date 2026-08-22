@@ -84,8 +84,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sonique.domain.data.model.lyrics.RomanizationLanguage
 import com.sonique.domain.data.model.metadata.Line
 import com.sonique.domain.data.model.streams.TimeLine
+import com.sonique.domain.repository.LyricsRomanizerRepository
 import com.sonique.logger.Logger
 import com.sonique.app.extension.KeepScreenOn
 import com.sonique.app.extension.ParsedRichSyncLine
@@ -291,6 +293,14 @@ internal fun List<TimedLineIndex>.activeIndexAt(nowMs: Long): Int {
     return if (ans >= 0) this[ans].index else -1
 }
 
+private val RICH_SYNC_TIMESTAMP_REGEX = Regex("""<\d{2}:\d{2}\.\d{2,3}>\s*""")
+private val WHITESPACE_REGEX = Regex("""\s+""")
+
+fun String.stripRichSyncTimestamps(): String =
+    replace(RICH_SYNC_TIMESTAMP_REGEX, " ")
+        .replace(WHITESPACE_REGEX, " ")
+        .trim()
+
 @Composable
 fun LyricsView(
     lyricsData: NowPlayingScreenData.LyricsData,
@@ -305,7 +315,10 @@ fun LyricsView(
         mutableIntStateOf(0)
     }
     val dataStoreManager: DataStoreManager = koinInject()
+    val romanizer: LyricsRomanizerRepository = koinInject()
     val lyricsOffsetMs by dataStoreManager.lyricsOffsetMs.collectAsStateWithLifecycle(0)
+    val romanizationStored by dataStoreManager.romanizationLanguages.collectAsStateWithLifecycle("")
+    val romanizationLanguages = remember(romanizationStored) { RomanizationLanguage.parse(romanizationStored) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val current by timeLine.collectAsStateWithLifecycle()
@@ -468,6 +481,16 @@ fun LyricsView(
 
                 line?.words?.let { words ->
                     Logger.d(TAG, "SyncType: ${lyricsData.lyrics.syncType}, Line $index content preview: ${words.take(50)}")
+                    val romanizedWords =
+                        if (romanizationLanguages.isEmpty() || isInterlude) {
+                            null
+                        } else {
+                            remember(words, romanizationLanguages) {
+                                val source =
+                                    if (lyricsData.lyrics.syncType == "RICH_SYNCED") words.stripRichSyncTimestamps() else words
+                                romanizer.romanize(source, romanizationLanguages)
+                            }
+                        }
                     when {
                          
                         lyricsData.lyrics.syncType == "RICH_SYNCED" -> {
@@ -482,6 +505,7 @@ fun LyricsView(
                                 RichSyncLyricsLineItem(
                                     parsedLine = parsedLine,
                                     translatedWords = translatedWords,
+                                    romanizedWords = romanizedWords,
                                     currentTimeMs = current.current - lyricsOffsetMs,
                                     isCurrent = index == currentLineIndex,
                                     playerContentColor = playerContentColor,
@@ -499,6 +523,7 @@ fun LyricsView(
                                 LyricsLineItem(
                                     originalWords = words,
                                     translatedWords = translatedWords,
+                                    romanizedWords = romanizedWords,
                                     isBold = index <= currentLineIndex,
                                     isCurrent = index == currentLineIndex,
                                     playerContentColor = playerContentColor,
@@ -519,6 +544,7 @@ fun LyricsView(
                             LyricsLineItem(
                                 originalWords = words,
                                 translatedWords = translatedWords,
+                                romanizedWords = romanizedWords,
                                 isBold = index <= currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
                                 isCurrent = index == currentLineIndex || lyricsData.lyrics.syncType != "LINE_SYNCED",
                                 playerContentColor = playerContentColor,
@@ -585,6 +611,7 @@ fun LyricsLineItem(
     translatedWords: String?,
     isBold: Boolean,
     isCurrent: Boolean = false,
+    romanizedWords: String? = null,
     modifier: Modifier = Modifier,
     playerContentColor: Color = Color.White,
 ) {
@@ -614,6 +641,26 @@ fun LyricsLineItem(
                             )
                         },
                 )
+                if (romanizedWords != null) {
+                    Text(
+                        modifier =
+                            Modifier.then(
+                                if (isCurrent) {
+                                    Modifier
+                                } else {
+                                    Modifier.blur(1.dp)
+                                },
+                            ),
+                        text = romanizedWords,
+                        style = typo().bodyMedium,
+                        color =
+                            if (isCurrent) {
+                                playerContentColor.copy(alpha = 0.62f)
+                            } else {
+                                playerContentColor.copy(alpha = 0.3f)
+                            },
+                    )
+                }
                 if (translatedWords != null) {
                     Text(
                         modifier =
@@ -654,6 +701,14 @@ fun LyricsLineItem(
                         alpha = 0.35f,
                     ),
             )
+            if (romanizedWords != null) {
+                Text(
+                    modifier = Modifier.blur(1.dp),
+                    text = romanizedWords,
+                    style = typo().bodyMedium,
+                    color = playerContentColor.copy(alpha = 0.3f),
+                )
+            }
             if (translatedWords != null) {
                 Text(
                     modifier = Modifier.blur(1.dp),

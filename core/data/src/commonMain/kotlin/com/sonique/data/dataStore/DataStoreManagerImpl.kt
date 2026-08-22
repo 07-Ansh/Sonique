@@ -1389,6 +1389,19 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val romanizationLanguages: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[ROMANIZATION_LANGUAGES] ?: ""
+        }
+
+    override suspend fun setRomanizationLanguages(languages: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[ROMANIZATION_LANGUAGES] = languages
+            }
+        }
+    }
+
     companion object Settings {
         val APP_VERSION = stringPreferencesKey("app_version")
         val COOKIE = stringPreferencesKey("cookie")
@@ -1483,6 +1496,7 @@ internal class DataStoreManagerImpl(
         val REVERB_PRESET = stringPreferencesKey("reverb_preset")
         val REVERB_MIX = stringPreferencesKey("reverb_mix")
         val LYRICS_OFFSET = intPreferencesKey("lyrics_offset")
+        val ROMANIZATION_LANGUAGES = stringPreferencesKey("romanization_languages")
     }
 
 

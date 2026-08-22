@@ -104,6 +104,10 @@ val repositoryModule =
         single<UpdateRepository>(createdAtStart = true) {
             UpdateRepositoryImpl(get())
         }
+
+        single<com.sonique.domain.repository.LyricsRomanizerRepository> {
+            com.sonique.data.lyrics.LyricsRomanizerRepositoryImpl("${fileDir()}/kuromoji-ipadic")
+        }
     }
 
 

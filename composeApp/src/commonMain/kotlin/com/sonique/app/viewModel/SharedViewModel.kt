@@ -1492,6 +1492,14 @@ class SharedViewModel(
             dataStoreManager.setLyricsOffsetMs(offsetMs)
         }
     }
+
+    fun getRomanizationLanguages() = dataStoreManager.romanizationLanguages
+
+    fun setRomanizationLanguages(languages: Set<com.sonique.domain.data.model.lyrics.RomanizationLanguage>) {
+        viewModelScope.launch {
+            dataStoreManager.setRomanizationLanguages(languages.map { it.name }.sorted().joinToString(","))
+        }
+    }
 }
 
 sealed class UIEvent {

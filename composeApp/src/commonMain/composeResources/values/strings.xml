@@ -419,4 +419,21 @@
     <string name="lyrics_offset_invalid">Enter a whole number of milliseconds</string>
     <string name="lyrics_sync_adjust">Adjust lyrics timing</string>
     <string name="lyrics_offset_reset">Reset</string>
+    <string name="lyrics_romanization">Lyrics romanization</string>
+    <string name="lyrics_romanization_description">Show lyrics in Latin script for the languages you pick</string>
+    <string name="romanization_japanese" translatable="false">Japanese</string>
+    <string name="romanization_korean" translatable="false">Korean</string>
+    <string name="romanization_chinese" translatable="false">Chinese</string>
+    <string name="romanization_hindi" translatable="false">Hindi</string>
+    <string name="romanization_punjabi" translatable="false">Punjabi</string>
+    <string name="romanization_russian" translatable="false">Russian</string>
+    <string name="romanization_ukrainian" translatable="false">Ukrainian</string>
+    <string name="romanization_serbian" translatable="false">Serbian</string>
+    <string name="romanization_bulgarian" translatable="false">Bulgarian</string>
+    <string name="romanization_belarusian" translatable="false">Belarusian</string>
+    <string name="romanization_kyrgyz" translatable="false">Kyrgyz</string>
+    <string name="romanization_macedonian" translatable="false">Macedonian</string>
+    <string name="romanization_japanese_dict_downloading">Downloading the Japanese dictionary…</string>
+    <string name="romanization_japanese_dict_ready">Japanese dictionary downloaded</string>
+    <string name="romanization_japanese_dict_failed">Couldn\'t download the Japanese dictionary. Check your connection and select Japanese again to retry.</string>
 </resources>

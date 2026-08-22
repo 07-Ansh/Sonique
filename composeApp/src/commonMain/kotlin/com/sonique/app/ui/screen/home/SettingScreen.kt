@@ -103,6 +103,8 @@ import kotlinx.datetime.format
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import com.sonique.domain.data.model.lyrics.RomanizationDictionaryState
+import com.sonique.domain.data.model.lyrics.RomanizationLanguage
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.*
@@ -772,7 +774,10 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
 }
 
 @Composable
-private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
+private fun PlaybackSettingsContent(
+    viewModel: SettingsViewModel,
+    sharedViewModel: SharedViewModel = koinInject(),
+) {
     val savePlaybackStateFlow = remember(viewModel.savedPlaybackState) {
         viewModel.savedPlaybackState.map { it == TRUE }
     }
@@ -794,6 +799,26 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
     val crossfadeDjMode by viewModel.crossfadeDjMode.collectAsStateWithLifecycle()
     val crossfadeSkipAlbum by viewModel.crossfadeSkipAlbum.collectAsStateWithLifecycle()
     val lyricsOffsetMs by viewModel.lyricsOffsetMs.collectAsStateWithLifecycle()
+
+    val romanizationStored by sharedViewModel.getRomanizationLanguages().collectAsStateWithLifecycle("")
+    val japaneseDictionaryState by viewModel.japaneseDictionaryState.collectAsStateWithLifecycle()
+
+    val romanizationLabels =
+        listOf(
+            RomanizationLanguage.JAPANESE to stringResource(Res.string.romanization_japanese),
+            RomanizationLanguage.KOREAN to stringResource(Res.string.romanization_korean),
+            RomanizationLanguage.CHINESE to stringResource(Res.string.romanization_chinese),
+            RomanizationLanguage.HINDI to stringResource(Res.string.romanization_hindi),
+            RomanizationLanguage.PUNJABI to stringResource(Res.string.romanization_punjabi),
+            RomanizationLanguage.RUSSIAN to stringResource(Res.string.romanization_russian),
+            RomanizationLanguage.UKRAINIAN to stringResource(Res.string.romanization_ukrainian),
+            RomanizationLanguage.SERBIAN to stringResource(Res.string.romanization_serbian),
+            RomanizationLanguage.BULGARIAN to stringResource(Res.string.romanization_bulgarian),
+            RomanizationLanguage.BELARUSIAN to stringResource(Res.string.romanization_belarusian),
+            RomanizationLanguage.KYRGYZ to stringResource(Res.string.romanization_kyrgyz),
+            RomanizationLanguage.MACEDONIAN to stringResource(Res.string.romanization_macedonian),
+        )
+    val romanizationSelected = RomanizationLanguage.parse(romanizationStored)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -942,7 +967,7 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
 
         item {
             Material3SettingsGroup(
-                title = "Lyrics Timing",
+                title = "Lyrics Settings",
                 items = listOf(
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.lyrics_offset)) },
@@ -978,6 +1003,52 @@ private fun PlaybackSettingsContent(viewModel: SettingsViewModel) {
                                         },
                                     dismiss = runBlocking { getString(Res.string.cancel) },
                                 )
+                            )
+                        }
+                    ),
+                    Material3SettingsItem(
+                        title = { Text(stringResource(Res.string.lyrics_romanization)) },
+                        description = {
+                            Text(
+                                if (romanizationSelected.isEmpty()) {
+                                    stringResource(Res.string.lyrics_romanization_description)
+                                } else {
+                                    val selectedNames =
+                                        romanizationLabels.filter { it.first in romanizationSelected }.joinToString(", ") { it.second }
+                                    when {
+                                        RomanizationLanguage.JAPANESE !in romanizationSelected -> selectedNames
+                                        japaneseDictionaryState == RomanizationDictionaryState.DOWNLOADING ->
+                                            "$selectedNames — ${stringResource(Res.string.romanization_japanese_dict_downloading)}"
+                                        japaneseDictionaryState == RomanizationDictionaryState.FAILED ->
+                                            "$selectedNames — ${stringResource(Res.string.romanization_japanese_dict_failed)}"
+                                        else -> selectedNames
+                                    }
+                                }
+                            )
+                        },
+                        onClick = {
+                            viewModel.setAlertData(
+                                SettingAlertState(
+                                    title = runBlocking { getString(Res.string.lyrics_romanization) },
+                                    multipleSelect =
+                                        SettingAlertState.SelectData(
+                                            listSelect =
+                                                romanizationLabels.map { (language, label) ->
+                                                    (language in romanizationSelected) to label
+                                                },
+                                        ),
+                                    confirm =
+                                        runBlocking { getString(Res.string.save) } to { state ->
+                                            val chosen = state.multipleSelect?.getListSelected().orEmpty()
+                                            val languages =
+                                                romanizationLabels.filter { it.second in chosen }.map { it.first }.toSet()
+                                            sharedViewModel.setRomanizationLanguages(languages)
+                                            if (RomanizationLanguage.JAPANESE in languages) {
+                                                viewModel.downloadJapaneseDictionaryIfNeeded()
+                                            }
+                                        },
+                                    dismiss = runBlocking { getString(Res.string.cancel) },
+                                ),
                             )
                         }
                     )

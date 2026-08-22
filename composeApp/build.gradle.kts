@@ -284,9 +284,10 @@ android {
                     "META-INF/*.kotlin_module",
                 )
         }
-        // Prevent stripping libpython.zip.so (it's a ZIP file, not a native library)
         resources {
             excludes += "META-INF/versions/9/OSGI-INF/MANIFEST.MF"
+            excludes += "META-INF/*.md"
+            excludes += "com/atilika/kuromoji/ipadic/*.bin"
         }
     }
 

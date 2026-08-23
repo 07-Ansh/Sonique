@@ -235,6 +235,24 @@ class SettingsViewModel(
     private val _lyricsOffsetMs = MutableStateFlow<Int>(0)
     val lyricsOffsetMs: StateFlow<Int> = _lyricsOffsetMs
 
+    private val _useAITranslation = MutableStateFlow(false)
+    val useAITranslation: StateFlow<Boolean> = _useAITranslation
+
+    private val _aiProvider = MutableStateFlow(DataStoreManager.AI_PROVIDER_GEMINI)
+    val aiProvider: StateFlow<String> = _aiProvider
+
+    private val _aiApiKey = MutableStateFlow("")
+    val aiApiKey: StateFlow<String> = _aiApiKey
+
+    private val _customModelId = MutableStateFlow("")
+    val customModelId: StateFlow<String> = _customModelId
+
+    private val _customOpenAIBaseUrl = MutableStateFlow("")
+    val customOpenAIBaseUrl: StateFlow<String> = _customOpenAIBaseUrl
+
+    private val _customOpenAIHeaders = MutableStateFlow("")
+    val customOpenAIHeaders: StateFlow<String> = _customOpenAIHeaders
+
     init {
         getYoutubeSubtitleLanguage()
 
@@ -312,6 +330,12 @@ class SettingsViewModel(
         getSponsorBlockCategories()
         getAudioEffects()
         getLyricsOffsetMs()
+        getUseAITranslation()
+        getAIProvider()
+        getAIApiKey()
+        getCustomModelId()
+        getCustomOpenAIBaseUrl()
+        getCustomOpenAIHeaders()
 
         viewModelScope.launch {
             calculateDataFraction(
@@ -1407,6 +1431,86 @@ class SettingsViewModel(
     fun setLyricsOffsetMs(offsetMs: Int) {
         viewModelScope.launch {
             dataStoreManager.setLyricsOffsetMs(offsetMs)
+        }
+    }
+
+    private fun getUseAITranslation() {
+        viewModelScope.launch {
+            dataStoreManager.useAITranslation.collect { v ->
+                _useAITranslation.emit(v == DataStoreManager.TRUE)
+            }
+        }
+    }
+
+    fun setUseAITranslation(use: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setUseAITranslation(use)
+            getUseAITranslation()
+        }
+    }
+
+    private fun getAIProvider() {
+        viewModelScope.launch {
+            dataStoreManager.aiProvider.collect { v -> _aiProvider.emit(v) }
+        }
+    }
+
+    fun setAIProvider(provider: String) {
+        viewModelScope.launch {
+            dataStoreManager.setAIProvider(provider)
+            getAIProvider()
+        }
+    }
+
+    private fun getAIApiKey() {
+        viewModelScope.launch {
+            dataStoreManager.aiApiKey.collect { v -> _aiApiKey.emit(v) }
+        }
+    }
+
+    fun setAIApiKey(key: String) {
+        viewModelScope.launch {
+            dataStoreManager.setAIApiKey(key)
+            getAIApiKey()
+        }
+    }
+
+    private fun getCustomModelId() {
+        viewModelScope.launch {
+            dataStoreManager.customModelId.collect { v -> _customModelId.emit(v) }
+        }
+    }
+
+    fun setCustomModelId(modelId: String) {
+        viewModelScope.launch {
+            dataStoreManager.setCustomModelId(modelId)
+            getCustomModelId()
+        }
+    }
+
+    private fun getCustomOpenAIBaseUrl() {
+        viewModelScope.launch {
+            dataStoreManager.customOpenAIBaseUrl.collect { v -> _customOpenAIBaseUrl.emit(v) }
+        }
+    }
+
+    fun setCustomOpenAIBaseUrl(baseUrl: String) {
+        viewModelScope.launch {
+            dataStoreManager.setCustomOpenAIBaseUrl(baseUrl)
+            getCustomOpenAIBaseUrl()
+        }
+    }
+
+    private fun getCustomOpenAIHeaders() {
+        viewModelScope.launch {
+            dataStoreManager.customOpenAIHeaders.collect { v -> _customOpenAIHeaders.emit(v) }
+        }
+    }
+
+    fun setCustomOpenAIHeaders(headers: String) {
+        viewModelScope.launch {
+            dataStoreManager.setCustomOpenAIHeaders(headers)
+            getCustomOpenAIHeaders()
         }
     }
 }

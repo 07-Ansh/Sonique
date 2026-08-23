@@ -113,6 +113,30 @@ interface DataStoreManager {
 
     suspend fun setTranslationLanguage(language: String)
 
+    val useAITranslation: Flow<String>
+
+    suspend fun setUseAITranslation(use: Boolean)
+
+    val aiProvider: Flow<String>
+
+    suspend fun setAIProvider(provider: String)
+
+    val aiApiKey: Flow<String>
+
+    suspend fun setAIApiKey(apiKey: String)
+
+    val customModelId: Flow<String>
+
+    suspend fun setCustomModelId(modelId: String)
+
+    val customOpenAIBaseUrl: Flow<String>
+
+    suspend fun setCustomOpenAIBaseUrl(baseUrl: String)
+
+    val customOpenAIHeaders: Flow<String>
+
+    suspend fun setCustomOpenAIHeaders(headers: String)
+
     val maxSongCacheSize: Flow<Int>
 
     suspend fun setMaxSongCacheSize(size: Int)
@@ -367,6 +391,10 @@ interface DataStoreManager {
         const val LOCAL_PLAYLIST_FILTER_CUSTOM_ORDER = "custom_order"
 
         const val CROSSFADE_DURATION_AUTO = 0
+ 
+        const val AI_PROVIDER_GEMINI = "gemini"
+        const val AI_PROVIDER_OPENAI = "openai"
+        const val AI_PROVIDER_CUSTOM_OPENAI = "custom_openai"
 
 
     }

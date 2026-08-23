@@ -1624,6 +1624,12 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
     val explicitContentEnabled by viewModel.explicitContentEnabled.collectAsStateWithLifecycle()
     val keepYoutubePlaylistOffline by viewModel.keepYouTubePlaylistOffline.collectAsStateWithLifecycle()
     val showMostPlayed by sharedViewModel.showMostPlayed.collectAsStateWithLifecycle()
+    val useAITranslation by viewModel.useAITranslation.collectAsStateWithLifecycle()
+    val aiProvider by viewModel.aiProvider.collectAsStateWithLifecycle()
+    val aiApiKey by viewModel.aiApiKey.collectAsStateWithLifecycle()
+    val customModelId by viewModel.customModelId.collectAsStateWithLifecycle()
+    val customOpenAIBaseUrl by viewModel.customOpenAIBaseUrl.collectAsStateWithLifecycle()
+    val customOpenAIHeaders by viewModel.customOpenAIHeaders.collectAsStateWithLifecycle()
 
     var showYouTubeAccountDialog by rememberSaveable {
         mutableStateOf(false)
@@ -1743,6 +1749,173 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                             onCheckedChange = { viewModel.setSendBackToGoogle(it) }
                         )
                     )
+                )
+            }
+
+            item {
+                Material3SettingsGroup(
+                    title = stringResource(Res.string.ai_translation),
+                    items = buildList {
+                        add(
+                            Material3SettingsItem(
+                                title = { Text(stringResource(Res.string.ai_translation_enable)) },
+                                description = { Text("Translate lyrics using an AI language model") },
+                                isSwitch = true,
+                                checked = useAITranslation,
+                                onCheckedChange = { viewModel.setUseAITranslation(it) }
+                            )
+                        )
+                        if (useAITranslation) {
+                            add(
+                                Material3SettingsItem(
+                                    title = { Text(stringResource(Res.string.ai_provider)) },
+                                    description = {
+                                        val label = when (aiProvider) {
+                                            DataStoreManager.AI_PROVIDER_GEMINI -> stringResource(Res.string.ai_provider_gemini)
+                                            DataStoreManager.AI_PROVIDER_OPENAI -> stringResource(Res.string.ai_provider_openai)
+                                            else -> stringResource(Res.string.ai_provider_custom)
+                                        }
+                                        Text(label)
+                                    },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            val labelGemini = getString(Res.string.ai_provider_gemini)
+                                            val labelOpenAI = getString(Res.string.ai_provider_openai)
+                                            val labelCustom = getString(Res.string.ai_provider_custom)
+                                            viewModel.setAlertData(
+                                                SettingAlertState(
+                                                    title = getString(Res.string.ai_provider),
+                                                    selectOne = SettingAlertState.SelectData(
+                                                        listSelect = listOf(
+                                                            (aiProvider == DataStoreManager.AI_PROVIDER_GEMINI) to labelGemini,
+                                                            (aiProvider == DataStoreManager.AI_PROVIDER_OPENAI) to labelOpenAI,
+                                                            (aiProvider == DataStoreManager.AI_PROVIDER_CUSTOM_OPENAI) to labelCustom,
+                                                        )
+                                                    ),
+                                                    confirm = getString(Res.string.change) to { state ->
+                                                        val sel = state.selectOne?.getSelected()
+                                                        val provider = when (sel) {
+                                                            labelOpenAI -> DataStoreManager.AI_PROVIDER_OPENAI
+                                                            labelCustom -> DataStoreManager.AI_PROVIDER_CUSTOM_OPENAI
+                                                            else -> DataStoreManager.AI_PROVIDER_GEMINI
+                                                        }
+                                                        viewModel.setAIProvider(provider)
+                                                    },
+                                                    dismiss = getString(Res.string.cancel),
+                                                )
+                                            )
+                                        }
+
+                                    }
+                                )
+                            )
+                            add(
+                                Material3SettingsItem(
+                                    title = { Text(stringResource(Res.string.ai_api_key)) },
+                                    description = {
+                                        val masked = if (aiApiKey.isBlank()) stringResource(Res.string.ai_api_key_placeholder)
+                                        else "•".repeat(minOf(aiApiKey.length, 12))
+                                        Text(masked)
+                                    },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            viewModel.setAlertData(
+                                                SettingAlertState(
+                                                    title = getString(Res.string.ai_api_key),
+                                                    textField = SettingAlertState.TextFieldData(
+                                                        label = getString(Res.string.ai_api_key),
+                                                        value = aiApiKey,
+                                                    ),
+                                                    confirm = getString(Res.string.change) to { state ->
+                                                        val newKey = state.textField?.value ?: ""
+                                                        viewModel.setAIApiKey(newKey)
+                                                    },
+                                                    dismiss = getString(Res.string.cancel),
+                                                )
+                                            )
+                                        }
+                                    }
+                                )
+                            )
+                            add(
+                                Material3SettingsItem(
+                                    title = { Text(stringResource(Res.string.ai_model_id)) },
+                                    description = {
+                                        Text(customModelId.ifBlank { stringResource(Res.string.ai_model_id_placeholder) })
+                                    },
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            viewModel.setAlertData(
+                                                SettingAlertState(
+                                                    title = getString(Res.string.ai_model_id),
+                                                    textField = SettingAlertState.TextFieldData(
+                                                        label = getString(Res.string.ai_model_id),
+                                                        value = customModelId,
+                                                    ),
+                                                    confirm = getString(Res.string.change) to { state ->
+                                                        viewModel.setCustomModelId(state.textField?.value ?: "")
+                                                    },
+                                                    dismiss = getString(Res.string.cancel),
+                                                )
+                                            )
+                                        }
+                                    }
+                                )
+                            )
+                            if (aiProvider == DataStoreManager.AI_PROVIDER_CUSTOM_OPENAI) {
+                                add(
+                                    Material3SettingsItem(
+                                        title = { Text(stringResource(Res.string.ai_custom_base_url)) },
+                                        description = {
+                                            Text(customOpenAIBaseUrl.ifBlank { stringResource(Res.string.ai_custom_base_url_placeholder) })
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                viewModel.setAlertData(
+                                                    SettingAlertState(
+                                                        title = getString(Res.string.ai_custom_base_url),
+                                                        textField = SettingAlertState.TextFieldData(
+                                                            label = getString(Res.string.ai_custom_base_url),
+                                                            value = customOpenAIBaseUrl,
+                                                        ),
+                                                        confirm = getString(Res.string.change) to { state ->
+                                                            viewModel.setCustomOpenAIBaseUrl(state.textField?.value ?: "")
+                                                        },
+                                                        dismiss = getString(Res.string.cancel),
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    )
+                                )
+                                add(
+                                    Material3SettingsItem(
+                                        title = { Text(stringResource(Res.string.ai_custom_headers)) },
+                                        description = {
+                                            Text(customOpenAIHeaders.ifBlank { stringResource(Res.string.ai_custom_headers_placeholder) })
+                                        },
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                viewModel.setAlertData(
+                                                    SettingAlertState(
+                                                        title = getString(Res.string.ai_custom_headers),
+                                                        textField = SettingAlertState.TextFieldData(
+                                                            label = getString(Res.string.ai_custom_headers),
+                                                            value = customOpenAIHeaders,
+                                                        ),
+                                                        confirm = getString(Res.string.change) to { state ->
+                                                            viewModel.setCustomOpenAIHeaders(state.textField?.value ?: "")
+                                                        },
+                                                        dismiss = getString(Res.string.cancel),
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    )
+                                )
+                            }
+                        }
+                    }
                 )
             }
         }

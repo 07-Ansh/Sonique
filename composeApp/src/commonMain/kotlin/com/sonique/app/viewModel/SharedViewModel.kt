@@ -50,11 +50,13 @@ import com.sonique.domain.repository.PlaylistRepository
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.repository.StreamRepository
 import com.sonique.domain.repository.UpdateRepository
+import com.sonique.domain.data.entities.TranslatedLyricsEntity
 import com.sonique.domain.utils.Resource
 import com.sonique.domain.utils.toListName
 import com.sonique.domain.utils.toLyrics
 import com.sonique.domain.utils.toLyricsEntity
 import com.sonique.domain.utils.toSongEntity
+import com.sonique.domain.utils.toSyncedLyrics
 import com.sonique.domain.utils.toTrack
 import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
@@ -81,6 +83,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
@@ -727,7 +730,7 @@ class SharedViewModel(
                         false,
                         LyricsProvider.OFFLINE,
                     )
-
+                    getAITranslationLyrics(track.videoId, lyricsData)
                 }
             }
         }
@@ -1210,7 +1213,7 @@ class SharedViewModel(
                                 LyricsProvider.YOUTUBE,
                             )
                         } else {
-
+                            getAITranslationLyrics(videoId, lyrics)
                         }
                     }
 
@@ -1244,16 +1247,16 @@ class SharedViewModel(
                             updateLyrics(
                                 song.videoId,
                                 duration,
-                                res.data,
+                                data,
                                 false,
                                 LyricsProvider.LRCLIB,
                             )
                             insertLyrics(
-                                res.data?.toLyricsEntity(
+                                data?.toLyricsEntity(
                                     song.videoId,
                                 ) ?: return@collectLatest,
                             )
-
+                            getAITranslationLyrics(song.videoId, data)
                         }
 
                         else -> {
@@ -1293,7 +1296,7 @@ class SharedViewModel(
                                 false,
                                 LyricsProvider.SPOTIFY,
                             )
-
+                            getAITranslationLyrics(track.videoId, data)
                         }
                     }
 
@@ -1498,6 +1501,101 @@ class SharedViewModel(
     fun setRomanizationLanguages(languages: Set<com.sonique.domain.data.model.lyrics.RomanizationLanguage>) {
         viewModelScope.launch {
             dataStoreManager.setRomanizationLanguages(languages.map { it.name }.sorted().joinToString(","))
+        }
+    }
+
+    private fun getAITranslationLyrics(
+        videoId: String,
+        lyrics: Lyrics,
+    ) {
+        viewModelScope.launch {
+            if (dataStoreManager.useAITranslation.first() == TRUE &&
+                dataStoreManager.aiApiKey.first().isNotBlank()
+            ) {
+                val targetLang = dataStoreManager.translationLanguage.first()
+                val savedTranslated =
+                    lyricsCanvasRepository
+                        .getSavedTranslatedLyrics(videoId, targetLang)
+                        .firstOrNull()
+
+                if (savedTranslated != null) {
+                    updateLyrics(
+                        videoId,
+                        0,
+                        savedTranslated.toLyrics(),
+                        true,
+                        LyricsProvider.AI,
+                    )
+                } else {
+                    val lyricsForAi =
+                        if (lyrics.syncType == "RICH_SYNCED") {
+                            lyrics.toSyncedLyrics()
+                        } else {
+                            lyrics
+                        }
+
+                    lyricsCanvasRepository
+                        .getAITranslationLyrics(lyricsForAi, targetLang)
+                        .cancellable()
+                        .collectLatest { res ->
+                            val data = res.data
+                            if (res is Resource.Success && data != null) {
+                                lyricsCanvasRepository.insertTranslatedLyrics(
+                                    TranslatedLyricsEntity(
+                                        videoId = videoId,
+                                        language = targetLang,
+                                        error = false,
+                                        lines = data.lines,
+                                        syncType = data.syncType,
+                                    ),
+                                )
+                                updateLyrics(
+                                    videoId,
+                                    0,
+                                    data,
+                                    true,
+                                    LyricsProvider.AI,
+                                )
+                            }
+                        }
+                }
+            }
+        }
+    }
+
+    fun setUseAITranslation(use: Boolean) {
+        viewModelScope.launch {
+            dataStoreManager.setUseAITranslation(use)
+        }
+    }
+
+    fun setAIProvider(provider: String) {
+        viewModelScope.launch {
+            dataStoreManager.setAIProvider(provider)
+        }
+    }
+
+    fun setAIApiKey(apiKey: String) {
+        viewModelScope.launch {
+            dataStoreManager.setAIApiKey(apiKey)
+        }
+    }
+
+    fun setCustomModelId(modelId: String) {
+        viewModelScope.launch {
+            dataStoreManager.setCustomModelId(modelId)
+        }
+    }
+
+    fun setCustomOpenAIBaseUrl(baseUrl: String) {
+        viewModelScope.launch {
+            dataStoreManager.setCustomOpenAIBaseUrl(baseUrl)
+        }
+    }
+
+    fun setCustomOpenAIHeaders(headers: String) {
+        viewModelScope.launch {
+            dataStoreManager.setCustomOpenAIHeaders(headers)
         }
     }
 }

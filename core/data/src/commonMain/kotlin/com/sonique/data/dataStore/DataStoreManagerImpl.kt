@@ -455,6 +455,84 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val useAITranslation =
+        settingsDataStore.data.map { preferences ->
+            preferences[USE_AI_TRANSLATION] ?: FALSE
+        }
+
+    override suspend fun setUseAITranslation(use: Boolean) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[USE_AI_TRANSLATION] = if (use) TRUE else FALSE
+            }
+        }
+    }
+
+    override val aiProvider =
+        settingsDataStore.data.map { preferences ->
+            preferences[AI_PROVIDER] ?: DataStoreManager.AI_PROVIDER_GEMINI
+        }
+
+    override suspend fun setAIProvider(provider: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[AI_PROVIDER] = provider
+            }
+        }
+    }
+
+    override val aiApiKey =
+        settingsDataStore.data.map { preferences ->
+            preferences[AI_API_KEY] ?: ""
+        }
+
+    override suspend fun setAIApiKey(apiKey: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[AI_API_KEY] = apiKey
+            }
+        }
+    }
+
+    override val customModelId =
+        settingsDataStore.data.map { preferences ->
+            preferences[CUSTOM_MODEL_ID] ?: ""
+        }
+
+    override suspend fun setCustomModelId(modelId: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[CUSTOM_MODEL_ID] = modelId
+            }
+        }
+    }
+
+    override val customOpenAIBaseUrl =
+        settingsDataStore.data.map { preferences ->
+            preferences[CUSTOM_OPENAI_BASE_URL] ?: ""
+        }
+
+    override suspend fun setCustomOpenAIBaseUrl(baseUrl: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[CUSTOM_OPENAI_BASE_URL] = baseUrl
+            }
+        }
+    }
+
+    override val customOpenAIHeaders =
+        settingsDataStore.data.map { preferences ->
+            preferences[CUSTOM_OPENAI_HEADERS] ?: ""
+        }
+
+    override suspend fun setCustomOpenAIHeaders(headers: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[CUSTOM_OPENAI_HEADERS] = headers
+            }
+        }
+    }
+
     override val maxSongCacheSize =
         settingsDataStore.data.map { preferences ->
             preferences[MAX_SONG_CACHE_SIZE] ?: 2048
@@ -1497,6 +1575,12 @@ internal class DataStoreManagerImpl(
         val REVERB_MIX = stringPreferencesKey("reverb_mix")
         val LYRICS_OFFSET = intPreferencesKey("lyrics_offset")
         val ROMANIZATION_LANGUAGES = stringPreferencesKey("romanization_languages")
+        val USE_AI_TRANSLATION = stringPreferencesKey("use_ai_translation")
+        val AI_PROVIDER = stringPreferencesKey("ai_provider")
+        val AI_API_KEY = stringPreferencesKey("ai_api_key")
+        val CUSTOM_MODEL_ID = stringPreferencesKey("custom_model_id")
+        val CUSTOM_OPENAI_BASE_URL = stringPreferencesKey("custom_openai_base_url")
+        val CUSTOM_OPENAI_HEADERS = stringPreferencesKey("custom_openai_headers")
     }
 
 

@@ -78,6 +78,7 @@ val repositoryModule =
                 get<YouTube>(),
                 get<Spotify>(),
                 get<SoniqueLyricsClient>(),
+                get<DataStoreManager>(),
             )
         }
 

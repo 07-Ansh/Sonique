@@ -450,4 +450,19 @@
     <string name="share_lyrics_background">Background</string>
     <string name="share_lyrics_permission_denied">Storage permission is needed to save the image</string>
     <string name="share_lyrics_no_lyrics">This song has no lyrics to share</string>
+    <string name="ai_translation">AI Lyrics Translation</string>
+    <string name="ai_translation_enable">Enable AI Lyrics Translation</string>
+    <string name="ai_provider">AI Provider</string>
+    <string name="ai_provider_gemini">Gemini</string>
+    <string name="ai_provider_openai">OpenAI</string>
+    <string name="ai_provider_custom">Custom (OpenAI-compatible)</string>
+    <string name="ai_api_key">API Key</string>
+    <string name="ai_api_key_placeholder">Enter API key…</string>
+    <string name="ai_model_id">Model ID</string>
+    <string name="ai_model_id_placeholder">e.g. gemini-2.0-flash</string>
+    <string name="ai_custom_base_url">Custom Base URL</string>
+    <string name="ai_custom_base_url_placeholder">https://…</string>
+    <string name="ai_custom_headers">Extra Headers (JSON object)</string>
+    <string name="ai_custom_headers_placeholder">{"Authorization":"Bearer …"}</string>
 </resources>
+

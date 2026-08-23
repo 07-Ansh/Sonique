@@ -382,6 +382,21 @@ fun Lyrics.toSyncedLrcString(): String? {
     }
 }
 
+fun Lyrics.toRichSyncLrcString(): String? {
+    val lines = this.lines
+    if (lines.isNullOrEmpty() || this.syncType != "RICH_SYNCED") {
+        return null
+    }
+    return lines.joinToString("\n") { line ->
+        val startTimeMs = line.startTimeMs.toLongOrNull() ?: 0L
+        val minutes = (startTimeMs / 60000).toString().padStart(2, '0')
+        val seconds = ((startTimeMs % 60000) / 1000).toString().padStart(2, '0')
+        val centiseconds = ((startTimeMs % 1000) / 10).toString().padStart(2, '0')
+
+        "[$minutes:$seconds.$centiseconds] ${line.words}"
+    }
+}
+
 fun Lyrics.toPlainLrcString(): String? {
     val lines = this.lines
     if (lines.isNullOrEmpty()) {

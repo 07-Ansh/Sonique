@@ -1174,7 +1174,21 @@ class SharedViewModel(
                         )
                     }
 
+                    DataStoreManager.BETTER_LYRICS -> {
+                        getBetterLyrics(
+                            song,
+                            (artist ?: "").toString(),
+                            duration,
+                        )
+                    }
+
                     DataStoreManager.YOUTUBE -> {
+                        getYouTubeCaption(
+                            videoId,
+                            song,
+                            (artist ?: "").toString(),
+                            duration,
+                        )
                     }
                 }
             }
@@ -1218,14 +1232,70 @@ class SharedViewModel(
                     }
 
                     else -> {
-                        getLrclibLyrics(
-                            song,
-                            (artist ?: ""),
-                            duration,
-                        )
+                        val pref = dataStoreManager.lyricsProvider.first()
+                        if (pref == DataStoreManager.BETTER_LYRICS) {
+                            getBetterLyrics(
+                                song,
+                                (artist ?: ""),
+                                duration,
+                            )
+                        } else {
+                            getLrclibLyrics(
+                                song,
+                                (artist ?: ""),
+                                duration,
+                            )
+                        }
                     }
                 }
             }
+    }
+
+    private fun getBetterLyrics(
+        song: SongEntity,
+        artist: String,
+        duration: Int,
+    ) {
+        viewModelScope.launch {
+            lyricsCanvasRepository
+                .getBetterLyrics(
+                    artist,
+                    song.title,
+                    duration,
+                ).collectLatest { res ->
+                    val data = res.data
+                    when (res) {
+                        is Resource.Success if (data != null) -> {
+                            Logger.d(tag, "Get BetterLyrics Success")
+                            updateLyrics(
+                                song.videoId,
+                                duration,
+                                data,
+                                false,
+                                LyricsProvider.BETTER_LYRICS,
+                            )
+                            insertLyrics(
+                                data.toLyricsEntity(
+                                    song.videoId,
+                                ),
+                            )
+                            getAITranslationLyrics(
+                                song.videoId,
+                                data,
+                            )
+                        }
+
+                        else -> {
+                            Logger.w(tag, "Get BetterLyrics Error: ${res.message}, falling back to LRCLIB")
+                            getLrclibLyrics(
+                                song,
+                                artist,
+                                duration,
+                            )
+                        }
+                    }
+                }
+        }
     }
 
     private fun getLrclibLyrics(
@@ -1639,6 +1709,7 @@ enum class LyricsProvider {
     YOUTUBE,
     SPOTIFY,
     LRCLIB,
+    BETTER_LYRICS,
     AI,
     OFFLINE,
 }

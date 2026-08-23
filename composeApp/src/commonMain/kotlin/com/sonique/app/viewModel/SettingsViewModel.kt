@@ -235,6 +235,9 @@ class SettingsViewModel(
     private val _lyricsOffsetMs = MutableStateFlow<Int>(0)
     val lyricsOffsetMs: StateFlow<Int> = _lyricsOffsetMs
 
+    private val _lyricsProvider = MutableStateFlow(DataStoreManager.LRCLIB)
+    val lyricsProvider: StateFlow<String> = _lyricsProvider
+
     private val _useAITranslation = MutableStateFlow(false)
     val useAITranslation: StateFlow<Boolean> = _useAITranslation
 
@@ -330,6 +333,7 @@ class SettingsViewModel(
         getSponsorBlockCategories()
         getAudioEffects()
         getLyricsOffsetMs()
+        getLyricsProvider()
         getUseAITranslation()
         getAIProvider()
         getAIApiKey()
@@ -1431,6 +1435,21 @@ class SettingsViewModel(
     fun setLyricsOffsetMs(offsetMs: Int) {
         viewModelScope.launch {
             dataStoreManager.setLyricsOffsetMs(offsetMs)
+        }
+    }
+
+    private fun getLyricsProvider() {
+        viewModelScope.launch {
+            dataStoreManager.lyricsProvider.collect { v ->
+                _lyricsProvider.emit(v)
+            }
+        }
+    }
+
+    fun setLyricsProvider(provider: String) {
+        viewModelScope.launch {
+            dataStoreManager.setLyricsProvider(provider)
+            getLyricsProvider()
         }
     }
 

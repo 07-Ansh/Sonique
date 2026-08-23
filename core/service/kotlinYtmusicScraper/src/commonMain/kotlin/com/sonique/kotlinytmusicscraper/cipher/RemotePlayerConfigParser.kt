@@ -84,12 +84,10 @@ internal object RemotePlayerConfigParser {
             val keys = listOf(hash) + aliases
             val duplicate =
                 keys.firstOrNull { it in configs }
-                    ?: keys
-                        .groupingBy { it }
-                        .eachCount()
-                        .entries
-                        .firstOrNull { it.value > 1 }
-                        ?.key
+                    ?: run {
+                        val seen = mutableSetOf<String>()
+                        keys.firstOrNull { !seen.add(it) }
+                    }
             if (duplicate != null) {
                 return ParseResult.Failure("duplicate hash/alias '$duplicate' (entry $hash)")
             }

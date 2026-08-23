@@ -25,11 +25,11 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import com.sonique.lyrics.SoniqueLyricsClient
+import com.sonique.lyrics.parser.parseTtmlLyrics
 import kotlin.math.abs
 import kotlin.time.Clock
 import com.sonique.lyrics.ai.AIHost
 import com.sonique.lyrics.ai.AiLyricsTranslator
-import kotlinx.coroutines.flow.first
 import kotlin.time.ExperimentalTime
 
 internal class LyricsCanvasRepositoryImpl(
@@ -392,6 +392,50 @@ internal class LyricsCanvasRepositoryImpl(
                 result.exceptionOrNull()?.printStackTrace()
                 emit(Resource.Error("Not found"))
             }
+        }.flowOn(Dispatchers.IO)
+
+    override fun getBetterLyrics(
+        artist: String,
+        track: String,
+        duration: Int?,
+    ): Flow<Resource<Lyrics>> =
+        flow {
+            Logger.w("Lyrics", "getBetterLyrics: $artist $track")
+            val qartist =
+                artist
+                    .replace(
+                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
+                        " ",
+                    ).replace(
+                        Regex("( và | & | и | e | und |, |和| dan)"),
+                        " ",
+                    ).replace("  ", " ")
+                    .replace(Regex("([()])"), "")
+                    .replace(".", " ")
+            val qtrack =
+                track
+                    .replace(
+                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
+                        " ",
+                    ).replace(
+                        Regex("( và | & | и | e | und |, |和| dan)"),
+                        " ",
+                    ).replace("  ", " ")
+                    .replace(Regex("([()])"), "")
+                    .replace(".", " ")
+            lyricsClient
+                .searchBetterLyrics(qtrack, qartist, duration)
+                .onSuccess { ttml ->
+                    if (ttml.isNullOrEmpty()) {
+                        emit(Resource.Error("No BetterLyrics found"))
+                        return@onSuccess
+                    }
+                    val lyrics = parseTtmlLyrics(ttml).toLyrics()
+                    emit(Resource.Success(lyrics))
+                }.onFailure {
+                    it.printStackTrace()
+                    emit(Resource.Error("BetterLyrics search failed"))
+                }
         }.flowOn(Dispatchers.IO)
 
     override fun getAITranslationLyrics(

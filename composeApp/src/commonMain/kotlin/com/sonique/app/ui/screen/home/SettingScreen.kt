@@ -799,6 +799,8 @@ private fun PlaybackSettingsContent(
     val crossfadeDjMode by viewModel.crossfadeDjMode.collectAsStateWithLifecycle()
     val crossfadeSkipAlbum by viewModel.crossfadeSkipAlbum.collectAsStateWithLifecycle()
     val lyricsOffsetMs by viewModel.lyricsOffsetMs.collectAsStateWithLifecycle()
+    val lyricsProvider by viewModel.lyricsProvider.collectAsStateWithLifecycle()
+    val coroutineScope = rememberCoroutineScope()
 
     val romanizationStored by sharedViewModel.getRomanizationLanguages().collectAsStateWithLifecycle("")
     val japaneseDictionaryState by viewModel.japaneseDictionaryState.collectAsStateWithLifecycle()
@@ -969,6 +971,46 @@ private fun PlaybackSettingsContent(
             Material3SettingsGroup(
                 title = "Lyrics Settings",
                 items = listOf(
+                    Material3SettingsItem(
+                        title = { Text(stringResource(Res.string.main_lyrics_provider)) },
+                        description = {
+                            val label = when (lyricsProvider) {
+                                DataStoreManager.BETTER_LYRICS -> stringResource(Res.string.better_lyrics)
+                                DataStoreManager.YOUTUBE -> stringResource(Res.string.youtube_transcript)
+                                else -> stringResource(Res.string.lrclib)
+                            }
+                            Text(label)
+                        },
+                        onClick = {
+                            coroutineScope.launch {
+                                val labelLrclib = getString(Res.string.lrclib)
+                                val labelBetterLyrics = getString(Res.string.better_lyrics)
+                                val labelYouTube = getString(Res.string.youtube_transcript)
+                                viewModel.setAlertData(
+                                    SettingAlertState(
+                                        title = getString(Res.string.main_lyrics_provider),
+                                        selectOne = SettingAlertState.SelectData(
+                                            listSelect = listOf(
+                                                (lyricsProvider == DataStoreManager.LRCLIB) to labelLrclib,
+                                                (lyricsProvider == DataStoreManager.BETTER_LYRICS) to labelBetterLyrics,
+                                                (lyricsProvider == DataStoreManager.YOUTUBE) to labelYouTube,
+                                            )
+                                        ),
+                                        confirm = getString(Res.string.change) to { state ->
+                                            val sel = state.selectOne?.getSelected()
+                                            val provider = when (sel) {
+                                                labelBetterLyrics -> DataStoreManager.BETTER_LYRICS
+                                                labelYouTube -> DataStoreManager.YOUTUBE
+                                                else -> DataStoreManager.LRCLIB
+                                            }
+                                            viewModel.setLyricsProvider(provider)
+                                        },
+                                        dismiss = getString(Res.string.cancel),
+                                    )
+                                )
+                            }
+                        }
+                    ),
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.lyrics_offset)) },
                         description = {

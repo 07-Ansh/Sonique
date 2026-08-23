@@ -1,4 +1,4 @@
-﻿@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalMaterial3Api::class)
 
 package com.sonique.app.ui.screen.player
 
@@ -196,7 +196,7 @@ import sonique.composeapp.generated.resources.like_and_dislike
 import sonique.composeapp.generated.resources.line_synced
 import sonique.composeapp.generated.resources.lyrics
 import sonique.composeapp.generated.resources.lyrics_provider_lrc
-
+import sonique.composeapp.generated.resources.lyrics_provider_betterlyrics
 import sonique.composeapp.generated.resources.lyrics_provider_youtube
 import sonique.composeapp.generated.resources.now_playing_upper
 import sonique.composeapp.generated.resources.offline_mode
@@ -1562,6 +1562,10 @@ fun NowPlayingScreenContent(
 
                                                     LyricsProvider.LRCLIB -> {
                                                         stringResource(Res.string.lyrics_provider_lrc)
+                                                    }
+
+                                                    LyricsProvider.BETTER_LYRICS -> {
+                                                        stringResource(Res.string.lyrics_provider_betterlyrics)
                                                     }
 
                                                     LyricsProvider.YOUTUBE -> {

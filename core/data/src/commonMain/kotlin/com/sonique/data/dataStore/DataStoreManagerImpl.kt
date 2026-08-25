@@ -147,8 +147,10 @@ internal class DataStoreManagerImpl(
         key: String,
         value: String,
     ) {
-        settingsDataStore.edit { settings ->
-            settings[stringPreferencesKey(key)] = value
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[stringPreferencesKey(key)] = value
+            }
         }
     }
 
@@ -532,6 +534,7 @@ internal class DataStoreManagerImpl(
             }
         }
     }
+
 
     override val maxSongCacheSize =
         settingsDataStore.data.map { preferences ->

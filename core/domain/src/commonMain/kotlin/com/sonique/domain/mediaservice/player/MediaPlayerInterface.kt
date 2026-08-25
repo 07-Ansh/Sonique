@@ -96,6 +96,10 @@ interface MediaPlayerInterface {
         get() = emptySet()
         set(_) {}
 
+    var crossfadeSuppressed: Boolean
+        get() = false
+        set(_) {}
+
      
     fun addListener(listener: MediaPlayerListener)
 

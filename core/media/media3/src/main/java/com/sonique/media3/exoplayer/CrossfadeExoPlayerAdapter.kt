@@ -243,6 +243,8 @@ internal class CrossfadeExoPlayerAdapter(
     @Volatile
     private var crossfadeEnabled = false
 
+    override var crossfadeSuppressed: Boolean = false
+
     @Volatile
     private var crossfadeDurationMs = 5000
 
@@ -1423,6 +1425,7 @@ internal class CrossfadeExoPlayerAdapter(
     private fun handleTrackEndInternal() {
         val shouldCrossfade =
             crossfadeEnabled &&
+                !crossfadeSuppressed &&
                 hasNextMediaItem() &&
                 !isCrossfading &&
                 !isCurrentTrackTooShortForCrossfade() &&
@@ -2033,6 +2036,7 @@ internal class CrossfadeExoPlayerAdapter(
                                 if (buf >= 0) cachedBufferedPosition = buf
 
                                 if (crossfadeEnabled &&
+                                    !crossfadeSuppressed &&
                                     !isCrossfading &&
                                     player.isPlaying &&
                                     dur > 0 &&

@@ -37,6 +37,27 @@ fun RippleIconButton(
 }
 
 @Composable
+fun RippleIconButton(
+    imageVector: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
+    fillMaxSize: Boolean = false,
+    tint: Color = Color.White,
+    onClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = modifier,
+    ) {
+        Icon(
+            imageVector,
+            null,
+            tint = tint,
+            modifier = if (fillMaxSize) Modifier.fillMaxSize().padding(4.dp) else Modifier,
+        )
+    }
+}
+
+@Composable
 fun PlayPauseButton(
     isPlaying: Boolean,
     modifier: Modifier = Modifier,

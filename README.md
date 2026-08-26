@@ -212,23 +212,19 @@ If you find Sonique useful and want to support its development:
 
 <div align="center">
 
-<a href="https://razorpay.me/@AnshSharma">
-  <img src="asset/qr-code.png" width="200" alt="Razorpay QR Code">
+<a href="https://buymeacoffee.com/07Ansh">
+  <img src="asset/bmc_qr.png" width="200" alt="Buy Me A Coffee QR Code">
 </a>
 
 <br><br>
 
-<a href="https://razorpay.me/@AnshSharma">
-  <img src="https://img.shields.io/badge/Support_via-Razorpay-02042B?style=for-the-badge&logo=razorpay&logoColor=3395FF" height="48" alt="Support via Razorpay">
-</a>
-&nbsp;
 <a href="https://buymeacoffee.com/07Ansh">
   <img src="https://img.shields.io/badge/Support_via-Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" height="48" alt="Buy Me A Coffee">
 </a>
 
 <br><br>
 
-💳 **[razorpay.me/@AnshSharma](https://razorpay.me/@AnshSharma)** • ☕ **[buymeacoffee.com/07Ansh](https://buymeacoffee.com/07Ansh)**
+☕ **[buymeacoffee.com/07Ansh](https://buymeacoffee.com/07Ansh)**
 
 <br>
 

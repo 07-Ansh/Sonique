@@ -278,14 +278,65 @@ object SUPPORTED_LANGUAGE {
     }
 }
 
+object ITAG {
+    const val AUDIO_OPUS_LOW: Int = 250
+    const val AUDIO_OPUS_MEDIUM: Int = 251
+    const val AUDIO_OPUS_HIGH: Int = 774
+    const val AUDIO_AAC_HIGH: Int = 141
+
+    const val VIDEO_360P: Int = 134
+    const val VIDEO_720P: Int = 136
+    const val VIDEO_1080P: Int = 137
+    const val MUXED_360P: Int = 18
+
+    val AUDIO: Set<Int> = setOf(AUDIO_OPUS_LOW, AUDIO_OPUS_MEDIUM, AUDIO_OPUS_HIGH, AUDIO_AAC_HIGH)
+    val VIDEO: Set<Int> = setOf(VIDEO_1080P, VIDEO_720P, VIDEO_360P)
+
+    fun highQualityTwinOf(itag: Int?): Int? =
+        when (itag) {
+            AUDIO_OPUS_HIGH -> AUDIO_AAC_HIGH
+            AUDIO_AAC_HIGH -> AUDIO_OPUS_HIGH
+            else -> null
+        }
+}
+
 object QUALITY {
-    val items: Array<CharSequence> = arrayOf("Low - 66kps", "Medium - 129kps", "High - 256kps (you may experience buffer)")
-    val itags: Array<Int> = arrayOf(250, 251, 774)
+    val items: Array<CharSequence> =
+        arrayOf(
+            "Low - 66kps",
+            "Medium - 129kps",
+            "High Opus - 256kps",
+            "High AAC - 256kps",
+        )
+
+    val itags: Array<Int> =
+        arrayOf(
+            ITAG.AUDIO_OPUS_LOW,
+            ITAG.AUDIO_OPUS_MEDIUM,
+            ITAG.AUDIO_OPUS_HIGH,
+            ITAG.AUDIO_AAC_HIGH,
+        )
+
+    private val LEGACY_ITEMS: Map<String, String> =
+        mapOf(
+            "High - 256kps (you may experience buffer)" to items[2].toString(),
+            "High - 256kps (YT Premium)" to items[2].toString(),
+            "High Opus - 256kps (YT Premium)" to items[2].toString(),
+            "High AAC - 256kps (YT Premium)" to items[3].toString(),
+        )
+
+    fun normalize(saved: String?): String {
+        val label = saved ?: return items[0].toString()
+        if (items.any { it.toString() == label }) return label
+        return LEGACY_ITEMS[label] ?: items[0].toString()
+    }
+
+    fun itagOf(saved: String?): Int = itags[items.indexOfFirst { it.toString() == normalize(saved) }]
 }
 
 object VIDEO_QUALITY {
     val items: Array<CharSequence> = arrayOf("1080p", "720p", "360p")
-    val itags: Array<Int> = arrayOf(137, 136, 134)
+    val itags: Array<Int> = arrayOf(ITAG.VIDEO_1080P, ITAG.VIDEO_720P, ITAG.VIDEO_360P)
 }
 
 object LIMIT_CACHE_SIZE {
@@ -302,6 +353,9 @@ object LIMIT_CACHE_SIZE {
         return items.getOrNull(index) ?: "∞"
     }
 }
+
+const val SPONSOR_BLOCK_MIN_SEGMENT_SECONDS = 1.0
+const val SPONSOR_BLOCK_SKIP_MARGIN_MS = 500L
 
 sealed class SponsorBlockType(
     val value: String,

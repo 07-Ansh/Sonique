@@ -12,7 +12,10 @@ plugins {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll(
+            "-Xexpect-actual-classes",
+            "-Xskip-metadata-version-check",
+        )
     }
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
@@ -86,6 +89,7 @@ kotlin {
 
                 implementation(libs.ksoup.html)
                 implementation(libs.ksoup.entities)
+                implementation(libs.quickjs)
             }
         }
 

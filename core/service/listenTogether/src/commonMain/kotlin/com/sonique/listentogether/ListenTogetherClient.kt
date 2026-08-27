@@ -413,7 +413,7 @@ class ListenTogetherClient(
          * Rooms are only shared by clients pointed at the SAME server, so this default is what
          * makes Sonique interoperable out of the box.
          */
-        const val DEFAULT_SERVER_URL = "wss://the room serverx.meowery.eu/ws"
+        const val DEFAULT_SERVER_URL = "wss://metroserverx.meowery.eu/ws"
 
         /** Anchors the default monotonic source; see [elapsedRealtime]. */
         private val PROCESS_START = TimeSource.Monotonic.markNow()

@@ -113,6 +113,8 @@ import sonique.composeapp.generated.resources.lt_connecting
 import sonique.composeapp.generated.resources.lt_create_room
 import sonique.composeapp.generated.resources.lt_credit_compatible
 import sonique.composeapp.generated.resources.lt_credit_protocol
+import sonique.composeapp.generated.resources.lt_default_server_location
+import sonique.composeapp.generated.resources.lt_default_server_name
 import sonique.composeapp.generated.resources.lt_disconnect
 import sonique.composeapp.generated.resources.lt_display_name
 import sonique.composeapp.generated.resources.lt_display_name_hint
@@ -471,7 +473,7 @@ private fun ConnectionLine(
         Column(Modifier.weight(1f)) {
             Text(label, style = typo().bodyMedium, color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
-                "The Meowery · Poland",
+                "${stringResource(Res.string.lt_default_server_name)} · ${stringResource(Res.string.lt_default_server_location)}",
                 style = typo().bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

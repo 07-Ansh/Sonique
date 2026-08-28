@@ -305,8 +305,8 @@ object QUALITY {
         arrayOf(
             "Low - 66kps",
             "Medium - 129kps",
-            "High Opus - 256kps (YT Premium)",
-            "High AAC - 256kps (YT Premium)",
+            "High Opus - 256kps",
+            "High AAC - 256kps",
         )
 
     val itags: Array<Int> =
@@ -321,6 +321,8 @@ object QUALITY {
         mapOf(
             "High - 256kps (you may experience buffer)" to items[2].toString(),
             "High - 256kps (YT Premium)" to items[2].toString(),
+            "High Opus - 256kps (YT Premium)" to items[2].toString(),
+            "High AAC - 256kps (YT Premium)" to items[3].toString(),
         )
 
     fun normalize(saved: String?): String {

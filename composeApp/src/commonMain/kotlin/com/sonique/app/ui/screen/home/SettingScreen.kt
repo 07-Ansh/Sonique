@@ -1285,8 +1285,8 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
                             Text(
                                 when (backupState) {
                                     is SettingsViewModel.BackupRestoreState.InProgress -> "Backing up data..."
-                                    is SettingsViewModel.BackupRestoreState.Success -> "âœ“ Backup complete!"
-                                    is SettingsViewModel.BackupRestoreState.Error -> "âœ— Backup failed"
+                                    is SettingsViewModel.BackupRestoreState.Success -> "\u2713 Backup complete!"
+                                    is SettingsViewModel.BackupRestoreState.Error -> "\u2717 Backup failed"
                                     else -> stringResource(Res.string.save_all_your_playlist_data)
                                 }
                             )
@@ -1303,8 +1303,8 @@ private fun BackupSettingsContent(viewModel: SettingsViewModel) {
                             Text(
                                 when (restoreState) {
                                     is SettingsViewModel.BackupRestoreState.InProgress -> "Restoring data..."
-                                    is SettingsViewModel.BackupRestoreState.Success -> "âœ“ Restore complete!"
-                                    is SettingsViewModel.BackupRestoreState.Error -> "âœ— Restore failed"
+                                    is SettingsViewModel.BackupRestoreState.Success -> "\u2713 Restore complete!"
+                                    is SettingsViewModel.BackupRestoreState.Error -> "\u2717 Restore failed"
                                     else -> stringResource(Res.string.restore_your_saved_data)
                                 }
                             )
@@ -1591,14 +1591,14 @@ private fun AboutSettingsContent(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Made with â¤ï¸ and Kotlin",
+                        text = "Made with \u2764\uFE0F and Kotlin",
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        text = "Â© 2025 Sonique",
+                        text = "\u00A9 2025 Sonique",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                     )

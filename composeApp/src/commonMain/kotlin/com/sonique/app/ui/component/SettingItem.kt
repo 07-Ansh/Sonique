@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.component
+package com.sonique.app.ui.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -63,6 +63,7 @@ fun SettingItem(
 ) {
     val sharedViewModel: SharedViewModel = koinInject()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val glassiness by sharedViewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
 
     LaunchedEffect(Unit) {
@@ -72,12 +73,14 @@ fun SettingItem(
     }
 
     val cardModifier = if (enableLiquidGlass) {
+        val glassAlpha = (glassiness * 0.12f + 0.02f)
+        val borderAlpha = (glassiness * 0.10f + 0.04f)
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(28.dp))
-            .background(Color.White.copy(alpha = 0.06f))
-            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(28.dp))
+            .background(Color.White.copy(alpha = glassAlpha))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = borderAlpha)), RoundedCornerShape(28.dp))
             .liquidGlass(backdrop, shape = RoundedCornerShape(28.dp), interactive = false)
             .then(
                 if (onClick != null && isEnable && !loading) {

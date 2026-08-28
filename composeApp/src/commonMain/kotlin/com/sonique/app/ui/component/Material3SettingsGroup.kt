@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Sonique Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -58,6 +58,7 @@ fun Material3SettingsGroup(
 ) {
     val sharedViewModel: SharedViewModel = koinInject()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val glassiness by sharedViewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
 
     Column(
@@ -85,12 +86,14 @@ fun Material3SettingsGroup(
                 }
 
                 val cardModifier = if (enableLiquidGlass) {
+                    val glassAlpha = (glassiness * 0.12f + 0.02f)
+                    val borderAlpha = (glassiness * 0.10f + 0.04f)
                     Modifier
                         .fillMaxWidth()
                         .animateContentSize()
                         .clip(shape)
-                        .background(Color.White.copy(alpha = 0.06f))
-                        .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), shape)
+                        .background(Color.White.copy(alpha = glassAlpha))
+                        .border(BorderStroke(0.5.dp, Color.White.copy(alpha = borderAlpha)), shape)
                         .liquidGlass(backdrop, shape = shape, interactive = false)
                 } else {
                     Modifier

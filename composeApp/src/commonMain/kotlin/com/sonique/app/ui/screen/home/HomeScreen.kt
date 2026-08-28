@@ -640,20 +640,20 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-             ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
-             Spacer(modifier = Modifier.width(8.dp))
-             val notificationPermissionLauncher = rememberNotificationPermissionLauncher {
-                 if (it) {
-                     navController.navigate(NotificationDestination)
-                 }
-             }
-             RippleIconButton(resId = Res.drawable.outline_notifications_24) {
+            val notificationPermissionLauncher = rememberNotificationPermissionLauncher {
+                if (it) {
+                    navController.navigate(NotificationDestination)
+                }
+            }
+            RippleIconButton(resId = Res.drawable.outline_notifications_24) {
                 notificationPermissionLauncher()
             }
-             Spacer(modifier = Modifier.width(8.dp))
-             RippleIconButton(resId = Res.drawable.baseline_settings_24) {
-                 navController.navigate(SettingsDestination())
-             }
+            Spacer(modifier = Modifier.width(8.dp))
+            ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
+            Spacer(modifier = Modifier.width(8.dp))
+            RippleIconButton(resId = Res.drawable.baseline_settings_24) {
+                navController.navigate(SettingsDestination())
+            }
         }
     }
 }

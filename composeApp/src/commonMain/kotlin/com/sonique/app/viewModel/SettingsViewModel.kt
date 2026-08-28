@@ -1215,9 +1215,9 @@ class SettingsViewModel(
     }
 
     fun setLiquidGlassGlassiness(glassiness: Float) {
+        _liquidGlassGlassiness.value = glassiness
         viewModelScope.launch {
             dataStoreManager.setLiquidGlassGlassiness(glassiness)
-            getLiquidGlassGlassiness()
         }
     }
 

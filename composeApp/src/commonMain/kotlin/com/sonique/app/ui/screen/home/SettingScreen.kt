@@ -513,8 +513,8 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                                 .fillMaxWidth()
                                 .height(64.dp)
                                 .clip(RoundedCornerShape(32.dp))
-                                .background(Color.White.copy(alpha = 0.06f))
-                                .border(1.dp, Color.White.copy(alpha = 0.05f), RoundedCornerShape(32.dp))
+                                .background(Color.White.copy(alpha = liquidGlassGlassiness * 0.12f + 0.02f))
+                                .border(1.dp, Color.White.copy(alpha = liquidGlassGlassiness * 0.10f + 0.04f), RoundedCornerShape(32.dp))
                                 .padding(horizontal = 16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -1362,14 +1362,17 @@ private fun AboutSettingsContent(navController: NavController) {
     val yeah = stringResource(Res.string.yeah)
 
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val glassiness by sharedViewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
 
     val cardModifier = if (enableLiquidGlass) {
+        val glassAlpha = (glassiness * 0.12f + 0.02f)
+        val borderAlpha = (glassiness * 0.10f + 0.04f)
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(32.dp))
-            .background(Color.White.copy(alpha = 0.06f))
-            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(32.dp))
+            .background(Color.White.copy(alpha = glassAlpha))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = borderAlpha)), RoundedCornerShape(32.dp))
             .liquidGlass(backdrop, shape = RoundedCornerShape(32.dp), interactive = false)
     } else {
         Modifier.fillMaxWidth()

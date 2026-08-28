@@ -127,7 +127,7 @@ fun Modifier.drawInteractiveGlass(
     pressedScale: Float = 1.12f,
     glassiness: Float = 0.5f,
 ): Modifier {
-    val effGlassiness = 1.0f - glassiness
+    val clampedGlassiness = glassiness.coerceIn(0f, 1f)
     return this
         .drawBackdrop(
             backdrop = backdrop,
@@ -137,11 +137,11 @@ fun Modifier.drawInteractiveGlass(
                 val press = interaction?.pressProgress ?: 0f
                 vibrancy()
                 colorControls(
-                    brightness = 0.05f,
+                    brightness = lerp(0.02f, 0.12f, clampedGlassiness),
                     contrast = 1f,
                     saturation = 1.5f,
                 )
-                val glassinessFactor = lerp(1.0f, 2.5f, effGlassiness)
+                val blurFactor = lerp(0.4f, 2.6f, clampedGlassiness)
                 blur(
                     (
                         if (l > 0f) {
@@ -149,7 +149,7 @@ fun Modifier.drawInteractiveGlass(
                         } else {
                             lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)
                         }
-                    ) * glassinessFactor + 2f.dp.toPx() * press,
+                    ) * blurFactor + 2f.dp.toPx() * press,
                 )
                 lens(size.minDimension / 4f + 2f.dp.toPx() * press, size.minDimension / 2f, false)
             },
@@ -158,9 +158,10 @@ fun Modifier.drawInteractiveGlass(
                 layer.record { drawBackdrop() }
             },
             onDrawSurface = {
-                val defaultDarken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
-                val darken = defaultDarken * (1.0f - effGlassiness) + 0.05f * effGlassiness
-                drawRect(Color.Black.copy(alpha = darken))
+                val surfaceTintAlpha = lerp(0.02f, 0.22f, clampedGlassiness)
+                drawRect(Color.White.copy(alpha = surfaceTintAlpha))
+                val defaultDarken = lerp(0.06f, 0.35f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
+                drawRect(Color.Black.copy(alpha = defaultDarken * (1f - clampedGlassiness * 0.4f)))
                 val press = interaction?.pressProgress ?: 0f
                 if (press > 0f) {
                     drawRect(

@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.other
+package com.sonique.app.ui.screen.other
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -152,7 +152,7 @@ fun CreditScreen(
                 Spacer(modifier = Modifier.height(32.dp))
                 
                 Text(
-                    text = "Made with â¤ï¸",
+                    text = "Made with \u2764\uFE0F",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )

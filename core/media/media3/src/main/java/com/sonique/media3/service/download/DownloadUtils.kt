@@ -72,28 +72,8 @@ internal class DownloadUtils(
             val mediaId = dataSpec.key ?: error("No media id")
             Logger.w("Stream", mediaId)
             Logger.w("Stream", mediaId.startsWith(MERGING_DATA_TYPE.VIDEO).toString())
-            val length = if (dataSpec.length >= 0) dataSpec.length else 1
-            if (playerCache.isCached(mediaId, dataSpec.position, length)) {
-                return@Factory dataSpec
-            }
-
-            if (downloadCache.isCached(mediaId, dataSpec.position, length)) {
-                val isDownloaded =
-                    runBlocking(Dispatchers.IO) {
-                        val id =
-                            if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
-                                mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                            } else {
-                                mediaId
-                            }
-                        val song = songRepository.getSongById(id).firstOrNull()
-                        song?.downloadState == DownloadState.STATE_DOWNLOADED
-                    }
-                if (isDownloaded) {
-                    return@Factory dataSpec
-                }
-            }
             var dataSpecReturn: DataSpec = dataSpec
+            var resolved = false
             runBlocking(Dispatchers.IO) {
                 if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
                     val id = mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
@@ -105,6 +85,7 @@ internal class DownloadUtils(
                             val is403Url = streamRepository.is403Url(videoUrl).firstOrNull() != false
                             if (!is403Url) {
                                 dataSpecReturn = dataSpec.withUri(videoUrl.toUri())
+                                resolved = true
                                 return@runBlocking
                             }
                         }
@@ -118,6 +99,7 @@ internal class DownloadUtils(
                         ).lastOrNull()
                         ?.let {
                             dataSpecReturn = dataSpec.withUri(it.toUri())
+                            resolved = true
                         }
                 } else {
                     streamRepository.getNewFormat(mediaId).firstOrNull()?.let {
@@ -128,6 +110,7 @@ internal class DownloadUtils(
                             val is403Url = streamRepository.is403Url(audioUrl).firstOrNull() != false
                             if (!is403Url) {
                                 dataSpecReturn = dataSpec.withUri(audioUrl.toUri())
+                                resolved = true
                                 return@runBlocking
                             }
                         }
@@ -142,10 +125,13 @@ internal class DownloadUtils(
                     
                     if (streamUrl != null) {
                         dataSpecReturn = dataSpec.withUri(streamUrl.toUri())
-                    } else {
-                        throw IOException("Failed to resolve stream URL for $mediaId")
+                        resolved = true
                     }
                 }
+            }
+            if (!resolved) {
+                Logger.e("Stream", "Failed to resolve download stream URL for $mediaId")
+                throw IOException("Failed to resolve stream URL for $mediaId")
             }
             return@Factory dataSpecReturn
         }

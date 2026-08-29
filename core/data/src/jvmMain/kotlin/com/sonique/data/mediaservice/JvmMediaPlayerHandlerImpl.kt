@@ -1,5 +1,7 @@
 package com.sonique.data.mediaservice
 
+import kotlin.math.pow
+
 import com.sonique.common.ASC
 import com.sonique.common.CUSTOM_ORDER
 import com.sonique.common.Config.ALBUM_CLICK
@@ -13,6 +15,8 @@ import com.sonique.common.DESC
 import com.sonique.common.LOCAL_PLAYLIST_ID
 import com.sonique.common.LOCAL_PLAYLIST_ID_SAVED_QUEUE
 import com.sonique.common.MERGING_DATA_TYPE
+import com.sonique.common.SPONSOR_BLOCK_MIN_SEGMENT_SECONDS
+import com.sonique.common.SPONSOR_BLOCK_SKIP_MARGIN_MS
 import com.sonique.common.TITLE
 import com.sonique.data.db.Converters
 import com.sonique.data.mediaservice.mac.MacOSMediaIntegration
@@ -24,6 +28,8 @@ import com.sonique.domain.data.model.browse.album.Track
 import com.sonique.domain.data.model.mediaService.SponsorSkipSegments
 import com.sonique.domain.data.model.searchResult.songs.Artist
 import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
+import com.sonique.domain.data.player.AudioEffects
+import com.sonique.domain.data.player.DelayEffect
 import com.sonique.domain.data.player.GenericCommandButton
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericMediaMetadata
@@ -31,6 +37,8 @@ import com.sonique.domain.data.player.GenericPlaybackParameters
 import com.sonique.domain.data.player.GenericTracks
 import com.sonique.domain.data.player.PlayerConstants
 import com.sonique.domain.data.player.PlayerError
+import com.sonique.domain.data.player.ReverbEffect
+import com.sonique.domain.data.player.ReverbPreset
 import com.sonique.domain.extension.isVideo
 import com.sonique.domain.extension.now
 import com.sonique.domain.extension.toGenericMediaItem
@@ -349,13 +357,18 @@ class JvmMediaPlayerHandlerImpl(
                                     if (skipSegments != null) {
                                         for (skip in skipSegments) {
                                             if (listCategory.contains(skip.category)) {
+                                                if (skip.segment[1] - skip.segment[0] < SPONSOR_BLOCK_MIN_SEGMENT_SECONDS) {
+                                                    continue
+                                                }
                                                 val firstPart = ((skip.segment[0] / skip.videoDuration) * 100).toFloat()
                                                 val secondPart =
                                                     ((skip.segment[1] / skip.videoDuration) * 100).toFloat()
                                                 if (current in firstPart..secondPart) {
                                                     Logger.w(TAG, "Seek to $secondPart")
                                                     Logger.d(TAG, "Seek to Cr: $current, First: $firstPart, Second: $secondPart")
-                                                    skipSegment((secondPart * player.duration).toLong() / 100)
+                                                    skipSegment(
+                                                        (secondPart * player.duration).toLong() / 100 + SPONSOR_BLOCK_SKIP_MARGIN_MS,
+                                                    )
                                                 }
                                             }
                                         }
@@ -403,6 +416,36 @@ class JvmMediaPlayerHandlerImpl(
             playbackJob.join()
             playbackSpeedPitchJob.join()
 
+        }
+
+        coroutineScope.launch {
+            val delayEffects =
+                combine(
+                    dataStoreManager.delayEnabled,
+                    dataStoreManager.delayTimeMs,
+                    dataStoreManager.delayFeedback,
+                    dataStoreManager.delayMix,
+                ) { enabled, timeMs, feedback, mix ->
+                    if (enabled == TRUE) DelayEffect(timeMs = timeMs, feedback = feedback, mix = mix) else null
+                }
+            val reverbEffects =
+                combine(
+                    dataStoreManager.reverbEnabled,
+                    dataStoreManager.reverbPreset,
+                    dataStoreManager.reverbMix,
+                ) { enabled, presetName, mix ->
+                    if (enabled == TRUE) {
+                        ReverbEffect(
+                            preset = runCatching { ReverbPreset.valueOf(presetName) }.getOrDefault(ReverbPreset.HALL),
+                            mix = mix,
+                        )
+                    } else {
+                        null
+                    }
+                }
+            combine(delayEffects, reverbEffects) { echo, room -> AudioEffects(delay = echo, reverb = room) }
+                .distinctUntilChanged()
+                .collect { effects -> player.setAudioEffects(effects) }
         }
     }
 
@@ -1349,6 +1392,12 @@ class JvmMediaPlayerHandlerImpl(
                 data = queueData,
             )
         }
+        player.albumTrackIds =
+            if (queueData.playlistType == PlaylistType.ALBUM) {
+                queueData.listTracks.map { it.videoId }.toSet()
+            } else {
+                emptySet()
+            }
         Logger.w(TAG, "setQueueData: $queueData")
     }
 
@@ -1965,77 +2014,39 @@ class JvmMediaPlayerHandlerImpl(
     }
 
     override fun mayBeNormalizeVolume() {
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+        runBlocking {
+            normalizeVolume = dataStoreManager.normalizeVolume.first() == TRUE
+        }
+        if (!normalizeVolume) {
+            volumeNormalizationJob?.cancel()
+            player.volume = 1f
+            return
+        }
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+        player.currentMediaItem?.mediaId?.let { songId ->
+            val videoId =
+                if (songId.contains("Video")) {
+                    songId.removePrefix("Video")
+                } else {
+                    songId
+                }
+            volumeNormalizationJob?.cancel()
+            volumeNormalizationJob =
+                coroutineScope.launch(Dispatchers.Main) {
+                    streamRepository
+                        .getFormatFlow(videoId)
+                        .cancellable()
+                        .distinctUntilChanged()
+                        .collectLatest { format ->
+                            if (format != null) {
+                                val loudnessDb = format.loudnessDb ?: 0f
+                                val factor = 10f.pow(-loudnessDb / 20f).coerceIn(0.2f, 1.5f)
+                                player.volume = factor.coerceIn(0f, 1f)
+                                Logger.d(TAG, "Desktop volume normalization: factor=$factor for $loudnessDb dB")
+                            }
+                        }
+                }
+        }
     }
 
     override fun mayBeSavePlaybackState() {
@@ -2255,6 +2266,12 @@ class JvmMediaPlayerHandlerImpl(
 
     override fun onTracksChanged(tracks: GenericTracks) {
         Logger.d(TAG, "onTracksChanged: ${tracks.groups.size}")
+    }
+
+    override fun onCrossfadeStateChanged(isCrossfading: Boolean) {
+        if (!isCrossfading) {
+            mayBeNormalizeVolume()
+        }
     }
 
     override fun onPlayerError(error: PlayerError) {

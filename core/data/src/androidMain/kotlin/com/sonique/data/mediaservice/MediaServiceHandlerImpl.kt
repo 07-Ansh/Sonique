@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
 import android.media.audiofx.LoudnessEnhancer
+import kotlin.math.pow
 import com.sonique.common.ASC
 import com.sonique.common.CUSTOM_ORDER
 import com.sonique.common.Config.ALBUM_CLICK
@@ -20,6 +21,8 @@ import com.sonique.common.DESC
 import com.sonique.common.LOCAL_PLAYLIST_ID
 import com.sonique.common.LOCAL_PLAYLIST_ID_SAVED_QUEUE
 import com.sonique.common.MERGING_DATA_TYPE
+import com.sonique.common.SPONSOR_BLOCK_MIN_SEGMENT_SECONDS
+import com.sonique.common.SPONSOR_BLOCK_SKIP_MARGIN_MS
 import com.sonique.common.TITLE
 import com.sonique.data.db.Converters
 import com.sonique.domain.data.entities.NewFormatEntity
@@ -28,6 +31,8 @@ import com.sonique.domain.data.model.browse.album.Track
 import com.sonique.domain.data.model.mediaService.SponsorSkipSegments
 import com.sonique.domain.data.model.searchResult.songs.Artist
 import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
+import com.sonique.domain.data.player.AudioEffects
+import com.sonique.domain.data.player.DelayEffect
 import com.sonique.domain.data.player.GenericCommandButton
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericMediaMetadata
@@ -35,6 +40,8 @@ import com.sonique.domain.data.player.GenericPlaybackParameters
 import com.sonique.domain.data.player.GenericTracks
 import com.sonique.domain.data.player.PlayerConstants
 import com.sonique.domain.data.player.PlayerError
+import com.sonique.domain.data.player.ReverbEffect
+import com.sonique.domain.data.player.ReverbPreset
 import com.sonique.domain.extension.isVideo
 import com.sonique.domain.extension.now
 import com.sonique.domain.extension.toGenericMediaItem
@@ -168,7 +175,6 @@ internal class MediaServiceHandlerImpl(
      
 
     private var loudnessEnhancer: LoudnessEnhancer? = null
-    private var secondLoudnessEnhancer: LoudnessEnhancer? = null
 
     private var skipSilent = false
 
@@ -282,13 +288,18 @@ internal class MediaServiceHandlerImpl(
                                     if (skipSegments != null) {
                                         for (skip in skipSegments) {
                                             if (listCategory.contains(skip.category)) {
+                                                if (skip.segment[1] - skip.segment[0] < SPONSOR_BLOCK_MIN_SEGMENT_SECONDS) {
+                                                    continue
+                                                }
                                                 val firstPart = ((skip.segment[0] / skip.videoDuration) * 100).toFloat()
                                                 val secondPart =
                                                     ((skip.segment[1] / skip.videoDuration) * 100).toFloat()
                                                 if (current in firstPart..secondPart) {
                                                     Logger.w(TAG, "Seek to $secondPart")
                                                     Logger.d(TAG, "Seek to Cr: $current, First: $firstPart, Second: $secondPart")
-                                                    skipSegment((secondPart * player.duration).toLong() / 100)
+                                                    skipSegment(
+                                                        (secondPart * player.duration).toLong() / 100 + SPONSOR_BLOCK_SKIP_MARGIN_MS,
+                                                    )
                                                 }
                                             }
                                         }
@@ -336,6 +347,36 @@ internal class MediaServiceHandlerImpl(
             playbackJob.join()
             playbackSpeedPitchJob.join()
 
+        }
+
+        coroutineScope.launch {
+            val delayEffects =
+                combine(
+                    dataStoreManager.delayEnabled,
+                    dataStoreManager.delayTimeMs,
+                    dataStoreManager.delayFeedback,
+                    dataStoreManager.delayMix,
+                ) { enabled, timeMs, feedback, mix ->
+                    if (enabled == TRUE) DelayEffect(timeMs = timeMs, feedback = feedback, mix = mix) else null
+                }
+            val reverbEffects =
+                combine(
+                    dataStoreManager.reverbEnabled,
+                    dataStoreManager.reverbPreset,
+                    dataStoreManager.reverbMix,
+                ) { enabled, presetName, mix ->
+                    if (enabled == TRUE) {
+                        ReverbEffect(
+                            preset = runCatching { ReverbPreset.valueOf(presetName) }.getOrDefault(ReverbPreset.HALL),
+                            mix = mix,
+                        )
+                    } else {
+                        null
+                    }
+                }
+            combine(delayEffects, reverbEffects) { echo, room -> AudioEffects(delay = echo, reverb = room) }
+                .distinctUntilChanged()
+                .collect { effects -> player.setAudioEffects(effects) }
         }
     }
 
@@ -586,22 +627,33 @@ internal class MediaServiceHandlerImpl(
         }
     }
 
+    private var lastEqualizerSessionId: Int = 0
+
     private fun sendOpenEqualizerIntent() {
+        val sessionId = player.audioSessionId
+        if (sessionId == 0) return
+        if (lastEqualizerSessionId != 0 && lastEqualizerSessionId != sessionId) {
+            sendCloseEqualizerIntent()
+        }
         context.sendBroadcast(
             Intent(AudioEffect.ACTION_OPEN_AUDIO_EFFECT_CONTROL_SESSION).apply {
-                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
+                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
                 putExtra(AudioEffect.EXTRA_PACKAGE_NAME, context.packageName)
                 putExtra(AudioEffect.EXTRA_CONTENT_TYPE, AudioEffect.CONTENT_TYPE_MUSIC)
             },
         )
+        lastEqualizerSessionId = sessionId
     }
 
     private fun sendCloseEqualizerIntent() {
+        val sessionId = if (lastEqualizerSessionId != 0) lastEqualizerSessionId else player.audioSessionId
+        if (sessionId == 0) return
         context.sendBroadcast(
             Intent(AudioEffect.ACTION_CLOSE_AUDIO_EFFECT_CONTROL_SESSION).apply {
-                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, player.audioSessionId)
+                putExtra(AudioEffect.EXTRA_AUDIO_SESSION, sessionId)
             },
         )
+        lastEqualizerSessionId = 0
     }
 
     @SuppressLint("PrivateResource")
@@ -1256,6 +1308,12 @@ internal class MediaServiceHandlerImpl(
                 data = queueData,
             )
         }
+        player.albumTrackIds =
+            if (queueData.playlistType == PlaylistType.ALBUM) {
+                queueData.listTracks.map { it.videoId }.toSet()
+            } else {
+                emptySet()
+            }
         Logger.w(TAG, "setQueueData: $queueData")
     }
 
@@ -1901,12 +1959,15 @@ internal class MediaServiceHandlerImpl(
             return
         }
 
-        if (loudnessEnhancer == null && player.audioSessionId != PlayerConstants.AUDIO_SESSION_ID_UNSET) {
+        if (player.audioSessionId != PlayerConstants.AUDIO_SESSION_ID_UNSET) {
+            try {
+                loudnessEnhancer?.release()
+            } catch (_: Exception) {
+            }
             try {
                 loudnessEnhancer = LoudnessEnhancer(player.audioSessionId)
             } catch (e: Exception) {
                 Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
-                e.printStackTrace()
             }
         }
 
@@ -1920,43 +1981,35 @@ internal class MediaServiceHandlerImpl(
             volumeNormalizationJob?.cancel()
             volumeNormalizationJob =
                 coroutineScope.launch(Dispatchers.Main) {
-                    fun Float?.toMb() = ((this ?: 0f) * 100).toInt()
                     streamRepository
                         .getFormatFlow(videoId)
                         .cancellable()
                         .distinctUntilChanged()
                         .collectLatest { format ->
                             if (format != null) {
-                                val loudnessMb =
-                                    format.loudnessDb.toMb().let {
-                                        if (it !in -2000..2000) {
-                                            0
-                                        } else {
-                                            it
-                                        }
+                                val loudnessDb = format.loudnessDb ?: 0f
+                                val loudnessMb = (loudnessDb * 100).toInt().coerceIn(-2000, 2000)
+                                Logger.d(TAG, "Loudness: $loudnessDb db, $loudnessMb mb")
+
+                                if (loudnessDb > 0f) {
+                                    try {
+                                        loudnessEnhancer?.setTargetGain(0)
+                                        loudnessEnhancer?.enabled = false
+                                    } catch (_: Exception) {
                                     }
-                                Logger.d(TAG, "Loudness: ${format.loudnessDb} db, $loudnessMb")
-                                try {
-                                    loudnessEnhancer?.setTargetGain(0f.toMb() - loudnessMb)
-                                    loudnessEnhancer?.enabled = true
-                                    Logger.w(
-                                        TAG,
-                                        "mayBeNormalizeVolume: ${loudnessEnhancer?.targetGain}",
-                                    )
-                                } catch (e: Exception) {
-                                    Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
-                                    e.printStackTrace()
-                                }
-                                try {
-                                    secondLoudnessEnhancer?.setTargetGain(0f.toMb() - loudnessMb)
-                                    secondLoudnessEnhancer?.enabled = true
-                                    Logger.w(
-                                        TAG,
-                                        "mayBeNormalizeVolume: ${secondLoudnessEnhancer?.targetGain}",
-                                    )
-                                } catch (e: Exception) {
-                                    Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
-                                    e.printStackTrace()
+                                    val attenuationFactor = 10f.pow(-loudnessDb / 20f).coerceIn(0.3f, 1.0f)
+                                    player.volume = attenuationFactor
+                                    Logger.d(TAG, "Normalized attenuation: volume=$attenuationFactor for +$loudnessDb dB")
+                                } else {
+                                    player.volume = 1f
+                                    val boostMb = (-loudnessMb).coerceIn(0, 2000)
+                                    try {
+                                        loudnessEnhancer?.setTargetGain(boostMb)
+                                        loudnessEnhancer?.enabled = boostMb > 0
+                                        Logger.d(TAG, "Normalized boost: +${boostMb}mB gain")
+                                    } catch (e: Exception) {
+                                        Logger.e(TAG, "mayBeNormalizeVolume: ${e.message}")
+                                    }
                                 }
                             }
                         }
@@ -2025,10 +2078,6 @@ internal class MediaServiceHandlerImpl(
                 loudnessEnhancer?.enabled = false
                 loudnessEnhancer?.release()
                 loudnessEnhancer = null
-
-                secondLoudnessEnhancer?.enabled = false
-                secondLoudnessEnhancer?.release()
-                secondLoudnessEnhancer = null
             } catch (e: Exception) {
                 Logger.e("ServiceHandler", "Error releasing audio effects ${e.message}")
             }
@@ -2167,6 +2216,15 @@ internal class MediaServiceHandlerImpl(
 
     override fun onTracksChanged(tracks: GenericTracks) {
         Logger.d(TAG, "onTracksChanged: ${tracks.groups.size}")
+    }
+
+    override fun onCrossfadeStateChanged(isCrossfading: Boolean) {
+        if (!isCrossfading) {
+            mayBeNormalizeVolume()
+            if (player.isPlaying) {
+                sendOpenEqualizerIntent()
+            }
+        }
     }
 
     override fun onPlayerError(error: PlayerError) {

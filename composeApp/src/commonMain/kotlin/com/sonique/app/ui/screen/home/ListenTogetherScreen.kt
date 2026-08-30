@@ -45,6 +45,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -351,38 +352,29 @@ private fun ColumnScope.WorkArea(
                 onClick = viewModel::joinRoom,
             )
 
-            Text(
-                text = stringResource(Res.string.lt_background_warning),
-                style = typo().bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-            )
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.size(16.dp),
+                )
+                Text(
+                    text = stringResource(Res.string.lt_background_warning),
+                    style = typo().bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                )
+            }
 
             FooterActions(onLeave = null, onSettings = onSettings)
         }
     }
 
-    CreditFooter()
     EndOfPage(withoutCredit = true)
-}
-
-@Composable
-private fun CreditFooter() {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = stringResource(Res.string.lt_credit_protocol),
-            style = typo().bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Text(
-            text = stringResource(Res.string.lt_credit_compatible),
-            style = typo().bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
 }
 
 private const val SHARE_PREFIX = "Join my Sonique room with code "
@@ -434,6 +426,7 @@ private fun ConnectionLine(
     onDisconnect: () -> Unit,
 ) {
     val connected = connection is RoomConnection.Connected
+    val isConnecting = connection is RoomConnection.Connecting
     val accent =
         when (connection) {
             is RoomConnection.Connected -> MaterialTheme.colorScheme.primary
@@ -457,42 +450,58 @@ private fun ConnectionLine(
         label = "ltConnectingAlpha",
     )
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), RoundedCornerShape(16.dp))
+            .padding(horizontal = 16.dp, vertical = 12.dp),
     ) {
-        Box(
-            Modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(
-                    if (connection is RoomConnection.Connecting) accent.copy(alpha = dotAlpha) else accent,
-                ),
-        )
-        Column(Modifier.weight(1f)) {
-            Text(label, style = typo().bodyMedium, color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                "${stringResource(Res.string.lt_default_server_name)} · ${stringResource(Res.string.lt_default_server_location)}",
-                style = typo().bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.weight(1f, fill = false),
+            ) {
+                Box(
+                    Modifier
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isConnecting) accent.copy(alpha = dotAlpha) else accent,
+                        ),
+                )
+                Text(
+                    text = label,
+                    style = typo().bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = accent,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (!isConnecting) {
+                Text(
+                    text = if (connected) {
+                        stringResource(Res.string.lt_disconnect)
+                    } else {
+                        stringResource(Res.string.lt_connect)
+                    },
+                    style = typo().labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = if (connected) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable { if (connected) onDisconnect() else onConnect() }
+                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                )
+            }
         }
-        Text(
-            text =
-                if (connected) {
-                    stringResource(Res.string.lt_disconnect)
-                } else {
-                    stringResource(Res.string.lt_connect)
-                },
-            style = typo().labelMedium,
-            color = if (connected) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-            modifier =
-                Modifier
-                    .clip(CircleShape)
-                    .clickable { if (connected) onDisconnect() else onConnect() }
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-        )
     }
 }
 
@@ -1066,14 +1075,30 @@ private fun SecondaryButton(
                 .fillMaxWidth()
                 .height(52.dp)
                 .clip(CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 0.35f else 0.15f), CircleShape)
+                .background(
+                    if (enabled) {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.3f)
+                    },
+                )
+                .border(
+                    1.dp,
+                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (enabled) 0.5f else 0.2f),
+                    CircleShape,
+                )
                 .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text,
             style = typo().titleSmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (enabled) 1f else 0.4f),
+            color =
+                if (enabled) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                },
         )
     }
 }
@@ -1137,24 +1162,33 @@ private fun NameField(
     onValueChange: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(Res.string.lt_display_name), style = typo().bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(Res.string.lt_display_name), style = typo().bodyMedium, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onBackground)
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
-            textStyle = typo().bodyMedium.copy(color = MaterialTheme.colorScheme.onBackground),
+            textStyle = typo().bodyLarge.copy(color = MaterialTheme.colorScheme.onBackground),
             cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .height(54.dp)
                     .clip(ROW_SHAPE)
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f)),
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), ROW_SHAPE),
             decorationBox = { inner ->
-                Box(Modifier.fillMaxSize().padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) { inner() }
+                Box(Modifier.fillMaxSize().padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
+                    if (value.isEmpty()) {
+                        Text(
+                            text = stringResource(Res.string.lt_display_name_hint),
+                            style = typo().bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
+                        )
+                    }
+                    inner()
+                }
             },
         )
-        Text(stringResource(Res.string.lt_display_name_hint), style = typo().bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -1186,15 +1220,19 @@ private fun CodeInput(
                                 .weight(1f)
                                 .height(52.dp)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.08f))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = if (filled) 0.8f else 0.4f))
                                 .then(
-                                    if (isCaret) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(14.dp)) else Modifier,
+                                    if (isCaret) {
+                                        Modifier.border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(14.dp))
+                                    } else {
+                                        Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                                    },
                                 ).clickable { focusRequester.requestFocus() },
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             text = if (filled) code[index].toString() else "",
-                            style = typo().titleSmall.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold),
+                            style = typo().titleMedium.copy(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onBackground,
                         )
                     }

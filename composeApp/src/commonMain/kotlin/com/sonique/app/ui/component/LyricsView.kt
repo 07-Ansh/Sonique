@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -106,8 +107,11 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.snapshotFlow
 import sonique.composeapp.generated.resources.baseline_sync_24
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -369,15 +373,24 @@ fun LyricsView(
             }
         }
     }
+    val isDragged by listState.interactionSource.collectIsDraggedAsState()
     var userIsScrolling by remember { mutableStateOf(false) }
 
-    // Pause auto-scroll when user manually scrolls lyrics
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (listState.isScrollInProgress) {
+    // Reset user scrolling state when track or lyrics change
+    LaunchedEffect(timedLineIndexes) {
+        userIsScrolling = false
+    }
+
+    // Pause auto-scroll only when user manually drags lyrics
+    LaunchedEffect(isDragged) {
+        if (isDragged) {
             userIsScrolling = true
         } else if (userIsScrolling) {
-            // When user stops scrolling, wait 5 seconds of inactivity before resuming auto-scroll
-            delay(5000)
+            // When user releases touch, wait for any momentum/fling to settle, then wait 4s of inactivity
+            snapshotFlow { listState.isScrollInProgress }
+                .filter { !it }
+                .first()
+            delay(4000)
             userIsScrolling = false
         }
     }

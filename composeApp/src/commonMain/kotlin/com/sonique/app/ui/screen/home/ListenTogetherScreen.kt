@@ -820,6 +820,7 @@ private fun FooterActions(
                 icon = Icons.AutoMirrored.Filled.Logout,
                 text = stringResource(Res.string.lt_leave_room),
                 color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.weight(1f),
                 onClick = onLeave,
             )
         }
@@ -827,6 +828,7 @@ private fun FooterActions(
             icon = Icons.Default.Settings,
             text = stringResource(Res.string.settings),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = if (onLeave != null) Modifier.weight(1f) else Modifier.fillMaxWidth(),
             onClick = onSettings,
         )
     }
@@ -837,6 +839,7 @@ private fun TextAction(
     icon: ImageVector,
     text: String,
     color: Color,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     FilledTonalButton(
@@ -848,10 +851,11 @@ private fun TextAction(
                 contentColor = color,
             ),
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
+        modifier = modifier.height(52.dp),
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
-        Text(text, style = typo().bodyMedium)
+        Text(text, style = typo().titleSmall, fontWeight = FontWeight.Medium)
     }
 }
 

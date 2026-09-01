@@ -186,7 +186,8 @@ fun App(
             val isMainRoute = route?.contains("Home") == true || 
                              route?.contains("Search") == true || 
                              route?.contains("Library") == true || 
-                             route?.contains("Downloads") == true
+                             route?.contains("Downloads") == true ||
+                             route?.contains("ListenTogether") == true
             if (isMainRoute) {
                 isNavBarVisible = true
             }
@@ -462,11 +463,14 @@ fun App(
                                                 }
                                             )
                                         }
-                                        AppBottomNavigationBar(
-                                            navController = navController,
-                                            isTranslucentBackground = false,
-                                        ) { klass ->
-                                            viewModel.reloadDestination(klass)
+                                        val isListenTogetherRoute = navBackStackEntry?.destination?.route?.contains("ListenTogetherDestination") == true
+                                        if (!isListenTogetherRoute) {
+                                            AppBottomNavigationBar(
+                                                navController = navController,
+                                                isTranslucentBackground = false,
+                                            ) { klass ->
+                                                viewModel.reloadDestination(klass)
+                                            }
                                         }
                                     }
                                 }

@@ -51,6 +51,7 @@ import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.logger.Logger
 import com.sonique.app.expect.ui.PlatformBackdrop
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
+import com.sonique.app.ui.navigation.destination.home.ListenTogetherDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.search.SearchDestination
 import com.sonique.app.ui.navigation.destination.library.AlbumsDestination
@@ -136,10 +137,14 @@ actual fun LiquidGlassAppBottomNavigationBar(
     var isInSearchDestination by remember {
         mutableStateOf(false)
     }
+    var isInListenTogetherDestination by remember {
+        mutableStateOf(false)
+    }
 
     LaunchedEffect(currentBackStackEntry) {
         currentBackStackEntry?.destination?.let { current ->
             isInSearchDestination = current.hasRoute(SearchDestination::class)
+            isInListenTogetherDestination = current.hasRoute(ListenTogetherDestination::class)
         }
     }
 
@@ -149,18 +154,18 @@ actual fun LiquidGlassAppBottomNavigationBar(
 
     var constraintSet by remember {
         mutableStateOf(
-            decoupledConstraints(isShowMiniPlayer, isExpanded),
+            decoupledConstraints(isShowMiniPlayer, isExpanded, hideDock = isInListenTogetherDestination),
         )
     }
 
-    LaunchedEffect(isShowMiniPlayer, isExpanded) {
-        constraintSet = decoupledConstraints(isShowMiniPlayer, isExpanded)
+    LaunchedEffect(isShowMiniPlayer, isExpanded, isInListenTogetherDestination) {
+        constraintSet = decoupledConstraints(isShowMiniPlayer, isExpanded, hideDock = isInListenTogetherDestination)
         updateConstraints = false
     }
 
     LaunchedEffect(updateConstraints) {
         if (updateConstraints) {
-            constraintSet = decoupledConstraints(isShowMiniPlayer, isExpanded)
+            constraintSet = decoupledConstraints(isShowMiniPlayer, isExpanded, hideDock = isInListenTogetherDestination)
             updateConstraints = false
         }
     }
@@ -289,13 +294,37 @@ actual fun LiquidGlassAppBottomNavigationBar(
 private fun decoupledConstraints(
     isMiniplayerShow: Boolean = true,
     isExpanded: Boolean,
+    hideDock: Boolean = false,
 ): ConstraintSet =
     ConstraintSet {
         val searchButton = createRefFor("searchButton")
         val toolbar = createRefFor("toolbar")
         val miniPlayer = createRefFor("miniPlayer")
 
-        if (isExpanded) {
+        if (hideDock) {
+            constrain(toolbar) {
+                bottom.linkTo(parent.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                width = Dimension.wrapContent
+                height = Dimension.wrapContent
+                visibility = Visibility.Gone
+            }
+            constrain(searchButton) {
+                bottom.linkTo(parent.bottom)
+                end.linkTo(parent.end)
+                width = Dimension.wrapContent
+                height = Dimension.wrapContent
+                visibility = Visibility.Gone
+            }
+            constrain(miniPlayer) {
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+                bottom.linkTo(parent.bottom, margin = 2.dp)
+                width = if (isMiniplayerShow) Dimension.matchParent else Dimension.wrapContent
+                visibility = if (isMiniplayerShow) Visibility.Visible else Visibility.Gone
+            }
+        } else if (isExpanded) {
             constrain(toolbar) {
                 bottom.linkTo(parent.bottom)
                 start.linkTo(parent.start)

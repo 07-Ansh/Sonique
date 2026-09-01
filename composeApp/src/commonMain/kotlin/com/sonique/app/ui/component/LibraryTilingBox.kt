@@ -122,16 +122,13 @@ fun LibraryTilingItem(
     val title = stringResource(state.title)
     val sharedViewModel: SharedViewModel = koinInject()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
-    val glassiness by sharedViewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
 
     val cardModifier = if (enableLiquidGlass) {
-        val glassAlpha = (glassiness * 0.12f + 0.02f)
-        val borderAlpha = (glassiness * 0.10f + 0.04f)
         Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = glassAlpha))
-            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = borderAlpha)), RoundedCornerShape(20.dp))
+            .background(Color.White.copy(alpha = 0.06f))
+            .border(BorderStroke(0.5.dp, Color.White.copy(alpha = 0.08f)), RoundedCornerShape(20.dp))
             .liquidGlass(backdrop, shape = RoundedCornerShape(20.dp), interactive = true)
             .clickable { onClick.invoke() }
             .padding(horizontal = 20.dp, vertical = 10.dp)

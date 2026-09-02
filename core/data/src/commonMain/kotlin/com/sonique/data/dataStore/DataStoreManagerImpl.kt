@@ -1483,6 +1483,19 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val playerScreenStyle: Flow<String> =
+        settingsDataStore.data.map { preferences ->
+            preferences[PLAYER_SCREEN_STYLE] ?: "classic"
+        }
+
+    override suspend fun setPlayerScreenStyle(style: String) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[PLAYER_SCREEN_STYLE] = style
+            }
+        }
+    }
+
     companion object Settings {
         val APP_VERSION = stringPreferencesKey("app_version")
         val COOKIE = stringPreferencesKey("cookie")
@@ -1584,6 +1597,7 @@ internal class DataStoreManagerImpl(
         val CUSTOM_MODEL_ID = stringPreferencesKey("custom_model_id")
         val CUSTOM_OPENAI_BASE_URL = stringPreferencesKey("custom_openai_base_url")
         val CUSTOM_OPENAI_HEADERS = stringPreferencesKey("custom_openai_headers")
+        val PLAYER_SCREEN_STYLE = stringPreferencesKey("player_screen_style")
     }
 
 

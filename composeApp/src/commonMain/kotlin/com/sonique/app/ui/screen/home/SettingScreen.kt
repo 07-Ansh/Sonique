@@ -376,6 +376,12 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
         else -> "1 Row (Standard)"
     }
 
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
+    val playerStyleLabel = when (playerScreenStyle) {
+        "material", "modern" -> "Material 3 (Modern)"
+        else -> "Classic"
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
         contentPadding = PaddingValues(bottom = 80.dp),
@@ -407,6 +413,31 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
             Material3SettingsGroup(
                 title = "Player Screen",
                 items = listOf(
+                    Material3SettingsItem(
+                        title = { Text("Player Style") },
+                        description = { Text(playerStyleLabel) },
+                        onClick = {
+                            coroutineScope.launch {
+                                viewModel.setAlertData(
+                                    SettingAlertState(
+                                        title = "Player Style",
+                                        selectOne = SettingAlertState.SelectData(
+                                            listSelect = listOf(
+                                                (playerScreenStyle != "material" && playerScreenStyle != "modern") to "Classic",
+                                                (playerScreenStyle == "material" || playerScreenStyle == "modern") to "Material 3 (Modern)"
+                                            )
+                                        ),
+                                        confirm = "Change" to { state ->
+                                            val selected = state.selectOne?.getSelected() ?: ""
+                                            val styleKey = if (selected == "Material 3 (Modern)") "modern" else "classic"
+                                            viewModel.setPlayerScreenStyle(styleKey)
+                                        },
+                                        dismiss = "Cancel"
+                                    )
+                                )
+                            }
+                        }
+                    ),
                     Material3SettingsItem(
                         title = { Text("Expressive Player Controls") },
                         description = { Text("Use Material 3 Expressive shapes for playback buttons") },

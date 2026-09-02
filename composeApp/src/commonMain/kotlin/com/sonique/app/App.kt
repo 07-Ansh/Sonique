@@ -77,6 +77,7 @@ import com.sonique.app.ui.navigation.graph.AppNavigationGraph
 import com.sonique.app.ui.screen.MiniPlayer
 import com.sonique.app.ui.screen.player.NowPlayingScreen
 import com.sonique.app.ui.screen.player.NowPlayingScreenContent
+import com.sonique.app.ui.screen.player.NewPlayerScreen
 import com.sonique.app.ui.theme.AppTheme
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.SharedViewModel
@@ -165,6 +166,7 @@ fun App(
     val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
 
     LaunchedEffect(reloadDestination) {
         val destination = reloadDestination
@@ -674,10 +676,19 @@ fun App(
                             .fillMaxSize()
                             .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt()) }
                     ) {
-                        NowPlayingScreen(
-                            navController = navController,
-                        ) {
-                            isShowNowPlaylistScreen = false
+                        if (playerScreenStyle == "material" || playerScreenStyle == "modern") {
+                            NewPlayerScreen(
+                                navController = navController,
+                                isVisible = isShowNowPlaylistScreen,
+                            ) {
+                                isShowNowPlaylistScreen = false
+                            }
+                        } else {
+                            NowPlayingScreen(
+                                navController = navController,
+                            ) {
+                                isShowNowPlaylistScreen = false
+                            }
                         }
                     }
                 }

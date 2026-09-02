@@ -362,6 +362,9 @@ interface DataStoreManager {
     val romanizationLanguages: Flow<String>
     suspend fun setRomanizationLanguages(languages: String)
 
+    val playerScreenStyle: Flow<String>
+    suspend fun setPlayerScreenStyle(style: String)
+
     enum class ProxyType {
         PROXY_TYPE_HTTP,
         PROXY_TYPE_SOCKS,

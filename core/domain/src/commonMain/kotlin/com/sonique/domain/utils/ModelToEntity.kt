@@ -14,6 +14,7 @@ import com.sonique.domain.data.model.browse.artist.ResultVideo
 import com.sonique.domain.data.model.browse.playlist.PlaylistBrowse
 import com.sonique.domain.data.model.home.Content
 import com.sonique.domain.data.model.metadata.Lyrics
+import com.sonique.domain.data.model.metadata.Line
 import com.sonique.domain.data.model.podcast.PodcastBrowse
 import com.sonique.domain.data.model.searchResult.songs.Album
 import com.sonique.domain.data.model.searchResult.songs.Artist
@@ -381,6 +382,21 @@ fun Lyrics.toSyncedLrcString(): String? {
     }
 }
 
+fun Lyrics.toRichSyncLrcString(): String? {
+    val lines = this.lines
+    if (lines.isNullOrEmpty() || this.syncType != "RICH_SYNCED") {
+        return null
+    }
+    return lines.joinToString("\n") { line ->
+        val startTimeMs = line.startTimeMs.toLongOrNull() ?: 0L
+        val minutes = (startTimeMs / 60000).toString().padStart(2, '0')
+        val seconds = ((startTimeMs % 60000) / 1000).toString().padStart(2, '0')
+        val centiseconds = ((startTimeMs % 1000) / 10).toString().padStart(2, '0')
+
+        "[$minutes:$seconds.$centiseconds] ${line.words}"
+    }
+}
+
 fun Lyrics.toPlainLrcString(): String? {
     val lines = this.lines
     if (lines.isNullOrEmpty()) {
@@ -402,4 +418,28 @@ fun List<String>.connectArtists(): String {
 
     return stringBuilder.toString()
 }
+
+fun Lyrics.toSyncedLyrics(): Lyrics {
+    val lines = this.lines
+    if (lines.isNullOrEmpty() || this.syncType != "RICH_SYNCED") {
+        return this
+    }
+    val wordTimingRegex = Regex("""<\d{1,2}:\d{2}\.\d{2,3}>""")
+    val syncedLines: List<Line> =
+        lines.map { line ->
+            val plainWords =
+                line.words
+                    .replace(wordTimingRegex, "")
+                    .replace("  ", " ")
+                    .trim()
+            Line(
+                endTimeMs = line.endTimeMs,
+                startTimeMs = line.startTimeMs,
+                words = plainWords,
+                syllables = null,
+            )
+        }
+    return this.copy(lines = syncedLines, syncType = "LINE_SYNCED")
+}
+
 

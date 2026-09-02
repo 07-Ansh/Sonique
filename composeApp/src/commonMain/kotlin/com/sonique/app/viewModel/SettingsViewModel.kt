@@ -101,6 +101,8 @@ class SettingsViewModel(
     val savedPlaybackState: StateFlow<String?> = _savedPlaybackState
     private var _saveRecentSongAndQueue: MutableStateFlow<String?> = MutableStateFlow(null)
     val saveRecentSongAndQueue: StateFlow<String?> = _saveRecentSongAndQueue
+    private var _playerScreenStyle: MutableStateFlow<String?> = MutableStateFlow(null)
+    val playerScreenStyle: StateFlow<String?> = _playerScreenStyle
 
     private var _sponsorBlockEnabled: MutableStateFlow<String?> = MutableStateFlow(null)
     val sponsorBlockEnabled: StateFlow<String?> = _sponsorBlockEnabled
@@ -316,6 +318,7 @@ class SettingsViewModel(
         getBlurPlayerBackground()
         getContinueListeningLayout()
         getEnablePageTransitions()
+        getPlayerScreenStyle()
 
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
@@ -559,6 +562,21 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setEnableTranslateLyric(useTranslation)
             getUseTranslation()
+        }
+    }
+
+    fun getPlayerScreenStyle() {
+        viewModelScope.launch {
+            dataStoreManager.playerScreenStyle.collect { style ->
+                _playerScreenStyle.emit(style)
+            }
+        }
+    }
+
+    fun setPlayerScreenStyle(style: String) {
+        viewModelScope.launch {
+            dataStoreManager.setPlayerScreenStyle(style)
+            getPlayerScreenStyle()
         }
     }
 

@@ -305,6 +305,9 @@ class SharedViewModel(
         .map { it ?: "list" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "list")
 
+    val playerScreenStyle: StateFlow<String> = dataStoreManager.playerScreenStyle
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "classic")
+
     val liquidGlassGlassiness: StateFlow<Float> = dataStoreManager.liquidGlassGlassiness
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0.5f)
 

@@ -78,6 +78,7 @@ val repositoryModule =
                 get<YouTube>(),
                 get<Spotify>(),
                 get<SoniqueLyricsClient>(),
+                get<DataStoreManager>(),
             )
         }
 
@@ -103,6 +104,10 @@ val repositoryModule =
 
         single<UpdateRepository>(createdAtStart = true) {
             UpdateRepositoryImpl(get())
+        }
+
+        single<com.sonique.domain.repository.LyricsRomanizerRepository> {
+            com.sonique.data.lyrics.LyricsRomanizerRepositoryImpl("${fileDir()}/kuromoji-ipadic")
         }
     }
 

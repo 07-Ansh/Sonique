@@ -85,6 +85,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.single
@@ -471,42 +472,48 @@ class JvmMediaPlayerHandlerImpl(
         getDataOfNowPlayingTrackStateJob =
             coroutineScope.launch {
                 Logger.w(TAG, "getDataOfNowPlayingState: $videoId")
-                songRepository.getSongById(videoId).cancellable().singleOrNull().let { songEntity ->
-                    if (songEntity != null) {
-                        _controlState.update { it.copy(isLiked = songEntity.liked) }
-                        var thumbUrl =
-                            track?.thumbnails?.lastOrNull()?.url
-                                ?: "http://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg"
-                        if (thumbUrl.contains("w120")) {
-                            thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-                        }
+                val songEntity = runCatching {
+                    songRepository.getSongById(videoId).cancellable().firstOrNull()
+                }.getOrNull()
+
+                if (songEntity != null) {
+                    _controlState.update { it.copy(isLiked = songEntity.liked) }
+                    var thumbUrl =
+                        track?.thumbnails?.lastOrNull()?.url
+                            ?: "http://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg"
+                    if (thumbUrl.contains("w120")) {
+                        thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
+                    }
+                    runCatching {
                         if (songEntity.thumbnails != thumbUrl) {
-                            songRepository.updateThumbnailsSongEntity(thumbUrl, songEntity.videoId).singleOrNull()?.let {
+                            songRepository.updateThumbnailsSongEntity(thumbUrl, songEntity.videoId).firstOrNull()?.let {
                                 Logger.w(TAG, "getDataOfNowPlayingState: Updated thumbs $it")
                             }
                         }
-                        songRepository.updateSongInLibrary(now(), songEntity.videoId).singleOrNull().let {
+                        songRepository.updateSongInLibrary(now(), songEntity.videoId).firstOrNull().let {
                             Logger.w(TAG, "getDataOfNowPlayingState: $it")
                         }
                         songRepository.updateListenCount(songEntity.videoId)
-                    } else {
-                        _controlState.update { it.copy(isLiked = false) }
+                    }
+                } else {
+                    _controlState.update { it.copy(isLiked = false) }
+                    runCatching {
                         songRepository
                             .insertSong(
                                 track?.toSongEntity() ?: mediaItem.toSongEntity(),
-                            ).singleOrNull()
+                            ).firstOrNull()
                             ?.let {
                                 Logger.w(TAG, "getDataOfNowPlayingState: $it")
                             }
                     }
-                    Logger.w(TAG, "getDataOfNowPlayingState: $songEntity")
-                    Logger.w(TAG, "getDataOfNowPlayingState: $track")
-                    _nowPlayingState.update {
-                        it.copy(
-                            songEntity = songEntity ?: track?.toSongEntity() ?: mediaItem.toSongEntity(),
-                        )
-                    }
-                    val song =
+                }
+                Logger.w(TAG, "getDataOfNowPlayingState: $songEntity")
+                Logger.w(TAG, "getDataOfNowPlayingState: $track")
+                _nowPlayingState.update {
+                    it.copy(
+                        songEntity = songEntity ?: track?.toSongEntity() ?: mediaItem.toSongEntity(),
+                    )
+                }    val song =
                         songEntity ?: track?.toSongEntity() ?: mediaItem.toSongEntity()
 
                     nypc.setNowPlaying(
@@ -2234,25 +2241,25 @@ class JvmMediaPlayerHandlerImpl(
         if (mediaItem?.mediaId != _nowPlaying.value?.mediaId) {
             _nowPlaying.value = mediaItem
         }
-        if (mediaItem?.mediaId != nowPlayingState.value.mediaItem.mediaId) {
-            Logger.w(TAG, "onMediaItemTransition: ${mediaItem?.mediaId}")
-            if (mediaItem != null) {
-                getDataOfNowPlayingState(mediaItem)
-            } else {
-                _nowPlayingState.update {
-                    NowPlayingTrackState
-                        .initial()
-                }
+        if (mediaItem != null) {
+            Logger.w(TAG, "onMediaItemTransition: ${mediaItem.mediaId}")
+            getDataOfNowPlayingState(mediaItem)
+        } else {
+            _nowPlayingState.update {
+                NowPlayingTrackState.initial()
             }
         }
         queueData.value.data.listTracks.let { list ->
-            if ((list.size > 3 || runBlocking { dataStoreManager.endlessQueue.first() == TRUE }) &&
-                list.size - player.currentMediaItemIndex < 3 &&
-                list.size - player.currentMediaItemIndex >= 0 &&
-                queueData.value.queueState == QueueData.StateSource.STATE_INITIALIZED
-            ) {
-                Logger.d("Check loadMore", "loadMore")
-                loadMore()
+            coroutineScope.launch(Dispatchers.IO) {
+                val isEndless = runCatching { dataStoreManager.endlessQueue.first() == TRUE }.getOrDefault(false)
+                if ((list.size > 3 || isEndless) &&
+                    list.size - player.currentMediaItemIndex < 3 &&
+                    list.size - player.currentMediaItemIndex >= 0 &&
+                    queueData.value.queueState == QueueData.StateSource.STATE_INITIALIZED
+                ) {
+                    Logger.d("Check loadMore", "loadMore")
+                    loadMore()
+                }
             }
         }
         updateNextPreviousTrackAvailability()

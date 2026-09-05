@@ -8,6 +8,7 @@ import io.ktor.client.statement.HttpResponse
 import com.sonique.lyrics.models.request.LyricsBody
 import com.sonique.lyrics.models.request.TranslatedLyricsBody
 import com.sonique.lyrics.models.response.BaseResponse
+import com.sonique.lyrics.models.response.BetterLyricsResponse
 import com.sonique.lyrics.models.response.LrclibObject
 import com.sonique.lyrics.models.response.LyricsResponse
 import com.sonique.lyrics.models.response.TranslatedLyricsResponse
@@ -135,6 +136,22 @@ class SoniqueLyricsClient {
             null
         }
     }
+
+    suspend fun searchBetterLyrics(
+        q_track: String,
+        q_artist: String,
+        durationSeconds: Int?,
+    ) = runCatching {
+        val rs =
+            lyricsService
+                .searchBetterLyrics(
+                    q_track = q_track,
+                    q_artist = q_artist,
+                    durationSeconds = durationSeconds,
+                ).body<BetterLyricsResponse>()
+        rs.ttml
+    }
+
 
     private suspend inline fun <reified T> HttpResponse.bodyOrThrow(): T {
         if (this.status.value == 429) {

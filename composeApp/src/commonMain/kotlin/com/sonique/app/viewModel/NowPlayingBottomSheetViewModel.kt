@@ -1,4 +1,4 @@
-﻿package com.sonique.app.viewModel
+package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import com.sonique.common.Config
@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.update
@@ -115,12 +116,14 @@ class NowPlayingBottomSheetViewModel(
                             ),
                     )
                 }
-                songRepository.getSongById(it).lastOrNull().let { song ->
-                    if (song != null) {
-                        getSongEntityFlow(videoId = song.videoId)
-                    } else {
-                        songRepository.insertSong(songOrNowPlaying).singleOrNull()?.let {
-                            getSongEntityFlow(videoId = songOrNowPlaying.videoId)
+                runCatching {
+                    songRepository.getSongById(it).firstOrNull().let { song ->
+                        if (song != null) {
+                            getSongEntityFlow(videoId = song.videoId)
+                        } else {
+                            songRepository.insertSong(songOrNowPlaying).firstOrNull()?.let {
+                                getSongEntityFlow(videoId = songOrNowPlaying.videoId)
+                            }
                         }
                     }
                 }

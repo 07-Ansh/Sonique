@@ -942,14 +942,13 @@ fun NewPlayerScreen(
             }
 
             if (showMoreOptions) {
-                FreshPlayerMenuSheet(
+                NowPlayingBottomSheet(
                     onDismiss = { showMoreOptions = false },
                     navController = navController,
+                    onNavigateToOtherScreen = onDismiss,
                     song = nowPlayingState?.songEntity,
                     viewModel = nowPlayingBottomSheetViewModel,
-                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 0.92f) else null,
-                    onShowSleepTimer = { showSleepTimerDialog = true },
-                    onNavigateToOtherScreen = onDismiss
+                    setSleepTimerEnable = true,
                 )
             }
 

@@ -1,42 +1,43 @@
 package com.sonique.app.ui.component
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.KeyboardArrowDown
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.LockOpen
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -48,6 +49,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -56,22 +58,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
-import com.kmpalette.rememberPaletteState
-import com.sonique.app.extension.getColorFromPalette
 import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.viewModel.UIEvent
+import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
 import com.sonique.domain.mediaservice.handler.QueueData
-import com.sonique.domain.manager.DataStoreManager
+import com.sonique.domain.mediaservice.handler.RepeatState
 import com.sonique.domain.utils.connectArtists
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import sonique.composeapp.generated.resources.Res
-import sonique.composeapp.generated.resources.baseline_close_24
-import sonique.composeapp.generated.resources.more_horiz
+import sonique.composeapp.generated.resources.baseline_more_vert_24
+import sonique.composeapp.generated.resources.repeat
+import sonique.composeapp.generated.resources.repeat_on
+import sonique.composeapp.generated.resources.repeat_one_on
+import sonique.composeapp.generated.resources.shuffle
+import sonique.composeapp.generated.resources.shuffle_on
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FreshQueueSheet(
     onDismiss: () -> Unit,
@@ -86,57 +92,65 @@ fun FreshQueueSheet(
     val lazyListState = rememberLazyListState()
 
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
-    val paletteState = rememberPaletteState()
-
-    LaunchedEffect(screenDataState.bitmap) {
-        screenDataState.bitmap?.let { bitmap ->
-            paletteState.generate(bitmap)
-        }
-    }
-
-    val extractedArtworkColor = paletteState.palette?.getColorFromPalette()
-
+    val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val queueData by musicServiceHandler.queueData.collectAsStateWithLifecycle()
 
-    val queue by remember {
-        derivedStateOf {
-            queueData?.data?.listTracks ?: emptyList()
+    val queue = remember(queueData?.data?.listTracks) {
+        queueData?.data?.listTracks ?: emptyList()
+    }
+
+    val currentSongIndex = remember(queueData) {
+        musicServiceHandler.currentOrderIndex().coerceAtLeast(0)
+    }
+
+    val visibleQueue = remember(queue, currentSongIndex) {
+        if (queue.isEmpty()) emptyList()
+        else queue.drop(currentSongIndex.coerceAtMost(queue.size))
+    }
+
+    // Precalculate total duration only when the queue list instance changes
+    val totalDurationText = remember(queue) {
+        var totalSec = 0L
+        for (track in queue) {
+            val sec = track.durationSeconds ?: 0
+            if (sec > 0) {
+                totalSec += sec
+            } else {
+                val dur = track.duration
+                if (!dur.isNullOrBlank()) {
+                    val parts = dur.split(":")
+                    if (parts.size == 2) {
+                        totalSec += (parts[0].toLongOrNull() ?: 0) * 60 + (parts[1].toLongOrNull() ?: 0)
+                    } else if (parts.size == 3) {
+                        totalSec += (parts[0].toLongOrNull() ?: 0) * 3600 + (parts[1].toLongOrNull() ?: 0) * 60 + (parts[2].toLongOrNull() ?: 0)
+                    }
+                }
+            }
+        }
+        if (totalSec <= 0L) ""
+        else {
+            val hours = totalSec / 3600
+            val minutes = (totalSec % 3600) / 60
+            val seconds = totalSec % 60
+            if (hours > 0) {
+                "$hours:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
+            } else {
+                "${minutes}:${seconds.toString().padStart(2, '0')}"
+            }
         }
     }
 
-    val currentSongIndex by remember {
-        derivedStateOf {
-            musicServiceHandler.currentOrderIndex().coerceAtLeast(0)
-        }
-    }
+    val endlessQueueEnable by dataStoreManager.endlessQueue
+        .map { it == DataStoreManager.TRUE }
+        .collectAsState(false)
 
-    // Filter queue to start from current playing song onwards (no past songs displayed)
-    val visibleQueue by remember(queue, currentSongIndex) {
-        derivedStateOf {
-            if (queue.isEmpty()) emptyList()
-            else queue.drop(currentSongIndex.coerceAtMost(queue.size))
-        }
-    }
-
-    val dragDropState = rememberDragDropState(lazyListState) { from, to ->
-        val actualFrom = currentSongIndex + from
-        val actualTo = currentSongIndex + to
-        scope.launch {
-            musicServiceHandler.swap(actualFrom, actualTo)
-        }
-    }
-
-    val loadMoreState by remember {
-        derivedStateOf {
-            queueData?.queueState ?: QueueData.StateSource.STATE_CREATED
-        }
-    }
+    val loadMoreState = queueData?.queueState ?: QueueData.StateSource.STATE_CREATED
 
     val shouldLoadMore = remember {
         derivedStateOf {
             val layoutInfo = lazyListState.layoutInfo
-            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf true
-            lastVisibleItem.index >= layoutInfo.totalItemsCount - 3 && layoutInfo.totalItemsCount > 0
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull() ?: return@derivedStateOf false
+            lastVisibleItem.index >= layoutInfo.totalItemsCount - 2 && layoutInfo.totalItemsCount > 5
         }
     }
 
@@ -158,200 +172,330 @@ fun FreshQueueSheet(
         )
     }
 
-    val defaultSheetBg = extractedArtworkColor?.copy(alpha = 0.92f) ?: MaterialTheme.colorScheme.surfaceContainerHigh
-    val finalBg = backgroundColor ?: defaultSheetBg
+    val sheetBg = backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh
     val finalContent = contentColor ?: Color.White
-
-    // Dynamic translucent card tinting for Ambience Mode
-    val cardBg = Color.White.copy(alpha = 0.15f)
-
-    val animatedBg by animateColorAsState(
-        targetValue = finalBg,
-        animationSpec = tween(300),
-        label = "sheetBackground"
-    )
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = animatedBg,
+        containerColor = sheetBg,
         contentColor = finalContent,
+        dragHandle = null,
         modifier = Modifier.fillMaxHeight(),
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Header with Material You dynamic color
-            Surface(
-                color = animatedBg,
-                tonalElevation = 4.dp,
-            ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .statusBarsPadding()
+                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "PLAYING QUEUE",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            letterSpacing = 1.2.sp
-                        )
-                        Text(
-                            text = screenDataState.playlistName.ifBlank { "Current Queue" },
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = finalContent,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "${visibleQueue.size} songs upcoming",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = finalContent.copy(alpha = 0.75f)
+                    Text(
+                        text = screenDataState.playlistName.ifBlank {
+                            queue.getOrNull(currentSongIndex)?.title?.let { "$it Mix" } ?: "Current Queue"
+                        },
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 17.sp,
+                            lineHeight = 22.sp
+                        ),
+                        color = finalContent,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    IconButton(
+                        onClick = {
+                            scope.launch {
+                                dataStoreManager.setEndlessQueue(!endlessQueueEnable)
+                            }
+                        },
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (endlessQueueEnable) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
+                            contentDescription = "Endless Queue",
+                            tint = if (endlessQueueEnable) finalContent else finalContent.copy(alpha = 0.5f),
+                            modifier = Modifier.size(24.dp)
                         )
                     }
 
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            painter = painterResource(Res.drawable.baseline_close_24),
-                            contentDescription = "Close queue",
-                            tint = finalContent
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = "${queue.size} songs",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Normal
+                            ),
+                            color = finalContent.copy(alpha = 0.75f)
                         )
+                        if (totalDurationText.isNotEmpty()) {
+                            Text(
+                                text = totalDurationText,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Normal
+                                ),
+                                color = finalContent.copy(alpha = 0.75f)
+                            )
+                        }
+                    }
+                }
+
+                LazyColumn(
+                    state = lazyListState,
+                    contentPadding = PaddingValues(
+                        start = 12.dp,
+                        end = 12.dp,
+                        top = 4.dp,
+                        bottom = 88.dp
+                    ),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    itemsIndexed(
+                        items = visibleQueue,
+                        key = { index, track -> "${track.videoId}_${currentSongIndex + index}" },
+                        contentType = { index, _ -> if (index == 0) "active_track" else "upcoming_track" }
+                    ) { index, track ->
+                        val actualIndex = currentSongIndex + index
+                        val isCurrentTrack = index == 0
+                        val artistNames = remember(track.artists) {
+                            track.artists?.mapNotNull { it.name }?.connectArtists() ?: ""
+                        }
+
+                        if (isCurrentTrack) {
+                            // Highlighted card for currently playing track
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable {
+                                        musicServiceHandler.playMediaItemInMediaSource(actualIndex)
+                                    },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White.copy(alpha = 0.16f)
+                                ),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // Artwork with Play triangle overlay
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(finalContent.copy(alpha = 0.12f))
+                                    ) {
+                                        AsyncImage(
+                                            model = track.thumbnails?.lastOrNull()?.url ?: "",
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxSize()
+                                                .background(Color.Black.copy(alpha = 0.35f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Rounded.PlayArrow,
+                                                contentDescription = "Currently Playing",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    // Title & Artist
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = track.title ?: "",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 15.sp
+                                            ),
+                                            color = finalContent,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = artistNames,
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontSize = 13.sp
+                                            ),
+                                            color = finalContent.copy(alpha = 0.72f),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    // Three dots menu
+                                    IconButton(
+                                        onClick = { selectedItemForMenu = actualIndex },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.baseline_more_vert_24),
+                                            contentDescription = "Track options",
+                                            tint = finalContent.copy(alpha = 0.75f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            // Flat row for upcoming tracks
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable {
+                                        musicServiceHandler.playMediaItemInMediaSource(actualIndex)
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // Artwork without play overlay
+                                Box(
+                                    modifier = Modifier
+                                        .size(52.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(finalContent.copy(alpha = 0.12f))
+                                ) {
+                                    AsyncImage(
+                                        model = track.thumbnails?.lastOrNull()?.url ?: "",
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                // Title & Artist
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = track.title ?: "",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 15.sp
+                                        ),
+                                        color = finalContent,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = artistNames,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontSize = 13.sp
+                                        ),
+                                        color = finalContent.copy(alpha = 0.72f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                // Three dots menu
+                                IconButton(
+                                    onClick = { selectedItemForMenu = actualIndex },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.baseline_more_vert_24),
+                                        contentDescription = "Track options",
+                                        tint = finalContent.copy(alpha = 0.75f),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
 
-            HorizontalDivider(color = finalContent.copy(alpha = 0.15f))
-
-            // Queue List (starts at currently playing song)
-            LazyColumn(
-                state = lazyListState,
-                contentPadding = WindowInsets.systemBars.asPaddingValues(),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                itemsIndexed(
-                    items = visibleQueue,
-                    key = { index, track -> "${track.videoId}_${currentSongIndex + index}" }
-                ) { index, track ->
-                    val actualIndex = currentSongIndex + index
-                    val isCurrentTrack = index == 0
-
-                    val itemCardBg = if (isCurrentTrack) {
-                        Color.White.copy(alpha = 0.28f)
-                    } else {
-                        cardBg
-                    }
-
-                    val titleColor = finalContent
-
-                    val artistColor = finalContent.copy(alpha = 0.75f)
-
-                    val artistNames = remember(track.artists) {
-                        track.artists?.mapNotNull { it.name }?.connectArtists() ?: ""
-                    }
-
-                    DraggableItem(
-                        dragDropState = dragDropState,
-                        index = index,
-                        modifier = Modifier
-                    ) { isDragging ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                                .clickable {
-                                    musicServiceHandler.playMediaItemInMediaSource(actualIndex)
-                                },
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = itemCardBg),
-                            elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 6.dp else 0.dp)
-                        ) {
-                            ListItem(
-                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                leadingContent = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        // Index or Active indicator
-                                        Box(
-                                            modifier = Modifier.size(24.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            if (isCurrentTrack) {
-                                                Surface(
-                                                    shape = CircleShape,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(8.dp)
-                                                ) {}
-                                            } else {
-                                                Text(
-                                                    text = "${index + 1}",
-                                                    style = MaterialTheme.typography.labelMedium,
-                                                    color = artistColor
-                                                )
-                                            }
-                                        }
-
-                                        // Artwork
-                                        Box(
-                                            modifier = Modifier
-                                                .size(48.dp)
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(finalContent.copy(alpha = 0.12f))
-                                        ) {
-                                            AsyncImage(
-                                                model = track.thumbnails?.lastOrNull()?.url ?: "",
-                                                contentDescription = null,
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier.fillMaxSize()
-                                            )
-                                        }
-                                    }
-                                },
-                                headlineContent = {
-                                    Text(
-                                        text = track.title ?: "",
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = if (isCurrentTrack) FontWeight.Bold else FontWeight.Normal
-                                        ),
-                                        color = titleColor,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                },
-                                supportingContent = {
-                                    Text(
-                                        text = artistNames,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = artistColor,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                },
-                                trailingContent = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        IconButton(
-                                            onClick = { selectedItemForMenu = actualIndex },
-                                            modifier = Modifier.size(36.dp)
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(Res.drawable.more_horiz),
-                                                contentDescription = "Track options",
-                                                tint = artistColor,
-                                                modifier = Modifier.size(20.dp)
-                                            )
-                                        }
-                                    }
-                                }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                sheetBg.copy(alpha = 0.85f),
+                                sheetBg.copy(alpha = 0.98f),
+                                sheetBg
                             )
-                        }
+                        )
+                    )
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 6.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Shuffle button
+                    val isShuffle = controllerState.isShuffle
+                    IconButton(
+                        onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(if (isShuffle) Res.drawable.shuffle_on else Res.drawable.shuffle),
+                            contentDescription = "Shuffle",
+                            tint = if (isShuffle) MaterialTheme.colorScheme.primary else finalContent.copy(alpha = 0.75f),
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    // Collapse Chevron
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.KeyboardArrowDown,
+                            contentDescription = "Close queue",
+                            tint = finalContent,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    // Repeat button
+                    val isRepeat = controllerState.repeatState != RepeatState.None
+                    val isRepeatOne = controllerState.repeatState == RepeatState.One
+                    IconButton(
+                        onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(
+                                if (isRepeatOne) Res.drawable.repeat_one_on
+                                else if (isRepeat) Res.drawable.repeat_on
+                                else Res.drawable.repeat
+                            ),
+                            contentDescription = "Repeat",
+                            tint = if (isRepeat) MaterialTheme.colorScheme.primary else finalContent.copy(alpha = 0.75f),
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             }

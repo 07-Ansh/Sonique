@@ -118,9 +118,11 @@ import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
+import com.sonique.app.expect.shareUrl
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.favorite
 import sonique.composeapp.generated.resources.favorite_border
+import sonique.composeapp.generated.resources.ic_share_curved
 import sonique.composeapp.generated.resources.baseline_share_24
 import sonique.composeapp.generated.resources.baseline_repeat_one_24
 import sonique.composeapp.generated.resources.lyrics
@@ -154,7 +156,6 @@ fun NewPlayerScreen(
 ) {
     val nowPlayingBottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
-    val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val currentSongData by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
     val queueData by sharedViewModel.queueData.collectAsStateWithLifecycle(initialValue = null)
     val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
@@ -564,18 +565,11 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Pill-shaped buttons — exact shapes from Player.kt lines 1126-1140
-                val shareShape = RoundedCornerShape(
-                    topStart = 50.dp, bottomStart = 50.dp,
-                    topEnd = 3.dp, bottomEnd = 3.dp
-                )
-                val favShape = RoundedCornerShape(
-                    topStart = 3.dp, bottomStart = 3.dp,
-                    topEnd = 50.dp, bottomEnd = 50.dp
-                )
+                // Symmetrical squircle buttons matching Screenshot 1 (RoundedCornerShape 16.dp, 48.dp)
+                val actionButtonShape = RoundedCornerShape(16.dp)
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Share button
@@ -583,27 +577,23 @@ fun NewPlayerScreen(
                         onClick = {
                             val songId = currentSongData?.songInfoData?.videoId ?: ""
                             if (songId.isNotEmpty()) {
-                                val intent = android.content.Intent().apply {
-                                    action = android.content.Intent.ACTION_SEND
-                                    type = "text/plain"
-                                    putExtra(
-                                        android.content.Intent.EXTRA_TEXT,
-                                        "https://music.youtube.com/watch?v=$songId"
-                                    )
-                                }
-                                context.startActivity(android.content.Intent.createChooser(intent, null))
+                                shareUrl(
+                                    title = trackTitle,
+                                    url = "https://music.youtube.com/watch?v=$songId"
+                                )
                             }
                         },
-                        shape = shareShape,
+                        shape = actionButtonShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = textButtonColor,
                             contentColor = iconButtonColor
                         ),
-                        modifier = Modifier.size(42.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
-                            painter = painterResource(Res.drawable.baseline_share_24),
-                            contentDescription = null,
+                            painter = painterResource(Res.drawable.ic_share_curved),
+                            contentDescription = "Share",
+                            tint = iconButtonColor,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -611,18 +601,18 @@ fun NewPlayerScreen(
                     val isLiked = controllerState.isLiked
                     FilledIconButton(
                         onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
-                        shape = favShape,
+                        shape = actionButtonShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = textButtonColor,
                             contentColor = iconButtonColor
                         ),
-                        modifier = Modifier.size(42.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             painter = painterResource(
                                 if (isLiked) Res.drawable.favorite else Res.drawable.favorite_border
                             ),
-                            contentDescription = null,
+                            contentDescription = "Favorite",
                             tint = if (isLiked) Color.Red else iconButtonColor,
                             modifier = Modifier.size(24.dp)
                         )
@@ -632,69 +622,11 @@ fun NewPlayerScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            var sliderPosition by remember { mutableStateOf<Float?>(null) }
-            val displayPosition = sliderPosition
-                ?: if (timelineState.total > 0) {
-                    (timelineState.current.toFloat() / timelineState.total.toFloat()) * 100f
-                } else {
-                    0f
-                }
-
-            val sliderColors = SliderDefaults.colors(
-                activeTrackColor = textButtonColor,
-                activeTickColor = textButtonColor,
-                thumbColor = textButtonColor,
-                inactiveTrackColor = Color.White.copy(alpha = 0.4f),
-                disabledActiveTrackColor = textButtonColor,
-                disabledInactiveTrackColor = Color.White.copy(alpha = 0.4f),
-                disabledThumbColor = textButtonColor,
+            PlayerTimelineSection(
+                sharedViewModel = sharedViewModel,
+                textButtonColor = textButtonColor,
+                TextBackgroundColor = TextBackgroundColor,
             )
-
-            Slider(
-                value = displayPosition.coerceIn(0f, 100f),
-                valueRange = 0f..100f,
-                onValueChange = { sliderPosition = it },
-                onValueChangeFinished = {
-                    sliderPosition?.let {
-                        sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it))
-                    }
-                    sliderPosition = null
-                },
-                colors = sliderColors,
-                modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            // Duration labels — matches Player.kt lines 1487-1510
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = PlayerHorizontalPadding + 4.dp)
-            ) {
-                Text(
-                    text = formatDuration(
-                        if (sliderPosition != null) {
-                            (timelineState.total * (sliderPosition!! / 100f)).roundToLong()
-                        } else {
-                            timelineState.current.coerceAtLeast(0L)
-                        }
-                    ),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextBackgroundColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = if (timelineState.total > 0) formatDuration(timelineState.total) else "",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextBackgroundColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
 
             Spacer(Modifier.height(24.dp))
 
@@ -1050,7 +982,7 @@ fun NewPlayerScreen(
             if (showQueueSheet) {
                 FreshQueueSheet(
                     onDismiss = { showQueueSheet = false },
-                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 0.92f) else null,
+                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 0.94f) else Color(0xFF191C1E),
                 )
             }
         }
@@ -1130,3 +1062,83 @@ fun ResizableIconButton(
             .alpha(if (enabled) 1f else 0.5f),
     )
 }
+
+/**
+ * Isolated timeline and progress slider section.
+ * Subscribes to sharedViewModel.timeline locally so that playback ticks
+ * do not cause the entire player screen to recompose.
+ */
+@Composable
+private fun PlayerTimelineSection(
+    sharedViewModel: SharedViewModel,
+    textButtonColor: Color,
+    TextBackgroundColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
+    var sliderPosition by remember { mutableStateOf<Float?>(null) }
+    val displayPosition = sliderPosition
+        ?: if (timelineState.total > 0) {
+            (timelineState.current.toFloat() / timelineState.total.toFloat()) * 100f
+        } else {
+            0f
+        }
+
+    val sliderColors = SliderDefaults.colors(
+        activeTrackColor = textButtonColor,
+        activeTickColor = textButtonColor,
+        thumbColor = textButtonColor,
+        inactiveTrackColor = Color.White.copy(alpha = 0.4f),
+        disabledActiveTrackColor = textButtonColor,
+        disabledInactiveTrackColor = Color.White.copy(alpha = 0.4f),
+        disabledThumbColor = textButtonColor,
+    )
+
+    Column(modifier = modifier) {
+        Slider(
+            value = displayPosition.coerceIn(0f, 100f),
+            valueRange = 0f..100f,
+            onValueChange = { sliderPosition = it },
+            onValueChangeFinished = {
+                sliderPosition?.let {
+                    sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it))
+                }
+                sliderPosition = null
+            },
+            colors = sliderColors,
+            modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
+        )
+
+        Spacer(Modifier.height(4.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PlayerHorizontalPadding + 4.dp)
+        ) {
+            Text(
+                text = formatDuration(
+                    if (sliderPosition != null) {
+                        (timelineState.total * (sliderPosition!! / 100f)).toLong()
+                    } else {
+                        timelineState.current.coerceAtLeast(0L)
+                    }
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                color = TextBackgroundColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = if (timelineState.total > 0) formatDuration(timelineState.total) else "",
+                style = MaterialTheme.typography.labelMedium,
+                color = TextBackgroundColor,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+

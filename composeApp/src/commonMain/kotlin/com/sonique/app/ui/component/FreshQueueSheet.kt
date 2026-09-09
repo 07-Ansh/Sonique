@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Lock
@@ -172,7 +174,7 @@ fun FreshQueueSheet(
         )
     }
 
-    val sheetBg = backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh
+    val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
     val finalContent = contentColor ?: Color.White
 
     ModalBottomSheet(
@@ -181,10 +183,20 @@ fun FreshQueueSheet(
         containerColor = sheetBg,
         contentColor = finalContent,
         dragHandle = null,
+        shape = RectangleShape,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         modifier = Modifier.fillMaxHeight(),
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(sheetBg)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(sheetBg)
+            ) {
 
                 Row(
                     modifier = Modifier

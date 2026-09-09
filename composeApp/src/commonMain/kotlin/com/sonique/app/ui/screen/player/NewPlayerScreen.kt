@@ -565,11 +565,18 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Symmetrical squircle buttons matching Screenshot 1 (RoundedCornerShape 16.dp, 48.dp)
-                val actionButtonShape = RoundedCornerShape(16.dp)
+                // Pill-shaped buttons — exact shapes from Player.kt lines 1126-1140
+                val shareShape = RoundedCornerShape(
+                    topStart = 50.dp, bottomStart = 50.dp,
+                    topEnd = 3.dp, bottomEnd = 3.dp
+                )
+                val favShape = RoundedCornerShape(
+                    topStart = 3.dp, bottomStart = 3.dp,
+                    topEnd = 50.dp, bottomEnd = 50.dp
+                )
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Share button
@@ -583,12 +590,12 @@ fun NewPlayerScreen(
                                 )
                             }
                         },
-                        shape = actionButtonShape,
+                        shape = shareShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = textButtonColor,
                             contentColor = iconButtonColor
                         ),
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(42.dp)
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_share_curved),
@@ -601,12 +608,12 @@ fun NewPlayerScreen(
                     val isLiked = controllerState.isLiked
                     FilledIconButton(
                         onClick = { sharedViewModel.onUIEvent(UIEvent.ToggleLike) },
-                        shape = actionButtonShape,
+                        shape = favShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
                             containerColor = textButtonColor,
                             contentColor = iconButtonColor
                         ),
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(42.dp)
                     ) {
                         Icon(
                             painter = painterResource(

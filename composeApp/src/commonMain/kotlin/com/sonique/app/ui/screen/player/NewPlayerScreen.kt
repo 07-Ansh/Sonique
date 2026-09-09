@@ -989,7 +989,7 @@ fun NewPlayerScreen(
             if (showQueueSheet) {
                 FreshQueueSheet(
                     onDismiss = { showQueueSheet = false },
-                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 0.94f) else Color(0xFF191C1E),
+                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 1f) else Color(0xFF191C1E),
                 )
             }
         }

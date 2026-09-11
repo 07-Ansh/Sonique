@@ -104,6 +104,7 @@ import com.sonique.app.extension.formatDuration
 import com.sonique.app.ui.component.FreshPlayerMenuSheet
 import com.sonique.app.ui.component.FreshQueueSheet
 import com.sonique.app.ui.component.LyricsView
+import com.sonique.app.ui.component.ModernMoreOptionsSheet
 import com.sonique.app.ui.component.NowPlayingBottomSheet
 import com.sonique.app.ui.component.QueueBottomSheet
 import com.sonique.app.viewModel.NowPlayingScreenData
@@ -881,13 +882,12 @@ fun NewPlayerScreen(
             }
 
             if (showMoreOptions) {
-                NowPlayingBottomSheet(
+                ModernMoreOptionsSheet(
                     onDismiss = { showMoreOptions = false },
                     navController = navController,
                     onNavigateToOtherScreen = onDismiss,
                     song = nowPlayingState?.songEntity,
                     viewModel = nowPlayingBottomSheetViewModel,
-                    setSleepTimerEnable = true,
                 )
             }
 

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -88,8 +87,8 @@ import sonique.composeapp.generated.resources.metro_volume_up
 
 /**
  * Modern 3-Dot More Options Bottom Sheet for NewPlayerScreen.
- * Material 3 Expressive design:
- * - Interactive custom Volume Slider
+ * Strictly uses Sonique's MaterialTheme.colorScheme tokens with no hardcoded colors:
+ * - Interactive Volume Slider pill using primary / surfaceVariant / onPrimary
  * - 3 Action Cards (Start radio, Add to playlist, Copy link)
  * - 7 Rounded Option Cards (View artist, Add to library, Pin to speed dial,
  *   Download, Listen Together, Details, Equalizer)
@@ -102,6 +101,8 @@ fun ModernMoreOptionsSheet(
     song: SongEntity?,
     viewModel: NowPlayingBottomSheetViewModel,
     onNavigateToOtherScreen: () -> Unit = {},
+    backgroundColor: Color? = null,
+    contentColor: Color? = null,
     mediaPlayerHandler: MediaPlayerHandler = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -161,9 +162,9 @@ fun ModernMoreOptionsSheet(
 
         AlertDialog(
             onDismissRequest = { showDetailsDialog = false },
-            containerColor = Color(0xFF1E2125),
-            titleContentColor = Color.White,
-            textContentColor = Color.White.copy(alpha = 0.85f),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             title = {
                 Text(
                     text = "Details",
@@ -195,9 +196,9 @@ fun ModernMoreOptionsSheet(
 
     if (showCancelDownloadDialog) {
         AlertDialog(
-            containerColor = Color(0xFF1E2125),
-            titleContentColor = Color.White,
-            textContentColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
             onDismissRequest = { showCancelDownloadDialog = false },
             confirmButton = {
                 TextButton(onClick = {
@@ -209,7 +210,7 @@ fun ModernMoreOptionsSheet(
             },
             dismissButton = {
                 TextButton(onClick = { showCancelDownloadDialog = false }) {
-                    Text("Cancel", color = Color.White.copy(alpha = 0.7f))
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             title = { Text("Download") },
@@ -220,14 +221,17 @@ fun ModernMoreOptionsSheet(
         )
     }
 
-    val sheetBg = Color(0xFF131518)
-    val cardBg = Color(0xFF1A1D21)
+    val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
+    val finalContent = contentColor ?: MaterialTheme.colorScheme.onSurface
+    val cardBg = MaterialTheme.colorScheme.surfaceVariant
+    val cardContent = MaterialTheme.colorScheme.onSurface
+    val cardSecondaryContent = MaterialTheme.colorScheme.onSurfaceVariant
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = sheetBg,
-        contentColor = Color.White,
+        contentColor = finalContent,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         dragHandle = {
             Box(
@@ -236,7 +240,7 @@ fun ModernMoreOptionsSheet(
                     .width(36.dp)
                     .height(4.dp)
                     .clip(CircleShape)
-                    .background(Color.White.copy(alpha = 0.25f))
+                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
             )
         },
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
@@ -256,7 +260,7 @@ fun ModernMoreOptionsSheet(
             item {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = 8.dp),
-                    color = Color.White.copy(alpha = 0.10f),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     thickness = 0.8.dp
                 )
             }
@@ -273,6 +277,8 @@ fun ModernMoreOptionsSheet(
                         icon = Res.drawable.metro_radio,
                         label = "Start radio",
                         cardBg = cardBg,
+                        iconTint = cardContent,
+                        labelColor = cardSecondaryContent,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             if (songId.isNotBlank()) {
@@ -294,6 +300,8 @@ fun ModernMoreOptionsSheet(
                         icon = Res.drawable.baseline_playlist_add_24,
                         label = "Add to playlist",
                         cardBg = cardBg,
+                        iconTint = cardContent,
+                        labelColor = cardSecondaryContent,
                         modifier = Modifier.weight(1f),
                         onClick = { addToAPlaylist = true }
                     )
@@ -302,6 +310,8 @@ fun ModernMoreOptionsSheet(
                         icon = Res.drawable.metro_link,
                         label = "Copy link",
                         cardBg = cardBg,
+                        iconTint = cardContent,
+                        labelColor = cardSecondaryContent,
                         modifier = Modifier.weight(1f),
                         onClick = {
                             if (songId.isNotBlank()) {
@@ -325,6 +335,8 @@ fun ModernMoreOptionsSheet(
                     title = "View artist",
                     subtitle = artistNames.ifBlank { null },
                     cardBg = cardBg,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
                     onClick = {
                         if (uiState.songUIState.listArtists.isNotEmpty() || !song?.artistName.isNullOrEmpty()) {
                             showArtistSheet = true
@@ -342,6 +354,8 @@ fun ModernMoreOptionsSheet(
                     title = if (isLiked) "In library" else "Add to library",
                     subtitle = null,
                     cardBg = cardBg,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
                     onClick = {
                         viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.ToggleLike)
                         showToast(if (!isLiked) "Added to library" else "Removed from library", ToastGravity.Bottom)
@@ -355,6 +369,8 @@ fun ModernMoreOptionsSheet(
                     title = "Pin to speed dial",
                     subtitle = null,
                     cardBg = cardBg,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
                     onClick = {
                         showToast("Pinned to speed dial", ToastGravity.Bottom)
                     }
@@ -374,6 +390,8 @@ fun ModernMoreOptionsSheet(
                     title = downloadText,
                     subtitle = null,
                     cardBg = cardBg,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
                     onClick = {
                         if (downloadState == DownloadState.STATE_DOWNLOADED ||
                             downloadState == DownloadState.STATE_DOWNLOADING ||
@@ -393,6 +411,8 @@ fun ModernMoreOptionsSheet(
                     title = "Listen Together",
                     subtitle = null,
                     cardBg = cardBg,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
                     onClick = {
                         scope.launch {
                             sheetState.hide()
@@ -410,6 +430,8 @@ fun ModernMoreOptionsSheet(
                     title = "Details",
                     subtitle = "View the song's details",
                     cardBg = cardBg,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
                     onClick = { showDetailsDialog = true }
                 )
             }
@@ -420,6 +442,8 @@ fun ModernMoreOptionsSheet(
                     title = "Equalizer",
                     subtitle = "Open the audio equalizer",
                     cardBg = cardBg,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
                     onClick = { eqLauncher.launch() }
                 )
             }
@@ -428,18 +452,18 @@ fun ModernMoreOptionsSheet(
 }
 
 /**
- * Interactive Material 3 volume bar pill:
- * Filled progress on left (light blue #9EC4D5), dark track on right (#1E2226),
- * volume icon inside left, vertical level indicator bar at the split.
+ * Interactive Material 3 volume bar pill strictly styled via MaterialTheme tokens:
+ * Filled progress uses primary / primaryContainer, track background uses surfaceVariant,
+ * indicator bar and speaker icon use onPrimary / onPrimaryContainer.
  */
 @Composable
 private fun ModernVolumeSlider(modifier: Modifier = Modifier) {
     val volumeController = rememberVolumeController()
     val currentVol = volumeController.currentVolume
 
-    val sliderColor = Color(0xFF9EC4D5)
-    val trackBgColor = Color(0xFF1E2226)
-    val indicatorColor = Color(0xFF12232E)
+    val sliderColor = MaterialTheme.colorScheme.primary
+    val trackBgColor = MaterialTheme.colorScheme.surfaceVariant
+    val indicatorColor = MaterialTheme.colorScheme.onPrimary
 
     BoxWithConstraints(
         modifier = modifier
@@ -493,7 +517,7 @@ private fun ModernVolumeSlider(modifier: Modifier = Modifier) {
         Icon(
             painter = painterResource(iconRes),
             contentDescription = "Volume",
-            tint = if (currentVol > 0.08f) indicatorColor else Color.White,
+            tint = if (currentVol > 0.08f) indicatorColor else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 16.dp)
@@ -518,6 +542,8 @@ private fun ModernQuickActionCard(
     icon: DrawableResource,
     label: String,
     cardBg: Color,
+    iconTint: Color,
+    labelColor: Color,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
@@ -537,7 +563,7 @@ private fun ModernQuickActionCard(
             Icon(
                 painter = painterResource(icon),
                 contentDescription = label,
-                tint = Color.White,
+                tint = iconTint,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -548,7 +574,7 @@ private fun ModernQuickActionCard(
                     fontWeight = FontWeight.Normal,
                     textAlign = TextAlign.Center
                 ),
-                color = Color.White.copy(alpha = 0.85f),
+                color = labelColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -563,6 +589,8 @@ private fun ModernQuickActionCard(
 private fun ModernOptionCard(
     title: String,
     cardBg: Color,
+    contentColor: Color,
+    secondaryContentColor: Color,
     subtitle: String? = null,
     iconRes: DrawableResource? = null,
     iconVector: ImageVector? = null,
@@ -581,14 +609,14 @@ private fun ModernOptionCard(
             Icon(
                 painter = painterResource(iconRes),
                 contentDescription = title,
-                tint = Color.White,
+                tint = contentColor,
                 modifier = Modifier.size(24.dp)
             )
         } else if (iconVector != null) {
             Icon(
                 imageVector = iconVector,
                 contentDescription = title,
-                tint = Color.White,
+                tint = contentColor,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -602,7 +630,7 @@ private fun ModernOptionCard(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
                 ),
-                color = Color.White,
+                color = contentColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -614,7 +642,7 @@ private fun ModernOptionCard(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Normal
                     ),
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = secondaryContentColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -634,7 +662,7 @@ private fun SongDetailRow(label: String, value: String) {
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color.White.copy(alpha = 0.9f)
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

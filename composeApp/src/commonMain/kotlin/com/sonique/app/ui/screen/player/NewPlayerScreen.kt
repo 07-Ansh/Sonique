@@ -182,7 +182,8 @@ fun NewPlayerScreen(
     var isLyricsAutoScrollEnabled by remember { mutableStateOf(true) }
 
     val paletteState = com.kmpalette.rememberPaletteState()
-    val startColor = remember { androidx.compose.animation.Animatable(Color(0xFF1C1B1F)) }
+    val defaultBg = MaterialTheme.colorScheme.background
+    val startColor = remember(defaultBg) { androidx.compose.animation.Animatable(defaultBg) }
 
     LaunchedEffect(currentSongData?.bitmap) {
         currentSongData?.bitmap?.let { bitmap ->
@@ -274,7 +275,7 @@ fun NewPlayerScreen(
                     }
                 )
             }
-            .background(Color(0xFF1C1B1F)) // Sonique surfaceContainer default dark
+            .background(defaultBg) // Sonique surfaceContainer/background theme color
     ) {
 
         AnimatedContent(
@@ -989,7 +990,7 @@ fun NewPlayerScreen(
             if (showQueueSheet) {
                 FreshQueueSheet(
                     onDismiss = { showQueueSheet = false },
-                    backgroundColor = if (ambienceMode && startColor.value != Color(0xFF1C1B1F)) startColor.value.copy(alpha = 1f) else Color(0xFF191C1E),
+                    backgroundColor = if (ambienceMode && startColor.value != defaultBg) startColor.value.copy(alpha = 1f) else defaultBg,
                 )
             }
         }

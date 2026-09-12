@@ -990,7 +990,7 @@ fun NewPlayerScreen(
             if (showQueueSheet) {
                 FreshQueueSheet(
                     onDismiss = { showQueueSheet = false },
-                    backgroundColor = if (ambienceMode && startColor.value != defaultBg) startColor.value.copy(alpha = 1f) else defaultBg,
+                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 )
             }
         }

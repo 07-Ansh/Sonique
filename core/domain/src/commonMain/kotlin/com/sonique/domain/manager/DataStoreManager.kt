@@ -1,6 +1,7 @@
 package com.sonique.domain.manager
 
 import com.sonique.domain.data.model.network.ProxyConfiguration
+import com.sonique.domain.data.player.ReverbPreset
 import kotlinx.coroutines.flow.Flow
 
 interface DataStoreManager {
@@ -111,6 +112,30 @@ interface DataStoreManager {
     val translationLanguage: Flow<String>
 
     suspend fun setTranslationLanguage(language: String)
+
+    val useAITranslation: Flow<String>
+
+    suspend fun setUseAITranslation(use: Boolean)
+
+    val aiProvider: Flow<String>
+
+    suspend fun setAIProvider(provider: String)
+
+    val aiApiKey: Flow<String>
+
+    suspend fun setAIApiKey(apiKey: String)
+
+    val customModelId: Flow<String>
+
+    suspend fun setCustomModelId(modelId: String)
+
+    val customOpenAIBaseUrl: Flow<String>
+
+    suspend fun setCustomOpenAIBaseUrl(baseUrl: String)
+
+    val customOpenAIHeaders: Flow<String>
+
+    suspend fun setCustomOpenAIHeaders(headers: String)
 
     val maxSongCacheSize: Flow<Int>
 
@@ -262,6 +287,10 @@ interface DataStoreManager {
 
     suspend fun setCrossfadeDjMode(enabled: Boolean)
 
+    val crossfadeSkipAlbum: Flow<String>
+
+    suspend fun setCrossfadeSkipAlbum(enabled: Boolean)
+
 
 
     val youtubeSubtitleLanguage: Flow<String>
@@ -305,8 +334,33 @@ interface DataStoreManager {
 
     val showMostPlayed: Flow<String>
     suspend fun setShowMostPlayed(show: Boolean)
-    
 
+    val delayEnabled: Flow<String>
+    suspend fun setDelayEnabled(enabled: Boolean)
+
+    val delayTimeMs: Flow<Int>
+    suspend fun setDelayTimeMs(timeMs: Int)
+
+    val delayFeedback: Flow<Float>
+    suspend fun setDelayFeedback(feedback: Float)
+
+    val delayMix: Flow<Float>
+    suspend fun setDelayMix(mix: Float)
+
+    val reverbEnabled: Flow<String>
+    suspend fun setReverbEnabled(enabled: Boolean)
+
+    val reverbPreset: Flow<String>
+    suspend fun setReverbPreset(preset: ReverbPreset)
+
+    val reverbMix: Flow<Float>
+    suspend fun setReverbMix(mix: Float)
+
+    val lyricsOffsetMs: Flow<Int>
+    suspend fun setLyricsOffsetMs(offsetMs: Int)
+
+    val romanizationLanguages: Flow<String>
+    suspend fun setRomanizationLanguages(languages: String)
 
     enum class ProxyType {
         PROXY_TYPE_HTTP,
@@ -316,6 +370,7 @@ interface DataStoreManager {
     companion object Values {
         const val YOUTUBE = "youtube"
         const val LRCLIB = "lrclib"
+        const val BETTER_LYRICS = "better_lyrics"
 
         const val FDROID = "fdroid"
         const val GITHUB_FOSS_NIGHTLY = "github_foss_nightly"
@@ -337,6 +392,10 @@ interface DataStoreManager {
         const val LOCAL_PLAYLIST_FILTER_CUSTOM_ORDER = "custom_order"
 
         const val CROSSFADE_DURATION_AUTO = 0
+ 
+        const val AI_PROVIDER_GEMINI = "gemini"
+        const val AI_PROVIDER_OPENAI = "openai"
+        const val AI_PROVIDER_CUSTOM_OPENAI = "custom_openai"
 
 
     }

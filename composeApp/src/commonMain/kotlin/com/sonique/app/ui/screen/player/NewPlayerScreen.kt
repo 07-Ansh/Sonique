@@ -197,6 +197,13 @@ fun NewPlayerScreen(
         }
     }
 
+    // Shared sheet background: album art palette color (opaque) when ambience mode is on,
+    // otherwise the standard solid card surface color.
+    val sheetBg = if (ambienceMode && startColor.value != defaultBg)
+        startColor.value.copy(alpha = 1f)
+    else
+        MaterialTheme.colorScheme.surfaceContainerHigh
+
     val offsetYAnimatable = remember { Animatable(0f) }
     val velocityTracker = remember { VelocityTracker() }
     val scope = rememberCoroutineScope()
@@ -889,6 +896,7 @@ fun NewPlayerScreen(
                     onNavigateToOtherScreen = onDismiss,
                     song = nowPlayingState?.songEntity,
                     viewModel = nowPlayingBottomSheetViewModel,
+                    backgroundColor = sheetBg,
                 )
             }
 
@@ -990,7 +998,7 @@ fun NewPlayerScreen(
             if (showQueueSheet) {
                 FreshQueueSheet(
                     onDismiss = { showQueueSheet = false },
-                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    backgroundColor = sheetBg,
                 )
             }
         }

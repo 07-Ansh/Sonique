@@ -23,6 +23,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.Lock
@@ -89,8 +91,44 @@ fun FreshQueueSheet(
     musicServiceHandler: MediaPlayerHandler = koinInject(),
     dataStoreManager: DataStoreManager = koinInject(),
 ) {
-    val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
+    val finalContent = contentColor ?: Color.White
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = sheetBg,
+        contentColor = finalContent,
+        dragHandle = null,
+        shape = RectangleShape,
+        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+        modifier = Modifier.fillMaxHeight(),
+    ) {
+        FreshQueueContent(
+            onDismiss = onDismiss,
+            backgroundColor = backgroundColor,
+            contentColor = contentColor,
+            sharedViewModel = sharedViewModel,
+            musicServiceHandler = musicServiceHandler,
+            dataStoreManager = dataStoreManager,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FreshQueueContent(
+    modifier: Modifier = Modifier,
+    nestedScrollConnection: NestedScrollConnection? = null,
+    onDismiss: () -> Unit,
+    backgroundColor: Color? = null,
+    contentColor: Color? = null,
+    sharedViewModel: SharedViewModel = koinInject(),
+    musicServiceHandler: MediaPlayerHandler = koinInject(),
+    dataStoreManager: DataStoreManager = koinInject(),
+) {
+    val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
@@ -177,99 +215,104 @@ fun FreshQueueSheet(
     val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
     val finalContent = contentColor ?: Color.White
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = sheetBg,
-        contentColor = finalContent,
-        dragHandle = null,
-        shape = RectangleShape,
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-        modifier = Modifier.fillMaxHeight(),
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(sheetBg)
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(sheetBg)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(sheetBg)
-            ) {
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(start = 16.dp, end = 20.dp, top = 16.dp, bottom = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = "Collapse queue",
+                        tint = finalContent,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Text(
+                    text = screenDataState.playlistName.ifBlank {
+                        queue.getOrNull(currentSongIndex)?.title?.let { "$it Mix" } ?: "Current Queue"
+                    },
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 17.sp,
+                        lineHeight = 22.sp
+                    ),
+                    color = finalContent,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            dataStoreManager.setEndlessQueue(!endlessQueueEnable)
+                        }
+                    },
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (endlessQueueEnable) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
+                        contentDescription = "Endless Queue",
+                        tint = if (endlessQueueEnable) finalContent else finalContent.copy(alpha = 0.5f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.End
                 ) {
                     Text(
-                        text = screenDataState.playlistName.ifBlank {
-                            queue.getOrNull(currentSongIndex)?.title?.let { "$it Mix" } ?: "Current Queue"
-                        },
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 17.sp,
-                            lineHeight = 22.sp
+                        text = "${queue.size} songs",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Normal
                         ),
-                        color = finalContent,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        color = finalContent.copy(alpha = 0.75f)
                     )
-
-                    IconButton(
-                        onClick = {
-                            scope.launch {
-                                dataStoreManager.setEndlessQueue(!endlessQueueEnable)
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (endlessQueueEnable) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
-                            contentDescription = "Endless Queue",
-                            tint = if (endlessQueueEnable) finalContent else finalContent.copy(alpha = 0.5f),
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-
-                    Column(
-                        horizontalAlignment = Alignment.End
-                    ) {
+                    if (totalDurationText.isNotEmpty()) {
                         Text(
-                            text = "${queue.size} songs",
+                            text = totalDurationText,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal
                             ),
                             color = finalContent.copy(alpha = 0.75f)
                         )
-                        if (totalDurationText.isNotEmpty()) {
-                            Text(
-                                text = totalDurationText,
-                                style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Normal
-                                ),
-                                color = finalContent.copy(alpha = 0.75f)
-                            )
-                        }
                     }
                 }
+            }
 
-                LazyColumn(
-                    state = lazyListState,
-                    contentPadding = PaddingValues(
-                        start = 12.dp,
-                        end = 12.dp,
-                        top = 4.dp,
-                        bottom = 88.dp
-                    ),
-                    modifier = Modifier.fillMaxSize()
-                ) {
+            LazyColumn(
+                state = lazyListState,
+                contentPadding = PaddingValues(
+                    start = 12.dp,
+                    end = 12.dp,
+                    top = 4.dp,
+                    bottom = 88.dp
+                ),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier)
+            ) {
                     itemsIndexed(
                         items = visibleQueue,
                         key = { index, track -> "${track.videoId}_${currentSongIndex + index}" },
@@ -513,4 +556,3 @@ fun FreshQueueSheet(
             }
         }
     }
-}

@@ -2,6 +2,9 @@ package com.sonique.app.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +18,10 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -35,9 +41,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,11 +55,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -102,11 +113,12 @@ fun ModernMoreOptionsSheet(
     viewModel: NowPlayingBottomSheetViewModel,
     onNavigateToOtherScreen: () -> Unit = {},
     backgroundColor: Color? = null,
+    accentColor: Color? = null,
     contentColor: Color? = null,
     mediaPlayerHandler: MediaPlayerHandler = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(song) {
@@ -222,10 +234,16 @@ fun ModernMoreOptionsSheet(
     }
 
     val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
-    val finalContent = contentColor ?: MaterialTheme.colorScheme.onSurface
-    val cardBg = MaterialTheme.colorScheme.surfaceVariant
-    val cardContent = MaterialTheme.colorScheme.onSurface
-    val cardSecondaryContent = MaterialTheme.colorScheme.onSurfaceVariant
+    val finalContent = contentColor ?: Color.White
+    val finalAccent = accentColor ?: MaterialTheme.colorScheme.primaryContainer
+    // If a custom album-art color is provided, derive the card bg from it (slightly brightened)
+    // so cards feel elevated over the sheet. Otherwise fall back to the theme's surfaceVariant.
+    val cardBg = if (backgroundColor != null)
+        Color.White.copy(alpha = 0.12f).compositeOver(sheetBg)
+    else
+        MaterialTheme.colorScheme.surfaceVariant
+    val cardContent = Color.White
+    val cardSecondaryContent = Color.White.copy(alpha = 0.72f)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -236,6 +254,7 @@ fun ModernMoreOptionsSheet(
         dragHandle = {
             Box(
                 modifier = Modifier
+                    .statusBarsPadding()
                     .padding(top = 12.dp, bottom = 8.dp)
                     .width(36.dp)
                     .height(4.dp)
@@ -244,23 +263,29 @@ fun ModernMoreOptionsSheet(
             )
         },
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
+        modifier = Modifier.fillMaxHeight(),
     ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
+                .fillMaxHeight()
                 .navigationBarsPadding(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 28.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
             item {
-                ModernVolumeSlider(modifier = Modifier.fillMaxWidth())
+                ModernVolumeSlider(
+                    accentColor = finalAccent,
+                    sheetBg = sheetBg,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
 
             item {
                 HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+                    color = Color.White.copy(alpha = 0.15f),
                     thickness = 0.8.dp
                 )
             }
@@ -456,81 +481,139 @@ fun ModernMoreOptionsSheet(
  * Filled progress uses primary / primaryContainer, track background uses surfaceVariant,
  * indicator bar and speaker icon use onPrimary / onPrimaryContainer.
  */
+/**
+ * Google Material 3 Expressive Volume Slider.
+ * Material 3 Expressive Slider specifications:
+ * - Track height: 40dp
+ * - Track corner radius: 12dp (RoundedCornerShape(12.dp), NOT round circle)
+ * - Handle: 4dp width, 36dp height, 2dp corner radius
+ * - Thumb-track gap size: 6dp
+ * - End stop indicator: 8dp circle
+ * - Inset volume icon: 22dp, adaptive contrast
+ */
 @Composable
-private fun ModernVolumeSlider(modifier: Modifier = Modifier) {
+private fun ModernVolumeSlider(
+    accentColor: Color,
+    sheetBg: Color,
+    modifier: Modifier = Modifier,
+) {
     val volumeController = rememberVolumeController()
     val currentVol = volumeController.currentVolume
 
-    val sliderColor = MaterialTheme.colorScheme.primary
-    val trackBgColor = MaterialTheme.colorScheme.surfaceVariant
-    val indicatorColor = MaterialTheme.colorScheme.onPrimary
+    var sliderPosition by remember { mutableFloatStateOf(currentVol) }
+    LaunchedEffect(currentVol) { sliderPosition = currentVol }
 
-    BoxWithConstraints(
+    val inactiveTrackColor = Color.White.copy(alpha = 0.08f).compositeOver(sheetBg)
+    val trackCornerRadius = 12.dp
+
+    Box(
         modifier = modifier
-            .height(56.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(trackBgColor)
-            .pointerInput(volumeController) {
-                detectTapGestures { offset ->
-                    val fraction = (offset.x / size.width.toFloat()).coerceIn(0f, 1f)
-                    volumeController.setVolume(fraction)
-                }
-            }
-            .pointerInput(volumeController) {
-                detectHorizontalDragGestures { change, _ ->
-                    val fraction = (change.position.x / size.width.toFloat()).coerceIn(0f, 1f)
-                    volumeController.setVolume(fraction)
-                }
-            }
+            .fillMaxWidth()
+            .height(48.dp),
+        contentAlignment = Alignment.Center
     ) {
-        val totalWidth = maxWidth
-        val filledWidth = totalWidth * currentVol
-
-        // Filled portion
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
-                .fillMaxHeight()
-                .width(filledWidth)
-                .background(sliderColor)
-        )
+                .fillMaxWidth()
+                .height(40.dp)
+                .clip(RoundedCornerShape(trackCornerRadius))
+                .background(inactiveTrackColor)
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        val down = awaitFirstDown()
+                        val initialVol = (down.position.x / size.width).coerceIn(0f, 1f)
+                        sliderPosition = initialVol
+                        volumeController.setVolume(initialVol)
 
-        // Vertical indicator line at current volume level
-        if (currentVol > 0.03f) {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            val change = event.changes.firstOrNull() ?: break
+                            if (!change.pressed) break
+                            change.consume()
+                            val newVol = (change.position.x / size.width).coerceIn(0f, 1f)
+                            sliderPosition = newVol
+                            volumeController.setVolume(newVol)
+                        }
+                    }
+                },
+            contentAlignment = Alignment.CenterStart
+        ) {
+            val totalWidthPx = constraints.maxWidth.toFloat()
+            val fraction = sliderPosition.coerceIn(0f, 1f)
+
+            val density = LocalDensity.current
+            val thumbWidthPx = with(density) { 4.dp.toPx() }
+            val gapPx = with(density) { 6.dp.toPx() }
+
+            // Position of the vertical thumb bar
+            val thumbX = (fraction * (totalWidthPx - thumbWidthPx)).coerceIn(0f, totalWidthPx - thumbWidthPx)
+            val activeWidthPx = (thumbX - gapPx).coerceAtLeast(0f)
+
+            // 1. Active Fill Track (left is clipped by 12dp corner; right edge is flat and straight)
+            if (activeWidthPx > 0f) {
+                val activeWidthDp = with(density) { activeWidthPx.toDp() }
+                Box(
+                    modifier = Modifier
+                        .width(activeWidthDp)
+                        .fillMaxHeight()
+                        .background(accentColor)
+                )
+            }
+
+            // Stop indicator: subtle dot at right end when volume is not max
+            if (sliderPosition < 0.90f) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 12.dp)
+                        .size(8.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.25f))
+                )
+            }
+
+            // 2. Vertical Thumb Bar (Google Material 3 Expressive handle)
+            val thumbOffsetXDp = with(density) { thumbX.toDp() }
             Box(
                 modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = (filledWidth - 10.dp).coerceAtLeast(0.dp))
-                    .width(3.dp)
-                    .height(28.dp)
-                    .clip(RoundedCornerShape(1.5.dp))
-                    .background(indicatorColor)
+                    .offset(x = thumbOffsetXDp)
+                    .width(4.dp)
+                    .height(34.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(accentColor)
+            )
+
+            val iconRes = when {
+                sliderPosition <= 0.01f -> Res.drawable.metro_volume_mute
+                sliderPosition < 0.5f   -> Res.drawable.metro_volume_down
+                else                    -> Res.drawable.metro_volume_up
+            }
+
+            // Icon tint: dark high-contrast when inside the active light fill, white otherwise
+            val iconThresholdPx = with(density) { 46.dp.toPx() }
+            val iconTint = if (activeWidthPx > iconThresholdPx) {
+                Color(0xFF14222E)
+            } else {
+                Color.White
+            }
+
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = "Volume",
+                tint = iconTint,
+                modifier = Modifier
+                    .padding(start = 12.dp)
+                    .size(20.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        val next = if (sliderPosition > 0.01f) 0f else 0.5f
+                        sliderPosition = next
+                        volumeController.setVolume(next)
+                    }
             )
         }
-
-        // Speaker icon on the left
-        val iconRes = when {
-            currentVol <= 0.01f -> Res.drawable.metro_volume_mute
-            currentVol < 0.5f -> Res.drawable.metro_volume_down
-            else -> Res.drawable.metro_volume_up
-        }
-
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = "Volume",
-            tint = if (currentVol > 0.08f) indicatorColor else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp)
-                .size(24.dp)
-                .clickable {
-                    // Tap speaker icon toggles mute / 50%
-                    if (currentVol > 0.01f) {
-                        volumeController.setVolume(0f)
-                    } else {
-                        volumeController.setVolume(0.5f)
-                    }
-                }
-        )
     }
 }
 

@@ -1,14 +1,21 @@
 package com.sonique.app.ui.screen.player
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import com.sonique.app.extension.getColorFromPalette
+import com.sonique.app.extension.getAmbientSheetColor
+import com.sonique.app.extension.getAmbientAccentColor
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import com.sonique.logger.Logger
 import com.sonique.app.ui.component.GoogleCircularProgressIndicator
 import kotlinx.coroutines.launch
 import androidx.compose.animation.AnimatedContent
@@ -40,6 +47,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -100,7 +110,17 @@ import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import com.sonique.app.expect.ui.toImageBitmap
+import com.sonique.app.extension.getAmbientSheetColor
 import com.sonique.app.extension.formatDuration
+import com.sonique.app.ui.component.BottomSheet
+import com.sonique.app.ui.component.rememberBottomSheetState
+import com.sonique.app.ui.component.collapsedAnchor
+import com.sonique.app.ui.component.FreshQueueContent
 import com.sonique.app.ui.component.FreshPlayerMenuSheet
 import com.sonique.app.ui.component.FreshQueueSheet
 import com.sonique.app.ui.component.LyricsView
@@ -110,6 +130,7 @@ import com.sonique.app.ui.component.QueueBottomSheet
 import com.sonique.app.viewModel.NowPlayingScreenData
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UIEvent
+import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
 import com.sonique.domain.mediaservice.handler.RepeatState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
@@ -151,6 +172,7 @@ private val ThumbnailCornerRadius = 3.dp  // cornerRadius * 2 = 6.dp applied in 
 @Composable
 fun NewPlayerScreen(
     sharedViewModel: SharedViewModel = koinInject(),
+    musicServiceHandler: MediaPlayerHandler = koinInject(),
     navController: NavController,
     isVisible: Boolean = false,
     onDismiss: () -> Unit = {},
@@ -174,33 +196,69 @@ fun NewPlayerScreen(
         ?: "Current Queue"
 
     // Sheet/dialog visibility state
-    var showQueueSheet by remember { mutableStateOf(false) }
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showMoreOptions by remember { mutableStateOf(false) }
     var showLyricsMenu by remember { mutableStateOf(false) }
     var isLyricsAutoScrollEnabled by remember { mutableStateOf(true) }
+    val coroutineScope = rememberCoroutineScope()
 
     val paletteState = com.kmpalette.rememberPaletteState()
     val defaultBg = MaterialTheme.colorScheme.background
     val startColor = remember(defaultBg) { androidx.compose.animation.Animatable(defaultBg) }
+    val defaultSheetBg = MaterialTheme.colorScheme.surfaceContainerHigh
+    val ambientSheetColor = remember(defaultSheetBg) { androidx.compose.animation.Animatable(defaultSheetBg) }
+    val ambientAccentColor = remember { androidx.compose.animation.Animatable(Color(0xFF90CAF9)) }
+    var extractedBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
-    LaunchedEffect(currentSongData?.bitmap) {
-        currentSongData?.bitmap?.let { bitmap ->
-            paletteState.generate(bitmap)
+    val platformContext = LocalPlatformContext.current
+    LaunchedEffect(trackArtwork) {
+        if (trackArtwork.isNotEmpty()) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val request = ImageRequest.Builder(platformContext)
+                        .data(trackArtwork)
+                        .build()
+                    val result = coil3.SingletonImageLoader.get(platformContext).execute(request)
+                    if (result is coil3.request.SuccessResult) {
+                        val bm = result.image.toImageBitmap()
+                        extractedBitmap = bm
+                        sharedViewModel.setBitmap(bm)
+                    }
+                } catch (e: Exception) {
+                    Logger.e("NewPlayerScreen", "Failed to extract bitmap: ${e.message}")
+                }
+            }
         }
     }
 
-    LaunchedEffect(paletteState.palette) {
-        paletteState.palette?.let { palette ->
-            startColor.animateTo(palette.getColorFromPalette())
+    LaunchedEffect(extractedBitmap, currentSongData?.bitmap) {
+        val bm = extractedBitmap ?: currentSongData?.bitmap
+        if (bm != null) {
+            try {
+                paletteState.generate(bm)
+            } catch (e: Exception) {
+                Logger.e("NewPlayerScreen", "Failed to generate palette: ${e.message}")
+            }
         }
     }
 
-    // Shared sheet background: album art palette color (opaque) when ambience mode is on,
+    LaunchedEffect(Unit) {
+        snapshotFlow { paletteState.palette }
+            .distinctUntilChanged()
+            .collectLatest { pal ->
+                pal?.let {
+                    startColor.animateTo(it.getColorFromPalette())
+                    ambientSheetColor.animateTo(it.getAmbientSheetColor())
+                    ambientAccentColor.animateTo(it.getAmbientAccentColor())
+                }
+            }
+    }
+
+    // Shared sheet background: album art palette color (opaque) when available,
     // otherwise the standard solid card surface color.
-    val sheetBg = if (ambienceMode && startColor.value != defaultBg)
-        startColor.value.copy(alpha = 1f)
+    val sheetBg = if (ambientSheetColor.value != defaultSheetBg)
+        ambientSheetColor.value.copy(alpha = 1f)
     else
         MaterialTheme.colorScheme.surfaceContainerHigh
 
@@ -234,7 +292,7 @@ fun NewPlayerScreen(
     val sideButtonContainerColor = Color.White.copy(alpha = 0.12f)
     val sideButtonContentColor = Color.White
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .graphicsLayer {
@@ -284,6 +342,14 @@ fun NewPlayerScreen(
             }
             .background(defaultBg) // Sonique surfaceContainer/background theme color
     ) {
+        val bottomInsets = WindowInsets.systemBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
+        val collapsedBarHeight = 66.dp + bottomInsets
+        val queueSheetState = rememberBottomSheetState(
+            dismissedBound = 0.dp,
+            expandedBound = maxHeight,
+            collapsedBound = collapsedBarHeight,
+            initialAnchor = collapsedAnchor
+        )
 
         AnimatedContent(
             targetState = if (ambienceMode) trackArtwork else "",
@@ -445,30 +511,89 @@ fun NewPlayerScreen(
                                 }
                             }
                         } else {
+                            // Album artwork — smooth horizontal swipe to switch tracks
+                            val queue = queueData?.data?.listTracks ?: emptyList()
+                            val currentOrderIndex = musicServiceHandler.currentOrderIndex()
+                            val canSkipPrevious = currentOrderIndex > 0
+                            val canSkipNext = currentOrderIndex < queue.size - 1
 
-                            // Album artwork — crossfade between songs
+                            val prevArtwork = if (canSkipPrevious) queue[currentOrderIndex - 1].thumbnails?.lastOrNull()?.url ?: "" else ""
+                            val currArtwork = trackArtwork.ifEmpty { queue.getOrNull(currentOrderIndex)?.thumbnails?.lastOrNull()?.url ?: "" }
+                            val nextArtwork = if (canSkipNext) queue[currentOrderIndex + 1].thumbnails?.lastOrNull()?.url ?: "" else ""
+
+                            val pagerState = rememberPagerState(
+                                initialPage = 1,
+                                pageCount = { 3 }
+                            )
+
+                            // Keep pager centered on current song when song changes
+                            LaunchedEffect(currentOrderIndex, trackArtwork) {
+                                if (pagerState.currentPage != 1) {
+                                    pagerState.scrollToPage(1)
+                                }
+                            }
+
+                            // Trigger previous/next track when user slides album art
+                            LaunchedEffect(pagerState.settledPage) {
+                                if (pagerState.settledPage == 2 && canSkipNext) {
+                                    sharedViewModel.onUIEvent(UIEvent.Next)
+                                    pagerState.scrollToPage(1)
+                                } else if (pagerState.settledPage == 0 && canSkipPrevious) {
+                                    sharedViewModel.onUIEvent(UIEvent.Previous)
+                                    pagerState.scrollToPage(1)
+                                } else if (pagerState.settledPage != 1) {
+                                    pagerState.animateScrollToPage(1)
+                                }
+                            }
+
                             BoxWithConstraints(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                val thumbnailSize = maxWidth - (PlayerHorizontalPadding * 2)
-                                Box(
-                                    modifier = Modifier
-                                        .size(thumbnailSize)
-                                        .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
-                                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                                ) {
-                                    if (trackArtwork.isNotEmpty()) {
-                                        AsyncImage(
-                                            model = ImageRequest
-                                                .Builder(LocalPlatformContext.current)
-                                                .data(trackArtwork)
-                                                .crossfade(true)
-                                                .build(),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
+                                val maxAllowedSize = minOf(maxWidth - (PlayerHorizontalPadding * 2), maxHeight - 12.dp)
+                                val thumbnailSize = if (maxAllowedSize > 120.dp) maxAllowedSize else (maxWidth - (PlayerHorizontalPadding * 2))
+
+                                HorizontalPager(
+                                    state = pagerState,
+                                    modifier = Modifier.fillMaxSize(),
+                                    userScrollEnabled = !showInlineLyrics,
+                                ) { page ->
+                                    val artUrl = when (page) {
+                                        0 -> prevArtwork
+                                        1 -> currArtwork
+                                        2 -> nextArtwork
+                                        else -> ""
+                                    }
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(thumbnailSize)
+                                                .clip(RoundedCornerShape(ThumbnailCornerRadius * 2)) // 6.dp
+                                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                        ) {
+                                            if (artUrl.isNotEmpty()) {
+                                                AsyncImage(
+                                                    model = ImageRequest
+                                                        .Builder(LocalPlatformContext.current)
+                                                        .data(artUrl)
+                                                        .crossfade(true)
+                                                        .build(),
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                    onSuccess = {
+                                                        if (page == 1) {
+                                                            val bm = it.result.image.toImageBitmap()
+                                                            extractedBitmap = bm
+                                                            sharedViewModel.setBitmap(bm)
+                                                        }
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -760,247 +885,243 @@ fun NewPlayerScreen(
                 }
             }
 
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(collapsedBarHeight))
+        }
 
-            // Queue · Sleep Timer · Shuffle · Lyrics · Repeat · More (circle)
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 30.dp, vertical = 12.dp)
-                    .windowInsetsPadding(
-                        WindowInsets.systemBars.only(
-                            WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal
+        BottomSheet(
+            state = queueSheetState,
+            modifier = Modifier.fillMaxSize(),
+            background = {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(sheetBg)
+                )
+            },
+            collapsedContent = {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 30.dp, vertical = 12.dp)
+                        .windowInsetsPadding(
+                            WindowInsets.systemBars.only(
+                                WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal
+                            )
                         )
+                ) {
+                    val buttonSize = 42.dp
+                    val iconSize = 24.dp
+                    val queueShape = RoundedCornerShape(
+                        topStart = 50.dp, bottomStart = 50.dp,
+                        topEnd = 3.dp, bottomEnd = 3.dp
                     )
-                    .pointerInput(Unit) {
-                        var totalY = 0f
-                        detectVerticalDragGestures(
-                            onDragStart = { totalY = 0f },
-                            onDragEnd = {
-                                if (totalY < -50f) {
-                                    showQueueSheet = true
-                                }
-                            },
-                            onDragCancel = { totalY = 0f },
-                            onVerticalDrag = { _, dragAmount ->
-                                totalY += dragAmount
-                            }
+                    val middleShape = RoundedCornerShape(3.dp)
+                    val repeatShape = RoundedCornerShape(
+                        topStart = 3.dp, bottomStart = 3.dp,
+                        topEnd = 50.dp, bottomEnd = 50.dp
+                    )
+
+                    // Queue button — expands Queue upward smoothly
+                    PlayerQueueButton(
+                        icon = Res.drawable.queue_music,
+                        isActive = false,
+                        shape = queueShape,
+                        modifier = Modifier.size(buttonSize),
+                        textButtonColor = textButtonColor,
+                        iconButtonColor = iconButtonColor,
+                        iconSize = iconSize,
+                        onClick = { queueSheetState.expandSoft() }
+                    )
+
+                    // Sleep Timer button
+                    val isSleepTimerActive = sleepTimerState.timeRemaining > 0
+                    PlayerQueueButton(
+                        icon = Res.drawable.bedtime,
+                        isActive = isSleepTimerActive,
+                        shape = middleShape,
+                        modifier = Modifier.size(buttonSize),
+                        textButtonColor = textButtonColor,
+                        iconButtonColor = iconButtonColor,
+                        iconSize = iconSize,
+                        onClick = { showSleepTimerDialog = true }
+                    )
+
+                    // Shuffle button — use transparent shuffle drawable always to prevent black background box
+                    val isShuffle = controllerState.isShuffle
+                    PlayerQueueButton(
+                        icon = Res.drawable.shuffle,
+                        isActive = isShuffle,
+                        shape = middleShape,
+                        modifier = Modifier.size(buttonSize),
+                        textButtonColor = textButtonColor,
+                        iconButtonColor = iconButtonColor,
+                        iconSize = iconSize,
+                        onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
+                    )
+
+                    // Lyrics button — toggles inline lyrics overlay instantly
+                    PlayerQueueButton(
+                        icon = Res.drawable.lyrics,
+                        isActive = showInlineLyrics,
+                        shape = middleShape,
+                        modifier = Modifier.size(buttonSize),
+                        textButtonColor = textButtonColor,
+                        iconButtonColor = iconButtonColor,
+                        iconSize = iconSize,
+                        enabled = true,
+                        onClick = { showInlineLyrics = !showInlineLyrics }
+                    )
+
+                    // Repeat button — use transparent repeat/repeat_one drawables always
+                    val isRepeat = controllerState.repeatState != RepeatState.None
+                    val isRepeatOne = controllerState.repeatState == RepeatState.One
+                    PlayerQueueButton(
+                        icon = if (isRepeatOne) Res.drawable.baseline_repeat_one_24 else Res.drawable.repeat,
+                        isActive = isRepeat,
+                        shape = repeatShape,
+                        modifier = Modifier.size(buttonSize),
+                        textButtonColor = textButtonColor,
+                        iconButtonColor = iconButtonColor,
+                        iconSize = iconSize,
+                        onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // More button — shows ModernMoreOptionsSheet
+                    Box(
+                        modifier = Modifier
+                            .size(buttonSize)
+                            .clip(CircleShape)
+                            .background(textButtonColor)
+                            .clickable { showMoreOptions = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.more_horiz),
+                            contentDescription = null,
+                            tint = iconButtonColor,
+                            modifier = Modifier.size(iconSize)
                         )
                     }
-            ) {
-                val buttonSize = 42.dp
-                val iconSize = 24.dp
-                val queueShape = RoundedCornerShape(
-                    topStart = 50.dp, bottomStart = 50.dp,
-                    topEnd = 3.dp, bottomEnd = 3.dp
-                )
-                val middleShape = RoundedCornerShape(3.dp)
-                val repeatShape = RoundedCornerShape(
-                    topStart = 3.dp, bottomStart = 3.dp,
-                    topEnd = 50.dp, bottomEnd = 50.dp
-                )
+                }
+            }
+        ) {
+            FreshQueueContent(
+                nestedScrollConnection = queueSheetState.preUpPostDownNestedScrollConnection,
+                onDismiss = { queueSheetState.collapseSoft() },
+                backgroundColor = sheetBg,
+                contentColor = TextBackgroundColor,
+            )
+        }
 
-                // Queue button
-                PlayerQueueButton(
-                    icon = Res.drawable.queue_music,
-                    isActive = false,
-                    shape = queueShape,
-                    modifier = Modifier.size(buttonSize),
-                    textButtonColor = textButtonColor,
-                    iconButtonColor = iconButtonColor,
-                    iconSize = iconSize,
-                    onClick = { showQueueSheet = true }
-                )
+        if (showMoreOptions) {
+            ModernMoreOptionsSheet(
+                onDismiss = { showMoreOptions = false },
+                navController = navController,
+                onNavigateToOtherScreen = onDismiss,
+                song = nowPlayingState?.songEntity,
+                viewModel = nowPlayingBottomSheetViewModel,
+                backgroundColor = sheetBg,
+                accentColor = ambientAccentColor.value,
+            )
+        }
 
-                // Sleep Timer button
-                val isSleepTimerActive = sleepTimerState.timeRemaining > 0
-                PlayerQueueButton(
-                    icon = Res.drawable.bedtime,
-                    isActive = isSleepTimerActive,
-                    shape = middleShape,
-                    modifier = Modifier.size(buttonSize),
-                    textButtonColor = textButtonColor,
-                    iconButtonColor = iconButtonColor,
-                    iconSize = iconSize,
-                    onClick = { showSleepTimerDialog = true }
-                )
+        if (showSleepTimerDialog) {
+            val activeRemaining = sleepTimerState.timeRemaining
+            var sleepTimerDefault by remember { mutableFloatStateOf(30f) }
+            var sleepTimerValue by remember(activeRemaining) {
+                mutableFloatStateOf(if (activeRemaining > 0) activeRemaining.toFloat() else sleepTimerDefault)
+            }
 
-                // Shuffle button — use transparent shuffle drawable always to prevent black background box
-                val isShuffle = controllerState.isShuffle
-                PlayerQueueButton(
-                    icon = Res.drawable.shuffle,
-                    isActive = isShuffle,
-                    shape = middleShape,
-                    modifier = Modifier.size(buttonSize),
-                    textButtonColor = textButtonColor,
-                    iconButtonColor = iconButtonColor,
-                    iconSize = iconSize,
-                    onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
-                )
-
-                // Lyrics button — toggles inline lyrics overlay instantly
-                PlayerQueueButton(
-                    icon = Res.drawable.lyrics,
-                    isActive = showInlineLyrics,
-                    shape = middleShape,
-                    modifier = Modifier.size(buttonSize),
-                    textButtonColor = textButtonColor,
-                    iconButtonColor = iconButtonColor,
-                    iconSize = iconSize,
-                    enabled = true,
-                    onClick = { showInlineLyrics = !showInlineLyrics }
-                )
-
-
-                // Repeat button — use transparent repeat/repeat_one drawables always
-                val isRepeat = controllerState.repeatState != RepeatState.None
-                val isRepeatOne = controllerState.repeatState == RepeatState.One
-                PlayerQueueButton(
-                    icon = if (isRepeatOne) Res.drawable.baseline_repeat_one_24 else Res.drawable.repeat,
-                    isActive = isRepeat,
-                    shape = repeatShape,
-                    modifier = Modifier.size(buttonSize),
-                    textButtonColor = textButtonColor,
-                    iconButtonColor = iconButtonColor,
-                    iconSize = iconSize,
-                    onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // More button — shows NowPlayingBottomSheet instead of crashing with navigation
-                Box(
-                    modifier = Modifier
-                        .size(buttonSize)
-                        .clip(CircleShape)
-                        .background(textButtonColor)
-                        .clickable { showMoreOptions = true },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(Res.drawable.more_horiz),
-                        contentDescription = null,
-                        tint = iconButtonColor,
-                        modifier = Modifier.size(iconSize)
+            AlertDialog(
+                onDismissRequest = { showSleepTimerDialog = false },
+                title = {
+                    Text(
+                        text = "Sleep Timer",
+                        style = MaterialTheme.typography.titleLarge
                     )
-                }
-            }
-
-            if (showMoreOptions) {
-                ModernMoreOptionsSheet(
-                    onDismiss = { showMoreOptions = false },
-                    navController = navController,
-                    onNavigateToOtherScreen = onDismiss,
-                    song = nowPlayingState?.songEntity,
-                    viewModel = nowPlayingBottomSheetViewModel,
-                    backgroundColor = sheetBg,
-                )
-            }
-
-            if (showSleepTimerDialog) {
-                val activeRemaining = sleepTimerState.timeRemaining
-                var sleepTimerDefault by remember { mutableFloatStateOf(30f) }
-                var sleepTimerValue by remember(activeRemaining) {
-                    mutableFloatStateOf(if (activeRemaining > 0) activeRemaining.toFloat() else sleepTimerDefault)
-                }
-
-                AlertDialog(
-                    onDismissRequest = { showSleepTimerDialog = false },
-                    title = {
+                },
+                text = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Sleep Timer",
-                            style = MaterialTheme.typography.titleLarge
+                            text = if (activeRemaining > 0) "Active: ${formatDuration(activeRemaining * 1000L)}"
+                            else "${sleepTimerValue.roundToInt()} minutes",
+                            style = MaterialTheme.typography.bodyLarge
                         )
-                    },
-                    text = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = if (activeRemaining > 0) "Active: ${formatDuration(activeRemaining * 1000L)}"
-                                else "${sleepTimerValue.roundToInt()} minutes",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Slider(
-                                value = sleepTimerValue,
-                                onValueChange = { sleepTimerValue = it },
-                                valueRange = 5f..120f,
-                                steps = (120 - 5) / 5 - 1
-                            )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Slider(
+                            value = sleepTimerValue,
+                            onValueChange = { sleepTimerValue = it },
+                            valueRange = 5f..120f,
+                            steps = (120 - 5) / 5 - 1
+                        )
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                            val isAtDefault = sleepTimerValue.roundToInt() == sleepTimerDefault.roundToInt()
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                OutlinedButton(
-                                    onClick = {
-                                        sleepTimerDefault = sleepTimerValue
-                                    }
-                                ) {
-                                    Text("Set as default")
-                                }
-
-                                OutlinedButton(
-                                    onClick = {
-                                        showSleepTimerDialog = false
-                                        sharedViewModel.stopSleepTimer()
-                                    }
-                                ) {
-                                    Text("End of song")
-                                }
-                            }
-                        }
-                    },
-                    confirmButton = {
+                        val isAtDefault = sleepTimerValue.roundToInt() == sleepTimerDefault.roundToInt()
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TextButton(
+                            OutlinedButton(
+                                onClick = {
+                                    sleepTimerDefault = sleepTimerValue
+                                }
+                            ) {
+                                Text("Set as default")
+                            }
+
+                            OutlinedButton(
                                 onClick = {
                                     showSleepTimerDialog = false
                                     sharedViewModel.stopSleepTimer()
                                 }
                             ) {
-                                Text("Reset")
-                            }
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                TextButton(
-                                    onClick = { showSleepTimerDialog = false }
-                                ) {
-                                    Text("Cancel")
-                                }
-                                TextButton(
-                                    onClick = {
-                                        showSleepTimerDialog = false
-                                        sharedViewModel.setSleepTimer(sleepTimerValue.roundToInt())
-                                    }
-                                ) {
-                                    Text("OK")
-                                }
+                                Text("End of song")
                             }
                         }
-                    },
-                    dismissButton = null
-                )
-            }
+                    }
+                },
+                confirmButton = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                showSleepTimerDialog = false
+                                sharedViewModel.stopSleepTimer()
+                            }
+                        ) {
+                            Text("Reset")
+                        }
 
-            if (showQueueSheet) {
-                FreshQueueSheet(
-                    onDismiss = { showQueueSheet = false },
-                    backgroundColor = sheetBg,
-                )
-            }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = { showSleepTimerDialog = false }
+                            ) {
+                                Text("Cancel")
+                            }
+                            TextButton(
+                                onClick = {
+                                    showSleepTimerDialog = false
+                                    sharedViewModel.setSleepTimer(sleepTimerValue.roundToInt())
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        }
+                    }
+                },
+                dismissButton = null
+            )
         }
     }
 }

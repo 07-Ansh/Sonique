@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -416,7 +417,7 @@ fun Palette?.getColorFromPalette(): Color {
 fun Palette?.getSecondaryColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    // Only use the darkest swatches â€” prefer DarkMuted as a complement to DarkVibrant
+    // Only use the darkest swatches — prefer DarkMuted as a complement to DarkVibrant
     val secondaryColor = p.getDarkMutedColor(defaultColor)
         .takeIf { it != defaultColor }
         ?: p.getDarkVibrantColor(defaultColor)
@@ -425,6 +426,50 @@ fun Palette?.getSecondaryColorFromPalette(): Color {
     } else {
         Color(secondaryColor).darkenForAmbience()
     }
+}
+
+/**
+ * Extracts a rich, vibrant ambient sheet background color from the album artwork palette.
+ * Uses vibrant/dominant swatches blended gracefully over a deep surface base (#121116)
+ * so it is clearly and noticeably tinted with the artwork's true color while preserving deep dark-mode contrast.
+ */
+fun Palette?.getAmbientSheetColor(): Color {
+    val p = this ?: return Color(0xFF18171C)
+    val swatch = p.vibrantSwatch
+        ?: p.dominantSwatch
+        ?: p.lightVibrantSwatch
+        ?: p.mutedSwatch
+        ?: p.darkVibrantSwatch
+        ?: p.darkMutedSwatch
+
+    if (swatch != null) {
+        val baseColor = Color(swatch.rgb)
+        // 38% blend over deep dark neutral gives a rich, unmistakable album-art tint
+        return baseColor.copy(alpha = 0.38f).compositeOver(Color(0xFF121116))
+    }
+    return Color(0xFF18171C)
+}
+
+/**
+ * Extracts a lively, pastel/light accent color from the album artwork palette.
+ * Perfect for active slider fills, thumbs, and highlighted buttons.
+ */
+fun Palette?.getAmbientAccentColor(): Color {
+    val p = this ?: return Color(0xFF90CAF9)
+    val swatch = p.lightVibrantSwatch
+        ?: p.vibrantSwatch
+        ?: p.dominantSwatch
+        ?: p.lightMutedSwatch
+    if (swatch != null) {
+        val c = Color(swatch.rgb)
+        val lum = 0.299f * c.red + 0.587f * c.green + 0.114f * c.blue
+        return if (lum < 0.45f) {
+            Color.White.copy(alpha = 0.52f).compositeOver(c)
+        } else {
+            c
+        }
+    }
+    return Color(0xFF90CAF9)
 }
 
 /**

@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.home
+package com.sonique.app.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Animatable
@@ -115,7 +115,9 @@ import com.sonique.app.ui.component.RippleIconButton
 import com.sonique.app.ui.component.InAppNotification
 import com.sonique.app.ui.component.OfflineScreen
 import com.sonique.app.ui.screen.home.SpeedDialSection
+import com.sonique.app.ui.component.ListenTogetherIconButton
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
+import com.sonique.app.ui.navigation.destination.home.ListenTogetherDestination
 import com.sonique.app.ui.navigation.destination.home.MoodDestination
 import com.sonique.app.ui.navigation.destination.home.NotificationDestination
 import com.sonique.app.ui.navigation.destination.home.SettingsDestination
@@ -638,18 +640,20 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-             val notificationPermissionLauncher = rememberNotificationPermissionLauncher {
-                 if (it) {
-                     navController.navigate(NotificationDestination)
-                 }
-             }
-             RippleIconButton(resId = Res.drawable.outline_notifications_24) {
+            val notificationPermissionLauncher = rememberNotificationPermissionLauncher {
+                if (it) {
+                    navController.navigate(NotificationDestination)
+                }
+            }
+            RippleIconButton(resId = Res.drawable.outline_notifications_24) {
                 notificationPermissionLauncher()
             }
-             Spacer(modifier = Modifier.width(8.dp))
-             RippleIconButton(resId = Res.drawable.baseline_settings_24) {
-                 navController.navigate(SettingsDestination())
-             }
+            Spacer(modifier = Modifier.width(8.dp))
+            ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
+            Spacer(modifier = Modifier.width(8.dp))
+            RippleIconButton(resId = Res.drawable.baseline_settings_24) {
+                navController.navigate(SettingsDestination())
+            }
         }
     }
 }

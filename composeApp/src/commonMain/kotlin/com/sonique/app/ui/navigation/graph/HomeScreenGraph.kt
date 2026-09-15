@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.navigation.graph
+package com.sonique.app.ui.navigation.graph
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -55,6 +55,17 @@ fun NavGraphBuilder.homeScreenGraph(
             onScrolling = onScrolling,
         )
     }
-
+    composable<ListenTogetherDestination> {
+        com.sonique.app.ui.screen.home.ListenTogetherScreen(
+            navController = navController,
+            innerPadding = innerPadding,
+        )
+    }
+    composable<ListenTogetherSettingsDestination> {
+        com.sonique.app.ui.screen.home.ListenTogetherSettingsScreen(
+            navController = navController,
+            innerPadding = innerPadding,
+        )
+    }
 }
 

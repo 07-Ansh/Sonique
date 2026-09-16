@@ -127,7 +127,7 @@ fun Modifier.drawInteractiveGlass(
     pressedScale: Float = 1.12f,
     glassiness: Float = 0.5f,
 ): Modifier {
-    val effGlassiness = 1.0f - glassiness
+    val clampedGlassiness = glassiness.coerceIn(0f, 1f)
     return this
         .drawBackdrop(
             backdrop = backdrop,
@@ -137,20 +137,19 @@ fun Modifier.drawInteractiveGlass(
                 val press = interaction?.pressProgress ?: 0f
                 vibrancy()
                 colorControls(
-                    brightness = 0.05f,
+                    brightness = 0.04f,
                     contrast = 1f,
-                    saturation = 1.5f,
+                    saturation = lerp(1.2f, 1.8f, clampedGlassiness),
                 )
-                val glassinessFactor = lerp(1.0f, 2.5f, effGlassiness)
-                blur(
-                    (
-                        if (l > 0f) {
-                            lerp(8f.dp.toPx(), 16f.dp.toPx(), l)
-                        } else {
-                            lerp(8f.dp.toPx(), 2f.dp.toPx(), -l)
-                        }
-                    ) * glassinessFactor + 2f.dp.toPx() * press,
-                )
+                val baseBlurDp = lerp(4f, 32f, clampedGlassiness)
+                val blurPx = (
+                    if (l > 0f) {
+                        lerp(baseBlurDp.dp.toPx(), (baseBlurDp * 1.5f).dp.toPx(), l)
+                    } else {
+                        lerp(baseBlurDp.dp.toPx(), (baseBlurDp * 0.6f).dp.toPx(), -l)
+                    }
+                ) + 2f.dp.toPx() * press
+                blur(blurPx)
                 lens(size.minDimension / 4f + 2f.dp.toPx() * press, size.minDimension / 2f, false)
             },
             onDrawBackdrop = { drawBackdrop ->
@@ -158,9 +157,8 @@ fun Modifier.drawInteractiveGlass(
                 layer.record { drawBackdrop() }
             },
             onDrawSurface = {
-                val defaultDarken = lerp(0.12f, 0.5f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
-                val darken = defaultDarken * (1.0f - effGlassiness) + 0.05f * effGlassiness
-                drawRect(Color.Black.copy(alpha = darken))
+                val defaultDarken = lerp(0.12f, 0.45f, ((luminanceAnimation - 0.3f) / 0.5f).coerceIn(0f, 1f))
+                drawRect(Color.Black.copy(alpha = defaultDarken))
                 val press = interaction?.pressProgress ?: 0f
                 if (press > 0f) {
                     drawRect(

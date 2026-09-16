@@ -101,7 +101,7 @@ class SettingsViewModel(
     val savedPlaybackState: StateFlow<String?> = _savedPlaybackState
     private var _saveRecentSongAndQueue: MutableStateFlow<String?> = MutableStateFlow(null)
     val saveRecentSongAndQueue: StateFlow<String?> = _saveRecentSongAndQueue
-    private var _playerScreenStyle: MutableStateFlow<String?> = MutableStateFlow(null)
+    private var _playerScreenStyle: MutableStateFlow<String?> = MutableStateFlow("modern")
     val playerScreenStyle: StateFlow<String?> = _playerScreenStyle
 
     private var _sponsorBlockEnabled: MutableStateFlow<String?> = MutableStateFlow(null)

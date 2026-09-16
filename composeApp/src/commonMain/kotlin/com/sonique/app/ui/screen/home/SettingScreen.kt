@@ -378,8 +378,8 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
 
     val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
     val playerStyleLabel = when (playerScreenStyle) {
-        "material", "modern" -> "Material 3 (Modern)"
-        else -> "Classic"
+        "classic" -> "Classic"
+        else -> "Material 3 (Modern)"
     }
 
     LazyColumn(
@@ -423,8 +423,8 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                                         title = "Player Style",
                                         selectOne = SettingAlertState.SelectData(
                                             listSelect = listOf(
-                                                (playerScreenStyle != "material" && playerScreenStyle != "modern") to "Classic",
-                                                (playerScreenStyle == "material" || playerScreenStyle == "modern") to "Material 3 (Modern)"
+                                                (playerScreenStyle == "classic") to "Classic",
+                                                (playerScreenStyle != "classic") to "Material 3 (Modern)"
                                             )
                                         ),
                                         confirm = "Change" to { state ->

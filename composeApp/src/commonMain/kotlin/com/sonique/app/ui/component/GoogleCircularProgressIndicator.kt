@@ -6,13 +6,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
+import androidx.compose.ui.graphics.Color
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun GoogleCircularProgressIndicator(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    color: Color = MaterialTheme.colorScheme.primary
 ) {
     LoadingIndicator(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.primary
+        color = color
     )
 }

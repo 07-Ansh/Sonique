@@ -1485,7 +1485,7 @@ internal class DataStoreManagerImpl(
 
     override val playerScreenStyle: Flow<String> =
         settingsDataStore.data.map { preferences ->
-            preferences[PLAYER_SCREEN_STYLE] ?: "classic"
+            preferences[PLAYER_SCREEN_STYLE] ?: "modern"
         }
 
     override suspend fun setPlayerScreenStyle(style: String) {

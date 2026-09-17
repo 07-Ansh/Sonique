@@ -7,19 +7,43 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
+import androidx.compose.ui.unit.Velocity
+import com.sonique.app.expect.ui.BackHandler
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -69,6 +93,7 @@ import androidx.navigation.NavController
 import com.sonique.app.expect.copyToClipboard
 import com.sonique.app.expect.rememberVolumeController
 import com.sonique.app.expect.ui.openEqResult
+import com.sonique.app.extension.toHsl
 import com.sonique.app.ui.navigation.destination.home.ListenTogetherDestination
 import com.sonique.app.viewModel.NowPlayingBottomSheetUIEvent
 import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
@@ -79,12 +104,13 @@ import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
 import com.sonique.domain.utils.connectArtists
 import com.sonique.domain.utils.toListName
 import kotlinx.coroutines.launch
-import multiplatform.network.cmptoast.ToastGravity
-import multiplatform.network.cmptoast.showToast
+import com.sonique.app.ui.component.SoniqueToastManager
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import sonique.composeapp.generated.resources.Res
+import sonique.composeapp.generated.resources.baseline_downloaded
+import sonique.composeapp.generated.resources.baseline_downloading_white
 import sonique.composeapp.generated.resources.baseline_playlist_add_24
 import sonique.composeapp.generated.resources.ic_artist_note
 import sonique.composeapp.generated.resources.ic_library_add
@@ -97,16 +123,12 @@ import sonique.composeapp.generated.resources.metro_volume_mute
 import sonique.composeapp.generated.resources.metro_volume_up
 
 /**
- * Modern 3-Dot More Options Bottom Sheet for NewPlayerScreen.
- * Strictly uses Sonique's MaterialTheme.colorScheme tokens with no hardcoded colors:
- * - Interactive Volume Slider pill using primary / surfaceVariant / onPrimary
- * - 3 Action Cards (Start radio, Add to playlist, Copy link)
- * - 7 Rounded Option Cards (View artist, Add to library, Pin to speed dial,
- *   Download, Listen Together, Details, Equalizer)
+ * 2-Stage Bottom Sheet for 3-Dot More Options.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModernMoreOptionsSheet(
+fun ModernMoreOptionsTwoStageSheet(
+    visible: Boolean,
     onDismiss: () -> Unit,
     navController: NavController,
     song: SongEntity?,
@@ -118,7 +140,626 @@ fun ModernMoreOptionsSheet(
     mediaPlayerHandler: MediaPlayerHandler = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val scrollState = rememberScrollState()
+
+    LaunchedEffect(song) {
+        viewModel.setSongEntity(song)
+    }
+
+    var addToAPlaylist by remember { mutableStateOf(false) }
+    var showArtistSheet by remember { mutableStateOf(false) }
+    var showDetailsDialog by remember { mutableStateOf(false) }
+    var showCancelDownloadDialog by remember { mutableStateOf(false) }
+
+    val audioSessionId = remember {
+        runCatching { mediaPlayerHandler.player.audioSessionId }.getOrDefault(0)
+    }
+    val eqLauncher = openEqResult(audioSessionId)
+
+    if (addToAPlaylist) {
+        AddToPlaylistModalBottomSheet(
+            isBottomSheetVisible = true,
+            listLocalPlaylist = uiState.listLocalPlaylist,
+            listYouTubePlaylist = uiState.listYouTubePlaylist,
+            onDismiss = { addToAPlaylist = false },
+            onClick = {
+                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.AddToPlaylist(it.id))
+            },
+            onYTPlaylistClick = {
+                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.AddToYouTubePlaylist(it.browseId))
+            },
+            videoId = uiState.songUIState.videoId.ifBlank { song?.videoId ?: "" },
+        )
+    }
+
+    if (showArtistSheet) {
+        val artistsList = uiState.songUIState.listArtists.ifEmpty {
+            song?.artistName?.map { Artist(name = it, id = null) } ?: emptyList()
+        }
+        ArtistModalBottomSheet(
+            isBottomSheetVisible = true,
+            artists = artistsList,
+            navController = navController,
+            onNavigateToOtherScreen = onNavigateToOtherScreen,
+            onDismiss = { showArtistSheet = false },
+        )
+    }
+
+    if (showDetailsDialog) {
+        val titleText = uiState.songUIState.title.ifBlank { song?.title ?: "Unknown" }
+        val artistText = uiState.songUIState.listArtists.toListName().connectArtists()
+            .ifBlank { song?.artistName?.connectArtists() ?: "Unknown" }
+        val albumText = uiState.songUIState.album?.name ?: song?.albumName ?: ""
+        val videoIdText = uiState.songUIState.videoId.ifBlank { song?.videoId ?: "" }
+        val durationText = song?.duration ?: ""
+
+        AlertDialog(
+            onDismissRequest = { showDetailsDialog = false },
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            title = {
+                Text(
+                    text = "Details",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SongDetailRow(label = "Title", value = titleText)
+                    SongDetailRow(label = "Artist", value = artistText)
+                    if (albumText.isNotBlank()) {
+                        SongDetailRow(label = "Album", value = albumText)
+                    }
+                    if (durationText.isNotBlank()) {
+                        SongDetailRow(label = "Duration", value = durationText)
+                    }
+                    if (videoIdText.isNotBlank()) {
+                        SongDetailRow(label = "Video ID", value = videoIdText)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDetailsDialog = false }) {
+                    Text("Close", color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        )
+    }
+
+    if (showCancelDownloadDialog) {
+        AlertDialog(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            titleContentColor = MaterialTheme.colorScheme.onSurface,
+            textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            onDismissRequest = { showCancelDownloadDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showCancelDownloadDialog = false
+                    viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                }) {
+                    Text("Yes", color = MaterialTheme.colorScheme.primary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCancelDownloadDialog = false }) {
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
+            title = { Text("Download") },
+            text = {
+                val isDownloaded = uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADED
+                Text(if (isDownloaded) "Do you want to remove this download?" else "Do you want to cancel the download?")
+            }
+        )
+    }
+
+    val tint = accentColor ?: MaterialTheme.colorScheme.primary
+    val isMonochrome = tint == Color.White || tint == Color.Black || tint.toHsl()[1] < 0.12f
+    val darkBase = Color(0xFF141316)
+    val defaultTintedBg = if (isMonochrome) darkBase else tint.copy(alpha = 0.16f).compositeOver(darkBase).copy(alpha = 1f)
+    val sheetBg = (backgroundColor ?: defaultTintedBg).copy(alpha = 1f)
+    val finalContent = contentColor ?: Color.White
+    val finalAccent = tint
+    // Solid tinted container for cards — strictly opaque, no transparency
+    val cardBg = if (isMonochrome) {
+        Color.White.copy(alpha = 0.08f).compositeOver(sheetBg).copy(alpha = 1f)
+    } else {
+        tint.copy(alpha = 0.12f).compositeOver(sheetBg).copy(alpha = 1f)
+    }
+    val cardBorder: Color? = null
+    val cardContent = Color.White
+    val cardSecondaryContent = Color.White.copy(alpha = 0.78f)
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val screenHeightPx = constraints.maxHeight.toFloat()
+        val sheetHeightPx = screenHeightPx
+        val sheetHeightDp = with(density) { sheetHeightPx.toDp() }
+
+        val halfHeightPx = (screenHeightPx * 0.56f).coerceAtLeast(1f)
+        val halfOffsetPx = (sheetHeightPx - halfHeightPx).coerceAtLeast(0f)
+        val hiddenOffsetPx = sheetHeightPx + with(density) { 60.dp.toPx() }
+
+        val offsetAnimatable = remember { Animatable(3000f) }
+        val sheetSpringSpec = spring<Float>(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        )
+
+        // When `visible` toggles:
+        LaunchedEffect(visible, sheetHeightPx) {
+            if (visible) {
+                offsetAnimatable.snapTo(hiddenOffsetPx)
+                scrollState.scrollTo(0)
+                offsetAnimatable.animateTo(
+                    targetValue = halfOffsetPx,
+                    animationSpec = sheetSpringSpec
+                )
+            } else {
+                if (offsetAnimatable.value < hiddenOffsetPx) {
+                    offsetAnimatable.animateTo(
+                        targetValue = hiddenOffsetPx,
+                        animationSpec = sheetSpringSpec
+                    )
+                }
+            }
+        }
+
+        // BackHandler: collapses from Full to Half, or dismisses from Half
+        val currentOffset = offsetAnimatable.value
+        val isSheetVisible = currentOffset < hiddenOffsetPx - 10f
+        if (visible && isSheetVisible) {
+            BackHandler(enabled = true) {
+                scope.launch {
+                    if (offsetAnimatable.value < halfOffsetPx - 20f) {
+                        // Collapse to Half
+                        offsetAnimatable.animateTo(
+                            targetValue = halfOffsetPx,
+                            animationSpec = sheetSpringSpec
+                        )
+                    } else {
+                        // Dismiss
+                        offsetAnimatable.animateTo(
+                            targetValue = hiddenOffsetPx,
+                            animationSpec = sheetSpringSpec
+                        )
+                        onDismiss()
+                    }
+                }
+            }
+        }
+
+        fun snapOrAnimateToAnchor(velocityY: Float = 0f) {
+            val curr = offsetAnimatable.value
+            scope.launch {
+                if (velocityY < -500f) {
+                    // Quick flick UP -> expand to Full
+                    offsetAnimatable.animateTo(
+                        targetValue = 0f,
+                        animationSpec = sheetSpringSpec,
+                        initialVelocity = velocityY
+                    )
+                } else if (velocityY > 500f) {
+                    // Quick flick DOWN
+                    if (curr < halfOffsetPx - 20f) {
+                        offsetAnimatable.animateTo(
+                            targetValue = halfOffsetPx,
+                            animationSpec = sheetSpringSpec,
+                            initialVelocity = velocityY
+                        )
+                    } else {
+                        offsetAnimatable.animateTo(
+                            targetValue = hiddenOffsetPx,
+                            animationSpec = sheetSpringSpec,
+                            initialVelocity = velocityY
+                        )
+                        onDismiss()
+                    }
+                } else {
+                    // Low velocity: snap to closest anchor
+                    val threshold1 = halfOffsetPx * 0.45f
+                    val threshold2 = halfOffsetPx + (sheetHeightPx - halfOffsetPx) * 0.40f
+
+                    when {
+                        curr <= threshold1 -> {
+                            offsetAnimatable.animateTo(
+                                targetValue = 0f,
+                                animationSpec = sheetSpringSpec
+                            )
+                        }
+                        curr <= threshold2 -> {
+                            offsetAnimatable.animateTo(
+                                targetValue = halfOffsetPx,
+                                animationSpec = sheetSpringSpec
+                            )
+                        }
+                        else -> {
+                            offsetAnimatable.animateTo(
+                                targetValue = hiddenOffsetPx,
+                                animationSpec = sheetSpringSpec
+                            )
+                            onDismiss()
+                        }
+                    }
+                }
+            }
+        }
+
+        val nestedScrollConnection = remember(sheetHeightPx, halfOffsetPx) {
+            object : NestedScrollConnection {
+                override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                    val deltaY = available.y
+                    // Dragging UP: if sheet is not fully expanded, consume drag to expand sheet
+                    if (deltaY < 0 && offsetAnimatable.value > 0f) {
+                        val newTarget = (offsetAnimatable.value + deltaY).coerceAtLeast(0f)
+                        val consumed = newTarget - offsetAnimatable.value
+                        scope.launch { offsetAnimatable.snapTo(newTarget) }
+                        return Offset(0f, consumed)
+                    }
+                    // Dragging DOWN: if sheet is at Half or lower, consume drag to move towards hidden
+                    if (deltaY > 0 && offsetAnimatable.value >= halfOffsetPx - 1f) {
+                        val newTarget = (offsetAnimatable.value + deltaY).coerceAtMost(hiddenOffsetPx)
+                        val consumed = newTarget - offsetAnimatable.value
+                        scope.launch { offsetAnimatable.snapTo(newTarget) }
+                        return Offset(0f, consumed)
+                    }
+                    return Offset.Zero
+                }
+
+                override fun onPostScroll(
+                    consumed: Offset,
+                    available: Offset,
+                    source: NestedScrollSource
+                ): Offset {
+                    val deltaY = available.y
+
+                    if (deltaY > 0 && scrollState.value == 0) {
+                        val newTarget = (offsetAnimatable.value + deltaY).coerceAtMost(hiddenOffsetPx)
+                        val consumedY = newTarget - offsetAnimatable.value
+                        scope.launch { offsetAnimatable.snapTo(newTarget) }
+                        return Offset(0f, consumedY)
+                    }
+                    return Offset.Zero
+                }
+
+                override suspend fun onPreFling(available: Velocity): Velocity {
+                    if (offsetAnimatable.value > 0f) {
+                        snapOrAnimateToAnchor(available.y)
+                        return available
+                    }
+                    return Velocity.Zero
+                }
+
+                override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
+                    if (scrollState.value == 0 && available.y > 0) {
+                        snapOrAnimateToAnchor(available.y)
+                        return available
+                    }
+                    return Velocity.Zero
+                }
+            }
+        }
+
+        val containerVelocityTracker = remember { VelocityTracker() }
+
+        if (isSheetVisible) {
+            val progress = ((hiddenOffsetPx - currentOffset) / hiddenOffsetPx).coerceIn(0f, 1f)
+            val scrimAlpha = (progress * 0.28f).coerceIn(0f, 0.28f)
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer { alpha = scrimAlpha }
+                    .background(Color.Black)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        scope.launch {
+                            offsetAnimatable.animateTo(
+                                targetValue = hiddenOffsetPx,
+                                animationSpec = sheetSpringSpec
+                            )
+                            onDismiss()
+                        }
+                    }
+            )
+        }
+
+        val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val expandFraction = if (halfOffsetPx > 0f) {
+            ((halfOffsetPx - currentOffset) / halfOffsetPx).coerceIn(0f, 1f)
+        } else 0f
+        val dynamicTopPadding = statusBarTopPadding * expandFraction
+        val dynamicCornerRadius = 28.dp * (1f - expandFraction)
+
+        if (currentOffset < hiddenOffsetPx) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(sheetHeightDp)
+                    .align(Alignment.BottomCenter)
+                    .graphicsLayer {
+                        translationY = currentOffset
+                    }
+                    .clip(RoundedCornerShape(topStart = dynamicCornerRadius, topEnd = dynamicCornerRadius))
+                    .background(sheetBg)
+                    .pointerInput(sheetHeightPx, halfOffsetPx) {
+                        detectVerticalDragGestures(
+                            onDragStart = { containerVelocityTracker.resetTracking() },
+                            onVerticalDrag = { change, dragAmount ->
+                                containerVelocityTracker.addPointerInputChange(change)
+                                val newTarget = (offsetAnimatable.value + dragAmount).coerceIn(0f, hiddenOffsetPx)
+                                scope.launch { offsetAnimatable.snapTo(newTarget) }
+                            },
+                            onDragEnd = {
+                                val vy = containerVelocityTracker.calculateVelocity().y
+                                snapOrAnimateToAnchor(vy)
+                            },
+                            onDragCancel = {
+                                snapOrAnimateToAnchor(0f)
+                            }
+                        )
+                    }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .nestedScroll(nestedScrollConnection)
+                        .verticalScroll(scrollState)
+                        .navigationBarsPadding()
+                        .padding(start = 16.dp, end = 16.dp, top = 2.dp + dynamicTopPadding, bottom = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp, bottom = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .width(36.dp)
+                                .height(4.dp)
+                                .clip(CircleShape)
+                                .background(if (isMonochrome) Color.White.copy(alpha = 0.30f) else finalAccent.copy(alpha = 0.40f))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    ModernVolumeSlider(
+                        accentColor = finalAccent,
+                        sheetBg = sheetBg,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+                        color = if (isMonochrome) Color.White.copy(alpha = 0.10f) else finalAccent.copy(alpha = 0.22f),
+                        thickness = 0.8.dp
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        val songId = uiState.songUIState.videoId.ifBlank { song?.videoId ?: "" }
+                        val songTitle = uiState.songUIState.title.ifBlank { song?.title ?: "" }
+
+                        ModernQuickActionCard(
+                            icon = Res.drawable.metro_radio,
+                            label = "Start radio",
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            iconTint = cardContent,
+                            labelColor = cardSecondaryContent,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (songId.isNotBlank()) {
+                                    viewModel.onUIEvent(
+                                        NowPlayingBottomSheetUIEvent.StartRadio(
+                                            videoId = songId,
+                                            name = "\"$songTitle\" Radio",
+                                        )
+                                    )
+                                    onDismiss()
+                                }
+                            }
+                        )
+
+                        ModernQuickActionCard(
+                            icon = Res.drawable.baseline_playlist_add_24,
+                            label = "Add to playlist",
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            iconTint = cardContent,
+                            labelColor = cardSecondaryContent,
+                            modifier = Modifier.weight(1f),
+                            onClick = { addToAPlaylist = true }
+                        )
+
+                        ModernQuickActionCard(
+                            icon = Res.drawable.metro_link,
+                            label = "Copy link",
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            iconTint = cardContent,
+                            labelColor = cardSecondaryContent,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (songId.isNotBlank()) {
+                                    val url = "https://music.youtube.com/watch?v=$songId"
+                                    copyToClipboard("Song Link", url)
+                                    SoniqueToastManager.show("Link copied to clipboard")
+                                }
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val isLiked = uiState.songUIState.liked
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        val artistNames = uiState.songUIState.listArtists.toListName().connectArtists()
+                            .ifBlank { song?.artistName?.connectArtists() ?: "" }
+
+                        ModernOptionCard(
+                            iconRes = Res.drawable.ic_artist_note,
+                            title = "View artist",
+                            subtitle = artistNames.ifBlank { null },
+                            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            onClick = {
+                                if (uiState.songUIState.listArtists.isNotEmpty() || !song?.artistName.isNullOrEmpty()) {
+                                    showArtistSheet = true
+                                } else {
+                                    SoniqueToastManager.show("No artist information")
+                                }
+                            }
+                        )
+
+                        ModernOptionCard(
+                            iconRes = Res.drawable.ic_library_add,
+                            title = if (isLiked) "Remove from library" else "Add to library",
+                            subtitle = null,
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            onClick = {
+                                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.ToggleLike)
+                                SoniqueToastManager.show(if (!isLiked) "Added to library" else "Removed from library")
+                            }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val downloadState = uiState.songUIState.downloadState
+                    val (downloadText, downloadSubtitle) = when (downloadState) {
+                        DownloadState.STATE_DOWNLOADED -> "Downloaded" to "Saved to offline library"
+                        DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> "Downloading" to "Saving to device..."
+                        else -> "Download" to null
+                    }
+
+                    ModernOptionCard(
+                        iconRes = when (downloadState) {
+                            DownloadState.STATE_DOWNLOADED -> Res.drawable.baseline_downloaded
+                            DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> Res.drawable.baseline_downloading_white
+                            else -> null
+                        },
+                        iconVector = if (downloadState != DownloadState.STATE_DOWNLOADED &&
+                            downloadState != DownloadState.STATE_DOWNLOADING &&
+                            downloadState != DownloadState.STATE_PREPARING
+                        ) Icons.Rounded.FileDownload else null,
+                        title = downloadText,
+                        subtitle = downloadSubtitle,
+                        shape = RoundedCornerShape(20.dp),
+                        cardBg = cardBg,
+                        borderColor = cardBorder,
+                        contentColor = cardContent,
+                        secondaryContentColor = cardSecondaryContent,
+                        onClick = {
+                            if (downloadState == DownloadState.STATE_DOWNLOADED ||
+                                downloadState == DownloadState.STATE_DOWNLOADING ||
+                                downloadState == DownloadState.STATE_PREPARING
+                            ) {
+                                showCancelDownloadDialog = true
+                            } else {
+                                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    ModernOptionCard(
+                        iconVector = Icons.Rounded.Group,
+                        title = "Listen Together",
+                        subtitle = null,
+                        shape = RoundedCornerShape(20.dp),
+                        cardBg = cardBg,
+                        borderColor = cardBorder,
+                        contentColor = cardContent,
+                        secondaryContentColor = cardSecondaryContent,
+                        onClick = {
+                            onDismiss()
+                            onNavigateToOtherScreen()
+                            navController.navigate(ListenTogetherDestination)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+
+                        ModernOptionCard(
+                            iconRes = Res.drawable.metro_info,
+                            title = "Details",
+                            subtitle = "View the song's details",
+                            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            onClick = { showDetailsDialog = true }
+                        )
+
+                        ModernOptionCard(
+                            iconRes = Res.drawable.metro_equalizer,
+                            title = "Equalizer",
+                            subtitle = "Open the audio equalizer",
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            onClick = { eqLauncher.launch() }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Modern 3-Dot More Options Bottom Sheet for NewPlayerScreen.
+ * Strictly uses Sonique's MaterialTheme.colorScheme tokens with no hardcoded colors:
+ * - Interactive Volume Slider pill using primary / surfaceVariant / onPrimary
+ * - 3 Action Cards (Start radio, Add to playlist, Copy link)
+ * - 7 Rounded Option Cards (View artist, Add to library, Pin to speed dial,
+ *   Download, Listen Together, Details, Equalizer)
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ModernMoreOptionsContent(
+    onDismiss: () -> Unit,
+    navController: NavController,
+    song: SongEntity?,
+    viewModel: NowPlayingBottomSheetViewModel,
+    onNavigateToOtherScreen: () -> Unit = {},
+    backgroundColor: Color? = null,
+    accentColor: Color? = null,
+    contentColor: Color? = null,
+    mediaPlayerHandler: MediaPlayerHandler = koinInject(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(song) {
@@ -233,125 +874,151 @@ fun ModernMoreOptionsSheet(
         )
     }
 
-    val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
+    val tint = accentColor ?: MaterialTheme.colorScheme.primary
+    val isMonochrome = tint == Color.White || tint == Color.Black || tint.toHsl()[1] < 0.12f
+    val darkBase = Color(0xFF141316)
+    val defaultTintedBg = if (isMonochrome) darkBase else tint.copy(alpha = 0.16f).compositeOver(darkBase).copy(alpha = 1f)
+    val sheetBg = (backgroundColor ?: defaultTintedBg).copy(alpha = 1f)
     val finalContent = contentColor ?: Color.White
-    val finalAccent = accentColor ?: MaterialTheme.colorScheme.primaryContainer
-    // If a custom album-art color is provided, derive the card bg from it (slightly brightened)
-    // so cards feel elevated over the sheet. Otherwise fall back to the theme's surfaceVariant.
-    val cardBg = if (backgroundColor != null)
-        Color.White.copy(alpha = 0.12f).compositeOver(sheetBg)
-    else
-        MaterialTheme.colorScheme.surfaceVariant
+    val finalAccent = tint
+    val cardBg = if (isMonochrome) {
+        Color.White.copy(alpha = 0.08f).compositeOver(sheetBg).copy(alpha = 1f)
+    } else {
+        tint.copy(alpha = 0.12f).compositeOver(sheetBg).copy(alpha = 1f)
+    }
+    val cardBorder: Color? = null
     val cardContent = Color.White
-    val cardSecondaryContent = Color.White.copy(alpha = 0.72f)
+    val cardSecondaryContent = Color.White.copy(alpha = 0.78f)
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = sheetBg,
-        contentColor = finalContent,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .statusBarsPadding()
-                    .padding(top = 12.dp, bottom = 8.dp)
-                    .width(36.dp)
-                    .height(4.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
-            )
-        },
-        contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
-        modifier = Modifier.fillMaxHeight(),
+    var dragOffsetY by remember { mutableFloatStateOf(0f) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .offset { IntOffset(0, dragOffsetY.roundToInt().coerceAtLeast(0)) }
+            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+            .background(sheetBg)
+            .pointerInput(Unit) {
+                detectVerticalDragGestures(
+                    onVerticalDrag = { _, dragAmount ->
+                        dragOffsetY = (dragOffsetY + dragAmount).coerceAtLeast(0f)
+                    },
+                    onDragEnd = {
+                        if (dragOffsetY > 130f) {
+                            onDismiss()
+                        } else {
+                            dragOffsetY = 0f
+                        }
+                    },
+                    onDragCancel = {
+                        dragOffsetY = 0f
+                    }
+                )
+            }
     ) {
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight()
-                .navigationBarsPadding(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
+                .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-            item {
-                ModernVolumeSlider(
-                    accentColor = finalAccent,
-                    sheetBg = sheetBg,
-                    modifier = Modifier.fillMaxWidth(),
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 10.dp, bottom = 6.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(if (isMonochrome) Color.White.copy(alpha = 0.30f) else finalAccent.copy(alpha = 0.40f))
                 )
             }
 
-            item {
-                HorizontalDivider(
-                    modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
-                    color = Color.White.copy(alpha = 0.15f),
-                    thickness = 0.8.dp
-                )
-            }
+            Spacer(modifier = Modifier.height(6.dp))
 
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    val songId = uiState.songUIState.videoId.ifBlank { song?.videoId ?: "" }
-                    val songTitle = uiState.songUIState.title.ifBlank { song?.title ?: "" }
+            ModernVolumeSlider(
+                accentColor = finalAccent,
+                sheetBg = sheetBg,
+                modifier = Modifier.fillMaxWidth(),
+            )
 
-                    ModernQuickActionCard(
-                        icon = Res.drawable.metro_radio,
-                        label = "Start radio",
-                        cardBg = cardBg,
-                        iconTint = cardContent,
-                        labelColor = cardSecondaryContent,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            if (songId.isNotBlank()) {
-                                viewModel.onUIEvent(
-                                    NowPlayingBottomSheetUIEvent.StartRadio(
-                                        videoId = songId,
-                                        name = "\"$songTitle\" Radio",
-                                    )
+            HorizontalDivider(
+                modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
+                color = finalAccent.copy(alpha = 0.22f),
+                thickness = 0.8.dp
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                val songId = uiState.songUIState.videoId.ifBlank { song?.videoId ?: "" }
+                val songTitle = uiState.songUIState.title.ifBlank { song?.title ?: "" }
+
+                ModernQuickActionCard(
+                    icon = Res.drawable.metro_radio,
+                    label = "Start radio",
+                    cardBg = cardBg,
+                    borderColor = cardBorder,
+                    iconTint = cardContent,
+                    labelColor = cardSecondaryContent,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        if (songId.isNotBlank()) {
+                            viewModel.onUIEvent(
+                                NowPlayingBottomSheetUIEvent.StartRadio(
+                                    videoId = songId,
+                                    name = "\"$songTitle\" Radio",
                                 )
-                                scope.launch {
-                                    sheetState.hide()
-                                    onDismiss()
-                                }
-                            }
+                            )
+                            onDismiss()
                         }
-                    )
+                    }
+                )
 
-                    ModernQuickActionCard(
-                        icon = Res.drawable.baseline_playlist_add_24,
-                        label = "Add to playlist",
-                        cardBg = cardBg,
-                        iconTint = cardContent,
-                        labelColor = cardSecondaryContent,
-                        modifier = Modifier.weight(1f),
-                        onClick = { addToAPlaylist = true }
-                    )
+                ModernQuickActionCard(
+                    icon = Res.drawable.baseline_playlist_add_24,
+                    label = "Add to playlist",
+                    cardBg = cardBg,
+                    borderColor = cardBorder,
+                    iconTint = cardContent,
+                    labelColor = cardSecondaryContent,
+                    modifier = Modifier.weight(1f),
+                    onClick = { addToAPlaylist = true }
+                )
 
-                    ModernQuickActionCard(
-                        icon = Res.drawable.metro_link,
-                        label = "Copy link",
-                        cardBg = cardBg,
-                        iconTint = cardContent,
-                        labelColor = cardSecondaryContent,
-                        modifier = Modifier.weight(1f),
-                        onClick = {
-                            if (songId.isNotBlank()) {
-                                val url = "https://music.youtube.com/watch?v=$songId"
-                                copyToClipboard("Song Link", url)
-                                showToast("Link copied to clipboard", ToastGravity.Bottom)
-                            }
+                ModernQuickActionCard(
+                    icon = Res.drawable.metro_link,
+                    label = "Copy link",
+                    cardBg = cardBg,
+                    borderColor = cardBorder,
+                    iconTint = cardContent,
+                    labelColor = cardSecondaryContent,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        if (songId.isNotBlank()) {
+                            val url = "https://music.youtube.com/watch?v=$songId"
+                            copyToClipboard("Song Link", url)
+                            SoniqueToastManager.show("Link copied to clipboard")
                         }
-                    )
-                }
+                    }
+                )
             }
 
-            item { Spacer(modifier = Modifier.height(4.dp)) }
+            Spacer(modifier = Modifier.height(6.dp))
 
-            item {
+            val isLiked = uiState.songUIState.liked
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
                 val artistNames = uiState.songUIState.listArtists.toListName().connectArtists()
                     .ifBlank { song?.artistName?.connectArtists() ?: "" }
 
@@ -359,114 +1026,118 @@ fun ModernMoreOptionsSheet(
                     iconRes = Res.drawable.ic_artist_note,
                     title = "View artist",
                     subtitle = artistNames.ifBlank { null },
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                     cardBg = cardBg,
+                    borderColor = cardBorder,
                     contentColor = cardContent,
                     secondaryContentColor = cardSecondaryContent,
                     onClick = {
                         if (uiState.songUIState.listArtists.isNotEmpty() || !song?.artistName.isNullOrEmpty()) {
                             showArtistSheet = true
                         } else {
-                            showToast("No artist information", ToastGravity.Bottom)
+                            SoniqueToastManager.show("No artist information")
                         }
                     }
                 )
-            }
 
-            item {
-                val isLiked = uiState.songUIState.liked
                 ModernOptionCard(
                     iconRes = Res.drawable.ic_library_add,
-                    title = if (isLiked) "In library" else "Add to library",
+                    title = if (isLiked) "Remove from library" else "Add to library",
                     subtitle = null,
+                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
                     cardBg = cardBg,
+                    borderColor = cardBorder,
                     contentColor = cardContent,
                     secondaryContentColor = cardSecondaryContent,
                     onClick = {
                         viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.ToggleLike)
-                        showToast(if (!isLiked) "Added to library" else "Removed from library", ToastGravity.Bottom)
+                        SoniqueToastManager.show(if (!isLiked) "Added to library" else "Removed from library")
                     }
                 )
             }
 
-            item {
-                ModernOptionCard(
-                    iconVector = Icons.Rounded.Add,
-                    title = "Pin to speed dial",
-                    subtitle = null,
-                    cardBg = cardBg,
-                    contentColor = cardContent,
-                    secondaryContentColor = cardSecondaryContent,
-                    onClick = {
-                        showToast("Pinned to speed dial", ToastGravity.Bottom)
-                    }
-                )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            val downloadState = uiState.songUIState.downloadState
+            val (downloadText, downloadSubtitle) = when (downloadState) {
+                DownloadState.STATE_DOWNLOADED -> "Downloaded" to "Saved to offline library"
+                DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> "Downloading" to "Saving to device..."
+                else -> "Download" to null
             }
 
-            item {
-                val downloadState = uiState.songUIState.downloadState
-                val downloadText = when (downloadState) {
-                    DownloadState.STATE_DOWNLOADED -> "Downloaded"
-                    DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> "Downloading"
-                    else -> "Download"
+            ModernOptionCard(
+                iconRes = when (downloadState) {
+                    DownloadState.STATE_DOWNLOADED -> Res.drawable.baseline_downloaded
+                    DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> Res.drawable.baseline_downloading_white
+                    else -> null
+                },
+                iconVector = if (downloadState != DownloadState.STATE_DOWNLOADED &&
+                    downloadState != DownloadState.STATE_DOWNLOADING &&
+                    downloadState != DownloadState.STATE_PREPARING
+                ) Icons.Rounded.FileDownload else null,
+                title = downloadText,
+                subtitle = downloadSubtitle,
+                shape = RoundedCornerShape(20.dp),
+                cardBg = cardBg,
+                borderColor = cardBorder,
+                contentColor = cardContent,
+                secondaryContentColor = cardSecondaryContent,
+                onClick = {
+                    if (downloadState == DownloadState.STATE_DOWNLOADED ||
+                        downloadState == DownloadState.STATE_DOWNLOADING ||
+                        downloadState == DownloadState.STATE_PREPARING
+                    ) {
+                        showCancelDownloadDialog = true
+                    } else {
+                        viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                    }
                 }
+            )
 
-                ModernOptionCard(
-                    iconVector = Icons.Rounded.FileDownload,
-                    title = downloadText,
-                    subtitle = null,
-                    cardBg = cardBg,
-                    contentColor = cardContent,
-                    secondaryContentColor = cardSecondaryContent,
-                    onClick = {
-                        if (downloadState == DownloadState.STATE_DOWNLOADED ||
-                            downloadState == DownloadState.STATE_DOWNLOADING ||
-                            downloadState == DownloadState.STATE_PREPARING
-                        ) {
-                            showCancelDownloadDialog = true
-                        } else {
-                            viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
-                        }
-                    }
-                )
-            }
+            Spacer(modifier = Modifier.height(6.dp))
 
-            item {
-                ModernOptionCard(
-                    iconVector = Icons.Rounded.Group,
-                    title = "Listen Together",
-                    subtitle = null,
-                    cardBg = cardBg,
-                    contentColor = cardContent,
-                    secondaryContentColor = cardSecondaryContent,
-                    onClick = {
-                        scope.launch {
-                            sheetState.hide()
-                            onDismiss()
-                            onNavigateToOtherScreen()
-                            navController.navigate(ListenTogetherDestination)
-                        }
-                    }
-                )
-            }
+            ModernOptionCard(
+                iconVector = Icons.Rounded.Group,
+                title = "Listen Together",
+                subtitle = null,
+                shape = RoundedCornerShape(20.dp),
+                cardBg = cardBg,
+                borderColor = cardBorder,
+                contentColor = cardContent,
+                secondaryContentColor = cardSecondaryContent,
+                onClick = {
+                    onDismiss()
+                    onNavigateToOtherScreen()
+                    navController.navigate(ListenTogetherDestination)
+                }
+            )
 
-            item {
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
+
                 ModernOptionCard(
                     iconRes = Res.drawable.metro_info,
                     title = "Details",
                     subtitle = "View the song's details",
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                     cardBg = cardBg,
+                    borderColor = cardBorder,
                     contentColor = cardContent,
                     secondaryContentColor = cardSecondaryContent,
                     onClick = { showDetailsDialog = true }
                 )
-            }
 
-            item {
                 ModernOptionCard(
                     iconRes = Res.drawable.metro_equalizer,
                     title = "Equalizer",
                     subtitle = "Open the audio equalizer",
+                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
                     cardBg = cardBg,
+                    borderColor = cardBorder,
                     contentColor = cardContent,
                     secondaryContentColor = cardSecondaryContent,
                     onClick = { eqLauncher.launch() }
@@ -474,6 +1145,31 @@ fun ModernMoreOptionsSheet(
             }
         }
     }
+}
+
+@Composable
+fun ModernMoreOptionsSheet(
+    onDismiss: () -> Unit,
+    navController: NavController,
+    song: SongEntity?,
+    viewModel: NowPlayingBottomSheetViewModel,
+    onNavigateToOtherScreen: () -> Unit = {},
+    backgroundColor: Color? = null,
+    accentColor: Color? = null,
+    contentColor: Color? = null,
+    mediaPlayerHandler: MediaPlayerHandler = koinInject(),
+) {
+    ModernMoreOptionsContent(
+        onDismiss = onDismiss,
+        navController = navController,
+        song = song,
+        viewModel = viewModel,
+        onNavigateToOtherScreen = onNavigateToOtherScreen,
+        backgroundColor = backgroundColor,
+        accentColor = accentColor,
+        contentColor = contentColor,
+        mediaPlayerHandler = mediaPlayerHandler,
+    )
 }
 
 /**
@@ -503,82 +1199,63 @@ private fun ModernVolumeSlider(
     var sliderPosition by remember { mutableFloatStateOf(currentVol) }
     LaunchedEffect(currentVol) { sliderPosition = currentVol }
 
-    val inactiveTrackColor = Color.White.copy(alpha = 0.08f).compositeOver(sheetBg)
-    val trackCornerRadius = 12.dp
+    val trackBg = accentColor.copy(alpha = 0.12f).compositeOver(sheetBg).copy(alpha = 1f)
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(52.dp),
         contentAlignment = Alignment.Center
     ) {
         BoxWithConstraints(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .clip(RoundedCornerShape(trackCornerRadius))
-                .background(inactiveTrackColor)
+                .fillMaxSize()
+                .clip(RoundedCornerShape(16.dp))
+                .background(trackBg)
                 .pointerInput(Unit) {
-                    awaitEachGesture {
-                        val down = awaitFirstDown()
-                        val initialVol = (down.position.x / size.width).coerceIn(0f, 1f)
-                        sliderPosition = initialVol
-                        volumeController.setVolume(initialVol)
-
-                        while (true) {
-                            val event = awaitPointerEvent()
-                            val change = event.changes.firstOrNull() ?: break
-                            if (!change.pressed) break
+                    detectHorizontalDragGestures(
+                        onDragStart = { offset ->
+                            val vol = (offset.x / size.width).coerceIn(0f, 1f)
+                            sliderPosition = vol
+                            volumeController.setVolume(vol)
+                        },
+                        onHorizontalDrag = { change, _ ->
                             change.consume()
-                            val newVol = (change.position.x / size.width).coerceIn(0f, 1f)
-                            sliderPosition = newVol
-                            volumeController.setVolume(newVol)
+                            val vol = (change.position.x / size.width).coerceIn(0f, 1f)
+                            sliderPosition = vol
+                            volumeController.setVolume(vol)
                         }
+                    )
+                }
+                .pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        val vol = (offset.x / size.width).coerceIn(0f, 1f)
+                        sliderPosition = vol
+                        volumeController.setVolume(vol)
                     }
                 },
             contentAlignment = Alignment.CenterStart
         ) {
             val totalWidthPx = constraints.maxWidth.toFloat()
             val fraction = sliderPosition.coerceIn(0f, 1f)
-
             val density = LocalDensity.current
-            val thumbWidthPx = with(density) { 4.dp.toPx() }
-            val gapPx = with(density) { 6.dp.toPx() }
 
-            // Position of the vertical thumb bar
-            val thumbX = (fraction * (totalWidthPx - thumbWidthPx)).coerceIn(0f, totalWidthPx - thumbWidthPx)
-            val activeWidthPx = (thumbX - gapPx).coerceAtLeast(0f)
-
-            // 1. Active Fill Track (left is clipped by 12dp corner; right edge is flat and straight)
-            if (activeWidthPx > 0f) {
-                val activeWidthDp = with(density) { activeWidthPx.toDp() }
+            if (fraction > 0f) {
                 Box(
                     modifier = Modifier
-                        .width(activeWidthDp)
+                        .fillMaxWidth(fraction)
                         .fillMaxHeight()
+                        .clip(RoundedCornerShape(16.dp))
                         .background(accentColor)
                 )
             }
 
-            // Stop indicator: subtle dot at right end when volume is not max
-            if (sliderPosition < 0.90f) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterEnd)
-                        .padding(end = 12.dp)
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.25f))
-                )
-            }
-
-            // 2. Vertical Thumb Bar (Google Material 3 Expressive handle)
-            val thumbOffsetXDp = with(density) { thumbX.toDp() }
             Box(
                 modifier = Modifier
-                    .offset(x = thumbOffsetXDp)
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 12.dp)
                     .width(4.dp)
-                    .height(34.dp)
+                    .height(28.dp)
                     .clip(RoundedCornerShape(2.dp))
                     .background(accentColor)
             )
@@ -589,10 +1266,10 @@ private fun ModernVolumeSlider(
                 else                    -> Res.drawable.metro_volume_up
             }
 
-            // Icon tint: dark high-contrast when inside the active light fill, white otherwise
+            val activeWidthPx = fraction * totalWidthPx
             val iconThresholdPx = with(density) { 46.dp.toPx() }
             val iconTint = if (activeWidthPx > iconThresholdPx) {
-                Color(0xFF14222E)
+                Color(0xFF0E1418)
             } else {
                 Color.White
             }
@@ -602,8 +1279,8 @@ private fun ModernVolumeSlider(
                 contentDescription = "Volume",
                 tint = iconTint,
                 modifier = Modifier
-                    .padding(start = 12.dp)
-                    .size(20.dp)
+                    .padding(start = 14.dp)
+                    .size(22.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -628,6 +1305,7 @@ private fun ModernQuickActionCard(
     iconTint: Color,
     labelColor: Color,
     modifier: Modifier = Modifier,
+    borderColor: Color? = null,
     onClick: () -> Unit,
 ) {
     Box(
@@ -635,6 +1313,7 @@ private fun ModernQuickActionCard(
             .height(82.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(cardBg)
+            .then(if (borderColor != null) Modifier.border(BorderStroke(1.dp, borderColor), RoundedCornerShape(18.dp)) else Modifier)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 12.dp),
         contentAlignment = Alignment.Center
@@ -677,13 +1356,16 @@ private fun ModernOptionCard(
     subtitle: String? = null,
     iconRes: DrawableResource? = null,
     iconVector: ImageVector? = null,
+    borderColor: Color? = null,
+    shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(18.dp),
     onClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(shape)
             .background(cardBg)
+            .then(if (borderColor != null) Modifier.border(BorderStroke(1.dp, borderColor), shape) else Modifier)
             .clickable(onClick = onClick)
             .padding(horizontal = 18.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically

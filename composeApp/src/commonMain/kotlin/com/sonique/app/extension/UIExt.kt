@@ -429,47 +429,111 @@ fun Palette?.getSecondaryColorFromPalette(): Color {
 }
 
 /**
- * Extracts a rich, vibrant ambient sheet background color from the album artwork palette.
- * Uses vibrant/dominant swatches blended gracefully over a deep surface base (#121116)
- * so it is clearly and noticeably tinted with the artwork's true color while preserving deep dark-mode contrast.
+ * Converts a Compose Color to HSL representation:
+ * [0] = Hue in degrees [0f, 360f)
+ * [1] = Saturation [0f, 1f]
+ * [2] = Lightness [0f, 1f]
  */
-fun Palette?.getAmbientSheetColor(): Color {
-    val p = this ?: return Color(0xFF18171C)
-    val swatch = p.vibrantSwatch
-        ?: p.dominantSwatch
-        ?: p.lightVibrantSwatch
-        ?: p.mutedSwatch
-        ?: p.darkVibrantSwatch
-        ?: p.darkMutedSwatch
+fun Color.toHsl(): FloatArray {
+    val r = red
+    val g = green
+    val b = blue
+    val max = maxOf(r, maxOf(g, b))
+    val min = minOf(r, minOf(g, b))
+    val delta = max - min
+    val l = (max + min) / 2f
 
-    if (swatch != null) {
-        val baseColor = Color(swatch.rgb)
-        // 38% blend over deep dark neutral gives a rich, unmistakable album-art tint
-        return baseColor.copy(alpha = 0.38f).compositeOver(Color(0xFF121116))
+    val s = if (delta == 0f) 0f else delta / (1f - kotlin.math.abs(2f * l - 1f))
+
+    var h = when {
+        delta == 0f -> 0f
+        max == r -> 60f * (((g - b) / delta) % 6f)
+        max == g -> 60f * (((b - r) / delta) + 2f)
+        else -> 60f * (((r - g) / delta) + 4f)
     }
-    return Color(0xFF18171C)
+    if (h < 0f) h += 360f
+
+    return floatArrayOf(h, s.coerceIn(0f, 1f), l.coerceIn(0f, 1f))
 }
 
 /**
- * Extracts a lively, pastel/light accent color from the album artwork palette.
- * Perfect for active slider fills, thumbs, and highlighted buttons.
+ * Creates a Compose Color from HSL parameters.
+ */
+fun hslToColor(hue: Float, saturation: Float, lightness: Float, alpha: Float = 1f): Color {
+    val h = (hue % 360f + 360f) % 360f
+    val s = saturation.coerceIn(0f, 1f)
+    val l = lightness.coerceIn(0f, 1f)
+
+    val c = (1f - kotlin.math.abs(2f * l - 1f)) * s
+    val x = c * (1f - kotlin.math.abs((h / 60f) % 2f - 1f))
+    val m = l - c / 2f
+
+    val (rPrime, gPrime, bPrime) = when {
+        h < 60f -> Triple(c, x, 0f)
+        h < 120f -> Triple(x, c, 0f)
+        h < 180f -> Triple(0f, c, x)
+        h < 240f -> Triple(0f, x, c)
+        h < 300f -> Triple(x, 0f, c)
+        else -> Triple(c, 0f, x)
+    }
+
+    return Color(
+        red = (rPrime + m).coerceIn(0f, 1f),
+        green = (gPrime + m).coerceIn(0f, 1f),
+        blue = (bPrime + m).coerceIn(0f, 1f),
+        alpha = alpha
+    )
+}
+
+/**
+ * Extracts a rich, vibrant ambient sheet background color from the album artwork palette.
+ * If the artwork is monochrome/grayscale (saturation < 0.12f), returns a neutral dark slate
+ * (Color(0xFF141316)) that matches the player screen instead of forcing a fake red/pink tint.
+ * For colored artwork, preserves the artwork's actual hue with a subtle, solid dark tint (14% lightness).
+ */
+fun Palette?.getAmbientSheetColor(): Color {
+    val p = this ?: return Color(0xFF141316)
+    // Look for swatches with genuine color saturation (>= 0.12f)
+    val colorSwatch = p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.darkVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.12f }.maxByOrNull { it.population }
+
+    if (colorSwatch != null) {
+        val hsl = Color(colorSwatch.rgb).toHsl()
+        val hue = hsl[0]
+        val saturation = hsl[1].coerceIn(0.12f, 0.38f)
+        return hslToColor(hue, saturation, 0.09f, 1f)
+    }
+    // Grayscale / Black & White artwork: return neutral dark mode background matching player
+    return Color(0xFF101214)
+}
+
+/**
+ * Extracts a lively accent color from the album artwork palette.
+ * If the artwork is monochrome/grayscale (saturation < 0.12f), returns clean White (Color.White),
+ * matching the player screen's white play/pause pill and timeline slider, rather than pink.
+ * For colored artwork, returns a pastel/luminous tint of the exact album hue (76% lightness).
  */
 fun Palette?.getAmbientAccentColor(): Color {
-    val p = this ?: return Color(0xFF90CAF9)
-    val swatch = p.lightVibrantSwatch
-        ?: p.vibrantSwatch
-        ?: p.dominantSwatch
-        ?: p.lightMutedSwatch
-    if (swatch != null) {
-        val c = Color(swatch.rgb)
-        val lum = 0.299f * c.red + 0.587f * c.green + 0.114f * c.blue
-        return if (lum < 0.45f) {
-            Color.White.copy(alpha = 0.52f).compositeOver(c)
-        } else {
-            c
-        }
+    val p = this ?: return Color(0xFF98D2EB)
+    // Look for swatches with genuine color saturation (>= 0.12f)
+    val colorSwatch = p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.12f }.maxByOrNull { it.population }
+
+    if (colorSwatch != null) {
+        val hsl = Color(colorSwatch.rgb).toHsl()
+        val hue = hsl[0]
+        val saturation = hsl[1].coerceIn(0.28f, 0.55f)
+        return hslToColor(hue, saturation, 0.76f, 1f)
     }
-    return Color(0xFF90CAF9)
+    // Grayscale / Black & White artwork: clean White accent matching the player
+    return Color.White
 }
 
 /**

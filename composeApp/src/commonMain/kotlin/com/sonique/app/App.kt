@@ -62,6 +62,7 @@ import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.expect.ui.layerBackdrop
 import com.sonique.app.expect.ui.LocalLiquidGlassEnabled
 import com.sonique.app.extension.copy
+import androidx.compose.ui.graphics.graphicsLayer
 import com.sonique.app.ui.component.AppBottomNavigationBar
 import com.sonique.app.ui.component.AppNavigationRail
 import com.sonique.app.ui.component.LiquidGlassAppBottomNavigationBar
@@ -674,9 +675,12 @@ fun App(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt()) }
+                            .graphicsLayer {
+                                translationY = playerOffsetY.value
+                                alpha = if (playerOffsetY.value >= screenHeightPx) 0f else 1f
+                            }
                     ) {
-                        if (playerScreenStyle == "material" || playerScreenStyle == "modern") {
+                        if (playerScreenStyle != "classic") {
                             NewPlayerScreen(
                                 navController = navController,
                                 isVisible = isShowNowPlaylistScreen,
@@ -692,6 +696,7 @@ fun App(
                         }
                     }
                 }
+                com.sonique.app.ui.component.SoniqueToastHost()
             }
         }
     }

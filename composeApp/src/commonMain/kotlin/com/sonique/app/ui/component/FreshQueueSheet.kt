@@ -1,5 +1,11 @@
 package com.sonique.app.ui.component
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -38,6 +44,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.compositeOver
+import com.sonique.app.extension.toHsl
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +54,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -55,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -86,13 +97,18 @@ import sonique.composeapp.generated.resources.shuffle_on
 fun FreshQueueSheet(
     onDismiss: () -> Unit,
     backgroundColor: Color? = null,
+    accentColor: Color? = null,
     contentColor: Color? = null,
     sharedViewModel: SharedViewModel = koinInject(),
     musicServiceHandler: MediaPlayerHandler = koinInject(),
     dataStoreManager: DataStoreManager = koinInject(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
+    val tint = accentColor ?: MaterialTheme.colorScheme.primary
+    val isMonochrome = tint == Color.White || tint == Color.Black || tint.toHsl()[1] < 0.12f
+    val darkBase = Color(0xFF141316)
+    val defaultTintedBg = if (isMonochrome) darkBase else tint.copy(alpha = 0.16f).compositeOver(darkBase).copy(alpha = 1f)
+    val sheetBg = (backgroundColor ?: defaultTintedBg).copy(alpha = 1f)
     val finalContent = contentColor ?: Color.White
 
     ModalBottomSheet(
@@ -108,6 +124,7 @@ fun FreshQueueSheet(
         FreshQueueContent(
             onDismiss = onDismiss,
             backgroundColor = backgroundColor,
+            accentColor = accentColor,
             contentColor = contentColor,
             sharedViewModel = sharedViewModel,
             musicServiceHandler = musicServiceHandler,
@@ -123,6 +140,7 @@ fun FreshQueueContent(
     nestedScrollConnection: NestedScrollConnection? = null,
     onDismiss: () -> Unit,
     backgroundColor: Color? = null,
+    accentColor: Color? = null,
     contentColor: Color? = null,
     sharedViewModel: SharedViewModel = koinInject(),
     musicServiceHandler: MediaPlayerHandler = koinInject(),
@@ -131,16 +149,38 @@ fun FreshQueueContent(
     val scope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
 
+    val nowPlayingState by sharedViewModel.nowPlayingState.collectAsStateWithLifecycle()
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val queueData by musicServiceHandler.queueData.collectAsStateWithLifecycle()
+
+    var localPendingVideoId by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(nowPlayingState?.mediaItem?.mediaId) {
+        val playingId = nowPlayingState?.mediaItem?.mediaId
+        if (playingId != null && playingId == localPendingVideoId) {
+            localPendingVideoId = null
+        }
+    }
 
     val queue = remember(queueData?.data?.listTracks) {
         queueData?.data?.listTracks ?: emptyList()
     }
 
-    val currentSongIndex = remember(queueData) {
-        musicServiceHandler.currentOrderIndex().coerceAtLeast(0)
+    val currentSongId = localPendingVideoId
+        ?: nowPlayingState?.mediaItem?.mediaId?.takeIf { it.isNotBlank() }
+        ?: nowPlayingState?.track?.videoId?.takeIf { it.isNotBlank() }
+        ?: screenDataState.songInfoData?.videoId?.takeIf { it.isNotBlank() }
+    val currentSongTitle = screenDataState.nowPlayingTitle
+
+    val currentSongIndex = remember(queue, currentSongId, currentSongTitle, controllerState) {
+        val indexFromId = if (!currentSongId.isNullOrBlank()) {
+            queue.indexOfFirst { it.videoId == currentSongId }.takeIf { it >= 0 }
+        } else null
+        val indexFromTitle = if (indexFromId == null && currentSongTitle.isNotBlank()) {
+            queue.indexOfFirst { it.title.equals(currentSongTitle, ignoreCase = true) }.takeIf { it >= 0 }
+        } else null
+        indexFromId ?: indexFromTitle ?: musicServiceHandler.currentOrderIndex().coerceAtLeast(0)
     }
 
     val visibleQueue = remember(queue, currentSongIndex) {
@@ -212,7 +252,11 @@ fun FreshQueueContent(
         )
     }
 
-    val sheetBg = (backgroundColor ?: MaterialTheme.colorScheme.surfaceContainerHigh).copy(alpha = 1f)
+    val tint = accentColor ?: MaterialTheme.colorScheme.primary
+    val isMonochrome = tint == Color.White || tint == Color.Black || tint.toHsl()[1] < 0.12f
+    val darkBase = Color(0xFF141316)
+    val defaultTintedBg = if (isMonochrome) darkBase else tint.copy(alpha = 0.16f).compositeOver(darkBase).copy(alpha = 1f)
+    val sheetBg = (backgroundColor ?: defaultTintedBg).copy(alpha = 1f)
     val finalContent = contentColor ?: Color.White
 
     Box(
@@ -223,29 +267,15 @@ fun FreshQueueContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(sheetBg)
         ) {
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(start = 16.dp, end = 20.dp, top = 16.dp, bottom = 12.dp),
+                    .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.KeyboardArrowDown,
-                        contentDescription = "Collapse queue",
-                        tint = finalContent,
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(6.dp))
-
                 Text(
                     text = screenDataState.playlistName.ifBlank {
                         queue.getOrNull(currentSongIndex)?.title?.let { "$it Mix" } ?: "Current Queue"
@@ -331,12 +361,18 @@ fun FreshQueueContent(
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
                                     .clickable {
+                                        localPendingVideoId = track.videoId
                                         musicServiceHandler.playMediaItemInMediaSource(actualIndex)
                                     },
-                                shape = RoundedCornerShape(12.dp),
+                                shape = RoundedCornerShape(14.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = Color.White.copy(alpha = 0.16f)
+                                    containerColor = if (isMonochrome) {
+                                        Color.White.copy(alpha = 0.10f).compositeOver(sheetBg).copy(alpha = 1f)
+                                    } else {
+                                        tint.copy(alpha = 0.16f).compositeOver(sheetBg).copy(alpha = 1f)
+                                    }
                                 ),
+                                border = null,
                                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                             ) {
                                 Row(
@@ -345,12 +381,12 @@ fun FreshQueueContent(
                                         .padding(horizontal = 10.dp, vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Artwork with Play triangle overlay
+                                    // Artwork with Animated Equalizer Bars overlay
                                     Box(
                                         modifier = Modifier
                                             .size(52.dp)
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(finalContent.copy(alpha = 0.12f))
+                                            .background(tint.copy(alpha = 0.18f))
                                     ) {
                                         AsyncImage(
                                             model = track.thumbnails?.lastOrNull()?.url ?: "",
@@ -364,11 +400,9 @@ fun FreshQueueContent(
                                                 .background(Color.Black.copy(alpha = 0.35f)),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.PlayArrow,
-                                                contentDescription = "Currently Playing",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(24.dp)
+                                            PlayingEqualizerBars(
+                                                color = Color.White,
+                                                modifier = Modifier.size(20.dp)
                                             )
                                         }
                                     }
@@ -421,6 +455,7 @@ fun FreshQueueContent(
                                     .padding(vertical = 4.dp)
                                     .clip(RoundedCornerShape(8.dp))
                                     .clickable {
+                                        localPendingVideoId = track.videoId
                                         musicServiceHandler.playMediaItemInMediaSource(actualIndex)
                                     }
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
@@ -431,7 +466,7 @@ fun FreshQueueContent(
                                     modifier = Modifier
                                         .size(52.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(finalContent.copy(alpha = 0.12f))
+                                        .background(if (isMonochrome) Color.White.copy(alpha = 0.08f) else tint.copy(alpha = 0.14f))
                                 ) {
                                     AsyncImage(
                                         model = track.thumbnails?.lastOrNull()?.url ?: "",
@@ -443,7 +478,7 @@ fun FreshQueueContent(
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
-                                // Title & Artist
+                                // Title & Artist with Duration
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = track.title ?: "",
@@ -455,9 +490,17 @@ fun FreshQueueContent(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
+                                    val subtitleText = remember(artistNames, track.duration) {
+                                        val dur = track.duration
+                                        if (!dur.isNullOrBlank()) {
+                                            if (artistNames.isNotBlank()) "$artistNames • $dur" else dur
+                                        } else {
+                                            artistNames
+                                        }
+                                    }
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = artistNames,
+                                        text = subtitleText,
                                         style = MaterialTheme.typography.bodyMedium.copy(
                                             fontSize = 13.sp
                                         ),
@@ -516,7 +559,7 @@ fun FreshQueueContent(
                         Icon(
                             painter = painterResource(if (isShuffle) Res.drawable.shuffle_on else Res.drawable.shuffle),
                             contentDescription = "Shuffle",
-                            tint = if (isShuffle) MaterialTheme.colorScheme.primary else finalContent.copy(alpha = 0.75f),
+                            tint = if (isShuffle) (if (isMonochrome) Color.White else tint) else finalContent.copy(alpha = 0.75f),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -548,7 +591,7 @@ fun FreshQueueContent(
                                 else Res.drawable.repeat
                             ),
                             contentDescription = "Repeat",
-                            tint = if (isRepeat) MaterialTheme.colorScheme.primary else finalContent.copy(alpha = 0.75f),
+                            tint = if (isRepeat) (if (isMonochrome) Color.White else tint) else finalContent.copy(alpha = 0.75f),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -556,3 +599,66 @@ fun FreshQueueContent(
             }
         }
     }
+
+@Composable
+private fun PlayingEqualizerBars(
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "queue_equalizer")
+    val bar1 by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.95f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(400, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar1"
+    )
+    val bar2 by infiniteTransition.animateFloat(
+        initialValue = 0.90f,
+        targetValue = 0.25f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(550, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar2"
+    )
+    val bar3 by infiniteTransition.animateFloat(
+        initialValue = 0.40f,
+        targetValue = 1.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(460, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "bar3"
+    )
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(2.5.dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .fillMaxHeight(bar1)
+                .clip(RoundedCornerShape(1.5.dp))
+                .background(color)
+        )
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .fillMaxHeight(bar2)
+                .clip(RoundedCornerShape(1.5.dp))
+                .background(color)
+        )
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .fillMaxHeight(bar3)
+                .clip(RoundedCornerShape(1.5.dp))
+                .background(color)
+        )
+    }
+}

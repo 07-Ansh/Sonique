@@ -72,6 +72,7 @@ class NowPlayingBottomSheetViewModel(
     val uiState: StateFlow<NowPlayingBottomSheetUIState> get() = _uiState.asStateFlow()
 
     private var getSongAsFlow: Job? = null
+    private var currentSongEntity: SongEntity? = null
 
     init {
         viewModelScope.launch {
@@ -106,16 +107,28 @@ class NowPlayingBottomSheetViewModel(
 
     fun setSongEntity(songEntity: SongEntity?) {
         val songOrNowPlaying = songEntity ?: (mediaPlayerHandler.nowPlayingState.value.songEntity ?: return)
+        currentSongEntity = songOrNowPlaying
+        // Immediately sync basic fields to eliminate race condition
+        _uiState.update { state ->
+            state.copy(
+                songUIState = state.songUIState.copy(
+                    videoId = songOrNowPlaying.videoId,
+                    title = songOrNowPlaying.title,
+                    listArtists = songOrNowPlaying.artistName?.mapIndexed { i, name ->
+                        Artist(name = name, id = songOrNowPlaying.artistId?.getOrNull(i) ?: "")
+                    } ?: emptyList(),
+                    thumbnails = songOrNowPlaying.thumbnails,
+                    liked = songOrNowPlaying.liked,
+                    downloadState = songOrNowPlaying.downloadState,
+                    album = songOrNowPlaying.albumName?.takeIf { it.isNotEmpty() }?.let { name ->
+                        Album(name = name, id = songOrNowPlaying.albumId ?: "")
+                    },
+                    isAddedToYouTubeLiked = false,
+                )
+            )
+        }
         viewModelScope.launch {
             songOrNowPlaying.videoId.let {
-                _uiState.update { state ->
-                    state.copy(
-                        songUIState =
-                            state.songUIState.copy(
-                                isAddedToYouTubeLiked = false,
-                            ),
-                    )
-                }
                 runCatching {
                     songRepository.getSongById(it).firstOrNull().let { song ->
                         if (song != null) {
@@ -218,10 +231,24 @@ class NowPlayingBottomSheetViewModel(
                 is NowPlayingBottomSheetUIEvent.Download -> {
                     when (songUIState.downloadState) {
                         DownloadState.STATE_NOT_DOWNLOADED -> {
-                            songRepository.updateDownloadState(
-                                videoId = songUIState.videoId,
-                                downloadState = DownloadState.STATE_PREPARING,
-                            )
+                            val existing = songRepository.getSongById(songUIState.videoId).firstOrNull()
+                            if (existing == null) {
+                                currentSongEntity?.let {
+                                    songRepository.insertSong(it.copy(downloadState = DownloadState.STATE_PREPARING)).firstOrNull()
+                                }
+                            } else {
+                                songRepository.updateDownloadState(
+                                    videoId = songUIState.videoId,
+                                    downloadState = DownloadState.STATE_PREPARING,
+                                )
+                            }
+                            _uiState.update { state ->
+                                state.copy(
+                                    songUIState = state.songUIState.copy(
+                                        downloadState = DownloadState.STATE_PREPARING
+                                    )
+                                )
+                            }
                             downloadUtils.downloadTrack(
                                 videoId = songUIState.videoId,
                                 title = songUIState.title,
@@ -236,6 +263,13 @@ class NowPlayingBottomSheetViewModel(
                                 songUIState.videoId,
                                 DownloadState.STATE_NOT_DOWNLOADED,
                             )
+                            _uiState.update { state ->
+                                state.copy(
+                                    songUIState = state.songUIState.copy(
+                                        downloadState = DownloadState.STATE_NOT_DOWNLOADED
+                                    )
+                                )
+                            }
                             makeToast(getString(Res.string.removed_download))
                         }
 
@@ -245,6 +279,13 @@ class NowPlayingBottomSheetViewModel(
                                 songUIState.videoId,
                                 DownloadState.STATE_NOT_DOWNLOADED,
                             )
+                            _uiState.update { state ->
+                                state.copy(
+                                    songUIState = state.songUIState.copy(
+                                        downloadState = DownloadState.STATE_NOT_DOWNLOADED
+                                    )
+                                )
+                            }
                             makeToast(getString(Res.string.removed_download))
                         }
                     }

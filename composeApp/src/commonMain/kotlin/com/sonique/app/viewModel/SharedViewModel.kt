@@ -416,38 +416,30 @@ class SharedViewModel(
                         ?: state.track?.thumbnails?.lastOrNull()?.url
                         ?: state.mediaItem.metadata.artworkUri?.toString()
 
-                    _nowPlayingScreenData.value =
-                        NowPlayingScreenData(
+                    _nowPlayingScreenData.update { currentData ->
+                        currentData.copy(
                             nowPlayingTitle = resolvedTitle,
                             artistName = resolvedArtist,
                             isVideo = false,
                             thumbnailURL = resolvedThumbnail,
-                            canvasData = null,
-                            lyricsData = null,
-                            songInfoData = null,
+                            isExplicit = currentSongEntity?.isExplicit ?: false,
                             playlistName =
                                 mediaPlayerHandler.queueData.value
                                     ?.data
                                     ?.playlistName ?: "",
                         )
+                    }
+
+                    if (currentSongEntity != null) {
+                        _liked.value = currentSongEntity.liked == true
+                    }
+
                     state.mediaItem.let { now ->
                         _canvas.value = null
-                        getLikeStatus(now.mediaId)
-                        getSongInfo(now.mediaId)
-                        getFormat(now.mediaId)
-                        _nowPlayingScreenData.update {
-                            it.copy(
-                                isVideo = false,
-                            )
-                        }
-                    }
-                    currentSongEntity?.let { song ->
-                        _liked.value = song.liked == true
-                        _nowPlayingScreenData.update {
-                            it.copy(
-                                thumbnailURL = song.thumbnails,
-                                isExplicit = song.isExplicit,
-                            )
+                        if (now.mediaId.isNotEmpty()) {
+                            launch { getLikeStatus(now.mediaId) }
+                            launch { getSongInfo(now.mediaId) }
+                            launch { getFormat(now.mediaId) }
                         }
                     }
                 }

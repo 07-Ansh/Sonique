@@ -56,3 +56,4 @@ google-services.json
 # AI Agent Context
 .agent
 .agents/
+task.md

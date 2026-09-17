@@ -58,12 +58,8 @@ abstract class BaseViewModel :
     }
 
     fun makeToast(message: String?) {
-        Res.string.loading
-        showToast(
-            message = message ?: "NO MESSAGE",
-            duration = ToastDuration.Short,
-            gravity = ToastGravity.Bottom,
-        )
+        if (message.isNullOrBlank()) return
+        com.sonique.app.ui.component.SoniqueToastManager.show(message)
     }
 
     protected suspend fun getString(resId: StringResource): String =

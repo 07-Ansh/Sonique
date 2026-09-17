@@ -146,8 +146,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import multiplatform.network.cmptoast.ToastGravity
-import multiplatform.network.cmptoast.showToast
+import com.sonique.app.ui.component.SoniqueToastManager
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
@@ -1644,6 +1643,49 @@ fun NowPlayingBottomSheet(
                     )
 
                     ActionButton(
+                        icon =
+                            when (uiState.songUIState.downloadState) {
+                                DownloadState.STATE_NOT_DOWNLOADED ->
+                                    painterResource(
+                                        Res.drawable.outline_download_for_offline_24,
+                                    )
+
+                                DownloadState.STATE_DOWNLOADING,
+                                DownloadState.STATE_PREPARING ->
+                                    painterResource(
+                                        Res.drawable.baseline_downloading_white,
+                                    )
+
+                                DownloadState.STATE_DOWNLOADED ->
+                                    painterResource(
+                                        Res.drawable.baseline_downloaded,
+                                    )
+
+                                else ->
+                                    painterResource(
+                                        Res.drawable.outline_download_for_offline_24,
+                                    )
+                            },
+                        text =
+                            when (uiState.songUIState.downloadState) {
+                                DownloadState.STATE_NOT_DOWNLOADED -> Res.string.download
+                                DownloadState.STATE_DOWNLOADING,
+                                DownloadState.STATE_PREPARING -> Res.string.downloading
+                                DownloadState.STATE_DOWNLOADED -> Res.string.downloaded
+                                else -> Res.string.download
+                            },
+                    ) {
+                        if (uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADING ||
+                            uiState.songUIState.downloadState == DownloadState.STATE_PREPARING ||
+                            uiState.songUIState.downloadState == DownloadState.STATE_DOWNLOADED
+                        ) {
+                            showCancelDownloadDialog = true
+                        } else {
+                            viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                        }
+                    }
+
+                    ActionButton(
                         icon = painterResource(Res.drawable.baseline_playlist_add_24),
                         text = Res.string.add_to_a_playlist,
                     ) {
@@ -2281,7 +2323,7 @@ fun SleepTimerBottomSheet(
                                 onDismiss()
                             }
                         } else {
-                            showToast(runBlocking { getString(Res.string.sleep_timer_set_error) }, ToastGravity.Bottom)
+                            SoniqueToastManager.show(runBlocking { getString(Res.string.sleep_timer_set_error) })
                         }
                     },
                     modifier =
@@ -2491,7 +2533,7 @@ fun PlaylistBottomSheet(
                     TextButton(
                         onClick = {
                             if (newTitle.isBlank()) {
-                                showToast(playlistNameError, ToastGravity.Bottom)
+                                SoniqueToastManager.show(playlistNameError)
                             } else {
                                 onEditTitle(newTitle)
                                 hideEditTitleBottomSheet()
@@ -2693,7 +2735,7 @@ fun LocalPlaylistBottomSheet(
                     TextButton(
                         onClick = {
                             if (newTitle.isBlank()) {
-                                showToast(playlistNameError, ToastGravity.Bottom)
+                                SoniqueToastManager.show(playlistNameError)
                             } else {
                                 onEditTitle(newTitle)
                                 hideEditTitleBottomSheet()
@@ -2984,11 +3026,11 @@ fun DevLogInBottomSheet(
                         if (value.isNotEmpty() && value.isNotBlank() &&
                             (type != DevLogInType.YouTube || (secondValue.isNotEmpty() && secondValue.isNotBlank()))
                         ) {
-                            showToast(runBlocking { getString(Res.string.processing) }, ToastGravity.Bottom)
+                            SoniqueToastManager.show(runBlocking { getString(Res.string.processing) })
                             onDismiss()
                             onDone(value, secondValue)
                         } else {
-                            showToast(runBlocking { getString(Res.string.can_not_be_empty) }, ToastGravity.Bottom)
+                            SoniqueToastManager.show(runBlocking { getString(Res.string.can_not_be_empty) })
                         }
                     },
                     modifier =
@@ -3076,7 +3118,7 @@ fun DevCookieLogInBottomSheet(
                         IconButton(
                             onClick = {
                                 copyToClipboard(cookie.first, cookie.second ?: "")
-                                showToast(copied, ToastGravity.Bottom)
+                                SoniqueToastManager.show(copied)
                             },
                         ) {
                             Icon(

@@ -225,6 +225,28 @@ class SharedViewModel(
         }
     }
 
+    /**
+     * One-shot migration: enables the Modern Player by default for any user who has
+     * never explicitly set this preference (fresh install OR update before this version).
+     *
+     * Logic:
+     *  - If the raw DataStore key is null → user never touched it → turn ON modern player.
+     *  - If the raw DataStore key is "TRUE" or "FALSE" → user explicitly set it → leave it alone.
+     *  - The migration flag "modern_player_forced_v1" ensures this runs exactly once.
+     */
+    private fun migrateModernPlayerDefault() {
+        viewModelScope.launch {
+            if (dataStoreManager.getString("modern_player_forced_v1").first() != STATUS_DONE) {
+                // null means the key was never written — user never explicitly chose a value
+                val wasNeverSet = dataStoreManager.getString("expressive_player_controls").first() == null
+                if (wasNeverSet) {
+                    dataStoreManager.setEnableExpressivePlayerControls(true)
+                }
+                dataStoreManager.putString("modern_player_forced_v1", STATUS_DONE)
+            }
+        }
+    }
+
     private val _showGitHubPopup = MutableStateFlow<Boolean>(false)
     val showGitHubPopup: StateFlow<Boolean> = _showGitHubPopup.asStateFlow()
 
@@ -306,7 +328,7 @@ class SharedViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "list")
 
     val playerScreenStyle: StateFlow<String> = dataStoreManager.playerScreenStyle
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "classic")
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "modern")
 
     val liquidGlassGlassiness: StateFlow<Float> = dataStoreManager.liquidGlassGlassiness
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0.5f)
@@ -348,6 +370,7 @@ class SharedViewModel(
                 isFirstLiked = it != STATUS_DONE
             }
 
+            migrateModernPlayerDefault()
             checkChangelog()
             checkGitHubPopup()
 
@@ -390,6 +413,7 @@ class SharedViewModel(
  
         }
         viewModelScope.launch {
+            var lastMediaIdForLyrics: String? = null
             mediaPlayerHandler.nowPlayingState
                 .collectLatest { state ->
                     Logger.w(tag, "NowPlayingState is $state")
@@ -419,6 +443,11 @@ class SharedViewModel(
                         ?: state.track?.thumbnails?.lastOrNull()?.url
                         ?: state.mediaItem.metadata.artworkUri?.toString()
 
+                    val isNewTrack = state.mediaItem.mediaId.isNotEmpty() && state.mediaItem.mediaId != lastMediaIdForLyrics
+                    if (isNewTrack) {
+                        lastMediaIdForLyrics = state.mediaItem.mediaId
+                    }
+
                     _nowPlayingScreenData.update { currentData ->
                         currentData.copy(
                             nowPlayingTitle = resolvedTitle,
@@ -430,7 +459,12 @@ class SharedViewModel(
                                 mediaPlayerHandler.queueData.value
                                     ?.data
                                     ?.playlistName ?: "",
+                            lyricsData = if (isNewTrack) null else currentData.lyricsData,
                         )
+                    }
+
+                    if (isNewTrack) {
+                        setLyricsProvider()
                     }
 
                     if (currentSongEntity != null) {
@@ -1419,28 +1453,65 @@ class SharedViewModel(
         viewModelScope.launch {
             val videoId = mediaPlayerHandler.nowPlaying.first()?.mediaId
             if (videoId != null) {
+                if (!isLoggedIn.value) {
+                    val wasLiked = controllerState.value.isLiked || likeStatus.value
+                    val targetLiked = !wasLiked
+                    _likeStatus.value = targetLiked
+                    _controllerState.update { it.copy(isLiked = targetLiked) }
+                    mediaPlayerHandler.like(targetLiked)
+                    val currentSong = nowPlayingState.value?.songEntity
+                    if (currentSong != null) {
+                        val existing = songRepository.getSongById(videoId).firstOrNull()
+                        if (existing == null) {
+                            songRepository.insertSong(currentSong.copy(liked = targetLiked)).firstOrNull()
+                        } else {
+                            songRepository.updateLikeStatus(videoId, if (targetLiked) 1 else 0)
+                        }
+                    } else {
+                        songRepository.updateLikeStatus(videoId, if (targetLiked) 1 else 0)
+                    }
+                    if (targetLiked) {
+                        makeToast("Added to Liked songs (Sign in to sync with YouTube)")
+                    } else {
+                        makeToast("Removed from Liked songs")
+                    }
+                    return@launch
+                }
                 val like = likeStatus.value
-                if (!like) {
+                val newLike = !like
+                // Optimistic UI update: flip immediately so UI reacts with 0ms latency
+                _likeStatus.value = newLike
+                _controllerState.update { it.copy(isLiked = newLike) }
+
+                if (newLike) {
                     songRepository
                         .addToYouTubeLiked(
-                            mediaPlayerHandler.nowPlaying.first()?.mediaId,
+                            videoId,
                         ).collect { response ->
                             if (response == 200) {
                                 makeToast(getString(Res.string.added_to_youtube_liked))
                                 getLikeStatus(videoId)
+                                onUIEvent(UIEvent.ToggleLike)
                             } else {
+                                // Revert optimistic state on failure
+                                _likeStatus.value = like
+                                _controllerState.update { it.copy(isLiked = like) }
                                 makeToast(getString(Res.string.error))
                             }
                         }
                 } else {
                     songRepository
                         .removeFromYouTubeLiked(
-                            mediaPlayerHandler.nowPlaying.first()?.mediaId,
+                            videoId,
                         ).collect {
                             if (it == 200) {
                                 makeToast(getString(Res.string.removed_from_youtube_liked))
                                 getLikeStatus(videoId)
+                                onUIEvent(UIEvent.ToggleLike)
                             } else {
+                                // Revert optimistic state on failure
+                                _likeStatus.value = like
+                                _controllerState.update { it.copy(isLiked = like) }
                                 makeToast(getString(Res.string.error))
                             }
                         }

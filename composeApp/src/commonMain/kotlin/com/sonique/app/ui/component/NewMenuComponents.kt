@@ -219,7 +219,6 @@ fun NewMenuContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-
         headerContent?.invoke()
 
         actionGrid?.invoke()

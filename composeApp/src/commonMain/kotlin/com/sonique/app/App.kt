@@ -306,20 +306,22 @@ fun App(
         var isPlayerExpanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
         LaunchedEffect(screenHeightPx) {
-            if (!isShowNowPlaylistScreen) {
+            if (!isShowNowPlaylistScreen && screenHeightPx > 0f) {
                 playerOffsetY.snapTo(screenHeightPx)
             }
         }
 
-        LaunchedEffect(isShowNowPlaylistScreen, screenHeightPx) {
+        val playerSlideSpec = androidx.compose.animation.core.tween<Float>(
+            durationMillis = 320,
+            easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
+        )
+
+        LaunchedEffect(isShowNowPlaylistScreen) {
              val target = if (isShowNowPlaylistScreen) 0f else screenHeightPx
              if (kotlin.math.abs(playerOffsetY.value - target) > 0.5f) {
                  playerOffsetY.animateTo(
                      target,
-                     animationSpec = androidx.compose.animation.core.tween(
-                         durationMillis = 280,
-                         easing = androidx.compose.animation.core.FastOutSlowInEasing
-                     )
+                     animationSpec = playerSlideSpec
                  )
              }
              isPlayerExpanded = isShowNowPlaylistScreen
@@ -443,11 +445,7 @@ fun App(
                                                         
                                                         val shouldExpand = if (playerOffsetY.value < expandThreshold) true else isShowNowPlaylistScreen
                                                         
-                                                         
-                                                        val spec = androidx.compose.animation.core.tween<Float>(
-                                                            durationMillis = 500,
-                                                            easing = androidx.compose.animation.core.EaseInOut
-                                                        )
+                                                        val spec = playerSlideSpec
 
                                                         if (shouldExpand) {
                                                             if (!isShowNowPlaylistScreen) {

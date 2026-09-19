@@ -46,6 +46,7 @@ fun NavGraphBuilder.homeScreenGraph(
     composable<NotificationDestination> {
         NotificationScreen(
             navController = navController,
+            innerPadding = innerPadding,
         )
     }
     composable<RecentlySongsDestination> {

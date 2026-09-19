@@ -438,6 +438,19 @@ internal class DataStoreManagerImpl(
         }
     }
 
+    override val lyricsAutoFallback =
+        settingsDataStore.data.map { preferences ->
+            preferences[LYRICS_AUTO_FALLBACK] ?: true
+        }
+
+    override suspend fun setLyricsAutoFallback(enable: Boolean) {
+        withContext(Dispatchers.IO) {
+            settingsDataStore.edit { settings ->
+                settings[LYRICS_AUTO_FALLBACK] = enable
+            }
+        }
+    }
+
     override val translationLanguage =
         settingsDataStore.data.map { preferences ->
             val languageValue = language.first()
@@ -1526,6 +1539,7 @@ internal class DataStoreManagerImpl(
         val CROSSFADE_DJ_MODE = stringPreferencesKey("crossfade_dj_mode")
         val CROSSFADE_SKIP_ALBUM = stringPreferencesKey("crossfade_skip_album")
         val LYRICS_PROVIDER = stringPreferencesKey("lyrics_provider")
+        val LYRICS_AUTO_FALLBACK = booleanPreferencesKey("lyrics_auto_fallback")
         val TRANSLATION_LANGUAGE = stringPreferencesKey("translation_language")
         val USE_TRANSLATION_LANGUAGE = stringPreferencesKey("use_translation_language")
 

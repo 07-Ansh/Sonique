@@ -27,7 +27,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -47,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.graphics.compositeOver
 import com.sonique.app.extension.toHsl
+import com.sonique.app.extension.cleanSongTitle
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -268,14 +274,61 @@ fun FreshQueueContent(
             modifier = Modifier
                 .fillMaxSize()
         ) {
+            val headerVelocityTracker = remember { VelocityTracker() }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(top = 10.dp, bottom = 2.dp)
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures(
+                            onDragStart = { headerVelocityTracker.resetTracking() },
+                            onVerticalDrag = { change, dragAmount ->
+                                change.consume()
+                                headerVelocityTracker.addPointerInputChange(change)
+                                if (dragAmount > 20f) {
+                                    onDismiss()
+                                }
+                            },
+                            onDragEnd = {
+                                val vy = headerVelocityTracker.calculateVelocity().y
+                                if (vy > 150f) {
+                                    onDismiss()
+                                }
+                            }
+                        )
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(if (isMonochrome) Color.White.copy(alpha = 0.35f) else tint.copy(alpha = 0.45f))
+                )
+            }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 12.dp),
+                    .padding(start = 12.dp, end = 18.dp, top = 6.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.KeyboardArrowDown,
+                        contentDescription = "Close Queue",
+                        tint = finalContent,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(6.dp))
+
                 Text(
                     text = screenDataState.playlistName.ifBlank {
                         queue.getOrNull(currentSongIndex)?.title?.let { "$it Mix" } ?: "Current Queue"
@@ -286,7 +339,7 @@ fun FreshQueueContent(
                         lineHeight = 22.sp
                     ),
                     color = finalContent,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.weight(1f)
                 )
@@ -297,13 +350,13 @@ fun FreshQueueContent(
                             dataStoreManager.setEndlessQueue(!endlessQueueEnable)
                         }
                     },
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    modifier = Modifier.padding(horizontal = 4.dp)
                 ) {
                     Icon(
                         imageVector = if (endlessQueueEnable) Icons.Rounded.Lock else Icons.Rounded.LockOpen,
                         contentDescription = "Endless Queue",
                         tint = if (endlessQueueEnable) finalContent else finalContent.copy(alpha = 0.5f),
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
@@ -313,7 +366,7 @@ fun FreshQueueContent(
                     Text(
                         text = "${queue.size} songs",
                         style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Normal
                         ),
                         color = finalContent.copy(alpha = 0.75f)
@@ -322,7 +375,7 @@ fun FreshQueueContent(
                         Text(
                             text = totalDurationText,
                             style = MaterialTheme.typography.bodyMedium.copy(
-                                fontSize = 14.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Normal
                             ),
                             color = finalContent.copy(alpha = 0.75f)
@@ -355,7 +408,6 @@ fun FreshQueueContent(
                         }
 
                         if (isCurrentTrack) {
-                            // Highlighted card for currently playing track
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -381,7 +433,6 @@ fun FreshQueueContent(
                                         .padding(horizontal = 10.dp, vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Artwork with Animated Equalizer Bars overlay
                                     Box(
                                         modifier = Modifier
                                             .size(52.dp)
@@ -409,10 +460,9 @@ fun FreshQueueContent(
 
                                     Spacer(modifier = Modifier.width(12.dp))
 
-                                    // Title & Artist
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = track.title ?: "",
+                                            text = (track.title ?: "").cleanSongTitle(),
                                             style = MaterialTheme.typography.titleMedium.copy(
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 15.sp
@@ -433,7 +483,6 @@ fun FreshQueueContent(
                                         )
                                     }
 
-                                    // Three dots menu
                                     IconButton(
                                         onClick = { selectedItemForMenu = actualIndex },
                                         modifier = Modifier.size(36.dp)
@@ -448,7 +497,6 @@ fun FreshQueueContent(
                                 }
                             }
                         } else {
-                            // Flat row for upcoming tracks
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -461,7 +509,6 @@ fun FreshQueueContent(
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Artwork without play overlay
                                 Box(
                                     modifier = Modifier
                                         .size(52.dp)
@@ -478,10 +525,9 @@ fun FreshQueueContent(
 
                                 Spacer(modifier = Modifier.width(12.dp))
 
-                                // Title & Artist with Duration
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = track.title ?: "",
+                                        text = (track.title ?: "").cleanSongTitle(),
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Normal,
                                             fontSize = 15.sp
@@ -510,7 +556,6 @@ fun FreshQueueContent(
                                     )
                                 }
 
-                                // Three dots menu
                                 IconButton(
                                     onClick = { selectedItemForMenu = actualIndex },
                                     modifier = Modifier.size(36.dp)
@@ -550,7 +595,6 @@ fun FreshQueueContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Shuffle button
                     val isShuffle = controllerState.isShuffle
                     IconButton(
                         onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) },
@@ -564,7 +608,6 @@ fun FreshQueueContent(
                         )
                     }
 
-                    // Collapse Chevron
                     IconButton(
                         onClick = onDismiss,
                         modifier = Modifier.size(48.dp)
@@ -577,7 +620,6 @@ fun FreshQueueContent(
                         )
                     }
 
-                    // Repeat button
                     val isRepeat = controllerState.repeatState != RepeatState.None
                     val isRepeatOne = controllerState.repeatState == RepeatState.One
                     IconButton(

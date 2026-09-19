@@ -294,7 +294,6 @@ class ListenTogetherPlaybackBridge(
             customCacheKey = id,
         )
 
-
     /**
      * Publishes what is ALREADY playing the moment we become host.
      *
@@ -473,7 +472,6 @@ class ListenTogetherPlaybackBridge(
             )
         }
     }
-
 
     /**
      * Answers `buffer_ready` once the local player has the track the room is waiting on.

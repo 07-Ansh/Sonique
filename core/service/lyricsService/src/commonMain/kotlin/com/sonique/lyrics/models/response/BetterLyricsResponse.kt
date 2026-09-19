@@ -4,5 +4,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class BetterLyricsResponse(
-    val ttml: String,
+    val ttml: String? = null,
 )

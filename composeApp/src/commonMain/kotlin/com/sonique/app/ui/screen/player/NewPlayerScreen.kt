@@ -103,6 +103,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.input.pointer.pointerInput
@@ -125,6 +126,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import com.sonique.app.expect.ui.toImageBitmap
 import com.sonique.app.extension.getAmbientSheetColor
+import com.sonique.app.extension.getAmbientAccentColor
+import com.sonique.app.extension.getAmbientTintedWhiteColor
+import com.sonique.app.extension.cleanSongTitle
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.ui.component.BottomSheet
 import com.sonique.app.ui.component.rememberBottomSheetState
@@ -144,6 +148,7 @@ import com.sonique.app.ui.component.QueueBottomSheet
 import androidx.compose.runtime.mutableIntStateOf
 import com.sonique.app.viewModel.NowPlayingScreenData
 import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.app.viewModel.LyricsProvider
 import com.sonique.app.viewModel.UIEvent
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
 import com.sonique.domain.mediaservice.handler.RepeatState
@@ -180,9 +185,8 @@ import sonique.composeapp.generated.resources.baseline_close_24
 
 import kotlin.math.roundToLong
 
-// Matches Sonique constants
 private val PlayerHorizontalPadding = 24.dp
-private val ThumbnailCornerRadius = 8.dp  // cornerRadius * 2 = 16.dp applied in UI
+private val ThumbnailCornerRadius = 8.dp
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -204,7 +208,8 @@ fun NewPlayerScreen(
     val likeStatus by sharedViewModel.likeStatus.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    val trackTitle = currentSongData?.nowPlayingTitle ?: ""
+    val rawTrackTitle = currentSongData?.nowPlayingTitle ?: ""
+    val trackTitle = rawTrackTitle.cleanSongTitle()
     val trackArtist = currentSongData?.artistName ?: ""
     val firstArtist = if (trackArtist.isBlank()) ""
     else trackArtist.split(",", ";", "&", " feat.", " Feat.", " ft.", " Ft.").firstOrNull()?.trim() ?: trackArtist
@@ -213,14 +218,11 @@ fun NewPlayerScreen(
         ?: queueData?.data?.playlistName?.takeIf { it.isNotBlank() }
         ?: "Current Queue"
 
-    // Sheet/dialog visibility state
     var showInlineLyrics by remember { mutableStateOf(false) }
     var showShareLyricsSheet by remember { mutableStateOf(false) }
     var shareInitialLineIndex by remember { mutableIntStateOf(0) }
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showMoreOptions by remember { mutableStateOf(false) }
-    var showLyricsMenu by remember { mutableStateOf(false) }
-    var isLyricsAutoScrollEnabled by remember { mutableStateOf(true) }
     val coroutineScope = rememberCoroutineScope()
 
     val paletteState = com.kmpalette.rememberPaletteState()
@@ -229,7 +231,9 @@ fun NewPlayerScreen(
     val defaultSheetBg = Color(0xFF141316)
     val ambientSheetColor = remember { androidx.compose.animation.Animatable(defaultSheetBg) }
     val ambientAccentColor = remember { androidx.compose.animation.Animatable(Color.White) }
+    val ambientTintedWhiteColor = remember { androidx.compose.animation.Animatable(Color.White) }
     var extractedBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var lastPaletteBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
     val platformContext = LocalPlatformContext.current
     LaunchedEffect(trackArtwork) {
@@ -254,11 +258,14 @@ fun NewPlayerScreen(
 
     LaunchedEffect(extractedBitmap, currentSongData?.bitmap) {
         val bm = extractedBitmap ?: currentSongData?.bitmap
-        if (bm != null) {
-            try {
-                paletteState.generate(bm)
-            } catch (e: Exception) {
-                Logger.e("NewPlayerScreen", "Failed to generate palette: ${e.message}")
+        if (bm != null && bm != lastPaletteBitmap) {
+            lastPaletteBitmap = bm
+            withContext(Dispatchers.Default) {
+                try {
+                    paletteState.generate(bm)
+                } catch (e: Exception) {
+                    Logger.e("NewPlayerScreen", "Failed to generate palette: ${e.message}")
+                }
             }
         }
     }
@@ -271,32 +278,29 @@ fun NewPlayerScreen(
                     startColor.animateTo(it.getColorFromPalette())
                     ambientSheetColor.animateTo(it.getAmbientSheetColor())
                     ambientAccentColor.animateTo(it.getAmbientAccentColor())
+                    ambientTintedWhiteColor.animateTo(it.getAmbientTintedWhiteColor())
                 }
             }
     }
 
-    // 100% SOLID tinted background — strictly opaque (alpha = 1f), no transparency
     val sheetBg = ambientSheetColor.value.copy(alpha = 1f)
     val activeAccentColor = ambientAccentColor.value
+    val activeTintedWhite = ambientTintedWhiteColor.value
 
     val offsetYAnimatable = remember { Animatable(0f) }
     val velocityTracker = remember { VelocityTracker() }
     val scope = rememberCoroutineScope()
 
-    // Reset translation to 0f whenever screen is opened
     LaunchedEffect(Unit) {
         offsetYAnimatable.snapTo(0f)
     }
 
-    // When player re-opens (isVisible flips true), reset inner offset.
-    // At this moment playerOffsetY is still at screenHeightPx so the reset is invisible.
     LaunchedEffect(isVisible) {
         if (isVisible) {
             offsetYAnimatable.snapTo(0f)
         }
     }
 
-    // Trigger lyrics fetch when user opens lyrics panel (fetch may not have run yet)
     LaunchedEffect(showInlineLyrics) {
         if (showInlineLyrics && currentSongData?.lyricsData == null) {
             sharedViewModel.setLyricsProvider()
@@ -304,60 +308,20 @@ fun NewPlayerScreen(
     }
 
     val TextBackgroundColor = Color.White
-    val textButtonColor = Color.White
-    val iconButtonColor = Color.Black
-    val sideButtonContainerColor = Color.White.copy(alpha = 0.12f)
-    val sideButtonContentColor = Color.White
+    val textButtonColor = activeTintedWhite
+    val iconButtonColor = Color(0xFF141316)
+    val sideButtonContainerColor = activeTintedWhite.copy(alpha = 0.14f)
+    val sideButtonContentColor = activeTintedWhite
+    val buttonBorderColor = activeTintedWhite.copy(alpha = 0.30f)
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .graphicsLayer {
-
                 translationY = offsetYAnimatable.value.coerceAtLeast(0f)
                 alpha = (1f - (offsetYAnimatable.value / 1200f)).coerceIn(0f, 1f)
             }
-            .pointerInput(Unit) {
-                detectVerticalDragGestures(
-                    onVerticalDrag = { change, dragAmount ->
-                        velocityTracker.addPointerInputChange(change)
-                        val newY = (offsetYAnimatable.value + dragAmount).coerceAtLeast(0f)
-                        scope.launch {
-                            offsetYAnimatable.snapTo(newY)
-                        }
-                    },
-                    onDragCancel = {
-                        velocityTracker.resetTracking()
-                        scope.launch {
-                            offsetYAnimatable.animateTo(
-                                targetValue = 0f,
-                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                            )
-                        }
-                    },
-                    onDragEnd = {
-                        val velocityY = velocityTracker.calculateVelocity().y
-                        velocityTracker.resetTracking()
-                        scope.launch {
-                            if (offsetYAnimatable.value > 180f || velocityY > 1200f) {
-                                offsetYAnimatable.animateTo(
-                                    targetValue = 1500f,
-                                    animationSpec = tween(durationMillis = 180, easing = LinearEasing)
-                                )
-                                onDismiss()
-                                // Do NOT snapTo(0f) here — that causes a 1-frame blink.
-                                // offsetYAnimatable resets to 0f via LaunchedEffect(Unit) when player re-opens.
-                            } else {
-                                offsetYAnimatable.animateTo(
-                                    targetValue = 0f,
-                                    animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
-                                )
-                            }
-                        }
-                    }
-                )
-            }
-            .background(defaultBg) // Sonique surfaceContainer/background theme color
+            .background(defaultBg)
     ) {
         val screenHeight = maxHeight
         val screenWidth = maxWidth
@@ -383,6 +347,20 @@ fun NewPlayerScreen(
             initialAnchor = collapsedAnchor
         )
 
+        BackHandler(enabled = isVisible && queueSheetState.isCollapsed) {
+            if (showInlineLyrics) {
+                showInlineLyrics = false
+            } else {
+                scope.launch {
+                    offsetYAnimatable.animateTo(
+                        targetValue = 1500f,
+                        animationSpec = tween(durationMillis = 180, easing = LinearEasing)
+                    )
+                    onDismiss()
+                }
+            }
+        }
+
         AnimatedContent(
             targetState = if (ambienceMode) trackArtwork else "",
             transitionSpec = { fadeIn(tween(800)).togetherWith(fadeOut(tween(800))) },
@@ -396,7 +374,7 @@ fun NewPlayerScreen(
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxSize()
-                            .blur(150.dp)
+                            .blur(48.dp)
                     )
                     Box(
                         modifier = Modifier
@@ -413,9 +391,49 @@ fun NewPlayerScreen(
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
                 .padding(bottom = collapsedBarHeight)
-                .animateContentSize()
+                .then(
+                    if (!showInlineLyrics && queueSheetState.isCollapsed) {
+                        Modifier.pointerInput(Unit) {
+                            detectVerticalDragGestures(
+                                onVerticalDrag = { change, dragAmount ->
+                                    velocityTracker.addPointerInputChange(change)
+                                    val newY = (offsetYAnimatable.value + dragAmount).coerceAtLeast(0f)
+                                    scope.launch {
+                                        offsetYAnimatable.snapTo(newY)
+                                    }
+                                },
+                                onDragCancel = {
+                                    velocityTracker.resetTracking()
+                                    scope.launch {
+                                        offsetYAnimatable.animateTo(
+                                            targetValue = 0f,
+                                            animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                        )
+                                    }
+                                },
+                                onDragEnd = {
+                                    val velocityY = velocityTracker.calculateVelocity().y
+                                    velocityTracker.resetTracking()
+                                    scope.launch {
+                                        if (offsetYAnimatable.value > 180f || velocityY > 1200f) {
+                                            offsetYAnimatable.animateTo(
+                                                targetValue = 1500f,
+                                                animationSpec = tween(durationMillis = 180, easing = LinearEasing)
+                                            )
+                                            onDismiss()
+                                        } else {
+                                            offsetYAnimatable.animateTo(
+                                                targetValue = 0f,
+                                                animationSpec = spring(stiffness = Spring.StiffnessMediumLow)
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    } else Modifier
+                )
         ) {
-
             Spacer(modifier = Modifier.statusBarsPadding())
             Spacer(modifier = Modifier.height(dynamicTopSpacing))
 
@@ -426,7 +444,15 @@ fun NewPlayerScreen(
                     .padding(horizontal = 8.dp)
             ) {
                 IconButton(
-                    onClick = onDismiss,
+                    onClick = {
+                        scope.launch {
+                            offsetYAnimatable.animateTo(
+                                targetValue = 1500f,
+                                animationSpec = tween(durationMillis = 180, easing = LinearEasing)
+                            )
+                            onDismiss()
+                        }
+                    },
                     modifier = Modifier.align(Alignment.CenterStart)
                 ) {
                     Icon(
@@ -444,11 +470,20 @@ fun NewPlayerScreen(
                 ) {
                     Text(
                         text = if (showInlineLyrics) {
-                            val providerName = currentSongData?.lyricsData?.lyricsProvider?.name
-                                ?.lowercase()
-                                ?.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                                ?: "LrcLib"
-                            "Lyrics from $providerName"
+                            val provider = currentSongData?.lyricsData?.lyricsProvider
+                            if (provider != null) {
+                                val providerName = when (provider) {
+                                    LyricsProvider.BETTER_LYRICS -> "BetterLyrics"
+                                    LyricsProvider.LRCLIB -> "LRCLIB"
+                                    LyricsProvider.YOUTUBE -> "YouTube"
+                                    LyricsProvider.SPOTIFY -> "Spotify"
+                                    LyricsProvider.OFFLINE -> "Offline Cache"
+                                    LyricsProvider.AI -> "AI Translated"
+                                }
+                                "Lyrics from $providerName"
+                            } else {
+                                "LYRICS"
+                            }
                         } else {
                             "NOW PLAYING"
                         },
@@ -569,7 +604,10 @@ fun NewPlayerScreen(
                         if (idMatch != -1) {
                             idMatch
                         } else {
-                            val titleMatch = queue.indexOfFirst { it.title.equals(trackTitle, ignoreCase = true) }
+                            val titleMatch = queue.indexOfFirst {
+                                it.title.equals(rawTrackTitle, ignoreCase = true) ||
+                                it.title?.cleanSongTitle().equals(trackTitle, ignoreCase = true)
+                            }
                             if (titleMatch != -1) {
                                 titleMatch
                             } else {
@@ -592,7 +630,17 @@ fun NewPlayerScreen(
                         snapPositionalThreshold = 0.25f,
                     )
 
-                    // Keep pager in sync with active track when changed externally (next button, queue, auto-advance)
+                    // Track whether the user physically dragged the album artwork pager
+                    val isPagerDragged by pagerState.interactionSource.collectIsDraggedAsState()
+                    var userSwipedPager by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(isPagerDragged) {
+                        if (isPagerDragged) {
+                            userSwipedPager = true
+                        }
+                    }
+
+                    // Keep pager in sync with active track when changed externally (next button, queue, auto-advance, app open)
                     LaunchedEffect(currentQueueIndex) {
                         if (currentQueueIndex in 0 until totalPages &&
                             currentQueueIndex != pagerState.currentPage &&
@@ -602,17 +650,13 @@ fun NewPlayerScreen(
                         }
                     }
 
-                    // Trigger track switch immediately when user swipes and pager settles on a target page
+                    // ONLY trigger track switch when the user PHYSICALLY swiped the pager and it has settled
                     LaunchedEffect(pagerState, queue) {
-                        snapshotFlow { pagerState.settledPage }
-                            .distinctUntilChanged()
-                            .collect { settledPage ->
-                                if (settledPage != currentQueueIndex && settledPage in queue.indices) {
-                                    if (settledPage == currentQueueIndex + 1) {
-                                        sharedViewModel.onUIEvent(UIEvent.Next)
-                                    } else if (settledPage == currentQueueIndex - 1) {
-                                        sharedViewModel.onUIEvent(UIEvent.Previous)
-                                    } else {
+                        snapshotFlow { Pair(pagerState.settledPage, pagerState.isScrollInProgress) }
+                            .collect { (settledPage, isScrolling) ->
+                                if (!isScrolling && userSwipedPager) {
+                                    userSwipedPager = false
+                                    if (settledPage != currentQueueIndex && settledPage in queue.indices) {
                                         musicServiceHandler.playMediaItemInMediaSource(settledPage)
                                     }
                                 }
@@ -634,18 +678,32 @@ fun NewPlayerScreen(
                                 .then(
                                     if (totalPages <= 1) {
                                         Modifier.pointerInput(Unit) {
+                                            var totalDragX = 0f
                                             var isSwipeHandled = false
+                                            val threshold = 50.dp.toPx()
                                             detectHorizontalDragGestures(
-                                                onDragEnd = { isSwipeHandled = false },
+                                                onDragStart = {
+                                                    totalDragX = 0f
+                                                    isSwipeHandled = false
+                                                },
+                                                onDragEnd = {
+                                                    totalDragX = 0f
+                                                    isSwipeHandled = false
+                                                },
+                                                onDragCancel = {
+                                                    totalDragX = 0f
+                                                    isSwipeHandled = false
+                                                },
                                             ) { change, dragAmount ->
                                                 change.consume()
                                                 if (!isSwipeHandled) {
-                                                    if (dragAmount < -60) {
+                                                    totalDragX += dragAmount
+                                                    if (totalDragX < -threshold) {
                                                         if (controllerState.isNextAvailable) {
                                                             sharedViewModel.onUIEvent(UIEvent.Next)
                                                             isSwipeHandled = true
                                                         }
-                                                    } else if (dragAmount > 60) {
+                                                    } else if (totalDragX > threshold) {
                                                         if (controllerState.isPreviousAvailable) {
                                                             sharedViewModel.onUIEvent(UIEvent.Previous)
                                                             isSwipeHandled = true
@@ -660,7 +718,7 @@ fun NewPlayerScreen(
                             HorizontalPager(
                                 state = pagerState,
                                 flingBehavior = flingBehavior,
-                                key = { page -> queue.getOrNull(page)?.videoId ?: page.toString() },
+                                key = { page -> "${page}_${queue.getOrNull(page)?.videoId ?: page}" },
                                 modifier = Modifier.fillMaxSize(),
                                 userScrollEnabled = totalPages > 1,
                             ) { page ->
@@ -717,7 +775,6 @@ fun NewPlayerScreen(
                 label = "playPauseRoundness"
             )
 
-            // Song info + action buttons row
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -725,7 +782,6 @@ fun NewPlayerScreen(
                     .fillMaxWidth()
                     .padding(horizontal = dynamicHorizontalPadding)
             ) {
-                // Conditional small artwork thumbnail next to details (only shown when lyrics are open)
                 AnimatedContent(
                     targetState = showInlineLyrics,
                     label = "ThumbnailAnimation"
@@ -757,7 +813,6 @@ fun NewPlayerScreen(
                 }
 
                 Column(modifier = Modifier.weight(1f)) {
-                    // Title with AnimatedContent (no marquee, medium font weight)
                     AnimatedContent(
                         targetState = trackTitle,
                         transitionSpec = { fadeIn() togetherWith fadeOut() },
@@ -775,7 +830,6 @@ fun NewPlayerScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Artist name with explicit badge & navigation to ArtistDestination
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.fillMaxWidth()
@@ -808,7 +862,6 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Pill-shaped buttons — exact shapes from Player.kt lines 1126-1140
                 val shareShape = RoundedCornerShape(
                     topStart = 50.dp, bottomStart = 50.dp,
                     topEnd = 3.dp, bottomEnd = 3.dp
@@ -822,10 +875,12 @@ fun NewPlayerScreen(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Share button
                     FilledIconButton(
                         onClick = {
-                            val songId = currentSongData?.songInfoData?.videoId ?: ""
+                            val songId = currentSongData?.songInfoData?.videoId?.takeIf { it.isNotBlank() }
+                                ?: nowPlayingState?.mediaItem?.mediaId?.removePrefix("Video")?.takeIf { it.isNotBlank() }
+                                ?: nowPlayingState?.track?.videoId?.takeIf { it.isNotBlank() }
+                                ?: ""
                             if (songId.isNotEmpty()) {
                                 shareUrl(
                                     title = trackTitle,
@@ -848,8 +903,10 @@ fun NewPlayerScreen(
                         )
                     }
 
-                    // Like button (likes in YouTube with dramatic 3D pop out of box animation)
-                    var localOptimisticLiked by remember(currentSongData?.nowPlayingTitle) { mutableStateOf<Boolean?>(null) }
+                    val currentTrackId = nowPlayingState?.mediaItem?.mediaId?.takeIf { it.isNotBlank() }
+                        ?: currentSongData?.songInfoData?.videoId?.takeIf { it.isNotBlank() }
+                        ?: currentSongData?.nowPlayingTitle
+                    var localOptimisticLiked by remember(currentTrackId) { mutableStateOf<Boolean?>(null) }
                     val isLiked = localOptimisticLiked ?: (likeStatus || controllerState.isLiked)
                     val popScale = remember { Animatable(1f) }
                     val popElevationY = remember { Animatable(0f) }
@@ -871,14 +928,12 @@ fun NewPlayerScreen(
                                 if (nextState) {
                                     isPopping = true
                                     coroutineScope.launch {
-                                        // Parallel radiant shockwave burst
                                         launch {
                                             burstScale.snapTo(0.4f)
                                             burstAlpha.snapTo(0.85f)
                                             burstScale.animateTo(2.3f, tween(360, easing = FastOutSlowInEasing))
                                             burstAlpha.animateTo(0f, tween(160, easing = LinearEasing))
                                         }
-
                                         launch {
                                             popScale.snapTo(0.4f)
                                             popElevationY.snapTo(0f)
@@ -896,12 +951,10 @@ fun NewPlayerScreen(
                                             launch {
                                                 popRotationX.animateTo(0f, tween(260))
                                             }
-                                            // Rocket out of box to 2.15x scale!
                                             popScale.animateTo(
                                                 targetValue = 2.15f,
                                                 animationSpec = spring(dampingRatio = 0.52f, stiffness = Spring.StiffnessMedium)
                                             )
-                                            // Spring back into socket
                                             popScale.animateTo(
                                                 targetValue = 1.0f,
                                                 animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)
@@ -950,7 +1003,6 @@ fun NewPlayerScreen(
                         }
 
                         if (isPopping) {
-                            // 1. Shockwave glow halo
                             Box(
                                 modifier = Modifier
                                     .size(dynamicActionButtonSize)
@@ -963,7 +1015,6 @@ fun NewPlayerScreen(
                                     .background(Color(0x55FF2A55))
                             )
 
-                            // 2. Exploding mini sparkles
                             val particles = listOf(
                                 0.0 to 1.0f,
                                 60.0 to 0.85f,
@@ -993,7 +1044,6 @@ fun NewPlayerScreen(
                                 )
                             }
 
-                            // 3. Huge 3D Floating Heart popping out into the camera
                             Icon(
                                 painter = painterResource(Res.drawable.favorite),
                                 contentDescription = null,
@@ -1087,7 +1137,6 @@ fun NewPlayerScreen(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                // Play/Pause — white pill with icon + text label (uses Button to keep color rendering correct)
                 androidx.compose.material3.Button(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.PlayPause) },
                     shape = RoundedCornerShape(50),
@@ -1177,7 +1226,6 @@ fun NewPlayerScreen(
                         topEnd = 50.dp, bottomEnd = 50.dp
                     )
 
-                    // Queue button — expands Queue upward smoothly
                     PlayerQueueButton(
                         icon = Res.drawable.queue_music,
                         isActive = false,
@@ -1185,11 +1233,11 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(buttonSize),
                         textButtonColor = textButtonColor,
                         iconButtonColor = iconButtonColor,
+                        borderColor = buttonBorderColor,
                         iconSize = iconSize,
                         onClick = { queueSheetState.expandSoft() }
                     )
 
-                    // Sleep Timer button
                     val isSleepTimerActive = sleepTimerState.timeRemaining > 0
                     PlayerQueueButton(
                         icon = Res.drawable.bedtime,
@@ -1198,11 +1246,11 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(buttonSize),
                         textButtonColor = textButtonColor,
                         iconButtonColor = iconButtonColor,
+                        borderColor = buttonBorderColor,
                         iconSize = iconSize,
                         onClick = { showSleepTimerDialog = true }
                     )
 
-                    // Shuffle button — use transparent shuffle drawable always to prevent black background box
                     val isShuffle = controllerState.isShuffle
                     PlayerQueueButton(
                         icon = Res.drawable.shuffle,
@@ -1211,11 +1259,11 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(buttonSize),
                         textButtonColor = textButtonColor,
                         iconButtonColor = iconButtonColor,
+                        borderColor = buttonBorderColor,
                         iconSize = iconSize,
                         onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
                     )
 
-                    // Lyrics button — toggles inline lyrics overlay instantly
                     PlayerQueueButton(
                         icon = Res.drawable.lyrics,
                         isActive = showInlineLyrics,
@@ -1223,12 +1271,12 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(buttonSize),
                         textButtonColor = textButtonColor,
                         iconButtonColor = iconButtonColor,
+                        borderColor = buttonBorderColor,
                         iconSize = iconSize,
                         enabled = true,
                         onClick = { showInlineLyrics = !showInlineLyrics }
                     )
 
-                    // Repeat button — use transparent repeat/repeat_one drawables always
                     val isRepeat = controllerState.repeatState != RepeatState.None
                     val isRepeatOne = controllerState.repeatState == RepeatState.One
                     PlayerQueueButton(
@@ -1238,13 +1286,13 @@ fun NewPlayerScreen(
                         modifier = Modifier.size(buttonSize),
                         textButtonColor = textButtonColor,
                         iconButtonColor = iconButtonColor,
+                        borderColor = buttonBorderColor,
                         iconSize = iconSize,
                         onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    // More button — shows ModernMoreOptionsSheet
                     Box(
                         modifier = Modifier
                             .size(buttonSize)
@@ -1282,6 +1330,10 @@ fun NewPlayerScreen(
             backgroundColor = sheetBg,
             accentColor = activeAccentColor,
             contentColor = TextBackgroundColor,
+            onLyricsClick = {
+                queueSheetState.collapseSoft()
+                showInlineLyrics = true
+            },
         )
 
         if (showShareLyricsSheet && currentSongData?.lyricsData != null) {
@@ -1299,9 +1351,11 @@ fun NewPlayerScreen(
         if (showSleepTimerDialog) {
             val activeRemaining = sleepTimerState.timeRemaining
             var sleepTimerDefault by remember { mutableFloatStateOf(30f) }
-            var sleepTimerValue by remember(activeRemaining) {
-                mutableFloatStateOf(if (activeRemaining > 0) activeRemaining.toFloat() else sleepTimerDefault)
+            val initialSliderValue = remember {
+                val activeMins = if (activeRemaining > 0) (activeRemaining / 60).toFloat() else sleepTimerDefault
+                activeMins.coerceIn(5f, 120f)
             }
+            var sleepTimerValue by remember { mutableFloatStateOf(initialSliderValue) }
 
             AlertDialog(
                 onDismissRequest = { showSleepTimerDialog = false },
@@ -1313,9 +1367,13 @@ fun NewPlayerScreen(
                 },
                 text = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val activeMinutes = activeRemaining / 60
+                        val activeSeconds = activeRemaining % 60
                         Text(
-                            text = if (activeRemaining > 0) "Active: ${formatDuration(activeRemaining * 1000L)}"
-                            else "${sleepTimerValue.roundToInt()} minutes",
+                            text = if (activeRemaining > 0) {
+                                if (activeMinutes > 0) "Active: ${activeMinutes}m ${activeSeconds}s remaining"
+                                else "Active: ${activeSeconds}s remaining"
+                            } else "${sleepTimerValue.roundToInt()} minutes",
                             style = MaterialTheme.typography.bodyLarge
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -1323,12 +1381,11 @@ fun NewPlayerScreen(
                             value = sleepTimerValue,
                             onValueChange = { sleepTimerValue = it },
                             valueRange = 5f..120f,
-                            steps = (120 - 5) / 5 - 1
+                            steps = 22
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        val isAtDefault = sleepTimerValue.roundToInt() == sleepTimerDefault.roundToInt()
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -1341,13 +1398,15 @@ fun NewPlayerScreen(
                                 Text("Set as default")
                             }
 
-                            OutlinedButton(
-                                onClick = {
-                                    showSleepTimerDialog = false
-                                    sharedViewModel.stopSleepTimer()
+                            if (activeRemaining > 0) {
+                                OutlinedButton(
+                                    onClick = {
+                                        showSleepTimerDialog = false
+                                        sharedViewModel.stopSleepTimer()
+                                    }
+                                ) {
+                                    Text("Stop Timer")
                                 }
-                            ) {
-                                Text("End of song")
                             }
                         }
                     }
@@ -1406,6 +1465,7 @@ fun PlayerQueueButton(
     modifier: Modifier = Modifier,
     textButtonColor: Color = Color.White,
     iconButtonColor: Color = Color.Black,
+    borderColor: Color = Color.White.copy(alpha = 0.3f),
     iconSize: androidx.compose.ui.unit.Dp = 24.dp,
     enabled: Boolean = true,
     onClick: () -> Unit = {},
@@ -1418,9 +1478,13 @@ fun PlayerQueueButton(
         targetValue = if (isActive) iconButtonColor else Color.White,
         label = "queueButtonContent"
     )
+    val animatedBorderColor by animateColorAsState(
+        targetValue = if (isActive) Color.Transparent else borderColor,
+        label = "queueButtonBorder"
+    )
     val borderModifier = if (isActive) Modifier else Modifier.border(
         width = 1.dp,
-        color = Color.White.copy(alpha = 0.3f),
+        color = animatedBorderColor,
         shape = shape
     )
     Box(
@@ -1486,7 +1550,7 @@ private fun PlayerTimelineSection(
     var sliderPosition by remember { mutableStateOf<Float?>(null) }
     val animatedPercent = remember { Animatable(0f) }
 
-    LaunchedEffect(isPlaying, timelineState.total, timelineState.loading) {
+    LaunchedEffect(timelineState.current, isPlaying, timelineState.total) {
         if (sliderPosition != null) return@LaunchedEffect
 
         if (timelineState.total <= 0L || timelineState.current < 0L) {
@@ -1495,42 +1559,18 @@ private fun PlayerTimelineSection(
         }
 
         val currentPercent = (timelineState.current.toFloat() / timelineState.total.toFloat()).coerceIn(0f, 1f) * 100f
-        val remainingMs = (timelineState.total - timelineState.current).coerceAtLeast(0L)
-
-        if (!isPlaying || timelineState.loading || remainingMs <= 0L) {
-            animatedPercent.snapTo(currentPercent)
-            return@LaunchedEffect
-        }
-
-        animatedPercent.snapTo(currentPercent)
-
-        animatedPercent.animateTo(
-            targetValue = 100f,
-            animationSpec = tween(
-                durationMillis = remainingMs.toInt().coerceAtLeast(1),
-                easing = LinearEasing
-            )
-        )
-    }
-
-    // Monitor for seeks, song switches, or large drift without cancelling the continuous animation
-    LaunchedEffect(timelineState.current) {
-        if (sliderPosition != null || timelineState.total <= 0L) return@LaunchedEffect
-        val currentPercent = (timelineState.current.toFloat() / timelineState.total.toFloat()).coerceIn(0f, 1f) * 100f
         val drift = kotlin.math.abs(animatedPercent.value - currentPercent)
-        // If drift is significant (> 1.8%), user seeked or playback jumped: resync and continue
-        if (drift > 1.8f) {
+
+        if (drift > 3f || !isPlaying || timelineState.loading) {
             animatedPercent.snapTo(currentPercent)
-            if (isPlaying && !timelineState.loading) {
-                val remainingMs = (timelineState.total - timelineState.current).coerceAtLeast(0L)
-                animatedPercent.animateTo(
-                    targetValue = 100f,
-                    animationSpec = tween(
-                        durationMillis = remainingMs.toInt().coerceAtLeast(1),
-                        easing = LinearEasing
-                    )
-                )
-            }
+        } else {
+            val remainingMs = (timelineState.total - timelineState.current).coerceAtLeast(0L)
+            val stepDuration = minOf(1000L, remainingMs).toInt().coerceAtLeast(1)
+            val nextPercent = ((timelineState.current + stepDuration).toFloat() / timelineState.total.toFloat()).coerceIn(0f, 1f) * 100f
+            animatedPercent.animateTo(
+                targetValue = nextPercent,
+                animationSpec = tween(durationMillis = stepDuration, easing = LinearEasing)
+            )
         }
     }
 
@@ -1574,10 +1614,8 @@ private fun PlayerTimelineSection(
         ) {
             val currentElapsedMs = if (sliderPosition != null) {
                 (timelineState.total * (sliderPosition!! / 100f)).toLong()
-            } else if (timelineState.total > 0L) {
-                ((animatedPercent.value / 100f) * timelineState.total).toLong().coerceIn(0L, timelineState.total)
             } else {
-                0L
+                timelineState.current.coerceIn(0L, timelineState.total.coerceAtLeast(0L))
             }
 
             Text(

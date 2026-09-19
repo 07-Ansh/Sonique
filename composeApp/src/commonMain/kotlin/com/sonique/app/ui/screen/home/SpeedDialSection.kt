@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.home
+package com.sonique.app.ui.screen.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,6 +39,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.sonique.app.ui.component.NowPlayingBottomSheet
+import com.sonique.app.extension.cleanSongTitle
 import com.sonique.domain.utils.toSongEntity
 import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.ui.component.liquidGlass
@@ -247,7 +248,7 @@ fun SpeedDialSection(
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = item.title,
+                                        text = item.title.cleanSongTitle(),
                                         style = typo().titleMedium,
                                         color = Color.White,
                                         maxLines = 1
@@ -398,7 +399,7 @@ fun SpeedDialBigItem(
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
-                text = item.title,
+                text = item.title.cleanSongTitle(),
                 style = typo().bodyMedium,
                 color = Color.White,
                 maxLines = 1,
@@ -473,7 +474,7 @@ fun SpeedDialGridItem(
                     )
             )
             Text(
-                text = item.title,
+                text = item.title.cleanSongTitle(),
                 style = typo().labelMedium,
                 color = Color.White,
                 maxLines = 2,

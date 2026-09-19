@@ -340,7 +340,6 @@ private fun SoniqueToastPill(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
-
             Box(
                 modifier = Modifier
                     .size(34.dp)

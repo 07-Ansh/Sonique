@@ -56,7 +56,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.FileDownload
 import androidx.compose.material.icons.rounded.Group
+import androidx.compose.material.icons.outlined.CloudSync
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -67,6 +69,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -121,9 +128,14 @@ import sonique.composeapp.generated.resources.metro_radio
 import sonique.composeapp.generated.resources.metro_volume_down
 import sonique.composeapp.generated.resources.metro_volume_mute
 import sonique.composeapp.generated.resources.metro_volume_up
+import sonique.composeapp.generated.resources.metro_lyrics
+import sonique.composeapp.generated.resources.metro_palette
+import sonique.composeapp.generated.resources.metro_tune
+import com.sonique.app.viewModel.SharedViewModel
+import com.sonique.domain.manager.DataStoreManager
 
 /**
- * 2-Stage Bottom Sheet for 3-Dot More Options.
+ * More options bottom sheet displaying quick actions, audio options, and playback settings.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,11 +150,23 @@ fun ModernMoreOptionsTwoStageSheet(
     accentColor: Color? = null,
     contentColor: Color? = null,
     mediaPlayerHandler: MediaPlayerHandler = koinInject(),
+    dataStoreManager: DataStoreManager = koinInject(),
+    sharedViewModel: SharedViewModel = koinInject(),
+    onLyricsClick: (() -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val scrollState = rememberScrollState()
+
+    val ambienceModePref by dataStoreManager.ambienceMode.collectAsStateWithLifecycle(initialValue = DataStoreManager.TRUE)
+    val isAmbienceEnabled = ambienceModePref == DataStoreManager.TRUE
+
+    val crossfadeEnabledPref by dataStoreManager.crossfadeEnabled.collectAsStateWithLifecycle(initialValue = DataStoreManager.FALSE)
+    val isCrossfadeEnabled = crossfadeEnabledPref == DataStoreManager.TRUE
+
+    val lyricsProviderPref by dataStoreManager.lyricsProvider.collectAsStateWithLifecycle(initialValue = DataStoreManager.LRCLIB)
+    val lyricsAutoFallbackPref by dataStoreManager.lyricsAutoFallback.collectAsStateWithLifecycle(initialValue = true)
 
     LaunchedEffect(song) {
         viewModel.setSongEntity(song)
@@ -152,6 +176,7 @@ fun ModernMoreOptionsTwoStageSheet(
     var showArtistSheet by remember { mutableStateOf(false) }
     var showDetailsDialog by remember { mutableStateOf(false) }
     var showCancelDownloadDialog by remember { mutableStateOf(false) }
+    var showLyricsOptionsDialog by remember { mutableStateOf(false) }
 
     val audioSessionId = remember {
         runCatching { mediaPlayerHandler.player.audioSessionId }.getOrDefault(0)
@@ -256,6 +281,20 @@ fun ModernMoreOptionsTwoStageSheet(
         )
     }
 
+    if (showLyricsOptionsDialog) {
+        LyricsOptionsDialog(
+            onDismissRequest = { showLyricsOptionsDialog = false },
+            dataStoreManager = dataStoreManager,
+            sharedViewModel = sharedViewModel,
+            onViewLyrics = onLyricsClick?.let {
+                {
+                    onDismiss()
+                    it.invoke()
+                }
+            },
+        )
+    }
+
     val tint = accentColor ?: MaterialTheme.colorScheme.primary
     val isMonochrome = tint == Color.White || tint == Color.Black || tint.toHsl()[1] < 0.12f
     val darkBase = Color(0xFF141316)
@@ -288,11 +327,15 @@ fun ModernMoreOptionsTwoStageSheet(
             stiffness = Spring.StiffnessMediumLow
         )
 
+        // Track where the current drag gesture originated (Fullscreen vs Half)
+        var gestureStartOffset by remember { mutableFloatStateOf(halfOffsetPx) }
+
         // When `visible` toggles:
         LaunchedEffect(visible, sheetHeightPx) {
             if (visible) {
                 offsetAnimatable.snapTo(hiddenOffsetPx)
                 scrollState.scrollTo(0)
+                gestureStartOffset = halfOffsetPx
                 offsetAnimatable.animateTo(
                     targetValue = halfOffsetPx,
                     animationSpec = sheetSpringSpec
@@ -333,9 +376,10 @@ fun ModernMoreOptionsTwoStageSheet(
 
         fun snapOrAnimateToAnchor(velocityY: Float = 0f) {
             val curr = offsetAnimatable.value
+            val wasStartingFromFull = gestureStartOffset < halfOffsetPx * 0.45f
             scope.launch {
                 if (velocityY < -500f) {
-                    // Quick flick UP -> expand to Full
+                    // Quick flick UP -> expand to Fullscreen
                     offsetAnimatable.animateTo(
                         targetValue = 0f,
                         animationSpec = sheetSpringSpec,
@@ -343,13 +387,15 @@ fun ModernMoreOptionsTwoStageSheet(
                     )
                 } else if (velocityY > 500f) {
                     // Quick flick DOWN
-                    if (curr < halfOffsetPx - 20f) {
+                    if (wasStartingFromFull) {
+                        // Swiped down from Fullscreen -> ALWAYS collapse to Half-screen first, never dismiss directly
                         offsetAnimatable.animateTo(
                             targetValue = halfOffsetPx,
                             animationSpec = sheetSpringSpec,
                             initialVelocity = velocityY
                         )
                     } else {
+                        // Swiped down from Half-screen -> Dismiss sheet
                         offsetAnimatable.animateTo(
                             targetValue = hiddenOffsetPx,
                             animationSpec = sheetSpringSpec,
@@ -358,32 +404,59 @@ fun ModernMoreOptionsTwoStageSheet(
                         onDismiss()
                     }
                 } else {
-                    // Low velocity: snap to closest anchor
-                    val threshold1 = halfOffsetPx * 0.45f
-                    val threshold2 = halfOffsetPx + (sheetHeightPx - halfOffsetPx) * 0.40f
-
-                    when {
-                        curr <= threshold1 -> {
+                    // Low velocity / slow drag release:
+                    if (wasStartingFromFull) {
+                        // Started from Fullscreen: if dragged down past 25% of distance, snap to Half; else snap back to Full
+                        val fullToHalfThreshold = halfOffsetPx * 0.25f
+                        if (curr > fullToHalfThreshold) {
+                            offsetAnimatable.animateTo(
+                                targetValue = halfOffsetPx,
+                                animationSpec = sheetSpringSpec
+                            )
+                        } else {
                             offsetAnimatable.animateTo(
                                 targetValue = 0f,
                                 animationSpec = sheetSpringSpec
                             )
                         }
-                        curr <= threshold2 -> {
-                            offsetAnimatable.animateTo(
-                                targetValue = halfOffsetPx,
-                                animationSpec = sheetSpringSpec
-                            )
-                        }
-                        else -> {
-                            offsetAnimatable.animateTo(
-                                targetValue = hiddenOffsetPx,
-                                animationSpec = sheetSpringSpec
-                            )
-                            onDismiss()
+                    } else {
+                        // Started from Half-screen:
+                        val halfToFullThreshold = halfOffsetPx * 0.75f
+                        val halfToHiddenThreshold = halfOffsetPx + (hiddenOffsetPx - halfOffsetPx) * 0.25f
+
+                        when {
+                            curr < halfToFullThreshold -> {
+                                offsetAnimatable.animateTo(
+                                    targetValue = 0f,
+                                    animationSpec = sheetSpringSpec
+                                )
+                            }
+                            curr > halfToHiddenThreshold -> {
+                                offsetAnimatable.animateTo(
+                                    targetValue = hiddenOffsetPx,
+                                    animationSpec = sheetSpringSpec
+                                )
+                                onDismiss()
+                            }
+                            else -> {
+                                offsetAnimatable.animateTo(
+                                    targetValue = halfOffsetPx,
+                                    animationSpec = sheetSpringSpec
+                                )
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        var isNestedScrollDragging by remember { mutableStateOf(false) }
+        var touchStartedInContentScroll by remember { mutableStateOf(false) }
+
+        androidx.compose.runtime.LaunchedEffect(scrollState.isScrollInProgress) {
+            if (!scrollState.isScrollInProgress) {
+                touchStartedInContentScroll = false
+                isNestedScrollDragging = false
             }
         }
 
@@ -391,6 +464,18 @@ fun ModernMoreOptionsTwoStageSheet(
             object : NestedScrollConnection {
                 override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                     val deltaY = available.y
+
+                    if (!isNestedScrollDragging) {
+                        isNestedScrollDragging = true
+                        touchStartedInContentScroll = scrollState.value > 0
+                        gestureStartOffset = offsetAnimatable.value
+                    }
+
+                    // If gesture started while content was scrolled, let the scrollable container handle all movement
+                    if (touchStartedInContentScroll) {
+                        return Offset.Zero
+                    }
+
                     // Dragging UP: if sheet is not fully expanded, consume drag to expand sheet
                     if (deltaY < 0 && offsetAnimatable.value > 0f) {
                         val newTarget = (offsetAnimatable.value + deltaY).coerceAtLeast(0f)
@@ -398,13 +483,17 @@ fun ModernMoreOptionsTwoStageSheet(
                         scope.launch { offsetAnimatable.snapTo(newTarget) }
                         return Offset(0f, consumed)
                     }
-                    // Dragging DOWN: if sheet is at Half or lower, consume drag to move towards hidden
-                    if (deltaY > 0 && offsetAnimatable.value >= halfOffsetPx - 1f) {
-                        val newTarget = (offsetAnimatable.value + deltaY).coerceAtMost(hiddenOffsetPx)
+
+                    // Dragging DOWN when content is already at the top:
+                    if (deltaY > 0 && scrollState.value == 0) {
+                        val wasStartingFromFull = gestureStartOffset < halfOffsetPx * 0.45f
+                        val maxTarget = if (wasStartingFromFull) halfOffsetPx else hiddenOffsetPx
+                        val newTarget = (offsetAnimatable.value + deltaY).coerceIn(0f, maxTarget)
                         val consumed = newTarget - offsetAnimatable.value
                         scope.launch { offsetAnimatable.snapTo(newTarget) }
                         return Offset(0f, consumed)
                     }
+
                     return Offset.Zero
                 }
 
@@ -413,10 +502,16 @@ fun ModernMoreOptionsTwoStageSheet(
                     available: Offset,
                     source: NestedScrollSource
                 ): Offset {
-                    val deltaY = available.y
+                    // Content scroll reached the top boundary: absorb without dragging the sheet down
+                    if (touchStartedInContentScroll) {
+                        return Offset.Zero
+                    }
 
+                    val deltaY = available.y
                     if (deltaY > 0 && scrollState.value == 0) {
-                        val newTarget = (offsetAnimatable.value + deltaY).coerceAtMost(hiddenOffsetPx)
+                        val wasStartingFromFull = gestureStartOffset < halfOffsetPx * 0.45f
+                        val maxTarget = if (wasStartingFromFull) halfOffsetPx else hiddenOffsetPx
+                        val newTarget = (offsetAnimatable.value + deltaY).coerceIn(0f, maxTarget)
                         val consumedY = newTarget - offsetAnimatable.value
                         scope.launch { offsetAnimatable.snapTo(newTarget) }
                         return Offset(0f, consumedY)
@@ -425,15 +520,28 @@ fun ModernMoreOptionsTwoStageSheet(
                 }
 
                 override suspend fun onPreFling(available: Velocity): Velocity {
+                    if (touchStartedInContentScroll) {
+                        isNestedScrollDragging = false
+                        touchStartedInContentScroll = false
+                        return Velocity.Zero
+                    }
                     if (offsetAnimatable.value > 0f) {
+                        isNestedScrollDragging = false
                         snapOrAnimateToAnchor(available.y)
                         return available
                     }
+                    isNestedScrollDragging = false
                     return Velocity.Zero
                 }
 
                 override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
-                    if (scrollState.value == 0 && available.y > 0) {
+                    val wasInContent = touchStartedInContentScroll
+                    isNestedScrollDragging = false
+                    touchStartedInContentScroll = false
+                    if (wasInContent) {
+                        return available
+                    }
+                    if (scrollState.value == 0 && available.y != 0f) {
                         snapOrAnimateToAnchor(available.y)
                         return available
                     }
@@ -442,7 +550,7 @@ fun ModernMoreOptionsTwoStageSheet(
             }
         }
 
-        val containerVelocityTracker = remember { VelocityTracker() }
+        val handleVelocityTracker = remember { VelocityTracker() }
 
         if (isSheetVisible) {
             val progress = ((hiddenOffsetPx - currentOffset) / hiddenOffsetPx).coerceIn(0f, 1f)
@@ -486,64 +594,80 @@ fun ModernMoreOptionsTwoStageSheet(
                     }
                     .clip(RoundedCornerShape(topStart = dynamicCornerRadius, topEnd = dynamicCornerRadius))
                     .background(sheetBg)
-                    .pointerInput(sheetHeightPx, halfOffsetPx) {
-                        detectVerticalDragGestures(
-                            onDragStart = { containerVelocityTracker.resetTracking() },
-                            onVerticalDrag = { change, dragAmount ->
-                                containerVelocityTracker.addPointerInputChange(change)
-                                val newTarget = (offsetAnimatable.value + dragAmount).coerceIn(0f, hiddenOffsetPx)
-                                scope.launch { offsetAnimatable.snapTo(newTarget) }
-                            },
-                            onDragEnd = {
-                                val vy = containerVelocityTracker.calculateVelocity().y
-                                snapOrAnimateToAnchor(vy)
-                            },
-                            onDragCancel = {
-                                snapOrAnimateToAnchor(0f)
-                            }
-                        )
-                    }
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .nestedScroll(nestedScrollConnection)
-                        .verticalScroll(scrollState)
-                        .navigationBarsPadding()
-                        .padding(start = 16.dp, end = 16.dp, top = 2.dp + dynamicTopPadding, bottom = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                        .padding(top = 2.dp + dynamicTopPadding)
                 ) {
-
-                    Box(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 10.dp, bottom = 6.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(horizontal = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .width(36.dp)
-                                .height(4.dp)
-                                .clip(CircleShape)
-                                .background(if (isMonochrome) Color.White.copy(alpha = 0.30f) else finalAccent.copy(alpha = 0.40f))
+                                .fillMaxWidth()
+                                .padding(top = 10.dp, bottom = 4.dp)
+                                .pointerInput(Unit) {
+                                    detectVerticalDragGestures(
+                                        onDragStart = {
+                                            gestureStartOffset = offsetAnimatable.value
+                                            handleVelocityTracker.resetTracking()
+                                        },
+                                        onVerticalDrag = { change, dragAmount ->
+                                            change.consume()
+                                            handleVelocityTracker.addPointerInputChange(change)
+                                            val wasStartingFromFull = gestureStartOffset < halfOffsetPx * 0.45f
+                                            val maxTarget = if (wasStartingFromFull) halfOffsetPx else hiddenOffsetPx
+                                            val newTarget = (offsetAnimatable.value + dragAmount).coerceIn(0f, maxTarget)
+                                            scope.launch { offsetAnimatable.snapTo(newTarget) }
+                                        },
+                                        onDragEnd = {
+                                            val vy = handleVelocityTracker.calculateVelocity().y
+                                            snapOrAnimateToAnchor(vy)
+                                        },
+                                        onDragCancel = {
+                                            snapOrAnimateToAnchor(0f)
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(36.dp)
+                                    .height(4.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isMonochrome) Color.White.copy(alpha = 0.30f) else finalAccent.copy(alpha = 0.40f))
+                            )
+                        }
+
+                        ModernVolumeSlider(
+                            accentColor = finalAccent,
+                            sheetBg = sheetBg,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(top = 10.dp, bottom = 6.dp),
+                            color = if (isMonochrome) Color.White.copy(alpha = 0.10f) else finalAccent.copy(alpha = 0.22f),
+                            thickness = 0.8.dp
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    ModernVolumeSlider(
-                        accentColor = finalAccent,
-                        sheetBg = sheetBg,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
-                        color = if (isMonochrome) Color.White.copy(alpha = 0.10f) else finalAccent.copy(alpha = 0.22f),
-                        thickness = 0.8.dp
-                    )
-
-                    Row(
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .nestedScroll(nestedScrollConnection)
+                            .verticalScroll(scrollState)
+                            .navigationBarsPadding()
+                            .padding(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
@@ -604,6 +728,7 @@ fun ModernMoreOptionsTwoStageSheet(
 
                     val isLiked = uiState.songUIState.liked
 
+                    // Section 1: Library & Track Actions
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(3.dp)
@@ -633,7 +758,7 @@ fun ModernMoreOptionsTwoStageSheet(
                             iconRes = Res.drawable.ic_library_add,
                             title = if (isLiked) "Remove from library" else "Add to library",
                             subtitle = null,
-                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                             cardBg = cardBg,
                             borderColor = cardBorder,
                             contentColor = cardContent,
@@ -643,99 +768,190 @@ fun ModernMoreOptionsTwoStageSheet(
                                 SoniqueToastManager.show(if (!isLiked) "Added to library" else "Removed from library")
                             }
                         )
-                    }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                        val downloadState = uiState.songUIState.downloadState
+                        val (downloadText, downloadSubtitle) = when (downloadState) {
+                            DownloadState.STATE_DOWNLOADED -> "Downloaded" to "Saved to offline library"
+                            DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> "Downloading" to "Saving to device..."
+                            else -> "Download" to null
+                        }
 
-                    val downloadState = uiState.songUIState.downloadState
-                    val (downloadText, downloadSubtitle) = when (downloadState) {
-                        DownloadState.STATE_DOWNLOADED -> "Downloaded" to "Saved to offline library"
-                        DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> "Downloading" to "Saving to device..."
-                        else -> "Download" to null
-                    }
-
-                    ModernOptionCard(
-                        iconRes = when (downloadState) {
-                            DownloadState.STATE_DOWNLOADED -> Res.drawable.baseline_downloaded
-                            DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> Res.drawable.baseline_downloading_white
-                            else -> null
-                        },
-                        iconVector = if (downloadState != DownloadState.STATE_DOWNLOADED &&
-                            downloadState != DownloadState.STATE_DOWNLOADING &&
-                            downloadState != DownloadState.STATE_PREPARING
-                        ) Icons.Rounded.FileDownload else null,
-                        title = downloadText,
-                        subtitle = downloadSubtitle,
-                        shape = RoundedCornerShape(20.dp),
-                        cardBg = cardBg,
-                        borderColor = cardBorder,
-                        contentColor = cardContent,
-                        secondaryContentColor = cardSecondaryContent,
-                        onClick = {
-                            if (downloadState == DownloadState.STATE_DOWNLOADED ||
-                                downloadState == DownloadState.STATE_DOWNLOADING ||
-                                downloadState == DownloadState.STATE_PREPARING
-                            ) {
-                                showCancelDownloadDialog = true
-                            } else {
-                                viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                        ModernOptionCard(
+                            iconRes = when (downloadState) {
+                                DownloadState.STATE_DOWNLOADED -> Res.drawable.baseline_downloaded
+                                DownloadState.STATE_DOWNLOADING, DownloadState.STATE_PREPARING -> Res.drawable.baseline_downloading_white
+                                else -> null
+                            },
+                            iconVector = if (downloadState != DownloadState.STATE_DOWNLOADED &&
+                                downloadState != DownloadState.STATE_DOWNLOADING &&
+                                downloadState != DownloadState.STATE_PREPARING
+                            ) Icons.Rounded.FileDownload else null,
+                            title = downloadText,
+                            subtitle = downloadSubtitle,
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            onClick = {
+                                if (downloadState == DownloadState.STATE_DOWNLOADED ||
+                                    downloadState == DownloadState.STATE_DOWNLOADING ||
+                                    downloadState == DownloadState.STATE_PREPARING
+                                ) {
+                                    showCancelDownloadDialog = true
+                                } else {
+                                    viewModel.onUIEvent(NowPlayingBottomSheetUIEvent.Download)
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    ModernOptionCard(
-                        iconVector = Icons.Rounded.Group,
-                        title = "Listen Together",
-                        subtitle = null,
-                        shape = RoundedCornerShape(20.dp),
-                        cardBg = cardBg,
-                        borderColor = cardBorder,
-                        contentColor = cardContent,
-                        secondaryContentColor = cardSecondaryContent,
-                        onClick = {
-                            onDismiss()
-                            onNavigateToOtherScreen()
-                            navController.navigate(ListenTogetherDestination)
-                        }
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
+                    // Section 2: Audio & Playback Experience
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
-
                         ModernOptionCard(
-                            iconRes = Res.drawable.metro_info,
-                            title = "Details",
-                            subtitle = "View the song's details",
+                            iconVector = Icons.Rounded.Group,
+                            title = "Listen Together",
+                            subtitle = null,
                             shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                             cardBg = cardBg,
                             borderColor = cardBorder,
                             contentColor = cardContent,
                             secondaryContentColor = cardSecondaryContent,
-                            onClick = { showDetailsDialog = true }
+                            onClick = {
+                                onDismiss()
+                                onNavigateToOtherScreen()
+                                navController.navigate(ListenTogetherDestination)
+                            }
+                        )
+
+                        val currentProviderLabel = when (lyricsProviderPref) {
+                            DataStoreManager.BETTER_LYRICS -> "BetterLyrics"
+                            DataStoreManager.YOUTUBE -> "YouTube"
+                            DataStoreManager.SPOTIFY -> "Spotify"
+                            else -> "LRCLIB"
+                        }
+                        val lyricsOptionsSubtitle = "$currentProviderLabel • ${if (lyricsAutoFallbackPref) "Auto fallback on" else "Auto fallback off"}"
+
+                        ModernOptionCard(
+                            iconRes = Res.drawable.metro_lyrics,
+                            title = "Lyrics options",
+                            subtitle = lyricsOptionsSubtitle,
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            onClick = {
+                                showLyricsOptionsDialog = true
+                            }
                         )
 
                         ModernOptionCard(
                             iconRes = Res.drawable.metro_equalizer,
                             title = "Equalizer",
                             subtitle = "Open the audio equalizer",
-                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
                             cardBg = cardBg,
                             borderColor = cardBorder,
                             contentColor = cardContent,
                             secondaryContentColor = cardSecondaryContent,
                             onClick = { eqLauncher.launch() }
                         )
+
+                        ModernOptionCard(
+                            iconRes = Res.drawable.metro_info,
+                            title = "Details",
+                            subtitle = "View the song's details",
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            onClick = { showDetailsDialog = true }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Section 3: Experience Toggles
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        ModernOptionCard(
+                            iconRes = Res.drawable.metro_palette,
+                            title = "Ambience Mode",
+                            subtitle = if (isAmbienceEnabled) "Dynamic background colors enabled" else "Dynamic background colors disabled",
+                            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            trailingContent = {
+                                Switch(
+                                    checked = isAmbienceEnabled,
+                                    onCheckedChange = null,
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = if (isMonochrome) Color.White else finalAccent,
+                                        checkedTrackColor = if (isMonochrome) Color.White.copy(alpha = 0.35f) else finalAccent.copy(alpha = 0.35f),
+                                        checkedBorderColor = if (isMonochrome) Color.White else finalAccent,
+                                        uncheckedThumbColor = cardSecondaryContent,
+                                        uncheckedTrackColor = cardBg,
+                                        uncheckedBorderColor = cardBorder ?: cardSecondaryContent.copy(alpha = 0.3f),
+                                    )
+                                )
+                            },
+                            onClick = {
+                                scope.launch {
+                                    val next = !isAmbienceEnabled
+                                    dataStoreManager.setAmbienceMode(next)
+                                    SoniqueToastManager.show(if (next) "Ambience Mode enabled" else "Ambience Mode disabled")
+                                }
+                            }
+                        )
+
+                        ModernOptionCard(
+                            iconRes = Res.drawable.metro_tune,
+                            title = "Crossfade",
+                            subtitle = if (isCrossfadeEnabled) "Smooth track transitions enabled" else "Smooth track transitions disabled",
+                            shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                            cardBg = cardBg,
+                            borderColor = cardBorder,
+                            contentColor = cardContent,
+                            secondaryContentColor = cardSecondaryContent,
+                            trailingContent = {
+                                Switch(
+                                    checked = isCrossfadeEnabled,
+                                    onCheckedChange = null,
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = if (isMonochrome) Color.White else finalAccent,
+                                        checkedTrackColor = if (isMonochrome) Color.White.copy(alpha = 0.35f) else finalAccent.copy(alpha = 0.35f),
+                                        checkedBorderColor = if (isMonochrome) Color.White else finalAccent,
+                                        uncheckedThumbColor = cardSecondaryContent,
+                                        uncheckedTrackColor = cardBg,
+                                        uncheckedBorderColor = cardBorder ?: cardSecondaryContent.copy(alpha = 0.3f),
+                                    )
+                                )
+                            },
+                            onClick = {
+                                scope.launch {
+                                    val next = !isCrossfadeEnabled
+                                    dataStoreManager.setCrossfadeEnabled(next)
+                                    SoniqueToastManager.show(if (next) "Crossfade enabled" else "Crossfade disabled")
+                                }
+                            }
+                        )
                     }
                 }
             }
         }
     }
+}
 }
 
 /**
@@ -758,9 +974,21 @@ fun ModernMoreOptionsContent(
     accentColor: Color? = null,
     contentColor: Color? = null,
     mediaPlayerHandler: MediaPlayerHandler = koinInject(),
+    dataStoreManager: DataStoreManager = koinInject(),
+    sharedViewModel: SharedViewModel = koinInject(),
+    onLyricsClick: (() -> Unit)? = null,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+
+    val ambienceModePref by dataStoreManager.ambienceMode.collectAsStateWithLifecycle(initialValue = DataStoreManager.TRUE)
+    val isAmbienceEnabled = ambienceModePref == DataStoreManager.TRUE
+
+    val crossfadeEnabledPref by dataStoreManager.crossfadeEnabled.collectAsStateWithLifecycle(initialValue = DataStoreManager.FALSE)
+    val isCrossfadeEnabled = crossfadeEnabledPref == DataStoreManager.TRUE
+
+    val lyricsProviderPref by dataStoreManager.lyricsProvider.collectAsStateWithLifecycle(initialValue = DataStoreManager.LRCLIB)
+    val lyricsAutoFallbackPref by dataStoreManager.lyricsAutoFallback.collectAsStateWithLifecycle(initialValue = true)
 
     LaunchedEffect(song) {
         viewModel.setSongEntity(song)
@@ -770,6 +998,7 @@ fun ModernMoreOptionsContent(
     var showArtistSheet by remember { mutableStateOf(false) }
     var showDetailsDialog by remember { mutableStateOf(false) }
     var showCancelDownloadDialog by remember { mutableStateOf(false) }
+    var showLyricsOptionsDialog by remember { mutableStateOf(false) }
 
     val audioSessionId = remember {
         runCatching { mediaPlayerHandler.player.audioSessionId }.getOrDefault(0)
@@ -874,6 +1103,20 @@ fun ModernMoreOptionsContent(
         )
     }
 
+    if (showLyricsOptionsDialog) {
+        LyricsOptionsDialog(
+            onDismissRequest = { showLyricsOptionsDialog = false },
+            dataStoreManager = dataStoreManager,
+            sharedViewModel = sharedViewModel,
+            onViewLyrics = onLyricsClick?.let {
+                {
+                    onDismiss()
+                    it.invoke()
+                }
+            },
+        )
+    }
+
     val tint = accentColor ?: MaterialTheme.colorScheme.primary
     val isMonochrome = tint == Color.White || tint == Color.Black || tint.toHsl()[1] < 0.12f
     val darkBase = Color(0xFF141316)
@@ -919,42 +1162,51 @@ fun ModernMoreOptionsContent(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .navigationBarsPadding()
-                .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(top = 2.dp)
         ) {
-
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 10.dp, bottom = 6.dp),
-                contentAlignment = Alignment.Center
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .width(36.dp)
-                        .height(4.dp)
-                        .clip(CircleShape)
-                        .background(if (isMonochrome) Color.White.copy(alpha = 0.30f) else finalAccent.copy(alpha = 0.40f))
+                        .fillMaxWidth()
+                        .padding(top = 10.dp, bottom = 4.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .width(36.dp)
+                            .height(4.dp)
+                            .clip(CircleShape)
+                            .background(if (isMonochrome) Color.White.copy(alpha = 0.30f) else finalAccent.copy(alpha = 0.40f))
+                    )
+                }
+
+                ModernVolumeSlider(
+                    accentColor = finalAccent,
+                    sheetBg = sheetBg,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp),
+                    color = finalAccent.copy(alpha = 0.22f),
+                    thickness = 0.8.dp
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            ModernVolumeSlider(
-                accentColor = finalAccent,
-                sheetBg = sheetBg,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            HorizontalDivider(
-                modifier = Modifier.padding(top = 6.dp, bottom = 4.dp),
-                color = finalAccent.copy(alpha = 0.22f),
-                thickness = 0.8.dp
-            )
-
-            Row(
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
+                    .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
@@ -1114,11 +1366,105 @@ fun ModernMoreOptionsContent(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            val currentProviderLabel = when (lyricsProviderPref) {
+                DataStoreManager.BETTER_LYRICS -> "BetterLyrics"
+                DataStoreManager.YOUTUBE -> "YouTube"
+                DataStoreManager.SPOTIFY -> "Spotify"
+                else -> "LRCLIB"
+            }
+            val lyricsOptionsSubtitle = "$currentProviderLabel • ${if (lyricsAutoFallbackPref) "Auto fallback on" else "Auto fallback off"}"
+
+            ModernOptionCard(
+                iconRes = Res.drawable.metro_lyrics,
+                title = "Lyrics options",
+                subtitle = lyricsOptionsSubtitle,
+                shape = RoundedCornerShape(20.dp),
+                cardBg = cardBg,
+                borderColor = cardBorder,
+                contentColor = cardContent,
+                secondaryContentColor = cardSecondaryContent,
+                onClick = {
+                    showLyricsOptionsDialog = true
+                }
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
+                ModernOptionCard(
+                    iconRes = Res.drawable.metro_palette,
+                    title = "Ambience Mode",
+                    subtitle = if (isAmbienceEnabled) "Dynamic background colors enabled" else "Dynamic background colors disabled",
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 4.dp),
+                    cardBg = cardBg,
+                    borderColor = cardBorder,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
+                    trailingContent = {
+                        Switch(
+                            checked = isAmbienceEnabled,
+                            onCheckedChange = null,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = if (isMonochrome) Color.White else finalAccent,
+                                checkedTrackColor = if (isMonochrome) Color.White.copy(alpha = 0.35f) else finalAccent.copy(alpha = 0.35f),
+                                checkedBorderColor = if (isMonochrome) Color.White else finalAccent,
+                                uncheckedThumbColor = cardSecondaryContent,
+                                uncheckedTrackColor = cardBg,
+                                uncheckedBorderColor = cardBorder ?: cardSecondaryContent.copy(alpha = 0.3f),
+                            )
+                        )
+                    },
+                    onClick = {
+                        scope.launch {
+                            val next = !isAmbienceEnabled
+                            dataStoreManager.setAmbienceMode(next)
+                            SoniqueToastManager.show(if (next) "Ambience Mode enabled" else "Ambience Mode disabled")
+                        }
+                    }
+                )
 
+                ModernOptionCard(
+                    iconRes = Res.drawable.metro_tune,
+                    title = "Crossfade",
+                    subtitle = if (isCrossfadeEnabled) "Smooth track transitions enabled" else "Smooth track transitions disabled",
+                    shape = RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
+                    cardBg = cardBg,
+                    borderColor = cardBorder,
+                    contentColor = cardContent,
+                    secondaryContentColor = cardSecondaryContent,
+                    trailingContent = {
+                        Switch(
+                            checked = isCrossfadeEnabled,
+                            onCheckedChange = null,
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = if (isMonochrome) Color.White else finalAccent,
+                                checkedTrackColor = if (isMonochrome) Color.White.copy(alpha = 0.35f) else finalAccent.copy(alpha = 0.35f),
+                                checkedBorderColor = if (isMonochrome) Color.White else finalAccent,
+                                uncheckedThumbColor = cardSecondaryContent,
+                                uncheckedTrackColor = cardBg,
+                                uncheckedBorderColor = cardBorder ?: cardSecondaryContent.copy(alpha = 0.3f),
+                            )
+                        )
+                    },
+                    onClick = {
+                        scope.launch {
+                            val next = !isCrossfadeEnabled
+                            dataStoreManager.setCrossfadeEnabled(next)
+                            SoniqueToastManager.show(if (next) "Crossfade enabled" else "Crossfade disabled")
+                        }
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
                 ModernOptionCard(
                     iconRes = Res.drawable.metro_info,
                     title = "Details",
@@ -1146,6 +1492,7 @@ fun ModernMoreOptionsContent(
         }
     }
 }
+}
 
 @Composable
 fun ModernMoreOptionsSheet(
@@ -1158,6 +1505,9 @@ fun ModernMoreOptionsSheet(
     accentColor: Color? = null,
     contentColor: Color? = null,
     mediaPlayerHandler: MediaPlayerHandler = koinInject(),
+    dataStoreManager: DataStoreManager = koinInject(),
+    sharedViewModel: SharedViewModel = koinInject(),
+    onLyricsClick: (() -> Unit)? = null,
 ) {
     ModernMoreOptionsContent(
         onDismiss = onDismiss,
@@ -1169,23 +1519,14 @@ fun ModernMoreOptionsSheet(
         accentColor = accentColor,
         contentColor = contentColor,
         mediaPlayerHandler = mediaPlayerHandler,
+        dataStoreManager = dataStoreManager,
+        sharedViewModel = sharedViewModel,
+        onLyricsClick = onLyricsClick,
     )
 }
 
 /**
- * Interactive Material 3 volume bar pill strictly styled via MaterialTheme tokens:
- * Filled progress uses primary / primaryContainer, track background uses surfaceVariant,
- * indicator bar and speaker icon use onPrimary / onPrimaryContainer.
- */
-/**
- * Google Material 3 Expressive Volume Slider.
- * Material 3 Expressive Slider specifications:
- * - Track height: 40dp
- * - Track corner radius: 12dp (RoundedCornerShape(12.dp), NOT round circle)
- * - Handle: 4dp width, 36dp height, 2dp corner radius
- * - Thumb-track gap size: 6dp
- * - End stop indicator: 8dp circle
- * - Inset volume icon: 22dp, adaptive contrast
+ * Interactive volume slider with in-track fill and vertical stop indicator.
  */
 @Composable
 private fun ModernVolumeSlider(
@@ -1204,13 +1545,13 @@ private fun ModernVolumeSlider(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(52.dp),
+            .height(44.dp),
         contentAlignment = Alignment.Center
     ) {
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(14.dp))
                 .background(trackBg)
                 .pointerInput(Unit) {
                     detectHorizontalDragGestures(
@@ -1245,7 +1586,7 @@ private fun ModernVolumeSlider(
                     modifier = Modifier
                         .fillMaxWidth(fraction)
                         .fillMaxHeight()
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(accentColor)
                 )
             }
@@ -1254,8 +1595,8 @@ private fun ModernVolumeSlider(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .padding(end = 12.dp)
-                    .width(4.dp)
-                    .height(28.dp)
+                    .width(3.5.dp)
+                    .height(22.dp)
                     .clip(RoundedCornerShape(2.dp))
                     .background(accentColor)
             )
@@ -1267,7 +1608,7 @@ private fun ModernVolumeSlider(
             }
 
             val activeWidthPx = fraction * totalWidthPx
-            val iconThresholdPx = with(density) { 46.dp.toPx() }
+            val iconThresholdPx = with(density) { 40.dp.toPx() }
             val iconTint = if (activeWidthPx > iconThresholdPx) {
                 Color(0xFF0E1418)
             } else {
@@ -1279,8 +1620,8 @@ private fun ModernVolumeSlider(
                 contentDescription = "Volume",
                 tint = iconTint,
                 modifier = Modifier
-                    .padding(start = 14.dp)
-                    .size(22.dp)
+                    .padding(start = 12.dp)
+                    .size(20.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -1358,6 +1699,7 @@ private fun ModernOptionCard(
     iconVector: ImageVector? = null,
     borderColor: Color? = null,
     shape: androidx.compose.ui.graphics.Shape = RoundedCornerShape(18.dp),
+    trailingContent: @Composable (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     Row(
@@ -1413,6 +1755,11 @@ private fun ModernOptionCard(
                 )
             }
         }
+
+        if (trailingContent != null) {
+            Spacer(modifier = Modifier.width(12.dp))
+            trailingContent()
+        }
     }
 }
 
@@ -1430,4 +1777,328 @@ private fun SongDetailRow(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurface
         )
     }
+}
+
+@Composable
+private fun LyricsOptionsDialog(
+    onDismissRequest: () -> Unit,
+    dataStoreManager: DataStoreManager,
+    sharedViewModel: SharedViewModel,
+    onViewLyrics: (() -> Unit)? = null,
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val lyricsProvider by dataStoreManager.lyricsProvider.collectAsStateWithLifecycle(initialValue = DataStoreManager.LRCLIB)
+    val lyricsAutoFallback by dataStoreManager.lyricsAutoFallback.collectAsStateWithLifecycle(initialValue = true)
+    val lyricsOffsetMs by dataStoreManager.lyricsOffsetMs.collectAsStateWithLifecycle(initialValue = 0)
+    val useAITranslation by sharedViewModel.useAITranslation.collectAsStateWithLifecycle(initialValue = false)
+
+    var aiTesting by remember { mutableStateOf(false) }
+    var aiTestResult by remember { mutableStateOf<String?>(null) }
+    var aiTestIsError by remember { mutableStateOf(false) }
+
+    val providers = listOf(
+        DataStoreManager.BETTER_LYRICS to "BetterLyrics",
+        DataStoreManager.LRCLIB to "LRCLIB",
+        DataStoreManager.YOUTUBE to "YouTube Captions",
+        DataStoreManager.SPOTIFY to "Spotify",
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        title = {
+            Text(
+                text = "Lyrics Options",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                Text(
+                    text = "Main Lyrics Provider",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                ) {
+                    providers.forEachIndexed { index, (key, label) ->
+                        val isSelected = (lyricsProvider == key) || (lyricsProvider.isBlank() && key == DataStoreManager.LRCLIB)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    coroutineScope.launch {
+                                        dataStoreManager.setLyricsProvider(key)
+                                        sharedViewModel.setLyricsProvider(key)
+                                    }
+                                }
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        dataStoreManager.setLyricsProvider(key)
+                                        sharedViewModel.setLyricsProvider(key)
+                                    }
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                        if (index < providers.lastIndex) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 12.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                thickness = 0.5.dp
+                            )
+                        }
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .clickable {
+                            coroutineScope.launch {
+                                dataStoreManager.setLyricsAutoFallback(!lyricsAutoFallback)
+                            }
+                        }
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text(
+                            text = "Automatic Fallback",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Check other sources if lyrics are missing",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = lyricsAutoFallback,
+                        onCheckedChange = { checked ->
+                            coroutineScope.launch {
+                                dataStoreManager.setLyricsAutoFallback(checked)
+                            }
+                        }
+                    )
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Lyrics Offset",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "${if (lyricsOffsetMs > 0) "+$lyricsOffsetMs" else "$lyricsOffsetMs"} ms",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    dataStoreManager.setLyricsOffsetMs(lyricsOffsetMs - 100)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text("-100ms", style = MaterialTheme.typography.labelSmall)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    dataStoreManager.setLyricsOffsetMs(0)
+                                }
+                            },
+                            modifier = Modifier.weight(0.8f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text("Reset", style = MaterialTheme.typography.labelSmall)
+                        }
+                        OutlinedButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    dataStoreManager.setLyricsOffsetMs(lyricsOffsetMs + 100)
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text("+100ms", style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(
+                                text = "AI Lyrics Translation",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Translate synced lyrics using AI",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Switch(
+                            checked = useAITranslation,
+                            onCheckedChange = { checked ->
+                                sharedViewModel.setUseAITranslation(checked)
+                            }
+                        )
+                    }
+
+                    if (useAITranslation) {
+                        OutlinedButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    aiTesting = true
+                                    aiTestResult = null
+                                    val res = sharedViewModel.testAIConnection()
+                                    aiTesting = false
+                                    res.onSuccess { msg ->
+                                        aiTestIsError = false
+                                        aiTestResult = msg
+                                    }.onFailure { err ->
+                                        aiTestIsError = true
+                                        aiTestResult = err.message ?: "Connection failed"
+                                    }
+                                }
+                            },
+                            enabled = !aiTesting,
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            if (aiTesting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Testing API...", style = MaterialTheme.typography.labelSmall)
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Outlined.CloudSync,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Test AI Connection", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+
+                        if (aiTestResult != null) {
+                            Text(
+                                text = aiTestResult ?: "",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (aiTestIsError) MaterialTheme.colorScheme.error else Color(0xFF4CAF50),
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (onViewLyrics != null) {
+                    TextButton(onClick = {
+                        onDismissRequest()
+                        onViewLyrics()
+                    }) {
+                        Text("View Lyrics", color = MaterialTheme.colorScheme.primary)
+                    }
+                } else {
+                    Spacer(Modifier.width(1.dp))
+                }
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = {
+                        sharedViewModel.setLyricsProvider()
+                        SoniqueToastManager.show("Reloading lyrics...")
+                    }) {
+                        Text("Reload", color = MaterialTheme.colorScheme.secondary)
+                    }
+                    TextButton(onClick = onDismissRequest) {
+                        Text("Done", color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+            }
+        }
+    )
 }

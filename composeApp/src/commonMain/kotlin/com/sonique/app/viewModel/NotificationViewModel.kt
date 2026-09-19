@@ -29,12 +29,19 @@ class NotificationViewModel(
     fun clearAllNotifications() {
         viewModelScope.launch {
             _listNotification.value?.forEach { notification ->
-                notification.id?.let { id ->
+                notification.id.let { id ->
                     commonRepository.deleteNotification(id)
                 }
             }
             // Clear local state immediately for instant UI update
             _listNotification.value = emptyList()
+        }
+    }
+
+    fun deleteNotification(id: Long) {
+        viewModelScope.launch {
+            commonRepository.deleteNotification(id)
+            _listNotification.value = _listNotification.value?.filter { it.id != id }
         }
     }
 }

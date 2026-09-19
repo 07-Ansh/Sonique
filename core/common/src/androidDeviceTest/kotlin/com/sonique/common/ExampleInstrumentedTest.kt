@@ -16,3 +16,4 @@ class ExampleInstrumentedTest {
         assertEquals("com.sonique.common.test", appContext.packageName)
     }
 }
+

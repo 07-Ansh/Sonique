@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -403,7 +404,7 @@ fun LazyGridState.isScrollingUp(thresholdPx: Int = 12): State<Boolean> {
 fun Palette?.getColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    // Only use the darkest swatches â€” no fallback to Vibrant/Muted (which can be bright)
+    // Only use the darkest swatches — no fallback to Vibrant/Muted (which can be bright)
     val startColor = p.getDarkVibrantColor(defaultColor)
         .takeIf { it != defaultColor }
         ?: p.getDarkMutedColor(defaultColor)
@@ -520,8 +521,8 @@ fun Palette?.getAmbientSheetColor(): Color {
 fun Palette?.getAmbientAccentColor(): Color {
     val p = this ?: return Color(0xFF98D2EB)
     // Look for swatches with genuine color saturation (>= 0.12f)
-    val colorSwatch = p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
-        ?: p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+    val colorSwatch = p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
         ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
         ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
         ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.12f }.maxByOrNull { it.population }
@@ -529,10 +530,33 @@ fun Palette?.getAmbientAccentColor(): Color {
     if (colorSwatch != null) {
         val hsl = Color(colorSwatch.rgb).toHsl()
         val hue = hsl[0]
-        val saturation = hsl[1].coerceIn(0.28f, 0.55f)
-        return hslToColor(hue, saturation, 0.76f, 1f)
+        val saturation = hsl[1].coerceIn(0.40f, 0.75f)
+        return hslToColor(hue, saturation, 0.78f, 1f)
     }
     // Grayscale / Black & White artwork: clean White accent matching the player
+    return Color.White
+}
+
+/**
+ * Returns a tinted white for player buttons (Play/Pause, 3-dot, Share, Like, Queue).
+ * Stays predominantly white (~90% white) with a subtle, minimal tint (10%) from the album artwork.
+ * If the artwork is monochrome/grayscale, returns pure Color.White.
+ */
+fun Palette?.getAmbientTintedWhiteColor(): Color {
+    val p = this ?: return Color.White
+    val colorSwatch = p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.10f }.maxByOrNull { it.population }
+
+    if (colorSwatch != null) {
+        val hsl = Color(colorSwatch.rgb).toHsl()
+        val hue = hsl[0]
+        val sat = hsl[1].coerceIn(0.40f, 0.85f)
+        val vividBase = hslToColor(hue, sat, 0.50f, 1f)
+        return lerp(Color.White, vividBase, 0.10f)
+    }
     return Color.White
 }
 
@@ -658,4 +682,48 @@ fun artworkScrimBrush(
     color: Color,
     steps: Int = 24,
 ): Brush = smoothScrimBrush(from = color.copy(alpha = 0f), to = color, steps = steps)
+
+/**
+ * Cleans song titles by removing extra metadata suffixes such as:
+ * - Parenthetical text: "Song (From Movie)", "Song (Official Audio)"
+ * - Bracketed text: "Song [Remix]", "Song [Official Video]"
+ * - Dash suffixes: "Song - Something", "Song – Something", "Song — Something", "Song- Something"
+ * - Pipe suffixes: "Song | Something"
+ * - Slash suffixes: "Song // Something"
+ */
+fun String.cleanSongTitle(): String {
+    if (isBlank()) return this
+    var cleaned = this.trim()
+
+    val parenIndex = cleaned.indexOf('(')
+    if (parenIndex > 0) {
+        cleaned = cleaned.substring(0, parenIndex)
+    }
+
+    val bracketIndex = cleaned.indexOf('[')
+    if (bracketIndex > 0) {
+        cleaned = cleaned.substring(0, bracketIndex)
+    }
+
+    val dashRegex = Regex("\\s+[-–—]\\s*|\\s*[-–—]\\s+")
+    val dashMatch = dashRegex.find(cleaned)
+    if (dashMatch != null && dashMatch.range.first > 0) {
+        cleaned = cleaned.substring(0, dashMatch.range.first)
+    }
+
+    val pipeIndex = cleaned.indexOf('|')
+    if (pipeIndex > 0) {
+        cleaned = cleaned.substring(0, pipeIndex)
+    }
+
+    val slashRegex = Regex("\\s+[/\\\\]+\\s*|\\s*[/\\\\]+\\s+")
+    val slashMatch = slashRegex.find(cleaned)
+    if (slashMatch != null && slashMatch.range.first > 0) {
+        cleaned = cleaned.substring(0, slashMatch.range.first)
+    }
+
+    val result = cleaned.trim()
+    return if (result.isNotBlank()) result else this.trim()
+}
+
 

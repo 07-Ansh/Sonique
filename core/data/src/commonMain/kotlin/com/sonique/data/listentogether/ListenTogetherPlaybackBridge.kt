@@ -143,7 +143,6 @@ class ListenTogetherPlaybackBridge(
             }
     }
 
-    // ─────────────────────────── guest: follow the host ───────────────────────────
 
     private suspend fun watchRoomForGuests() {
         repository.room
@@ -294,8 +293,6 @@ class ListenTogetherPlaybackBridge(
                 ),
             customCacheKey = id,
         )
-
-    // ─────────────────────────── host: publish what we do ───────────────────────────
 
     /**
      * Publishes what is ALREADY playing the moment we become host.
@@ -475,8 +472,6 @@ class ListenTogetherPlaybackBridge(
             )
         }
     }
-
-    // ─────────────────────────── the buffer barrier ───────────────────────────
 
     /**
      * Answers `buffer_ready` once the local player has the track the room is waiting on.

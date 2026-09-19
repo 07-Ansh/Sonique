@@ -139,7 +139,6 @@ data class RoomState(
     @ProtoNumber(10) val revision: Long = 0L,
 )
 
-// ───────────────────────────── client → server ─────────────────────────────
 
 @Serializable
 data class CreateRoomPayload(
@@ -232,7 +231,6 @@ data class ReconnectPayload(
     @ProtoNumber(1) val sessionToken: String = "",
 )
 
-// ───────────────────────────── server → client ─────────────────────────────
 
 @Serializable
 data class RoomCreatedPayload(
@@ -365,7 +363,6 @@ data class SuggestionRejectedPayload(
     @ProtoNumber(2) val reason: String = "",
 )
 
-// ───────────────────────── capability negotiation ─────────────────────────
 
 /**
  * Sent first, before anything else.

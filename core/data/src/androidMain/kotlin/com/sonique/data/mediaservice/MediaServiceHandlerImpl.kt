@@ -857,9 +857,11 @@ internal class MediaServiceHandlerImpl(
                 if (id.contains("Video")) {
                     id = id.removePrefix("Video")
                 }
+                val newLiked = !controlState.first().isLiked
+                _controlState.value = _controlState.value.copy(isLiked = newLiked)
                 songRepository.updateLikeStatus(
                     id,
-                    if (!(controlState.first().isLiked)) 1 else 0,
+                    if (newLiked) 1 else 0,
                 )
                 delay(200)
             }

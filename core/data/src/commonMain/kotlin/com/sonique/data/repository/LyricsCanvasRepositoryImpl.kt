@@ -353,41 +353,45 @@ internal class LyricsCanvasRepositoryImpl(
             }
         }
 
+    private fun sanitizeTitle(title: String): String {
+        var s = title.substringBefore("|").substringBefore(" - ")
+        s = s.replace(Regex("(?i)\\bfrom\\s+[\"'].*?[\"']"), " ")
+        s = s.replace(Regex("(?i)\\[(official\\s*(music\\s*)?video|official\\s*audio|music\\s*video|lyric\\s*video|lyrics|audio|4k|hd|video|visualizer|remix|live).*?\\]"), " ")
+        s = s.replace(Regex("(?i)\\((official\\s*(music\\s*)?video|official\\s*audio|music\\s*video|lyric\\s*video|lyrics|audio|4k|hd|video|visualizer|remix|live).*?\\)"), " ")
+        s = s.replace(Regex("(?i)\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) [^)]+\\)"), " ")
+        s = s.replace(Regex("(?i)\\[(feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) [^\\]]+\\]"), " ")
+        s = s.replace(Regex("( và | & | и | e | und |, |和| dan)"), " ")
+        s = s.replace(Regex("([()])"), " ")
+        s = s.replace(".", " ")
+        return s.replace(Regex("\\s+"), " ").trim()
+    }
+
+    private fun sanitizeArtist(artist: String): String {
+        var a = artist.split(",", ";", "&", " feat.", " Feat.", " ft.", " Ft.", " / ").firstOrNull()?.trim() ?: artist
+        a = a.replace(Regex("(?i)\\b(topic|vevo)\\b"), " ")
+        a = a.replace(Regex("([()])"), " ")
+        a = a.replace(".", " ")
+        return a.replace(Regex("\\s+"), " ").trim()
+    }
+
     override fun getLrclibLyricsData(
         sartist: String,
         strack: String,
         duration: Int?,
     ): Flow<Resource<Lyrics>> =
         flow<Resource<Lyrics>> {
-            Logger.w("Lyrics", "getLrclibLyricsData: $sartist $strack $duration")
-            val qartist =
-                sartist
-                    .replace(
-                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
-                        " ",
-                    ).replace(
-                        Regex("( và | & | и | e | und |, |和| dan)"),
-                        " ",
-                    ).replace("  ", " ")
-                    .replace(Regex("([()])"), "")
-                    .replace(".", " ")
-            val qtrack =
-                strack
-                    .replace(
-                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
-                        " ",
-                    ).replace(
-                        Regex("( và | & | и | e | und |, |和| dan)"),
-                        " ",
-                    ).replace("  ", " ")
-                    .replace(Regex("([()])"), "")
-                    .replace(".", " ")
+            val qartist = sanitizeArtist(sartist)
+            val qtrack = sanitizeTitle(strack)
+            Logger.w("Lyrics", "getLrclibLyricsData: artist='$qartist' track='$qtrack' duration=$duration")
 
-            val result = lyricsClient.searchLrclibLyrics(qtrack, qartist, duration)
-            if (result.isSuccess) {
-                result.getOrNull()?.let {
-                    emit(Resource.Success(it.toLyrics()))
-                }
+            var result = lyricsClient.searchLrclibLyrics(qtrack, qartist, duration)
+            if (!result.isSuccess || result.getOrNull() == null) {
+                // Retry searching with just the sanitized track name as fallback
+                result = lyricsClient.searchLrclibLyrics(qtrack, "", duration)
+            }
+
+            if (result.isSuccess && result.getOrNull() != null) {
+                emit(Resource.Success(result.getOrNull()!!.toLyrics()))
             } else {
                 result.exceptionOrNull()?.printStackTrace()
                 emit(Resource.Error("Not found"))
@@ -400,29 +404,9 @@ internal class LyricsCanvasRepositoryImpl(
         duration: Int?,
     ): Flow<Resource<Lyrics>> =
         flow {
-            Logger.w("Lyrics", "getBetterLyrics: $artist $track")
-            val qartist =
-                artist
-                    .replace(
-                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
-                        " ",
-                    ).replace(
-                        Regex("( và | & | и | e | und |, |和| dan)"),
-                        " ",
-                    ).replace("  ", " ")
-                    .replace(Regex("([()])"), "")
-                    .replace(".", " ")
-            val qtrack =
-                track
-                    .replace(
-                        Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
-                        " ",
-                    ).replace(
-                        Regex("( và | & | и | e | und |, |和| dan)"),
-                        " ",
-                    ).replace("  ", " ")
-                    .replace(Regex("([()])"), "")
-                    .replace(".", " ")
+            val qartist = sanitizeArtist(artist)
+            val qtrack = sanitizeTitle(track)
+            Logger.w("Lyrics", "getBetterLyrics: artist='$qartist' track='$qtrack'")
             lyricsClient
                 .searchBetterLyrics(qtrack, qartist, duration)
                 .onSuccess { ttml ->
@@ -469,6 +453,32 @@ internal class LyricsCanvasRepositoryImpl(
                 emit(Resource.Error(throwable.message ?: "Translation failed"))
             }
         }.flowOn(Dispatchers.IO)
+
+    override suspend fun testAIConnection(
+        provider: String?,
+        apiKey: String?,
+        modelId: String?,
+        baseUrl: String?,
+        headers: String?,
+    ): Result<String> = withContext(Dispatchers.IO) {
+        val finalProvider = provider?.takeIf { it.isNotBlank() } ?: dataStoreManager.aiProvider.first()
+        val finalApiKey = apiKey?.takeIf { it.isNotBlank() } ?: dataStoreManager.aiApiKey.first()
+        if (finalApiKey.isBlank()) {
+            return@withContext Result.failure(IllegalArgumentException("AI API key is missing"))
+        }
+        val finalModelId = modelId?.takeIf { it.isNotBlank() } ?: dataStoreManager.customModelId.first().takeIf { it.isNotBlank() }
+        val finalBaseUrl = baseUrl?.takeIf { it.isNotBlank() } ?: dataStoreManager.customOpenAIBaseUrl.first().takeIf { it.isNotBlank() }
+        val finalHeaders = headers?.takeIf { it.isNotBlank() } ?: dataStoreManager.customOpenAIHeaders.first().takeIf { it.isNotBlank() }
+
+        val host = AIHost.fromString(finalProvider)
+        aiLyricsTranslator.testConnection(
+            host = host,
+            apiKey = finalApiKey,
+            customModelId = finalModelId,
+            customBaseUrl = finalBaseUrl,
+            customHeaders = finalHeaders,
+        )
+    }
 }
 
 

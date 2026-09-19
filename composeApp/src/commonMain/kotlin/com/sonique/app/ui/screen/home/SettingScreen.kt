@@ -238,6 +238,7 @@ private fun MainSettingsList(
                         Material3SettingsItem(
                             icon = Icons.Default.Palette,
                             title = { Text("Appearance") },
+                            description = { Text("Theme, Liquid Glass, player styling & visual effects") },
                             onClick = { onCategoryClick(SettingsSubCategory.APPEARANCE) }
                         )
                     )
@@ -251,16 +252,19 @@ private fun MainSettingsList(
                         Material3SettingsItem(
                             icon = Icons.Default.Audiotrack,
                             title = { Text(stringResource(Res.string.audio)) },
+                            description = { Text("Equalizer, volume normalization, crossfade & audio effects") },
                             onClick = { onCategoryClick(SettingsSubCategory.AUDIO) }
                         ),
                         Material3SettingsItem(
                             icon = Icons.Default.PlayCircle,
                             title = { Text(stringResource(Res.string.playback)) },
+                            description = { Text("Crossfade transitions, queue preservation, service & lyrics") },
                             onClick = { onCategoryClick(SettingsSubCategory.PLAYBACK) }
                         ),
                         Material3SettingsItem(
                             icon = Icons.Default.Block,
                             title = { Text(stringResource(Res.string.sponsorBlock)) },
+                            description = { Text("Skip sponsored segments, intros, outros & non-music parts") },
                             onClick = { onCategoryClick(SettingsSubCategory.SPONSORBLOCK) }
                         )
                     )
@@ -274,6 +278,7 @@ private fun MainSettingsList(
                         Material3SettingsItem(
                             icon = Icons.Default.MusicNote,
                             title = { Text(stringResource(Res.string.spotify)) },
+                            description = { Text("Connect account, import playlists & sync Spotify Canvas") },
                             onClick = { onCategoryClick(SettingsSubCategory.SPOTIFY) }
                         )
                     )
@@ -288,6 +293,7 @@ private fun MainSettingsList(
                             Material3SettingsItem(
                                 icon = Icons.Default.Settings,
                                 title = { Text(stringResource(Res.string.general)) },
+                                description = { Text("App language, search history & navigation preferences") },
                                 onClick = { onCategoryClick(SettingsSubCategory.GENERAL) }
                             )
                         )
@@ -295,6 +301,7 @@ private fun MainSettingsList(
                             Material3SettingsItem(
                                 icon = Icons.Default.Backup,
                                 title = { Text(stringResource(Res.string.backup)) },
+                                description = { Text("Export, import & restore playlists, favorites and settings") },
                                 onClick = { onCategoryClick(SettingsSubCategory.BACKUP) }
                             )
                         )
@@ -303,6 +310,7 @@ private fun MainSettingsList(
                                 Material3SettingsItem(
                                     icon = Icons.Default.Storage,
                                     title = { Text(stringResource(Res.string.storage)) },
+                                    description = { Text("Manage offline downloads, song cache & storage usage") },
                                     onClick = { onCategoryClick(SettingsSubCategory.STORAGE) }
                                 )
                             )
@@ -318,11 +326,13 @@ private fun MainSettingsList(
                         Material3SettingsItem(
                             icon = Icons.Default.SystemUpdate,
                             title = { Text("App Updates") },
+                            description = { Text("Check for updates, release notes & auto-update settings") },
                             onClick = { onCategoryClick(SettingsSubCategory.UPDATES) }
                         ),
                         Material3SettingsItem(
                             icon = Icons.Default.Info,
                             title = { Text(stringResource(Res.string.about_us)) },
+                            description = { Text("App version, open-source licenses & contributors") },
                             onClick = { onCategoryClick(SettingsSubCategory.ABOUT) }
                         )
                     )
@@ -376,6 +386,12 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
         else -> "1 Row (Standard)"
     }
 
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
+    val playerStyleLabel = when (playerScreenStyle) {
+        "classic" -> "Classic"
+        else -> "Material 3 (Modern)"
+    }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
         contentPadding = PaddingValues(bottom = 80.dp),
@@ -407,6 +423,31 @@ private fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
             Material3SettingsGroup(
                 title = "Player Screen",
                 items = listOf(
+                    Material3SettingsItem(
+                        title = { Text("Player Style") },
+                        description = { Text(playerStyleLabel) },
+                        onClick = {
+                            coroutineScope.launch {
+                                viewModel.setAlertData(
+                                    SettingAlertState(
+                                        title = "Player Style",
+                                        selectOne = SettingAlertState.SelectData(
+                                            listSelect = listOf(
+                                                (playerScreenStyle == "classic") to "Classic",
+                                                (playerScreenStyle != "classic") to "Material 3 (Modern)"
+                                            )
+                                        ),
+                                        confirm = "Change" to { state ->
+                                            val selected = state.selectOne?.getSelected() ?: ""
+                                            val styleKey = if (selected == "Material 3 (Modern)") "modern" else "classic"
+                                            viewModel.setPlayerScreenStyle(styleKey)
+                                        },
+                                        dismiss = "Cancel"
+                                    )
+                                )
+                            }
+                        }
+                    ),
                     Material3SettingsItem(
                         title = { Text("Expressive Player Controls") },
                         description = { Text("Use Material 3 Expressive shapes for playback buttons") },
@@ -643,6 +684,10 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
     val skipSilent by skipSilentFlow.collectAsStateWithLifecycle(initialValue = false)
     val delayEnabled by viewModel.delayEnabled.collectAsStateWithLifecycle()
     val reverbEnabled by viewModel.reverbEnabled.collectAsStateWithLifecycle()
+    val crossfadeDuration by viewModel.crossfadeDuration.collectAsStateWithLifecycle()
+    val crossfadeEnabled by viewModel.crossfadeEnabled.collectAsStateWithLifecycle()
+    val crossfadeDjMode by viewModel.crossfadeDjMode.collectAsStateWithLifecycle()
+    val crossfadeSkipAlbum by viewModel.crossfadeSkipAlbum.collectAsStateWithLifecycle()
     val resultLauncher = openEqResult(viewModel.getAudioSessionId())
 
     LazyColumn(
@@ -770,7 +815,118 @@ private fun AudioSettingsContent(viewModel: SettingsViewModel) {
                 ReverbSection(viewModel)
             }
         }
+
+        item {
+            CrossfadeSettingsGroup(
+                viewModel = viewModel,
+                crossfadeEnabled = crossfadeEnabled,
+                crossfadeDuration = crossfadeDuration,
+                crossfadeDjMode = crossfadeDjMode,
+                crossfadeSkipAlbum = crossfadeSkipAlbum,
+            )
+        }
     }
+}
+
+@Composable
+private fun CrossfadeSettingsGroup(
+    viewModel: SettingsViewModel,
+    crossfadeEnabled: Boolean,
+    crossfadeDuration: Int,
+    crossfadeDjMode: Boolean,
+    crossfadeSkipAlbum: Boolean,
+) {
+    Material3SettingsGroup(
+        title = "Crossfade Settings",
+        items = buildList {
+            add(
+                Material3SettingsItem(
+                    title = { Text(stringResource(Res.string.crossfade)) },
+                    description = { Text(stringResource(Res.string.crossfade_description)) },
+                    isSwitch = true,
+                    checked = crossfadeEnabled,
+                    onCheckedChange = { viewModel.setCrossfadeEnabled(it) }
+                )
+            )
+            if (crossfadeEnabled) {
+                add(
+                    Material3SettingsItem(
+                        title = { Text(stringResource(Res.string.crossfade_duration)) },
+                        description = {
+                            Text(
+                                if (crossfadeDuration == DataStoreManager.Values.CROSSFADE_DURATION_AUTO) {
+                                    stringResource(Res.string.crossfade_auto)
+                                } else {
+                                    "${crossfadeDuration / 1000}s"
+                                }
+                            )
+                        },
+                        onClick = {
+                            viewModel.setAlertData(
+                                SettingAlertState(
+                                    title = runBlocking { getString(Res.string.crossfade_duration) },
+                                    selectOne = SettingAlertState.SelectData(
+                                        listSelect = listOf(
+                                            (crossfadeDuration == DataStoreManager.Values.CROSSFADE_DURATION_AUTO) to
+                                                    runBlocking { getString(Res.string.crossfade_auto) },
+                                            (crossfadeDuration == 1000) to "1s",
+                                            (crossfadeDuration == 2000) to "2s",
+                                            (crossfadeDuration == 3000) to "3s",
+                                            (crossfadeDuration == 5000) to "5s",
+                                            (crossfadeDuration == 8000) to "8s",
+                                            (crossfadeDuration == 10000) to "10s",
+                                            (crossfadeDuration == 12000) to "12s",
+                                            (crossfadeDuration == 15000) to "15s",
+                                            (crossfadeDuration == 20000) to "20s",
+                                            (crossfadeDuration == 30000) to "30s",
+                                        ),
+                                    ),
+                                    confirm = runBlocking { getString(Res.string.change) } to { state ->
+                                        val duration = when (state.selectOne?.getSelected()) {
+                                            runBlocking { getString(Res.string.crossfade_auto) } -> DataStoreManager.Values.CROSSFADE_DURATION_AUTO
+                                            "1s" -> 1000
+                                            "2s" -> 2000
+                                            "3s" -> 3000
+                                            "5s" -> 5000
+                                            "8s" -> 8000
+                                            "10s" -> 10000
+                                            "12s" -> 12000
+                                            "15s" -> 15000
+                                            "20s" -> 20000
+                                            "30s" -> 30000
+                                            else -> 5000
+                                        }
+                                        viewModel.setCrossfadeDuration(duration)
+                                    },
+                                    dismiss = runBlocking { getString(Res.string.cancel) },
+                                )
+                            )
+                        }
+                    )
+                )
+                if (getPlatform() == Platform.Android) {
+                    add(
+                        Material3SettingsItem(
+                            title = { Text(stringResource(Res.string.crossfade_dj_mode)) },
+                            description = { Text(stringResource(Res.string.crossfade_dj_mode_description)) },
+                            isSwitch = true,
+                            checked = crossfadeDjMode,
+                            onCheckedChange = { viewModel.setCrossfadeDjMode(it) }
+                        )
+                    )
+                }
+                add(
+                    Material3SettingsItem(
+                        title = { Text(stringResource(Res.string.crossfade_skip_album)) },
+                        description = { Text(stringResource(Res.string.crossfade_skip_album_description)) },
+                        isSwitch = true,
+                        checked = crossfadeSkipAlbum,
+                        onCheckedChange = { viewModel.setCrossfadeSkipAlbum(it) }
+                    )
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -800,6 +956,7 @@ private fun PlaybackSettingsContent(
     val crossfadeSkipAlbum by viewModel.crossfadeSkipAlbum.collectAsStateWithLifecycle()
     val lyricsOffsetMs by viewModel.lyricsOffsetMs.collectAsStateWithLifecycle()
     val lyricsProvider by viewModel.lyricsProvider.collectAsStateWithLifecycle()
+    val lyricsAutoFallback by viewModel.lyricsAutoFallback.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
 
     val romanizationStored by sharedViewModel.getRomanizationLanguages().collectAsStateWithLifecycle("")
@@ -874,96 +1031,12 @@ private fun PlaybackSettingsContent(
         }
 
         item {
-            Material3SettingsGroup(
-                title = "Crossfade Settings",
-                items = buildList {
-                    add(
-                        Material3SettingsItem(
-                            title = { Text(stringResource(Res.string.crossfade)) },
-                            description = { Text(stringResource(Res.string.crossfade_description)) },
-                            isSwitch = true,
-                            checked = crossfadeEnabled,
-                            onCheckedChange = { viewModel.setCrossfadeEnabled(it) }
-                        )
-                    )
-                    if (crossfadeEnabled) {
-                        add(
-                            Material3SettingsItem(
-                                title = { Text(stringResource(Res.string.crossfade_duration)) },
-                                description = {
-                                    Text(
-                                        if (crossfadeDuration == DataStoreManager.Values.CROSSFADE_DURATION_AUTO) {
-                                            stringResource(Res.string.crossfade_auto)
-                                        } else {
-                                            "${crossfadeDuration / 1000}s"
-                                        }
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.setAlertData(
-                                        SettingAlertState(
-                                            title = runBlocking { getString(Res.string.crossfade_duration) },
-                                            selectOne = SettingAlertState.SelectData(
-                                                listSelect = listOf(
-                                                    (crossfadeDuration == DataStoreManager.Values.CROSSFADE_DURATION_AUTO) to
-                                                            runBlocking { getString(Res.string.crossfade_auto) },
-                                                    (crossfadeDuration == 1000) to "1s",
-                                                    (crossfadeDuration == 2000) to "2s",
-                                                    (crossfadeDuration == 3000) to "3s",
-                                                    (crossfadeDuration == 5000) to "5s",
-                                                    (crossfadeDuration == 8000) to "8s",
-                                                    (crossfadeDuration == 10000) to "10s",
-                                                    (crossfadeDuration == 12000) to "12s",
-                                                    (crossfadeDuration == 15000) to "15s",
-                                                    (crossfadeDuration == 20000) to "20s",
-                                                    (crossfadeDuration == 30000) to "30s",
-                                                ),
-                                            ),
-                                            confirm = runBlocking { getString(Res.string.change) } to { state ->
-                                                val duration = when (state.selectOne?.getSelected()) {
-                                                    runBlocking { getString(Res.string.crossfade_auto) } -> DataStoreManager.Values.CROSSFADE_DURATION_AUTO
-                                                    "1s" -> 1000
-                                                    "2s" -> 2000
-                                                    "3s" -> 3000
-                                                    "5s" -> 5000
-                                                    "8s" -> 8000
-                                                    "10s" -> 10000
-                                                    "12s" -> 12000
-                                                    "15s" -> 15000
-                                                    "20s" -> 20000
-                                                    "30s" -> 30000
-                                                    else -> 5000
-                                                }
-                                                viewModel.setCrossfadeDuration(duration)
-                                            },
-                                            dismiss = runBlocking { getString(Res.string.cancel) },
-                                        )
-                                    )
-                                }
-                            )
-                        )
-                        if (getPlatform() == Platform.Android) {
-                            add(
-                                Material3SettingsItem(
-                                    title = { Text(stringResource(Res.string.crossfade_dj_mode)) },
-                                    description = { Text(stringResource(Res.string.crossfade_dj_mode_description)) },
-                                    isSwitch = true,
-                                    checked = crossfadeDjMode,
-                                    onCheckedChange = { viewModel.setCrossfadeDjMode(it) }
-                                )
-                            )
-                        }
-                        add(
-                            Material3SettingsItem(
-                                title = { Text(stringResource(Res.string.crossfade_skip_album)) },
-                                description = { Text(stringResource(Res.string.crossfade_skip_album_description)) },
-                                isSwitch = true,
-                                checked = crossfadeSkipAlbum,
-                                onCheckedChange = { viewModel.setCrossfadeSkipAlbum(it) }
-                            )
-                        )
-                    }
-                }
+            CrossfadeSettingsGroup(
+                viewModel = viewModel,
+                crossfadeEnabled = crossfadeEnabled,
+                crossfadeDuration = crossfadeDuration,
+                crossfadeDjMode = crossfadeDjMode,
+                crossfadeSkipAlbum = crossfadeSkipAlbum,
             )
         }
 
@@ -977,6 +1050,7 @@ private fun PlaybackSettingsContent(
                             val label = when (lyricsProvider) {
                                 DataStoreManager.BETTER_LYRICS -> stringResource(Res.string.better_lyrics)
                                 DataStoreManager.YOUTUBE -> stringResource(Res.string.youtube_transcript)
+                                DataStoreManager.SPOTIFY -> stringResource(Res.string.spotify)
                                 else -> stringResource(Res.string.lrclib)
                             }
                             Text(label)
@@ -986,14 +1060,16 @@ private fun PlaybackSettingsContent(
                                 val labelLrclib = getString(Res.string.lrclib)
                                 val labelBetterLyrics = getString(Res.string.better_lyrics)
                                 val labelYouTube = getString(Res.string.youtube_transcript)
+                                val labelSpotify = getString(Res.string.spotify)
                                 viewModel.setAlertData(
                                     SettingAlertState(
                                         title = getString(Res.string.main_lyrics_provider),
                                         selectOne = SettingAlertState.SelectData(
                                             listSelect = listOf(
-                                                (lyricsProvider == DataStoreManager.LRCLIB) to labelLrclib,
                                                 (lyricsProvider == DataStoreManager.BETTER_LYRICS) to labelBetterLyrics,
+                                                (lyricsProvider == DataStoreManager.LRCLIB) to labelLrclib,
                                                 (lyricsProvider == DataStoreManager.YOUTUBE) to labelYouTube,
+                                                (lyricsProvider == DataStoreManager.SPOTIFY) to labelSpotify,
                                             )
                                         ),
                                         confirm = getString(Res.string.change) to { state ->
@@ -1001,6 +1077,7 @@ private fun PlaybackSettingsContent(
                                             val provider = when (sel) {
                                                 labelBetterLyrics -> DataStoreManager.BETTER_LYRICS
                                                 labelYouTube -> DataStoreManager.YOUTUBE
+                                                labelSpotify -> DataStoreManager.SPOTIFY
                                                 else -> DataStoreManager.LRCLIB
                                             }
                                             viewModel.setLyricsProvider(provider)
@@ -1010,6 +1087,13 @@ private fun PlaybackSettingsContent(
                                 )
                             }
                         }
+                    ),
+                    Material3SettingsItem(
+                        title = { Text("Automatic Lyrics Fallback") },
+                        description = { Text("If lyrics are missing from your preferred provider, automatically check other sources (BetterLyrics, LRCLIB, YouTube, Spotify)") },
+                        isSwitch = true,
+                        checked = lyricsAutoFallback,
+                        onCheckedChange = { viewModel.setLyricsAutoFallback(it) }
                     ),
                     Material3SettingsItem(
                         title = { Text(stringResource(Res.string.lyrics_offset)) },
@@ -1672,6 +1756,7 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
     val customModelId by viewModel.customModelId.collectAsStateWithLifecycle()
     val customOpenAIBaseUrl by viewModel.customOpenAIBaseUrl.collectAsStateWithLifecycle()
     val customOpenAIHeaders by viewModel.customOpenAIHeaders.collectAsStateWithLifecycle()
+    val aiConnectionStatus by viewModel.aiConnectionStatus.collectAsStateWithLifecycle()
 
     var showYouTubeAccountDialog by rememberSaveable {
         mutableStateOf(false)
@@ -1956,6 +2041,65 @@ private fun GeneralSettingsContent(viewModel: SettingsViewModel, sharedViewModel
                                     )
                                 )
                             }
+                            add(
+                                Material3SettingsItem(
+                                    title = { Text("Test Connection") },
+                                    description = {
+                                        when (val status = aiConnectionStatus) {
+                                            is SettingsViewModel.AIConnectionStatus.Idle -> {
+                                                Text("Verify API key and model connectivity")
+                                            }
+                                            is SettingsViewModel.AIConnectionStatus.Testing -> {
+                                                Text("Testing API connection...", color = MaterialTheme.colorScheme.primary)
+                                            }
+                                            is SettingsViewModel.AIConnectionStatus.Success -> {
+                                                Text(status.message, color = Color(0xFF4CAF50))
+                                            }
+                                            is SettingsViewModel.AIConnectionStatus.Error -> {
+                                                Text(status.message, color = MaterialTheme.colorScheme.error)
+                                            }
+                                        }
+                                    },
+                                    trailingContent = {
+                                        when (aiConnectionStatus) {
+                                            is SettingsViewModel.AIConnectionStatus.Testing -> {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(20.dp),
+                                                    strokeWidth = 2.dp,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                            is SettingsViewModel.AIConnectionStatus.Success -> {
+                                                Icon(
+                                                    imageVector = Icons.Default.CheckCircle,
+                                                    contentDescription = "Success",
+                                                    tint = Color(0xFF4CAF50),
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            is SettingsViewModel.AIConnectionStatus.Error -> {
+                                                Icon(
+                                                    imageVector = Icons.Default.ErrorOutline,
+                                                    contentDescription = "Error",
+                                                    tint = MaterialTheme.colorScheme.error,
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            is SettingsViewModel.AIConnectionStatus.Idle -> {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.CloudSync,
+                                                    contentDescription = "Test",
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        viewModel.testAIConnection()
+                                    }
+                                )
+                            )
                         }
                     }
                 )

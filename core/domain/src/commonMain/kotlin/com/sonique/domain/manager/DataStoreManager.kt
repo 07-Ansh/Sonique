@@ -109,6 +109,10 @@ interface DataStoreManager {
 
     suspend fun setLyricsProvider(provider: String)
 
+    val lyricsAutoFallback: Flow<Boolean>
+
+    suspend fun setLyricsAutoFallback(enable: Boolean)
+
     val translationLanguage: Flow<String>
 
     suspend fun setTranslationLanguage(language: String)
@@ -362,6 +366,9 @@ interface DataStoreManager {
     val romanizationLanguages: Flow<String>
     suspend fun setRomanizationLanguages(languages: String)
 
+    val playerScreenStyle: Flow<String>
+    suspend fun setPlayerScreenStyle(style: String)
+
     enum class ProxyType {
         PROXY_TYPE_HTTP,
         PROXY_TYPE_SOCKS,
@@ -371,6 +378,7 @@ interface DataStoreManager {
         const val YOUTUBE = "youtube"
         const val LRCLIB = "lrclib"
         const val BETTER_LYRICS = "better_lyrics"
+        const val SPOTIFY = "spotify"
 
         const val FDROID = "fdroid"
         const val GITHUB_FOSS_NIGHTLY = "github_foss_nightly"

@@ -63,9 +63,8 @@ import com.sonique.app.expect.ui.toPngByteArray
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.capture.capturable
 import com.sonique.app.ui.component.capture.rememberCaptureController
+import com.sonique.app.ui.component.SoniqueToastManager
 import kotlinx.coroutines.launch
-import multiplatform.network.cmptoast.ToastGravity
-import multiplatform.network.cmptoast.showToast
 import org.jetbrains.compose.resources.stringResource
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.share_lyrics
@@ -153,14 +152,14 @@ fun ShareLyricsSheet(
     val savePermission =
         rememberSaveImagePermission { granted ->
             if (!granted) {
-                showToast(permissionDeniedMessage, ToastGravity.Bottom)
+                SoniqueToastManager.show(permissionDeniedMessage)
                 busy = false
                 return@rememberSaveImagePermission
             }
             scope.launch {
                 val bytes = captureController.captureAsync().await().toPngByteArray()
                 val ok = bytes != null && saveImageToDevice(bytes, fileName)
-                showToast(if (ok) savedMessage else saveFailedMessage, ToastGravity.Bottom)
+                SoniqueToastManager.show(if (ok) savedMessage else saveFailedMessage)
                 busy = false
             }
         }
@@ -221,7 +220,7 @@ fun ShareLyricsSheet(
                                 scope.launch {
                                     val bytes = captureController.captureAsync().await().toPngByteArray()
                                     val ok = bytes != null && shareImage(bytes, fileName, chooserTitle)
-                                    if (!ok) showToast(shareFailedMessage, ToastGravity.Bottom)
+                                    if (!ok) SoniqueToastManager.show(shareFailedMessage)
                                     busy = false
                                 }
                             }
@@ -234,7 +233,7 @@ fun ShareLyricsSheet(
                         onFilled = onFilled,
                         content = content,
                         initialLineIndex = initialLineIndex,
-                        onLimitReached = { showToast(limitMessage, ToastGravity.Bottom) },
+                        onLimitReached = { SoniqueToastManager.show(limitMessage) },
                         onContinue = { showPreview = true },
                         modifier = Modifier.weight(1f),
                     )

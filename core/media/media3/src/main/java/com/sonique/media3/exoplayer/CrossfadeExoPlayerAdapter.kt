@@ -63,7 +63,7 @@ internal class CrossfadeExoPlayerAdapter(
     private val audioAttributes: AudioAttributes,
     private val streamRepository: StreamRepository,
 ) : MediaPlayerInterface {
-    // ========== Internal State Enum ==========
+
 
     private enum class InternalState {
         IDLE,
@@ -77,7 +77,6 @@ internal class CrossfadeExoPlayerAdapter(
 
     private fun InternalState.isInReadyState(): Boolean = this == InternalState.READY || this == InternalState.PLAYING || this == InternalState.PAUSED
 
-    // ========== Crossfade Settings ==========
 
     init {
         coroutineScope.launch {
@@ -106,7 +105,6 @@ internal class CrossfadeExoPlayerAdapter(
         }
     }
 
-    // ========== State Management ==========
 
     private val listeners = mutableListOf<MediaPlayerListener>()
 
@@ -156,7 +154,6 @@ internal class CrossfadeExoPlayerAdapter(
 
     private var activePlayerListener: Player.Listener? = null
 
-    // ========== Audio Focus ==========
 
     private val duckVolumeFactor = 0.2f
 
@@ -230,7 +227,6 @@ internal class CrossfadeExoPlayerAdapter(
         Logger.d(TAG, "abandonAudioFocus")
     }
 
-    // ========== Precaching System ==========
 
     private data class PrecachedPlayer(
         val player: ExoPlayer,
@@ -243,7 +239,6 @@ internal class CrossfadeExoPlayerAdapter(
     private val maxPrecacheCount = 2
     private var precacheJob: Job? = null
 
-    // ========== Crossfade System ==========
 
     @Volatile
     private var crossfadeEnabled = false
@@ -280,12 +275,10 @@ internal class CrossfadeExoPlayerAdapter(
     @Volatile
     private var crossfadeFromIndex = -1
 
-    // ========== Retry on Source Error ==========
     private var retryCount = 0
     private var retryVideoId: String? = null
     private val maxRetryCount = 2
 
-    // ========== AutoMix Metadata Cache ==========
     private val audioMetaCache = ConcurrentHashMap<String, SongAudioMeta>()
 
     private fun setCrossfading(value: Boolean) {
@@ -295,7 +288,6 @@ internal class CrossfadeExoPlayerAdapter(
         }
     }
 
-    // ========== Playlist Management ==========
 
     private val playlist = mutableListOf<GenericMediaItem>()
     private var localCurrentMediaItemIndex = -1
@@ -305,7 +297,6 @@ internal class CrossfadeExoPlayerAdapter(
 
     private var currentLoadJob: Job? = null
 
-    // ========== ForwardingPlayer for MediaSession ==========
 
     private val initialPlayerWithFilter = createExoPlayerInstance()
 
@@ -329,7 +320,6 @@ internal class CrossfadeExoPlayerAdapter(
             }
     }
 
-    // ========== ExoPlayer Instance Factory ==========
 
     private data class PlayerWithFilter(
         val player: ExoPlayer,
@@ -391,7 +381,6 @@ internal class CrossfadeExoPlayerAdapter(
         return PlayerWithFilter(player, crossfadeFilter)
     }
 
-    // ========== Playback Control ==========
 
     override fun play() {
         Logger.d(TAG, "play() called (state: $internalState, playWhenReady: $internalPlayWhenReady)")
@@ -583,7 +572,6 @@ internal class CrossfadeExoPlayerAdapter(
         }
     }
 
-    // ========== Media Item Management ==========
 
     override fun setMediaItem(mediaItem: GenericMediaItem) {
         coroutineScope.launch {
@@ -787,7 +775,6 @@ internal class CrossfadeExoPlayerAdapter(
             shuffledIndex
         }
 
-    // ========== Playback State Properties ==========
 
     override val isPlaying: Boolean
         get() = internalState == InternalState.PLAYING
@@ -832,7 +819,6 @@ internal class CrossfadeExoPlayerAdapter(
                 InternalState.PAUSED -> PlayerConstants.STATE_READY
             }
 
-    // ========== Navigation ==========
 
     override fun hasNextMediaItem(): Boolean =
         when (internalRepeatMode) {
@@ -919,7 +905,6 @@ internal class CrossfadeExoPlayerAdapter(
             }
         }
 
-    // ========== Playback Modes ==========
 
     override var shuffleModeEnabled: Boolean
         get() = internalShuffleModeEnabled
@@ -966,7 +951,6 @@ internal class CrossfadeExoPlayerAdapter(
             secondaryPlayer?.playbackParameters = params
         }
 
-    // ========== Audio Settings ==========
 
     override val audioSessionId: Int
         get() = currentPlayer?.audioSessionId ?: 0
@@ -994,7 +978,6 @@ internal class CrossfadeExoPlayerAdapter(
             internalAlbumTrackIds = value
         }
 
-    // ========== Listener Management ==========
 
     override fun addListener(listener: MediaPlayerListener) {
         listeners.add(listener)
@@ -1004,7 +987,6 @@ internal class CrossfadeExoPlayerAdapter(
         listeners.remove(listener)
     }
 
-    // ========== Release Resources ==========
 
     override fun release() {
         currentLoadJob?.cancel()
@@ -1024,7 +1006,6 @@ internal class CrossfadeExoPlayerAdapter(
         listeners.clear()
     }
 
-    // ========== Internal: State Transition ==========
 
     private fun propagatePlayerError(error: PlaybackException) {
         val genericError =
@@ -1111,7 +1092,6 @@ internal class CrossfadeExoPlayerAdapter(
         }
     }
 
-    // ========== Internal: Load and Play Track ==========
 
     private fun loadAndPlayTrackInternal(
         index: Int,
@@ -1215,7 +1195,6 @@ internal class CrossfadeExoPlayerAdapter(
             }
     }
 
-    // ========== Internal: Player Listener Management ==========
 
     private fun setupPlayerListenerInternal(player: ExoPlayer) {
         cleanupPlayerListenerInternal()
@@ -1375,7 +1354,6 @@ internal class CrossfadeExoPlayerAdapter(
         activePlayerListener = null
     }
 
-    // ========== Internal: Player Cleanup ==========
 
     private fun cleanupPlayerInternal(player: ExoPlayer) {
         try {
@@ -1419,7 +1397,6 @@ internal class CrossfadeExoPlayerAdapter(
         crossfadeFromIndex = -1
     }
 
-    // ========== Internal: Track End ==========
 
     private fun isCurrentTrackTooShortForCrossfade(): Boolean {
         val duration = currentPlayer?.duration ?: return false
@@ -1480,7 +1457,6 @@ internal class CrossfadeExoPlayerAdapter(
         }
     }
 
-    // ========== Internal: Crossfade ==========
 
     private fun triggerCrossfadeTransition(nextIndex: Int) {
         if (nextIndex !in playlist.indices || isCrossfading) return
@@ -1698,7 +1674,6 @@ internal class CrossfadeExoPlayerAdapter(
             }
     }
 
-    // ========== AutoMix Public API ==========
 
     data class SongAudioMeta(
         val bpm: Int?,
@@ -1718,7 +1693,6 @@ internal class CrossfadeExoPlayerAdapter(
         }
     }
 
-    // ========== AutoMix Internal Logic ==========
 
     private suspend fun loadAudioMetaIfNeeded(videoId: String) {
         if (videoId.isBlank() || audioMetaCache.containsKey(videoId)) return
@@ -1850,7 +1824,6 @@ internal class CrossfadeExoPlayerAdapter(
         }
     }
 
-    // ========== Camelot Wheel Key Matching ==========
 
     private data class CamelotCode(
         val number: Int,
@@ -2040,7 +2013,6 @@ internal class CrossfadeExoPlayerAdapter(
         triggerPrecachingInternal()
     }
 
-    // ========== Internal: Position Updates ==========
 
     private fun startPositionUpdates() {
         stopPositionUpdates()
@@ -2107,7 +2079,6 @@ internal class CrossfadeExoPlayerAdapter(
         positionUpdateJob = null
     }
 
-    // ========== Internal: Precaching ==========
 
     private fun triggerPrecachingInternal() {
         if (!precacheEnabled || playlist.isEmpty()) return
@@ -2187,13 +2158,11 @@ internal class CrossfadeExoPlayerAdapter(
         precachedPlayers.clear()
     }
 
-    // ========== Internal: Notifications ==========
 
     private fun notifyEqualizerIntent(shouldOpen: Boolean) {
         listeners.forEach { it.shouldOpenOrCloseEqualizerIntent(shouldOpen) }
     }
 
-    // ========== Internal: Shuffle Management ==========
 
     private fun createShuffleOrder() {
         if (playlist.isEmpty()) {

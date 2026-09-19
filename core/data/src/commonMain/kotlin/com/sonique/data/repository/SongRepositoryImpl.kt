@@ -302,9 +302,10 @@ internal class SongRepositoryImpl(
 
     override suspend fun getLikeStatus(videoId: String): Flow<Boolean> =
         flow {
+            val cleanId = videoId.removePrefix("Video")
             runCatching {
                 youTube
-                    .getLikedInfo(videoId)
+                    .getLikedInfo(cleanId)
                     .onSuccess {
                         if (it == LikeStatus.LIKE) emit(true) else emit(false)
                     }.onFailure {
@@ -317,9 +318,10 @@ internal class SongRepositoryImpl(
     override suspend fun addToYouTubeLiked(mediaId: String?): Flow<Int> =
         flow {
             if (mediaId != null) {
+                val cleanId = mediaId.removePrefix("Video")
                 runCatching {
                     youTube
-                        .addToLiked(mediaId)
+                        .addToLiked(cleanId)
                         .onSuccess {
                             Logger.d(TAG, "Liked -> Success: $it")
                             emit(it)
@@ -334,9 +336,10 @@ internal class SongRepositoryImpl(
     override suspend fun removeFromYouTubeLiked(mediaId: String?): Flow<Int> =
         flow {
             if (mediaId != null) {
+                val cleanId = mediaId.removePrefix("Video")
                 runCatching {
                     youTube
-                        .removeFromLiked(mediaId)
+                        .removeFromLiked(cleanId)
                         .onSuccess {
                             Logger.d(TAG, "Liked -> Success: $it")
                             emit(it)

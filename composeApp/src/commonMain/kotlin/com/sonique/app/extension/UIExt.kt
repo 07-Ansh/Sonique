@@ -41,6 +41,8 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
@@ -402,7 +404,7 @@ fun LazyGridState.isScrollingUp(thresholdPx: Int = 12): State<Boolean> {
 fun Palette?.getColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    // Only use the darkest swatches â€” no fallback to Vibrant/Muted (which can be bright)
+    // Only use the darkest swatches — no fallback to Vibrant/Muted (which can be bright)
     val startColor = p.getDarkVibrantColor(defaultColor)
         .takeIf { it != defaultColor }
         ?: p.getDarkMutedColor(defaultColor)
@@ -416,7 +418,7 @@ fun Palette?.getColorFromPalette(): Color {
 fun Palette?.getSecondaryColorFromPalette(): Color {
     val p = this ?: return md_theme_dark_background
     val defaultColor = 0x000000
-    // Only use the darkest swatches â€” prefer DarkMuted as a complement to DarkVibrant
+    // Only use the darkest swatches — prefer DarkMuted as a complement to DarkVibrant
     val secondaryColor = p.getDarkMutedColor(defaultColor)
         .takeIf { it != defaultColor }
         ?: p.getDarkVibrantColor(defaultColor)
@@ -425,6 +427,137 @@ fun Palette?.getSecondaryColorFromPalette(): Color {
     } else {
         Color(secondaryColor).darkenForAmbience()
     }
+}
+
+/**
+ * Converts a Compose Color to HSL representation:
+ * [0] = Hue in degrees [0f, 360f)
+ * [1] = Saturation [0f, 1f]
+ * [2] = Lightness [0f, 1f]
+ */
+fun Color.toHsl(): FloatArray {
+    val r = red
+    val g = green
+    val b = blue
+    val max = maxOf(r, maxOf(g, b))
+    val min = minOf(r, minOf(g, b))
+    val delta = max - min
+    val l = (max + min) / 2f
+
+    val s = if (delta == 0f) 0f else delta / (1f - kotlin.math.abs(2f * l - 1f))
+
+    var h = when {
+        delta == 0f -> 0f
+        max == r -> 60f * (((g - b) / delta) % 6f)
+        max == g -> 60f * (((b - r) / delta) + 2f)
+        else -> 60f * (((r - g) / delta) + 4f)
+    }
+    if (h < 0f) h += 360f
+
+    return floatArrayOf(h, s.coerceIn(0f, 1f), l.coerceIn(0f, 1f))
+}
+
+/**
+ * Creates a Compose Color from HSL parameters.
+ */
+fun hslToColor(hue: Float, saturation: Float, lightness: Float, alpha: Float = 1f): Color {
+    val h = (hue % 360f + 360f) % 360f
+    val s = saturation.coerceIn(0f, 1f)
+    val l = lightness.coerceIn(0f, 1f)
+
+    val c = (1f - kotlin.math.abs(2f * l - 1f)) * s
+    val x = c * (1f - kotlin.math.abs((h / 60f) % 2f - 1f))
+    val m = l - c / 2f
+
+    val (rPrime, gPrime, bPrime) = when {
+        h < 60f -> Triple(c, x, 0f)
+        h < 120f -> Triple(x, c, 0f)
+        h < 180f -> Triple(0f, c, x)
+        h < 240f -> Triple(0f, x, c)
+        h < 300f -> Triple(x, 0f, c)
+        else -> Triple(c, 0f, x)
+    }
+
+    return Color(
+        red = (rPrime + m).coerceIn(0f, 1f),
+        green = (gPrime + m).coerceIn(0f, 1f),
+        blue = (bPrime + m).coerceIn(0f, 1f),
+        alpha = alpha
+    )
+}
+
+/**
+ * Extracts a rich, vibrant ambient sheet background color from the album artwork palette.
+ * If the artwork is monochrome/grayscale (saturation < 0.12f), returns a neutral dark slate
+ * (Color(0xFF141316)) that matches the player screen instead of forcing a fake red/pink tint.
+ * For colored artwork, preserves the artwork's actual hue with a subtle, solid dark tint (14% lightness).
+ */
+fun Palette?.getAmbientSheetColor(): Color {
+    val p = this ?: return Color(0xFF141316)
+    // Look for swatches with genuine color saturation (>= 0.12f)
+    val colorSwatch = p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.darkVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.12f }.maxByOrNull { it.population }
+
+    if (colorSwatch != null) {
+        val hsl = Color(colorSwatch.rgb).toHsl()
+        val hue = hsl[0]
+        val saturation = hsl[1].coerceIn(0.12f, 0.38f)
+        return hslToColor(hue, saturation, 0.09f, 1f)
+    }
+    // Grayscale / Black & White artwork: return neutral dark mode background matching player
+    return Color(0xFF101214)
+}
+
+/**
+ * Extracts a lively accent color from the album artwork palette.
+ * If the artwork is monochrome/grayscale (saturation < 0.12f), returns clean White (Color.White),
+ * matching the player screen's white play/pause pill and timeline slider, rather than pink.
+ * For colored artwork, returns a pastel/luminous tint of the exact album hue (76% lightness).
+ */
+fun Palette?.getAmbientAccentColor(): Color {
+    val p = this ?: return Color(0xFF98D2EB)
+    // Look for swatches with genuine color saturation (>= 0.12f)
+    val colorSwatch = p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.12f }
+        ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.12f }.maxByOrNull { it.population }
+
+    if (colorSwatch != null) {
+        val hsl = Color(colorSwatch.rgb).toHsl()
+        val hue = hsl[0]
+        val saturation = hsl[1].coerceIn(0.40f, 0.75f)
+        return hslToColor(hue, saturation, 0.78f, 1f)
+    }
+    // Grayscale / Black & White artwork: clean White accent matching the player
+    return Color.White
+}
+
+/**
+ * Returns a tinted white for player buttons (Play/Pause, 3-dot, Share, Like, Queue).
+ * Stays predominantly white (~90% white) with a subtle, minimal tint (10%) from the album artwork.
+ * If the artwork is monochrome/grayscale, returns pure Color.White.
+ */
+fun Palette?.getAmbientTintedWhiteColor(): Color {
+    val p = this ?: return Color.White
+    val colorSwatch = p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.10f }
+        ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.10f }.maxByOrNull { it.population }
+
+    if (colorSwatch != null) {
+        val hsl = Color(colorSwatch.rgb).toHsl()
+        val hue = hsl[0]
+        val sat = hsl[1].coerceIn(0.40f, 0.85f)
+        val vividBase = hslToColor(hue, sat, 0.50f, 1f)
+        return lerp(Color.White, vividBase, 0.10f)
+    }
+    return Color.White
 }
 
 /**
@@ -549,4 +682,48 @@ fun artworkScrimBrush(
     color: Color,
     steps: Int = 24,
 ): Brush = smoothScrimBrush(from = color.copy(alpha = 0f), to = color, steps = steps)
+
+/**
+ * Cleans song titles by removing extra metadata suffixes such as:
+ * - Parenthetical text: "Song (From Movie)", "Song (Official Audio)"
+ * - Bracketed text: "Song [Remix]", "Song [Official Video]"
+ * - Dash suffixes: "Song - Something", "Song – Something", "Song — Something", "Song- Something"
+ * - Pipe suffixes: "Song | Something"
+ * - Slash suffixes: "Song // Something"
+ */
+fun String.cleanSongTitle(): String {
+    if (isBlank()) return this
+    var cleaned = this.trim()
+
+    val parenIndex = cleaned.indexOf('(')
+    if (parenIndex > 0) {
+        cleaned = cleaned.substring(0, parenIndex)
+    }
+
+    val bracketIndex = cleaned.indexOf('[')
+    if (bracketIndex > 0) {
+        cleaned = cleaned.substring(0, bracketIndex)
+    }
+
+    val dashRegex = Regex("\\s+[-–—]\\s*|\\s*[-–—]\\s+")
+    val dashMatch = dashRegex.find(cleaned)
+    if (dashMatch != null && dashMatch.range.first > 0) {
+        cleaned = cleaned.substring(0, dashMatch.range.first)
+    }
+
+    val pipeIndex = cleaned.indexOf('|')
+    if (pipeIndex > 0) {
+        cleaned = cleaned.substring(0, pipeIndex)
+    }
+
+    val slashRegex = Regex("\\s+[/\\\\]+\\s*|\\s*[/\\\\]+\\s+")
+    val slashMatch = slashRegex.find(cleaned)
+    if (slashMatch != null && slashMatch.range.first > 0) {
+        cleaned = cleaned.substring(0, slashMatch.range.first)
+    }
+
+    val result = cleaned.trim()
+    return if (result.isNotBlank()) result else this.trim()
+}
+
 

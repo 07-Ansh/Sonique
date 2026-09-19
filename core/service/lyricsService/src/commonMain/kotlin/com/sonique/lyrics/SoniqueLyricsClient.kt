@@ -117,10 +117,12 @@ class SoniqueLyricsClient {
                     q_artist = q_artist,
                 ).body<List<LrclibObject>>()
         val lrclibObject: LrclibObject? =
-            if (duration != null) {
-                rs.find { abs(it.duration.toInt() - duration) <= 10 }
+            if (duration != null && duration > 0) {
+                rs.find { abs(it.duration.toInt() - duration) <= 15 && (!it.syncedLyrics.isNullOrEmpty() || !it.plainLyrics.isNullOrEmpty()) }
+                    ?: rs.filter { !it.syncedLyrics.isNullOrEmpty() || !it.plainLyrics.isNullOrEmpty() }.minByOrNull { abs(it.duration.toInt() - duration) }
+                    ?: rs.firstOrNull()
             } else {
-                rs.firstOrNull()
+                rs.firstOrNull { !it.syncedLyrics.isNullOrEmpty() } ?: rs.firstOrNull()
             }
         if (lrclibObject != null) {
             val syncedLyrics = lrclibObject.syncedLyrics

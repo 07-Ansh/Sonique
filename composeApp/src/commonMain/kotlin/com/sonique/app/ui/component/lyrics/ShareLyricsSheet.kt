@@ -143,10 +143,10 @@ fun ShareLyricsSheet(
     val permissionDeniedMessage = stringResource(Res.string.share_lyrics_permission_denied)
     val chooserTitle = stringResource(Res.string.share_lyrics)
 
-    val fileName =
+    val baseFileName =
         remember(songTitle) {
             val stem = songTitle.ifBlank { "lyrics" }.take(32).map { if (it.isLetterOrDigit()) it else '_' }.joinToString("")
-            "Sonique_${stem}_${Random.nextInt(100_000, 999_999)}.png"
+            "Sonique_${stem}"
         }
 
     val savePermission =
@@ -157,10 +157,16 @@ fun ShareLyricsSheet(
                 return@rememberSaveImagePermission
             }
             scope.launch {
-                val bytes = captureController.captureAsync().await().toPngByteArray()
-                val ok = bytes != null && saveImageToDevice(bytes, fileName)
-                SoniqueToastManager.show(if (ok) savedMessage else saveFailedMessage)
-                busy = false
+                try {
+                    val currentFileName = "${baseFileName}_${Random.nextInt(100_000, 999_999)}.png"
+                    val bytes = captureController.captureAsync().await().toPngByteArray()
+                    val ok = bytes != null && saveImageToDevice(bytes, currentFileName)
+                    SoniqueToastManager.show(if (ok) savedMessage else saveFailedMessage)
+                } catch (e: Throwable) {
+                    SoniqueToastManager.show(saveFailedMessage)
+                } finally {
+                    busy = false
+                }
             }
         }
 
@@ -218,10 +224,16 @@ fun ShareLyricsSheet(
                             if (!busy) {
                                 busy = true
                                 scope.launch {
-                                    val bytes = captureController.captureAsync().await().toPngByteArray()
-                                    val ok = bytes != null && shareImage(bytes, fileName, chooserTitle)
-                                    if (!ok) SoniqueToastManager.show(shareFailedMessage)
-                                    busy = false
+                                    try {
+                                        val currentFileName = "${baseFileName}_${Random.nextInt(100_000, 999_999)}.png"
+                                        val bytes = captureController.captureAsync().await().toPngByteArray()
+                                        val ok = bytes != null && shareImage(bytes, currentFileName, chooserTitle)
+                                        if (!ok) SoniqueToastManager.show(shareFailedMessage)
+                                    } catch (e: Throwable) {
+                                        SoniqueToastManager.show(shareFailedMessage)
+                                    } finally {
+                                        busy = false
+                                    }
                                 }
                             }
                         },

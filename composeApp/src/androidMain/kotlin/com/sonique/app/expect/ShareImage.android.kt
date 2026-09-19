@@ -1,12 +1,12 @@
 package com.sonique.app.expect
 
 import android.content.ContentValues
+import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import com.sonique.logger.Logger
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ actual suspend fun saveImageToDevice(
 ): Boolean =
     withContext(Dispatchers.IO) {
         runCatching {
-            val context: AppCompatActivity = getKoin().get()
+            val context: Context = getKoin().get()
             val resolver = context.contentResolver
             val isScopedStorage = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
@@ -35,6 +35,12 @@ actual suspend fun saveImageToDevice(
                     if (isScopedStorage) {
                         put(MediaStore.Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$ALBUM")
                         put(MediaStore.Images.Media.IS_PENDING, 1)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        val dir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), ALBUM).apply { mkdirs() }
+                        val file = File(dir, fileName)
+                        @Suppress("DEPRECATION")
+                        put(MediaStore.Images.Media.DATA, file.absolutePath)
                     }
                 }
 
@@ -52,7 +58,7 @@ actual suspend fun saveImageToDevice(
             }
             true
         }.getOrElse { error ->
-            Logger.e(TAG, "Could not save $fileName to gallery: ${error.message}")
+            Logger.e(TAG, "Could not save $fileName to gallery: ${error.message}", error)
             false
         }
     }
@@ -64,7 +70,7 @@ actual suspend fun shareImage(
 ): Boolean =
     withContext(Dispatchers.IO) {
         runCatching {
-            val context: AppCompatActivity = getKoin().get()
+            val context: Context = getKoin().get()
             val dir = File(context.cacheDir, "shared_images").apply { mkdirs() }
             val file = File(dir, fileName)
             file.writeBytes(bytes)
@@ -80,7 +86,7 @@ actual suspend fun shareImage(
             context.startActivity(chooser)
             true
         }.getOrElse { error ->
-            Logger.e(TAG, "Could not share $fileName: ${error.message}")
+            Logger.e(TAG, "Could not share $fileName: ${error.message}", error)
             false
         }
     }

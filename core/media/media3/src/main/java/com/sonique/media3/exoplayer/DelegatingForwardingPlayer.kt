@@ -46,7 +46,6 @@ internal class DelegatingForwardingPlayer(
             }
     }
 
-    // ========== Playlist Navigation Provider ==========
 
     /**
      * Provides playlist-level navigation information to the ForwardingPlayer.
@@ -78,7 +77,6 @@ internal class DelegatingForwardingPlayer(
      */
     var playlistNavigationProvider: PlaylistNavigationProvider? = null
 
-    // ========== Playback-Ended Suppression ==========
 
     /**
      * When true, [getPlaybackState] remaps [Player.STATE_ENDED] to [Player.STATE_BUFFERING].
@@ -101,7 +99,6 @@ internal class DelegatingForwardingPlayer(
         return state
     }
 
-    // ========== Listener Tracking ==========
 
     // Track all externally registered listeners so we can re-register them after delegate swap
     private val trackedListeners = mutableListOf<Player.Listener>()
@@ -116,7 +113,6 @@ internal class DelegatingForwardingPlayer(
         super.removeListener(listener)
     }
 
-    // ========== Video Surface Tracking ==========
     // Track the current video output so it can be re-attached when the delegate is swapped.
     // Without this, video stops rendering after a delegate swap because the new ExoPlayer
     // instance never receives setVideoSurfaceView/setVideoSurface/etc.
@@ -238,7 +234,6 @@ internal class DelegatingForwardingPlayer(
         }
     }
 
-    // ========== Playlist Navigation Overrides ==========
 
     override fun getAvailableCommands(): Player.Commands {
         val baseCommands = super.getAvailableCommands()
@@ -323,7 +318,6 @@ internal class DelegatingForwardingPlayer(
     // Media3's PlayerWrapper.createPositionInfo() validates that currentMediaItemIndex < timeline.windowCount.
     // If we return the adapter's playlist index (e.g. 5) but Timeline only has 1 window, it crashes.
 
-    // ========== Delegate Swap ==========
 
     /**
      * Swap the underlying delegate player.
@@ -376,7 +370,6 @@ internal class DelegatingForwardingPlayer(
         }
     }
 
-    // ========== Manual Event Dispatch ==========
 
     /**
      * Manually notify all tracked listeners about a media item change.

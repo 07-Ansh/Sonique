@@ -44,6 +44,13 @@ private data class ChatCompletionRequest(
 )
 
 @Serializable
+private data class ChatCompletionTestRequest(
+    val model: String,
+    val messages: List<ChatMessage>,
+    val max_tokens: Int = 10,
+)
+
+@Serializable
 private data class ChatMessage(
     val role: String,
     val content: String,
@@ -243,6 +250,84 @@ class AiLyricsTranslator {
                 lines = translatedLines,
                 syncType = inputLyrics.syncType,
             )
+        }
+
+    suspend fun testConnection(
+        host: AIHost,
+        apiKey: String,
+        customModelId: String? = null,
+        customBaseUrl: String? = null,
+        customHeaders: String? = null,
+    ): Result<String> =
+        runCatching {
+            if (apiKey.isBlank()) {
+                throw IllegalArgumentException("API key is required")
+            }
+
+            val endpointUrl =
+                when (host) {
+                    AIHost.GEMINI -> "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+                    AIHost.OPENAI -> "https://api.openai.com/v1/chat/completions"
+                    AIHost.CUSTOM_OPENAI -> {
+                        val base = customBaseUrl?.trim()?.trimEnd('/') ?: "https://api.openai.com/v1"
+                        if (base.endsWith("/chat/completions")) base else "$base/chat/completions"
+                    }
+                }
+
+            val model =
+                if (!customModelId.isNullOrBlank()) {
+                    customModelId.trim()
+                } else {
+                    when (host) {
+                        AIHost.GEMINI -> "gemini-2.0-flash"
+                        AIHost.OPENAI, AIHost.CUSTOM_OPENAI -> "gpt-4o"
+                    }
+                }
+
+            val request =
+                ChatCompletionTestRequest(
+                    model = model,
+                    messages = listOf(
+                        ChatMessage(role = "user", content = "Respond with 'OK'")
+                    ),
+                    max_tokens = 10,
+                )
+
+            val httpResponse =
+                httpClient.post(endpointUrl) {
+                    header("Authorization", "Bearer ${apiKey.trim()}")
+                    contentType(ContentType.Application.Json)
+
+                    if (!customHeaders.isNullOrBlank()) {
+                        try {
+                            val parsed = json.decodeFromString<JsonObject>(customHeaders)
+                            parsed.forEach { (key, value) ->
+                                header(key, value.jsonPrimitive.content)
+                            }
+                        } catch (e: Exception) {
+                            Logger.w(TAG, "Failed to parse custom headers: ${e.message}")
+                        }
+                    }
+
+                    setBody(request)
+                }
+
+            val responseBody = httpResponse.bodyAsText()
+            if (!httpResponse.status.isSuccess()) {
+                val statusCode = httpResponse.status.value
+                val errorMsg = when (statusCode) {
+                    401 -> "Invalid API Key (401 Unauthorized)"
+                    403 -> "Access Forbidden / Quota exceeded (403)"
+                    404 -> "Model '$model' not found or invalid URL (404)"
+                    429 -> "Rate limit reached or quota exhausted (429)"
+                    else -> "HTTP $statusCode: ${responseBody.take(150)}"
+                }
+                throw IllegalStateException(errorMsg)
+            }
+
+            val completion = json.decodeFromString<ChatCompletionResponse>(responseBody)
+            val reply = completion.choices.firstOrNull()?.message?.content?.trim() ?: "OK"
+            "Connected successfully to $model ($reply)"
         }
 
     companion object {

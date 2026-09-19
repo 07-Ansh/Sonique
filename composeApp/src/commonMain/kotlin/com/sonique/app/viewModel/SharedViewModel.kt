@@ -200,7 +200,7 @@ class SharedViewModel(
                     dataStoreManager.setLastVersionCode(currentVersion)
                 } else {
                     val versionString = VersionManager.getVersionName()
-                    val fallback = "Updated to version ${versionString}\nâ€¢ Bug fixes and performance improvements."
+                    val fallback = "Updated to version ${versionString}\n• Bug fixes and performance improvements."
                     try {
                         val result = updateRepository.fetchChangelog(versionString)
                         if (!result.isNullOrBlank()) {
@@ -222,6 +222,28 @@ class SharedViewModel(
         _showChangelog.value = false
         viewModelScope.launch {
             dataStoreManager.setLastVersionCode(VersionManager.getVersionCode())
+        }
+    }
+
+    /**
+     * One-shot migration: enables the Modern Player by default for any user who has
+     * never explicitly set this preference (fresh install OR update before this version).
+     *
+     * Logic:
+     *  - If the raw DataStore key is null → user never touched it → turn ON modern player.
+     *  - If the raw DataStore key is "TRUE" or "FALSE" → user explicitly set it → leave it alone.
+     *  - The migration flag "modern_player_forced_v1" ensures this runs exactly once.
+     */
+    private fun migrateModernPlayerDefault() {
+        viewModelScope.launch {
+            if (dataStoreManager.getString("modern_player_forced_v1").first() != STATUS_DONE) {
+                // null means the key was never written — user never explicitly chose a value
+                val wasNeverSet = dataStoreManager.getString("expressive_player_controls").first() == null
+                if (wasNeverSet) {
+                    dataStoreManager.setEnableExpressivePlayerControls(true)
+                }
+                dataStoreManager.putString("modern_player_forced_v1", STATUS_DONE)
+            }
         }
     }
 
@@ -305,6 +327,9 @@ class SharedViewModel(
         .map { it ?: "list" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "list")
 
+    val playerScreenStyle: StateFlow<String> = dataStoreManager.playerScreenStyle
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), "modern")
+
     val liquidGlassGlassiness: StateFlow<Float> = dataStoreManager.liquidGlassGlassiness
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), 0.5f)
 
@@ -345,6 +370,7 @@ class SharedViewModel(
                 isFirstLiked = it != STATUS_DONE
             }
 
+            migrateModernPlayerDefault()
             checkChangelog()
             checkGitHubPopup()
 
@@ -361,17 +387,15 @@ class SharedViewModel(
                             log("Timeline job ${(it.first.total.toString() + it.second.songEntity?.videoId).hashCode()}")
                             val nowPlaying = it.second
                             val timeline = it.first
-                            if (timeline.total > 0 && nowPlaying.songEntity != null) {
+                            if (timeline.total > 0) {
                                 if (nowPlaying.mediaItem.isSong() && nowPlayingScreenData.value.canvasData == null) {
                                     Logger.w(tag, "Duration is ${timeline.total}")
                                     Logger.w(tag, "MediaId is ${nowPlaying.mediaItem.mediaId}")
                                     getCanvas(nowPlaying.mediaItem.mediaId, (timeline.total / 1000).toInt())
                                 }
-                                nowPlaying.songEntity?.let { song ->
-                                    if (nowPlayingScreenData.value.lyricsData == null) {
-                                        Logger.w(tag, "Get lyrics from format")
-                                        getLyricsFromFormat(nowPlaying.mediaItem.isVideo(), song, (timeline.total / 1000).toInt())
-                                    }
+                                if (nowPlayingScreenData.value.lyricsData == null) {
+                                    Logger.w(tag, "Get lyrics on timeline update")
+                                    setLyricsProvider()
                                 }
                             }
                         }
@@ -381,12 +405,18 @@ class SharedViewModel(
                     setLyricsProvider()
                 }
             }
+            launch {
+                dataStoreManager.lyricsAutoFallback.distinctUntilChanged().collectLatest {
+                    setLyricsProvider()
+                }
+            }
 
  
 
  
         }
         viewModelScope.launch {
+            var lastMediaIdForLyrics: String? = null
             mediaPlayerHandler.nowPlayingState
                 .collectLatest { state ->
                     Logger.w(tag, "NowPlayingState is $state")
@@ -416,6 +446,11 @@ class SharedViewModel(
                         ?: state.track?.thumbnails?.lastOrNull()?.url
                         ?: state.mediaItem.metadata.artworkUri?.toString()
 
+                    val isNewTrack = state.mediaItem.mediaId.isNotEmpty() && state.mediaItem.mediaId != lastMediaIdForLyrics
+                    if (isNewTrack) {
+                        lastMediaIdForLyrics = state.mediaItem.mediaId
+                    }
+
                     _nowPlayingScreenData.update { currentData ->
                         currentData.copy(
                             nowPlayingTitle = resolvedTitle,
@@ -427,7 +462,12 @@ class SharedViewModel(
                                 mediaPlayerHandler.queueData.value
                                     ?.data
                                     ?.playlistName ?: "",
+                            lyricsData = if (isNewTrack) null else currentData.lyricsData,
                         )
+                    }
+
+                    if (isNewTrack) {
+                        setLyricsProvider()
                     }
 
                     if (currentSongEntity != null) {
@@ -558,8 +598,8 @@ class SharedViewModel(
     private fun getLikeStatus(videoId: String?) {
         viewModelScope.launch {
             if (videoId != null) {
-                _likeStatus.value = false
-                songRepository.getLikeStatus(videoId).collectLatest { status ->
+                val cleanId = videoId.removePrefix("Video")
+                songRepository.getLikeStatus(cleanId).collectLatest { status ->
                     _likeStatus.value = status
                 }
             }
@@ -1083,7 +1123,11 @@ class SharedViewModel(
             }
         }
 
-        if (_nowPlayingState.value?.songEntity?.videoId == videoId) {
+        val activeVideoId = _nowPlayingState.value?.songEntity?.videoId
+            ?: _nowPlayingState.value?.track?.videoId
+            ?: _nowPlayingState.value?.mediaItem?.mediaId?.removePrefix("Video")
+
+        if (activeVideoId == videoId || activeVideoId.isNullOrEmpty()) {
             val track = _nowPlayingState.value?.track
             when (isTranslatedLyrics) {
                 true -> {
@@ -1125,260 +1169,157 @@ class SharedViewModel(
         }
     }
 
+    private var lyricsFetchJob: Job? = null
+
+    fun setLyricsProvider(overrideProvider: String? = null) {
+        lyricsFetchJob?.cancel()
+        lyricsFetchJob = viewModelScope.launch {
+            val state = nowPlayingState.value
+            val screenData = nowPlayingScreenData.value
+            val videoId = state?.songEntity?.videoId
+                ?: state?.track?.videoId
+                ?: state?.mediaItem?.mediaId?.removePrefix("Video")
+                ?: return@launch
+            if (videoId.isBlank()) return@launch
+
+            val isVideo = state?.mediaItem?.isVideo() ?: false
+            val title = state?.songEntity?.title
+                ?: state?.track?.title
+                ?: screenData.nowPlayingTitle
+            val artist = state?.songEntity?.artistName?.joinToString(", ")
+                ?: state?.track?.artists?.toListName()?.joinToString(", ")
+                ?: screenData.artistName
+            val duration: Int = (timeline.value.total.toInt() / 1000).takeIf { it > 0 }
+                ?: (state?.track?.durationSeconds ?: state?.songEntity?.durationSeconds ?: 0)
+
+            fetchLyricsWithFallback(videoId, title, artist, isVideo, duration, overrideProvider)
+        }
+    }
+
     private fun getLyricsFromFormat(
         isVideo: Boolean,
         song: SongEntity,
         duration: Int,
     ) {
-        viewModelScope.launch {
-            val videoId = song.videoId
-            log("Get Lyrics From Format for $videoId", LogLevel.WARN)
-            val artistName = song.artistName
-            val artist =
-                if (artistName?.firstOrNull() != null &&
-                    artistName
-                        .firstOrNull()
-                        ?.contains("Various Artists") == false
-                ) {
-                    artistName.firstOrNull()
-                } else {
-                    mediaPlayerHandler.nowPlaying
-                        .first()
-                        ?.metadata
-                        ?.artist
-                        ?: ""
-                }
-            val lyricsProvider = dataStoreManager.lyricsProvider.first()
-            if (isVideo) {
-                getYouTubeCaption(
-                    videoId,
-                    song,
-                    (artist ?: "").toString(),
-                    duration,
-                )
-            } else {
-                when (lyricsProvider) {
-                    DataStoreManager.LRCLIB -> {
-                        getLrclibLyrics(
-                            song,
-                            (artist ?: "").toString(),
-                            duration,
-                        )
-                    }
-
-                    DataStoreManager.BETTER_LYRICS -> {
-                        getBetterLyrics(
-                            song,
-                            (artist ?: "").toString(),
-                            duration,
-                        )
-                    }
-
-                    DataStoreManager.YOUTUBE -> {
-                        getYouTubeCaption(
-                            videoId,
-                            song,
-                            (artist ?: "").toString(),
-                            duration,
-                        )
-                    }
-                }
-            }
+        val artist = song.artistName?.joinToString(", ") ?: ""
+        lyricsFetchJob?.cancel()
+        lyricsFetchJob = viewModelScope.launch {
+            fetchLyricsWithFallback(song.videoId, song.title, artist, isVideo, duration)
         }
     }
 
-    private suspend fun getYouTubeCaption(
+    private suspend fun fetchLyricsWithFallback(
         videoId: String,
-        song: SongEntity,
-        artist: String?,
-        duration: Int,
-    ) {
-        lyricsCanvasRepository
-            .getYouTubeCaption(dataStoreManager.youtubeSubtitleLanguage.first(), videoId)
-            .cancellable()
-            .collect { response ->
-                val data = response.data
-                when (response) {
-                    is Resource.Success if (data != null) -> {
-                        val lyrics = data.first
-                        val translatedLyrics = data.second
-                        insertLyrics(lyrics.toLyricsEntity(videoId))
-                        updateLyrics(
-                            videoId,
-                            duration,
-                            lyrics,
-                            false,
-                            LyricsProvider.YOUTUBE,
-                        )
-                        if (translatedLyrics != null) {
-                            updateLyrics(
-                                videoId,
-                                duration,
-                                translatedLyrics,
-                                true,
-                                LyricsProvider.YOUTUBE,
-                            )
-                        } else {
-                            getAITranslationLyrics(videoId, lyrics)
-                        }
-                    }
-
-                    else -> {
-                        val pref = dataStoreManager.lyricsProvider.first()
-                        if (pref == DataStoreManager.BETTER_LYRICS) {
-                            getBetterLyrics(
-                                song,
-                                (artist ?: ""),
-                                duration,
-                            )
-                        } else {
-                            getLrclibLyrics(
-                                song,
-                                (artist ?: ""),
-                                duration,
-                            )
-                        }
-                    }
-                }
-            }
-    }
-
-    private fun getBetterLyrics(
-        song: SongEntity,
+        title: String,
         artist: String,
+        isVideo: Boolean,
         duration: Int,
+        overrideProvider: String? = null,
     ) {
-        viewModelScope.launch {
-            lyricsCanvasRepository
-                .getBetterLyrics(
-                    artist,
-                    song.title,
-                    duration,
-                ).collectLatest { res ->
-                    val data = res.data
-                    when (res) {
-                        is Resource.Success if (data != null) -> {
-                            Logger.d(tag, "Get BetterLyrics Success")
-                            updateLyrics(
-                                song.videoId,
-                                duration,
-                                data,
-                                false,
-                                LyricsProvider.BETTER_LYRICS,
-                            )
-                            insertLyrics(
-                                data.toLyricsEntity(
-                                    song.videoId,
-                                ),
-                            )
-                            getAITranslationLyrics(
-                                song.videoId,
-                                data,
-                            )
-                        }
+        log("Get Lyrics With Fallback for $videoId, title='$title', artist='$artist'", LogLevel.WARN)
+        val cleanArtist = artist.ifBlank {
+            mediaPlayerHandler.nowPlaying.first()?.metadata?.artist ?: ""
+        }.toString()
+        val cleanTitle = title.ifBlank {
+            mediaPlayerHandler.nowPlaying.first()?.metadata?.title ?: ""
+        }.toString()
 
-                        else -> {
-                            Logger.w(tag, "Get BetterLyrics Error: ${res.message}, falling back to LRCLIB")
-                            getLrclibLyrics(
-                                song,
-                                artist,
-                                duration,
-                            )
-                        }
-                    }
-                }
+        val prefProvider = overrideProvider ?: dataStoreManager.lyricsProvider.first()
+        val autoFallback = dataStoreManager.lyricsAutoFallback.first()
+
+        val baseSequence = if (isVideo) {
+            listOf(
+                DataStoreManager.YOUTUBE,
+                DataStoreManager.BETTER_LYRICS,
+                DataStoreManager.LRCLIB,
+                DataStoreManager.SPOTIFY,
+            )
+        } else {
+            listOf(
+                DataStoreManager.BETTER_LYRICS,
+                DataStoreManager.LRCLIB,
+                DataStoreManager.YOUTUBE,
+                DataStoreManager.SPOTIFY,
+            )
         }
-    }
 
-    private fun getLrclibLyrics(
-        song: SongEntity,
-        artist: String,
-        duration: Int,
-    ) {
-        viewModelScope.launch {
-            lyricsCanvasRepository
-                .getLrclibLyricsData(
-                    artist,
-                    song.title,
-                    duration,
-                ).collectLatest { res ->
-                    val data = res.data
-                    when (res) {
-                        is Resource.Success if (data != null) -> {
-                            Logger.d(tag, "Get Lyrics Data Success")
-                            updateLyrics(
-                                song.videoId,
-                                duration,
-                                data,
-                                false,
-                                LyricsProvider.LRCLIB,
-                            )
-                            insertLyrics(
-                                data?.toLyricsEntity(
-                                    song.videoId,
-                                ) ?: return@collectLatest,
-                            )
-                            getAITranslationLyrics(song.videoId, data)
-                        }
-
-                        else -> {
-                            getSavedLyrics(
-                                song.toTrack().copy(
-                                    durationSeconds = duration,
-                                ),
-                            )
-                        }
-                    }
-                }
+        val providersToTry = if (!autoFallback) {
+            listOf(prefProvider)
+        } else {
+            listOf(prefProvider) + baseSequence.filter { it != prefProvider }
         }
-    }
 
-    private fun getSpotifyLyrics(
-        track: Track,
-        query: String,
-        duration: Int? = null,
-    ) {
-        viewModelScope.launch {
-            Logger.d("Check SpotifyLyrics", "SpotifyLyrics $query")
-            lyricsCanvasRepository.getSpotifyLyrics(dataStoreManager, query, duration).cancellable().collect { response ->
-                Logger.d("Check SpotifyLyrics", response.toString())
-                val data = response.data
-                when (response) {
-                    is Resource.Success -> {
-                        if (data != null) {
-                            insertLyrics(
-                                data.toLyricsEntity(
-                                    track.videoId,
-                                ),
-                            )
-                            updateLyrics(
-                                track.videoId,
-                                duration ?: 0,
-                                data,
-                                false,
-                                LyricsProvider.SPOTIFY,
-                            )
-                            getAITranslationLyrics(track.videoId, data)
+        Logger.d(tag, "Attempting lyrics for $videoId. Order: $providersToTry (autoFallback=$autoFallback)")
+
+        var foundLyrics: Lyrics? = null
+        var foundTranslated: Lyrics? = null
+        var successfulProvider: LyricsProvider = LyricsProvider.LRCLIB
+
+        for (providerKey in providersToTry) {
+            try {
+                when (providerKey) {
+                    DataStoreManager.BETTER_LYRICS -> {
+                        val res = lyricsCanvasRepository.getBetterLyrics(cleanArtist, cleanTitle, duration).firstOrNull()
+                        val data = res?.data
+                        if (res is Resource.Success && data != null && !data.lines.isNullOrEmpty()) {
+                            foundLyrics = data
+                            successfulProvider = LyricsProvider.BETTER_LYRICS
                         }
                     }
-
-                    else -> {
-                        getLrclibLyrics(
-                            track.toSongEntity(),
-                            track.artists.toListName().firstOrNull() ?: "",
-                            duration ?: 0,
-                        )
+                    DataStoreManager.LRCLIB -> {
+                        val res = lyricsCanvasRepository.getLrclibLyricsData(cleanArtist, cleanTitle, duration).firstOrNull()
+                        val data = res?.data
+                        if (res is Resource.Success && data != null && !data.lines.isNullOrEmpty()) {
+                            foundLyrics = data
+                            successfulProvider = LyricsProvider.LRCLIB
+                        }
+                    }
+                    DataStoreManager.YOUTUBE -> {
+                        val lang = dataStoreManager.youtubeSubtitleLanguage.first()
+                        val res = lyricsCanvasRepository.getYouTubeCaption(lang, videoId).firstOrNull()
+                        val data = res?.data
+                        if (res is Resource.Success && data != null && !data.first.lines.isNullOrEmpty()) {
+                            foundLyrics = data.first
+                            foundTranslated = data.second
+                            successfulProvider = LyricsProvider.YOUTUBE
+                        }
+                    }
+                    DataStoreManager.SPOTIFY -> {
+                        val query = "$cleanTitle $cleanArtist"
+                        val res = lyricsCanvasRepository.getSpotifyLyrics(dataStoreManager, query, duration).firstOrNull()
+                        val data = res?.data
+                        if (res is Resource.Success && data != null && !data.lines.isNullOrEmpty()) {
+                            foundLyrics = data
+                            successfulProvider = LyricsProvider.SPOTIFY
+                        }
                     }
                 }
+
+                if (foundLyrics != null) {
+                    Logger.d(tag, "Successfully resolved lyrics for $videoId via $successfulProvider")
+                    break
+                }
+            } catch (e: Exception) {
+                Logger.w(tag, "Provider $providerKey failed for $videoId: ${e.message}")
             }
         }
-    }
 
-    fun setLyricsProvider() {
-        viewModelScope.launch {
-            val songEntity = nowPlayingState.value?.songEntity ?: return@launch
-            val isVideo = nowPlayingState.value?.mediaItem?.isVideo() ?: false
-            getLyricsFromFormat(isVideo, songEntity, timeline.value.total.toInt() / 1000)
+        if (foundLyrics != null) {
+            updateLyrics(videoId, duration, foundLyrics, false, successfulProvider)
+            insertLyrics(foundLyrics.toLyricsEntity(videoId))
+            if (foundTranslated != null) {
+                updateLyrics(videoId, duration, foundTranslated, true, successfulProvider)
+            } else {
+                getAITranslationLyrics(videoId, foundLyrics)
+            }
+        } else {
+            // Check offline cache as final fallback
+            val saved = lyricsCanvasRepository.getSavedLyrics(videoId).firstOrNull()
+            if (saved != null && !saved.lines.isNullOrEmpty()) {
+                val mapped = saved.toLyrics()
+                updateLyrics(videoId, duration, mapped, false, LyricsProvider.OFFLINE)
+                getAITranslationLyrics(videoId, mapped)
+            }
         }
     }
 
@@ -1414,34 +1355,75 @@ class SharedViewModel(
 
     fun addToYouTubeLiked() {
         viewModelScope.launch {
-            val videoId = mediaPlayerHandler.nowPlaying.first()?.mediaId
-            if (videoId != null) {
-                val like = likeStatus.value
-                if (!like) {
-                    songRepository
-                        .addToYouTubeLiked(
-                            mediaPlayerHandler.nowPlaying.first()?.mediaId,
-                        ).collect { response ->
-                            if (response == 200) {
-                                makeToast(getString(Res.string.added_to_youtube_liked))
-                                getLikeStatus(videoId)
-                            } else {
-                                makeToast(getString(Res.string.error))
-                            }
-                        }
+            val rawId = mediaPlayerHandler.nowPlaying.first()?.mediaId
+                ?: nowPlayingState.value?.songEntity?.videoId
+                ?: return@launch
+            val videoId = rawId.removePrefix("Video")
+            if (videoId.isBlank()) return@launch
+
+            val cookie = dataStoreManager.cookie.first()
+            val hasCookie = cookie.isNotBlank()
+
+            val wasLiked = controllerState.value.isLiked || likeStatus.value
+            val targetLiked = !wasLiked
+
+            _likeStatus.value = targetLiked
+            _controllerState.update { it.copy(isLiked = targetLiked) }
+            mediaPlayerHandler.like(targetLiked)
+
+            val currentSong = nowPlayingState.value?.songEntity
+            if (currentSong != null) {
+                val existing = songRepository.getSongById(videoId).firstOrNull()
+                if (existing == null) {
+                    songRepository.insertSong(currentSong.copy(liked = targetLiked)).firstOrNull()
                 } else {
-                    songRepository
-                        .removeFromYouTubeLiked(
-                            mediaPlayerHandler.nowPlaying.first()?.mediaId,
-                        ).collect {
-                            if (it == 200) {
-                                makeToast(getString(Res.string.removed_from_youtube_liked))
-                                getLikeStatus(videoId)
-                            } else {
-                                makeToast(getString(Res.string.error))
-                            }
-                        }
+                    songRepository.updateLikeStatus(videoId, if (targetLiked) 1 else 0)
                 }
+            } else {
+                songRepository.updateLikeStatus(videoId, if (targetLiked) 1 else 0)
+            }
+
+            if (!hasCookie) {
+                if (targetLiked) {
+                    makeToast("Added to Liked songs (Sign in to sync with YouTube)")
+                } else {
+                    makeToast("Removed from Liked songs")
+                }
+                return@launch
+            }
+
+            if (targetLiked) {
+                songRepository
+                    .addToYouTubeLiked(
+                        videoId,
+                    ).collect { response ->
+                        if (response in 200..299) {
+                            makeToast(getString(Res.string.added_to_youtube_liked))
+                            getLikeStatus(videoId)
+                        } else {
+                            _likeStatus.value = wasLiked
+                            _controllerState.update { it.copy(isLiked = wasLiked) }
+                            mediaPlayerHandler.like(wasLiked)
+                            songRepository.updateLikeStatus(videoId, if (wasLiked) 1 else 0)
+                            makeToast(getString(Res.string.error))
+                        }
+                    }
+            } else {
+                songRepository
+                    .removeFromYouTubeLiked(
+                        videoId,
+                    ).collect { response ->
+                        if (response in 200..299) {
+                            makeToast(getString(Res.string.removed_from_youtube_liked))
+                            getLikeStatus(videoId)
+                        } else {
+                            _likeStatus.value = wasLiked
+                            _controllerState.update { it.copy(isLiked = wasLiked) }
+                            mediaPlayerHandler.like(wasLiked)
+                            songRepository.updateLikeStatus(videoId, if (wasLiked) 1 else 0)
+                            makeToast(getString(Res.string.error))
+                        }
+                    }
             }
         }
     }
@@ -1541,10 +1523,10 @@ class SharedViewModel(
     fun shouldStopMusicService(): Boolean = runBlocking { dataStoreManager.killServiceOnExit.first() == TRUE }
 
     val isLoggedIn: StateFlow<Boolean> = dataStoreManager.cookie
-        .map { it.isNotEmpty() }
+        .map { it.isNotBlank() }
         .stateIn(
             scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000L),
+            started = SharingStarted.Eagerly,
             initialValue = false
         )
 
@@ -1625,10 +1607,17 @@ class SharedViewModel(
         }
     }
 
+    val useAITranslation: Flow<Boolean> =
+        dataStoreManager.useAITranslation.map { it == TRUE }
+
     fun setUseAITranslation(use: Boolean) {
         viewModelScope.launch {
             dataStoreManager.setUseAITranslation(use)
         }
+    }
+
+    suspend fun testAIConnection(): Result<String> {
+        return lyricsCanvasRepository.testAIConnection()
     }
 
     fun setAIProvider(provider: String) {

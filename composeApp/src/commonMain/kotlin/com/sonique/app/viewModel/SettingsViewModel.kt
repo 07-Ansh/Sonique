@@ -66,6 +66,7 @@ class SettingsViewModel(
     private val databasePath: String? = commonRepository.getDatabasePath()
     private val downloadUtils: DownloadHandler by inject()
     private val lyricsRomanizerRepository: com.sonique.domain.repository.LyricsRomanizerRepository by inject()
+    private val lyricsCanvasRepository: com.sonique.domain.repository.LyricsCanvasRepository by inject()
 
     val japaneseDictionaryState: StateFlow<com.sonique.domain.data.model.lyrics.RomanizationDictionaryState>
         get() = lyricsRomanizerRepository.japaneseDictionaryState
@@ -101,6 +102,8 @@ class SettingsViewModel(
     val savedPlaybackState: StateFlow<String?> = _savedPlaybackState
     private var _saveRecentSongAndQueue: MutableStateFlow<String?> = MutableStateFlow(null)
     val saveRecentSongAndQueue: StateFlow<String?> = _saveRecentSongAndQueue
+    private var _playerScreenStyle: MutableStateFlow<String?> = MutableStateFlow("modern")
+    val playerScreenStyle: StateFlow<String?> = _playerScreenStyle
 
     private var _sponsorBlockEnabled: MutableStateFlow<String?> = MutableStateFlow(null)
     val sponsorBlockEnabled: StateFlow<String?> = _sponsorBlockEnabled
@@ -238,6 +241,9 @@ class SettingsViewModel(
     private val _lyricsProvider = MutableStateFlow(DataStoreManager.LRCLIB)
     val lyricsProvider: StateFlow<String> = _lyricsProvider
 
+    private val _lyricsAutoFallback = MutableStateFlow(true)
+    val lyricsAutoFallback: StateFlow<Boolean> = _lyricsAutoFallback
+
     private val _useAITranslation = MutableStateFlow(false)
     val useAITranslation: StateFlow<Boolean> = _useAITranslation
 
@@ -255,6 +261,16 @@ class SettingsViewModel(
 
     private val _customOpenAIHeaders = MutableStateFlow("")
     val customOpenAIHeaders: StateFlow<String> = _customOpenAIHeaders
+
+    sealed interface AIConnectionStatus {
+        data object Idle : AIConnectionStatus
+        data object Testing : AIConnectionStatus
+        data class Success(val message: String) : AIConnectionStatus
+        data class Error(val message: String) : AIConnectionStatus
+    }
+
+    private val _aiConnectionStatus = MutableStateFlow<AIConnectionStatus>(AIConnectionStatus.Idle)
+    val aiConnectionStatus: StateFlow<AIConnectionStatus> = _aiConnectionStatus
 
     init {
         getYoutubeSubtitleLanguage()
@@ -316,6 +332,7 @@ class SettingsViewModel(
         getBlurPlayerBackground()
         getContinueListeningLayout()
         getEnablePageTransitions()
+        getPlayerScreenStyle()
 
         getSaveRecentSongAndQueue()
         getSavedPlaybackState()
@@ -334,6 +351,7 @@ class SettingsViewModel(
         getAudioEffects()
         getLyricsOffsetMs()
         getLyricsProvider()
+        getLyricsAutoFallback()
         getUseAITranslation()
         getAIProvider()
         getAIApiKey()
@@ -559,6 +577,21 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStoreManager.setEnableTranslateLyric(useTranslation)
             getUseTranslation()
+        }
+    }
+
+    fun getPlayerScreenStyle() {
+        viewModelScope.launch {
+            dataStoreManager.playerScreenStyle.collect { style ->
+                _playerScreenStyle.emit(style)
+            }
+        }
+    }
+
+    fun setPlayerScreenStyle(style: String) {
+        viewModelScope.launch {
+            dataStoreManager.setPlayerScreenStyle(style)
+            getPlayerScreenStyle()
         }
     }
 
@@ -1447,9 +1480,24 @@ class SettingsViewModel(
     }
 
     fun setLyricsProvider(provider: String) {
+        _lyricsProvider.value = provider
         viewModelScope.launch {
             dataStoreManager.setLyricsProvider(provider)
-            getLyricsProvider()
+        }
+    }
+
+    private fun getLyricsAutoFallback() {
+        viewModelScope.launch {
+            dataStoreManager.lyricsAutoFallback.collect { v ->
+                _lyricsAutoFallback.emit(v)
+            }
+        }
+    }
+
+    fun setLyricsAutoFallback(enable: Boolean) {
+        _lyricsAutoFallback.value = enable
+        viewModelScope.launch {
+            dataStoreManager.setLyricsAutoFallback(enable)
         }
     }
 
@@ -1531,6 +1579,34 @@ class SettingsViewModel(
             dataStoreManager.setCustomOpenAIHeaders(headers)
             getCustomOpenAIHeaders()
         }
+    }
+
+    fun testAIConnection(
+        provider: String? = null,
+        apiKey: String? = null,
+        modelId: String? = null,
+        baseUrl: String? = null,
+        headers: String? = null,
+    ) {
+        viewModelScope.launch {
+            _aiConnectionStatus.value = AIConnectionStatus.Testing
+            val result = lyricsCanvasRepository.testAIConnection(
+                provider = provider,
+                apiKey = apiKey,
+                modelId = modelId,
+                baseUrl = baseUrl,
+                headers = headers,
+            )
+            result.onSuccess { msg ->
+                _aiConnectionStatus.value = AIConnectionStatus.Success(msg)
+            }.onFailure { err ->
+                _aiConnectionStatus.value = AIConnectionStatus.Error(err.message ?: "Connection failed")
+            }
+        }
+    }
+
+    fun resetAIConnectionStatus() {
+        _aiConnectionStatus.value = AIConnectionStatus.Idle
     }
 }
 

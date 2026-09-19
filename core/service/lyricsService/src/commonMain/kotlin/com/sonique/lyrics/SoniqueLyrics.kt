@@ -163,7 +163,8 @@ class SoniqueLyrics {
         q_artist: String,
     ) = httpClient.get("https://lrclib.net/api/search") {
         buildDefaultHeaders()
-        parameter("q", "$q_artist $q_track")
+        val query = if (q_artist.isNotBlank()) "$q_artist $q_track" else q_track
+        parameter("q", query.trim())
     }
 
     suspend fun searchBetterLyrics(

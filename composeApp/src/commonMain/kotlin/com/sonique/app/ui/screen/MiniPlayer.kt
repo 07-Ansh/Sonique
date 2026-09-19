@@ -99,6 +99,7 @@ import com.sonique.app.expect.ui.PlatformBackdrop
 import com.sonique.app.expect.ui.toImageBitmap
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.extension.getColorFromPalette
+import com.sonique.app.extension.cleanSongTitle
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.ExplicitBadge
 import com.sonique.app.ui.component.GoogleCircularProgressIndicator
@@ -181,7 +182,7 @@ fun MiniPlayer(
 
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
 
-    val title = screenDataState.nowPlayingTitle
+    val title = screenDataState.nowPlayingTitle.cleanSongTitle()
     val artistName = screenDataState.artistName
     val thumbnailURL = screenDataState.thumbnailURL
     val isExplicit = screenDataState.isExplicit

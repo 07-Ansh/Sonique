@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.component
+package com.sonique.app.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -82,6 +82,7 @@ import com.sonique.app.Platform
 import com.sonique.app.expect.ui.HorizontalScrollBar
 import com.sonique.app.extension.generateRandomColor
 import com.sonique.app.extension.ifNullOrEmpty
+import com.sonique.app.extension.cleanSongTitle
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.navigation.destination.list.AlbumDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
@@ -371,14 +372,14 @@ fun HomeItemContentPlaylist(
             Text(
                 text =
                     when (data) {
-                        is Content -> data.title
+                        is Content -> data.title.cleanSongTitle()
                         is com.sonique.domain.data.model.mood.genre.Content -> data.title.title
                         is com.sonique.domain.data.model.mood.moodmoments.Content -> data.title
                         is LocalPlaylistEntity -> data.title
                         is PlaylistsResult -> data.title
                         is AlbumEntity -> data.title
                         is PlaylistEntity -> data.title
-                        is ResultSingle -> data.title
+                        is ResultSingle -> data.title.cleanSongTitle()
                         is ResultAlbum -> data.title
                         is ResultPlaylist -> data.title
                         is PodcastsEntity -> data.title
@@ -556,7 +557,7 @@ fun QuickPicksItem(
                 verticalArrangement = Arrangement.SpaceEvenly,
             ) {
                 Text(
-                    text = data.title,
+                    text = data.title.cleanSongTitle(),
                     style = typo().titleSmall,
                     maxLines = 1,
                     color = Color.White,

@@ -62,6 +62,7 @@ import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.expect.ui.layerBackdrop
 import com.sonique.app.expect.ui.LocalLiquidGlassEnabled
 import com.sonique.app.extension.copy
+import androidx.compose.ui.graphics.graphicsLayer
 import com.sonique.app.ui.component.AppBottomNavigationBar
 import com.sonique.app.ui.component.AppNavigationRail
 import com.sonique.app.ui.component.LiquidGlassAppBottomNavigationBar
@@ -77,6 +78,7 @@ import com.sonique.app.ui.navigation.graph.AppNavigationGraph
 import com.sonique.app.ui.screen.MiniPlayer
 import com.sonique.app.ui.screen.player.NowPlayingScreen
 import com.sonique.app.ui.screen.player.NowPlayingScreenContent
+import com.sonique.app.ui.screen.player.NewPlayerScreen
 import com.sonique.app.ui.theme.AppTheme
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.SharedViewModel
@@ -165,6 +167,7 @@ fun App(
     val reloadDestination by viewModel.reloadDestination.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
+    val playerScreenStyle by viewModel.playerScreenStyle.collectAsStateWithLifecycle()
 
     LaunchedEffect(reloadDestination) {
         val destination = reloadDestination
@@ -303,20 +306,22 @@ fun App(
         var isPlayerExpanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
         LaunchedEffect(screenHeightPx) {
-            if (!isShowNowPlaylistScreen) {
+            if (!isShowNowPlaylistScreen && screenHeightPx > 0f) {
                 playerOffsetY.snapTo(screenHeightPx)
             }
         }
 
-        LaunchedEffect(isShowNowPlaylistScreen, screenHeightPx) {
+        val playerSlideSpec = androidx.compose.animation.core.tween<Float>(
+            durationMillis = 320,
+            easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0.0f, 0.0f, 1.0f)
+        )
+
+        LaunchedEffect(isShowNowPlaylistScreen) {
              val target = if (isShowNowPlaylistScreen) 0f else screenHeightPx
              if (kotlin.math.abs(playerOffsetY.value - target) > 0.5f) {
                  playerOffsetY.animateTo(
                      target,
-                     animationSpec = androidx.compose.animation.core.tween(
-                         durationMillis = 280,
-                         easing = androidx.compose.animation.core.FastOutSlowInEasing
-                     )
+                     animationSpec = playerSlideSpec
                  )
              }
              isPlayerExpanded = isShowNowPlaylistScreen
@@ -440,11 +445,7 @@ fun App(
                                                         
                                                         val shouldExpand = if (playerOffsetY.value < expandThreshold) true else isShowNowPlaylistScreen
                                                         
-                                                         
-                                                        val spec = androidx.compose.animation.core.tween<Float>(
-                                                            durationMillis = 500,
-                                                            easing = androidx.compose.animation.core.EaseInOut
-                                                        )
+                                                        val spec = playerSlideSpec
 
                                                         if (shouldExpand) {
                                                             if (!isShowNowPlaylistScreen) {
@@ -672,15 +673,28 @@ fun App(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .offset { androidx.compose.ui.unit.IntOffset(0, playerOffsetY.value.roundToInt()) }
+                            .graphicsLayer {
+                                translationY = playerOffsetY.value
+                                alpha = if (playerOffsetY.value >= screenHeightPx) 0f else 1f
+                            }
                     ) {
-                        NowPlayingScreen(
-                            navController = navController,
-                        ) {
-                            isShowNowPlaylistScreen = false
+                        if (playerScreenStyle != "classic") {
+                            NewPlayerScreen(
+                                navController = navController,
+                                isVisible = isShowNowPlaylistScreen,
+                            ) {
+                                isShowNowPlaylistScreen = false
+                            }
+                        } else {
+                            NowPlayingScreen(
+                                navController = navController,
+                            ) {
+                                isShowNowPlaylistScreen = false
+                            }
                         }
                     }
                 }
+                com.sonique.app.ui.component.SoniqueToastHost()
             }
         }
     }

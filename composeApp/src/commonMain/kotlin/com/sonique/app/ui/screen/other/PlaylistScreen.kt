@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.other
+package com.sonique.app.ui.screen.other
 
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.animation.core.Spring
@@ -349,7 +349,7 @@ fun PlaylistScreen(
         mutableStateOf<ImageBitmap?>(null)
     }
     // Track which thumbnail URL we've already extracted a palette from.
-    // Prevents palette flash when LazyColumn recycles the header item on scroll â€”
+    // Prevents palette flash when LazyColumn recycles the header item on scroll —
     // AsyncImage re-mount fires onSuccess again, but we skip the regenerate.
     var paletteGeneratedFor by remember {
         mutableStateOf<String?>(null)
@@ -684,7 +684,7 @@ fun PlaylistScreen(
                                                             } else {
                                                                 stringResource(Res.string.playlist)
                                                             }
-                                                        } â€¢ ${data.year}",
+                                                        } • ${data.year}",
                                                         style = typo().bodyMedium,
                                                         color = Color.White.copy(alpha = 0.6f),
                                                         textAlign = TextAlign.Center,
@@ -768,7 +768,7 @@ fun PlaylistScreen(
                                                                 } else {
                                                                     stringResource(Res.string.playlist)
                                                                 }
-                                                            } â€¢ ${data.year}",
+                                                            } • ${data.year}",
                                                             style = typo().bodyMedium,
                                                         )
                                                     }

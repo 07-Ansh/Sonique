@@ -213,20 +213,10 @@ If you find Sonique useful and want to support its development:
 <div align="center">
 
 <a href="https://buymeacoffee.com/07Ansh">
-  <img src="asset/bmc_qr.png" width="200" alt="Buy Me A Coffee QR Code">
+  <img src="asset/qr-code.png" width="200" alt="Buy Me A Coffee QR Code">
 </a>
 
-<br><br>
-
-<a href="https://buymeacoffee.com/07Ansh">
-  <img src="https://img.shields.io/badge/Support_via-Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" height="48" alt="Buy Me A Coffee">
-</a>
-
-<br><br>
-
-☕ **[buymeacoffee.com/07Ansh](https://buymeacoffee.com/07Ansh)**
-
-<br>
+**[buymeacoffee.com/07Ansh](https://buymeacoffee.com/07Ansh)**
 
 Your support helps keep this project alive! ❤️
 
@@ -237,4 +227,3 @@ Your support helps keep this project alive! ❤️
 ⭐ **Star this repo if you like it!** ⭐
 
 </div>
-

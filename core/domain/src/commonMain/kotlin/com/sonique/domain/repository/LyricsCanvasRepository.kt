@@ -68,6 +68,14 @@ interface LyricsCanvasRepository {
         lyrics: Lyrics,
         targetLanguage: String,
     ): Flow<Resource<Lyrics>>
+
+    suspend fun testAIConnection(
+        provider: String? = null,
+        apiKey: String? = null,
+        modelId: String? = null,
+        baseUrl: String? = null,
+        headers: String? = null,
+    ): Result<String>
 }
 
 

@@ -22,6 +22,13 @@ actual fun ImageBitmap.toPngByteArray(): ByteArray? {
     return byteArrayOutputStream.toByteArray()
 }
 
-actual fun Image.toImageBitmap(): ImageBitmap =
-    this.toBitmap().asImageBitmap()
+actual fun Image.toImageBitmap(): ImageBitmap {
+    val bmp = this.toBitmap()
+    val softwareBmp = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && bmp.config == android.graphics.Bitmap.Config.HARDWARE) {
+        bmp.copy(android.graphics.Bitmap.Config.ARGB_8888, false) ?: bmp
+    } else {
+        bmp
+    }
+    return softwareBmp.asImageBitmap()
+}
 

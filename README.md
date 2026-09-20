@@ -46,16 +46,11 @@
 
 <div align="center">
 
-| | |
-| :---: | :---: |
-| <img src="asset/Sonique-Graphics/Home&player.png" width="400" alt="Home & Player"> | <img src="asset/Sonique-Graphics/player&lyrics.png" width="400" alt="Player & Synced Lyrics"> |
-| **Home & Now Playing** | **Now Playing Canvas & Synced Lyrics** |
-| <img src="asset/Sonique-Graphics/Mix.png" width="400" alt="Mix For You"> | <img src="asset/Sonique-Graphics/Album&Search.png" width="400" alt="Albums & Search"> |
-| **Mix For You** | **Albums & Search View** |
-| <img src="asset/Sonique-Graphics/Home.png" width="400" alt="Home Screen"> | <img src="asset/Sonique-Graphics/Player.png" width="400" alt="Player Screen"> |
-| **Home Dashboard** | **Player Controls** |
-| <img src="asset/Sonique-Graphics/Search.png" width="400" alt="Search Screen"> | <img src="asset/Sonique-Graphics/Library.png" width="400" alt="Library View"> |
-| **Music Search** | **Music Library** |
+<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/01-home-1.png"><img src="asset/screenshots/01-home-1.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/02-home-2.png"><img src="asset/screenshots/02-home-2.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/03-player.png"><img src="asset/screenshots/03-player.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/04-lyrics.png"><img src="asset/screenshots/04-lyrics.png" width="24%"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/05-search.png"><img src="asset/screenshots/05-search.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/06-album.png"><img src="asset/screenshots/06-album.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/07-play-together-1.png"><img src="asset/screenshots/07-play-together-1.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/08-play-together-2.png"><img src="asset/screenshots/08-play-together-2.png" width="24%"></picture>
+
+<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/09-dots.png"><img src="asset/screenshots/09-dots.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/10-queue-1.png"><img src="asset/screenshots/10-queue-1.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/11-queue-2.png"><img src="asset/screenshots/11-queue-2.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/12-mixes.png"><img src="asset/screenshots/12-mixes.png" width="24%"></picture>
 
 </div>
 

@@ -46,11 +46,11 @@
 
 <div align="center">
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/01-home-1.png"><img src="asset/screenshots/01-home-1.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/02-home-2.png"><img src="asset/screenshots/02-home-2.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/03-player.png"><img src="asset/screenshots/03-player.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/04-lyrics.png"><img src="asset/screenshots/04-lyrics.png" width="24%"></picture>
+<img src="asset/screenshots/01-home-1.png" width="24%">&nbsp;<img src="asset/screenshots/02-home-2.png" width="24%">&nbsp;<img src="asset/screenshots/03-player.png" width="24%">&nbsp;<img src="asset/screenshots/04-lyrics.png" width="24%">
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/05-search.png"><img src="asset/screenshots/05-search.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/06-album.png"><img src="asset/screenshots/06-album.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/07-play-together-1.png"><img src="asset/screenshots/07-play-together-1.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/08-play-together-2.png"><img src="asset/screenshots/08-play-together-2.png" width="24%"></picture>
+<img src="asset/screenshots/05-search.png" width="24%">&nbsp;<img src="asset/screenshots/06-album.png" width="24%">&nbsp;<img src="asset/screenshots/07-play-together-1.png" width="24%">&nbsp;<img src="asset/screenshots/08-play-together-2.png" width="24%">
 
-<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/09-dots.png"><img src="asset/screenshots/09-dots.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/10-queue-1.png"><img src="asset/screenshots/10-queue-1.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/11-queue-2.png"><img src="asset/screenshots/11-queue-2.png" width="24%"></picture>&nbsp;<picture><source media="(prefers-color-scheme: dark)" srcset="asset/screenshots/dark/12-mixes.png"><img src="asset/screenshots/12-mixes.png" width="24%"></picture>
+<img src="asset/screenshots/09-dots.png" width="24%">&nbsp;<img src="asset/screenshots/10-queue-1.png" width="24%">&nbsp;<img src="asset/screenshots/11-queue-2.png" width="24%">&nbsp;<img src="asset/screenshots/12-mixes.png" width="24%">
 
 </div>
 

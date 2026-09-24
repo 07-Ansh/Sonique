@@ -170,7 +170,7 @@ fun ArrayList<SongsResult>.toListTrack(): ArrayList<Track> {
 }
 
 fun VideosResult.toTrack(): Track {
-    val thumb = Thumbnail(720, "http://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg", 1280)
+    val thumb = Thumbnail(720, "https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg", 1280)
     val thumbList = this.thumbnails ?: mutableListOf(thumb)
     return Track(
         album = null,

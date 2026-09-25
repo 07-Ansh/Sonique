@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.library
+package com.sonique.app.ui.screen.library
 
 import androidx.compose.foundation.focusable
 import androidx.compose.material3.IconButton
@@ -100,7 +100,6 @@ import com.sonique.app.ui.theme.transparent
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.LibraryViewModel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -986,10 +985,11 @@ fun LibraryScreen(
                                 .padding(horizontal = 8.dp),
                     )
                     Spacer(modifier = Modifier.height(5.dp))
+                    val playlistEmptyString = stringResource(Res.string.playlist_name_cannot_be_empty)
                     TextButton(
                         onClick = {
                             if (newTitle.isBlank()) {
-                                viewModel.makeToast(runBlocking { getString(Res.string.playlist_name_cannot_be_empty) })
+                                viewModel.makeToast(playlistEmptyString)
                             } else {
                                 viewModel.createPlaylist(newTitle)
                                 hideEditTitleBottomSheet()

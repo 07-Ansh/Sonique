@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.library
+package com.sonique.app.ui.screen.library
 import androidx.compose.ui.platform.LocalUriHandler
 import com.sonique.app.ui.component.DescriptionView
 import sonique.composeapp.generated.resources.no_description
@@ -175,12 +175,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.format
 import kotlinx.datetime.format.MonthNames
 import kotlinx.datetime.format.char
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
@@ -326,6 +324,8 @@ fun LocalPlaylistScreen(
     var changingOrder by remember {
         mutableStateOf(false)
     }
+    val downloadedString = stringResource(Res.string.downloaded)
+    val downloadingString = stringResource(Res.string.downloading)
 
     val trackPagingItems: LazyPagingItems<Pair<SongEntity, PairSongLocalPlaylist>> = viewModel.tracksPagingState.collectAsLazyPagingItems()
 
@@ -950,7 +950,7 @@ fun LocalPlaylistScreen(
                                                             modifier = Modifier
                                                                 .fillMaxSize()
                                                                 .clickable {
-                                                                    viewModel.makeToast(runBlocking { getString(Res.string.downloaded) })
+                                                                    viewModel.makeToast(downloadedString)
                                                                 },
                                                             contentAlignment = Alignment.Center,
                                                         ) {
@@ -1025,7 +1025,7 @@ fun LocalPlaylistScreen(
                                                             .size(36.dp)
                                                             .clip(CircleShape)
                                                             .clickable {
-                                                                viewModel.makeToast(runBlocking { getString(Res.string.downloaded) })
+                                                                viewModel.makeToast(downloadedString)
                                                             },
                                                     ) {
                                                         Icon(
@@ -1045,7 +1045,7 @@ fun LocalPlaylistScreen(
                                                             .size(36.dp)
                                                             .clip(CircleShape)
                                                             .clickable {
-                                                                viewModel.makeToast(runBlocking { getString(Res.string.downloading) })
+                                                                viewModel.makeToast(downloadingString)
                                                             },
                                                     ) {
                                                         Image(

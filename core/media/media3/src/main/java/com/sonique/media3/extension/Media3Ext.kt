@@ -71,7 +71,7 @@ fun SongEntity.toMediaItem(): MediaItem {
 fun Track.toMediaItem(): MediaItem {
     var thumbUrl =
         this.thumbnails?.last()?.url
-            ?: "http://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg"
+            ?: "https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg"
     if (thumbUrl.contains("w120")) {
         thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
     }

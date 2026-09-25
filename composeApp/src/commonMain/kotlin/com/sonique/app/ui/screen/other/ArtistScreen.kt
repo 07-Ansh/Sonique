@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.other
+package com.sonique.app.ui.screen.other
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -59,7 +59,6 @@ import com.sonique.domain.mediaservice.handler.QueueData
 import com.sonique.domain.utils.toSongEntity
 import com.sonique.domain.utils.toTrack
 import com.sonique.app.expect.ui.MediaPlayerView
-import com.sonique.app.extension.getStringBlocking
 import com.sonique.app.extension.rgbFactor
 import com.sonique.app.ui.component.CenterLoadingBox
 import com.sonique.app.ui.component.RippleIconButton
@@ -83,8 +82,6 @@ import com.sonique.app.viewModel.ArtistScreenState
 import com.sonique.app.viewModel.ArtistViewModel
 import com.sonique.app.viewModel.SharedViewModel
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -122,8 +119,9 @@ fun ArtistScreen(
     val playingTrack by sharedViewModel.nowPlayingState.map { it?.track?.videoId }.collectAsState(null)
     val lazyState = rememberLazyListState()
     var gradientColors by remember { mutableStateOf(listOf(md_theme_dark_background, md_theme_dark_background)) }
-
-     
+    val popularString = stringResource(Res.string.popular)
+    val errorString = stringResource(Res.string.error)
+    val videosString = stringResource(Res.string.videos)
     var choosingTrack by remember {
         mutableStateOf<Track?>(null)
     }
@@ -160,6 +158,7 @@ fun ArtistScreen(
                     onBack = { onBack?.invoke() ?: navController.navigateUp() },
                     playButtonContent = {
                         val firstQueue = state.data.popularSongs.firstOrNull()
+                        val popularString = stringResource(Res.string.popular)
                         RippleIconButton(
                             resId = Res.drawable.baseline_play_circle_24,
                             fillMaxSize = true,
@@ -172,7 +171,7 @@ fun ArtistScreen(
                                         listTracks = ArrayList(state.data.popularSongs),
                                         firstPlayedTrack = firstQueue,
                                         playlistId = "RDAMVM${firstQueue.videoId}",
-                                        playlistName = "${state.data.title.orEmpty()} - ${getStringBlocking(Res.string.popular)}",
+                                        playlistName = "${state.data.title.orEmpty()} - $popularString",
                                         playlistType = PlaylistType.RADIO,
                                         continuation = null,
                                     ),
@@ -215,7 +214,7 @@ fun ArtistScreen(
                                         listTracks = ArrayList(state.data.popularSongs),
                                         firstPlayedTrack = track,
                                         playlistId = "RDAMVM${track.videoId}",
-                                        playlistName = "\"${(state.data.title ?: "")}\" ${getStringBlocking(Res.string.popular)}",
+                                        playlistName = "\"${(state.data.title ?: "")}\" $popularString",
                                         playlistType = PlaylistType.RADIO,
                                         continuation = null,
                                     ),
@@ -255,7 +254,7 @@ fun ArtistScreen(
                                                     ),
                                                 )
                                             } else {
-                                                viewModel.makeToast(getStringBlocking(Res.string.error))
+                                                viewModel.makeToast(errorString)
                                             }
                                         },
                                         colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
@@ -310,7 +309,7 @@ fun ArtistScreen(
                                                     ),
                                                 )
                                             } else {
-                                                viewModel.makeToast(getStringBlocking(Res.string.error))
+                                                viewModel.makeToast(errorString)
                                             }
                                         },
                                         colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
@@ -360,7 +359,7 @@ fun ArtistScreen(
                                             if (videoListParam != null) {
                                                 navController.navigate(PlaylistDestination(videoListParam))
                                             } else {
-                                                viewModel.makeToast(getStringBlocking(Res.string.error))
+                                                viewModel.makeToast(errorString)
                                             }
                                         },
                                         colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
@@ -381,7 +380,7 @@ fun ArtistScreen(
                                                         listTracks = arrayListOf(firstQueue),
                                                         firstPlayedTrack = firstQueue,
                                                         playlistId = "RDAMVM${video.videoId}",
-                                                        playlistName = (state.data.title ?: "") + getStringBlocking(Res.string.videos),
+                                                        playlistName = (state.data.title ?: "") + videosString,
                                                         playlistType = PlaylistType.RADIO,
                                                         continuation = null,
                                                     ),

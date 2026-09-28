@@ -13,6 +13,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import com.sonique.app.extension.getColorFromPalette
 import com.sonique.app.extension.getAmbientSheetColor
 import com.sonique.app.extension.getAmbientAccentColor
+import com.sonique.app.extension.PlayerPaletteTheme
+import com.sonique.app.extension.extractPlayerPaletteTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.sonique.app.ui.component.GoogleCircularProgressIndicator
@@ -227,11 +229,6 @@ fun NewPlayerScreen(
 
     val paletteState = com.kmpalette.rememberPaletteState()
     val defaultBg = MaterialTheme.colorScheme.background
-    val startColor = remember(defaultBg) { androidx.compose.animation.Animatable(defaultBg) }
-    val defaultSheetBg = Color(0xFF141316)
-    val ambientSheetColor = remember { androidx.compose.animation.Animatable(defaultSheetBg) }
-    val ambientAccentColor = remember { androidx.compose.animation.Animatable(Color.White) }
-    val ambientTintedWhiteColor = remember { androidx.compose.animation.Animatable(Color.White) }
     var extractedBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var lastPaletteBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
 
@@ -270,22 +267,36 @@ fun NewPlayerScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        snapshotFlow { paletteState.palette }
-            .distinctUntilChanged()
-            .collectLatest { pal ->
-                pal?.let {
-                    startColor.animateTo(it.getColorFromPalette())
-                    ambientSheetColor.animateTo(it.getAmbientSheetColor())
-                    ambientAccentColor.animateTo(it.getAmbientAccentColor())
-                    ambientTintedWhiteColor.animateTo(it.getAmbientTintedWhiteColor())
-                }
-            }
+    val paletteTheme = remember(paletteState.palette) {
+        paletteState.palette.extractPlayerPaletteTheme()
     }
 
-    val sheetBg = ambientSheetColor.value.copy(alpha = 1f)
-    val activeAccentColor = ambientAccentColor.value
-    val activeTintedWhite = ambientTintedWhiteColor.value
+    val targetBgColor = if (ambienceMode) paletteTheme.solidBackgroundColor else defaultBg
+    val animatedBgColor by animateColorAsState(
+        targetValue = targetBgColor,
+        animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing),
+        label = "playerSolidBg"
+    )
+
+    val animatedPrimaryContainer by animateColorAsState(paletteTheme.primaryContainer, tween(500), label = "primaryContainer")
+    val animatedOnPrimaryContainer by animateColorAsState(paletteTheme.onPrimaryContainer, tween(500), label = "onPrimaryContainer")
+    val animatedSecondaryContainer by animateColorAsState(paletteTheme.secondaryContainer, tween(500), label = "secondaryContainer")
+    val animatedOnSecondaryContainer by animateColorAsState(paletteTheme.onSecondaryContainer, tween(500), label = "onSecondaryContainer")
+    val animatedActionContainer by animateColorAsState(paletteTheme.actionButtonContainer, tween(500), label = "actionContainer")
+    val animatedActionContent by animateColorAsState(paletteTheme.actionButtonContent, tween(500), label = "actionContent")
+    val animatedSliderActive by animateColorAsState(paletteTheme.sliderActive, tween(500), label = "sliderActive")
+    val animatedSliderInactive by animateColorAsState(paletteTheme.sliderInactive, tween(500), label = "sliderInactive")
+    val animatedBottomBarContainer by animateColorAsState(paletteTheme.bottomBarContainer, tween(500), label = "bottomBarContainer")
+    val animatedBottomBarActiveContainer by animateColorAsState(paletteTheme.bottomBarActiveContainer, tween(500), label = "bottomBarActiveContainer")
+    val animatedBottomBarActiveContent by animateColorAsState(paletteTheme.bottomBarActiveContent, tween(500), label = "bottomBarActiveContent")
+    val animatedBottomBarInactiveBorder by animateColorAsState(paletteTheme.bottomBarInactiveBorder, tween(500), label = "bottomBarInactiveBorder")
+    val animatedBottomBarInactiveIcon by animateColorAsState(paletteTheme.bottomBarInactiveIcon, tween(500), label = "bottomBarInactiveIcon")
+    val animatedTitleText by animateColorAsState(paletteTheme.titleTextColor, tween(500), label = "titleText")
+    val animatedArtistText by animateColorAsState(paletteTheme.artistTextColor, tween(500), label = "artistText")
+    val animatedHeaderText by animateColorAsState(paletteTheme.headerTextColor, tween(500), label = "headerText")
+
+    val sheetBg = paletteTheme.solidBackgroundColor.copy(alpha = 1f)
+    val activeAccentColor = animatedSliderActive
 
     val offsetYAnimatable = remember { Animatable(0f) }
     val velocityTracker = remember { VelocityTracker() }
@@ -307,13 +318,6 @@ fun NewPlayerScreen(
         }
     }
 
-    val TextBackgroundColor = Color.White
-    val textButtonColor = activeTintedWhite
-    val iconButtonColor = Color(0xFF141316)
-    val sideButtonContainerColor = activeTintedWhite.copy(alpha = 0.14f)
-    val sideButtonContentColor = activeTintedWhite
-    val buttonBorderColor = activeTintedWhite.copy(alpha = 0.30f)
-
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -321,7 +325,7 @@ fun NewPlayerScreen(
                 translationY = offsetYAnimatable.value.coerceAtLeast(0f)
                 alpha = (1f - (offsetYAnimatable.value / 1200f)).coerceIn(0f, 1f)
             }
-            .background(defaultBg)
+            .background(animatedBgColor)
     ) {
         val screenHeight = maxHeight
         val screenWidth = maxWidth
@@ -357,30 +361,6 @@ fun NewPlayerScreen(
                         animationSpec = tween(durationMillis = 180, easing = LinearEasing)
                     )
                     onDismiss()
-                }
-            }
-        }
-
-        AnimatedContent(
-            targetState = if (ambienceMode) trackArtwork else "",
-            transitionSpec = { fadeIn(tween(800)).togetherWith(fadeOut(tween(800))) },
-            label = "blurBackground"
-        ) { url ->
-            if (url.isNotEmpty()) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    AsyncImage(
-                        model = url,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .blur(48.dp)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.Black.copy(alpha = 0.3f))
-                    )
                 }
             }
         }
@@ -443,7 +423,7 @@ fun NewPlayerScreen(
                     .height(48.dp)
                     .padding(horizontal = 8.dp)
             ) {
-                IconButton(
+                FilledIconButton(
                     onClick = {
                         scope.launch {
                             offsetYAnimatable.animateTo(
@@ -453,12 +433,20 @@ fun NewPlayerScreen(
                             onDismiss()
                         }
                     },
-                    modifier = Modifier.align(Alignment.CenterStart)
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = animatedActionContainer,
+                        contentColor = animatedActionContent
+                    ),
+                    modifier = Modifier
+                        .size(40.dp)
+                        .align(Alignment.CenterStart)
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         contentDescription = "Dismiss player",
-                        tint = TextBackgroundColor
+                        tint = animatedActionContent,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
@@ -489,7 +477,7 @@ fun NewPlayerScreen(
                         },
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Normal,
-                        color = TextBackgroundColor.copy(alpha = 0.65f),
+                        color = animatedHeaderText,
                         letterSpacing = 1.2.sp
                     )
                     if (!showInlineLyrics) {
@@ -498,7 +486,7 @@ fun NewPlayerScreen(
                             text = trackTitle.ifBlank { "Unknown Title" },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
-                            color = TextBackgroundColor,
+                            color = animatedTitleText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -515,7 +503,7 @@ fun NewPlayerScreen(
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share Lyrics",
-                            tint = if (hasLyrics) TextBackgroundColor else TextBackgroundColor.copy(alpha = 0.38f)
+                            tint = if (hasLyrics) animatedTitleText else animatedHeaderText.copy(alpha = 0.38f)
                         )
                     }
                 }
@@ -575,7 +563,7 @@ fun NewPlayerScreen(
                                 Text(
                                     text = "Lyrics unavailable • Tap to retry",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextBackgroundColor.copy(alpha = 0.5f)
+                                    color = animatedTitleText.copy(alpha = 0.5f)
                                 )
                             }
                         } else {
@@ -824,7 +812,7 @@ fun NewPlayerScreen(
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = TextBackgroundColor
+                            color = animatedTitleText
                         )
                     }
 
@@ -845,7 +833,7 @@ fun NewPlayerScreen(
                             text = firstArtist.ifBlank { "Unknown Artist" },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
-                            color = TextBackgroundColor.copy(alpha = 0.75f),
+                            color = animatedArtistText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.clickable {
@@ -890,15 +878,15 @@ fun NewPlayerScreen(
                         },
                         shape = shareShape,
                         colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = textButtonColor,
-                            contentColor = iconButtonColor
+                            containerColor = animatedActionContainer,
+                            contentColor = animatedActionContent
                         ),
                         modifier = Modifier.size(dynamicActionButtonSize)
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.ic_share_curved),
                             contentDescription = "Share",
-                            tint = iconButtonColor,
+                            tint = animatedActionContent,
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -973,8 +961,8 @@ fun NewPlayerScreen(
                             },
                             shape = favShape,
                             colors = IconButtonDefaults.filledIconButtonColors(
-                                containerColor = textButtonColor,
-                                contentColor = iconButtonColor
+                                containerColor = animatedActionContainer,
+                                contentColor = animatedActionContent
                             ),
                             modifier = Modifier.fillMaxSize()
                         ) {
@@ -988,7 +976,7 @@ fun NewPlayerScreen(
                                         if (liked) Res.drawable.favorite else Res.drawable.favorite_border
                                     ),
                                     contentDescription = if (liked) "Liked on YouTube" else "Like on YouTube",
-                                    tint = if (liked) Color(0xFFE53935) else iconButtonColor,
+                                    tint = if (liked) Color(0xFFE53935) else animatedActionContent,
                                     modifier = Modifier
                                         .size(24.dp)
                                         .graphicsLayer {
@@ -1070,8 +1058,9 @@ fun NewPlayerScreen(
             PlayerTimelineSection(
                 sharedViewModel = sharedViewModel,
                 isPlaying = controllerState.isPlaying,
-                textButtonColor = textButtonColor,
-                TextBackgroundColor = TextBackgroundColor,
+                sliderActiveColor = animatedSliderActive,
+                sliderInactiveColor = animatedSliderInactive,
+                timestampColor = animatedArtistText,
                 horizontalPadding = dynamicHorizontalPadding,
                 screenHeight = screenHeight,
             )
@@ -1121,16 +1110,17 @@ fun NewPlayerScreen(
                     shape = RoundedCornerShape(50),
                     interactionSource = backSource,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = sideButtonContainerColor,
-                        contentColor = sideButtonContentColor,
-                        disabledContainerColor = sideButtonContainerColor.copy(alpha = 0.4f),
-                        disabledContentColor = sideButtonContentColor.copy(alpha = 0.4f),
+                        containerColor = animatedSecondaryContainer,
+                        contentColor = animatedOnSecondaryContainer,
+                        disabledContainerColor = animatedSecondaryContainer.copy(alpha = 0.4f),
+                        disabledContentColor = animatedOnSecondaryContainer.copy(alpha = 0.4f),
                     ),
                     modifier = Modifier.height(dynamicControlsHeight).weight(backWeight)
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.skip_previous),
                         contentDescription = null,
+                        tint = animatedOnSecondaryContainer,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -1142,8 +1132,8 @@ fun NewPlayerScreen(
                     shape = RoundedCornerShape(50),
                     interactionSource = ppSource,
                     colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                        containerColor = textButtonColor,
-                        contentColor = iconButtonColor
+                        containerColor = animatedPrimaryContainer,
+                        contentColor = animatedOnPrimaryContainer
                     ),
                     modifier = Modifier.height(dynamicControlsHeight).weight(ppWeight)
                 ) {
@@ -1156,14 +1146,14 @@ fun NewPlayerScreen(
                                 if (controllerState.isPlaying) Res.drawable.pause else Res.drawable.play
                             ),
                             contentDescription = null,
-                            tint = iconButtonColor,
+                            tint = animatedOnPrimaryContainer,
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = if (controllerState.isPlaying) "Pause" else "Play",
                             style = MaterialTheme.typography.titleMedium,
-                            color = iconButtonColor
+                            color = animatedOnPrimaryContainer
                         )
                     }
                 }
@@ -1176,16 +1166,17 @@ fun NewPlayerScreen(
                     shape = RoundedCornerShape(50),
                     interactionSource = nextSource,
                     colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = sideButtonContainerColor,
-                        contentColor = sideButtonContentColor,
-                        disabledContainerColor = sideButtonContainerColor.copy(alpha = 0.4f),
-                        disabledContentColor = sideButtonContentColor.copy(alpha = 0.4f),
+                        containerColor = animatedSecondaryContainer,
+                        contentColor = animatedOnSecondaryContainer,
+                        disabledContainerColor = animatedSecondaryContainer.copy(alpha = 0.4f),
+                        disabledContentColor = animatedOnSecondaryContainer.copy(alpha = 0.4f),
                     ),
                     modifier = Modifier.height(dynamicControlsHeight).weight(nextWeight)
                 ) {
                     Icon(
                         painter = painterResource(Res.drawable.skip_next),
                         contentDescription = null,
+                        tint = animatedOnSecondaryContainer,
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -1231,9 +1222,10 @@ fun NewPlayerScreen(
                         isActive = false,
                         shape = queueShape,
                         modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        borderColor = buttonBorderColor,
+                        activeContainerColor = animatedBottomBarActiveContainer,
+                        activeContentColor = animatedBottomBarActiveContent,
+                        inactiveBorderColor = animatedBottomBarInactiveBorder,
+                        inactiveContentColor = animatedBottomBarInactiveIcon,
                         iconSize = iconSize,
                         onClick = { queueSheetState.expandSoft() }
                     )
@@ -1244,9 +1236,10 @@ fun NewPlayerScreen(
                         isActive = isSleepTimerActive,
                         shape = middleShape,
                         modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        borderColor = buttonBorderColor,
+                        activeContainerColor = animatedBottomBarActiveContainer,
+                        activeContentColor = animatedBottomBarActiveContent,
+                        inactiveBorderColor = animatedBottomBarInactiveBorder,
+                        inactiveContentColor = animatedBottomBarInactiveIcon,
                         iconSize = iconSize,
                         onClick = { showSleepTimerDialog = true }
                     )
@@ -1257,9 +1250,10 @@ fun NewPlayerScreen(
                         isActive = isShuffle,
                         shape = middleShape,
                         modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        borderColor = buttonBorderColor,
+                        activeContainerColor = animatedBottomBarActiveContainer,
+                        activeContentColor = animatedBottomBarActiveContent,
+                        inactiveBorderColor = animatedBottomBarInactiveBorder,
+                        inactiveContentColor = animatedBottomBarInactiveIcon,
                         iconSize = iconSize,
                         onClick = { sharedViewModel.onUIEvent(UIEvent.Shuffle) }
                     )
@@ -1269,9 +1263,10 @@ fun NewPlayerScreen(
                         isActive = showInlineLyrics,
                         shape = middleShape,
                         modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        borderColor = buttonBorderColor,
+                        activeContainerColor = animatedBottomBarActiveContainer,
+                        activeContentColor = animatedBottomBarActiveContent,
+                        inactiveBorderColor = animatedBottomBarInactiveBorder,
+                        inactiveContentColor = animatedBottomBarInactiveIcon,
                         iconSize = iconSize,
                         enabled = true,
                         onClick = { showInlineLyrics = !showInlineLyrics }
@@ -1284,9 +1279,10 @@ fun NewPlayerScreen(
                         isActive = isRepeat,
                         shape = repeatShape,
                         modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        borderColor = buttonBorderColor,
+                        activeContainerColor = animatedBottomBarActiveContainer,
+                        activeContentColor = animatedBottomBarActiveContent,
+                        inactiveBorderColor = animatedBottomBarInactiveBorder,
+                        inactiveContentColor = animatedBottomBarInactiveIcon,
                         iconSize = iconSize,
                         onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
                     )
@@ -1297,14 +1293,14 @@ fun NewPlayerScreen(
                         modifier = Modifier
                             .size(buttonSize)
                             .clip(CircleShape)
-                            .background(textButtonColor)
+                            .background(animatedActionContainer)
                             .clickable { showMoreOptions = true },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             painter = painterResource(Res.drawable.more_horiz),
                             contentDescription = null,
-                            tint = iconButtonColor,
+                            tint = animatedActionContent,
                             modifier = Modifier.size(iconSize)
                         )
                     }
@@ -1316,7 +1312,7 @@ fun NewPlayerScreen(
                 onDismiss = { queueSheetState.collapseSoft() },
                 backgroundColor = sheetBg,
                 accentColor = activeAccentColor,
-                contentColor = TextBackgroundColor,
+                contentColor = animatedTitleText,
             )
         }
 
@@ -1329,7 +1325,7 @@ fun NewPlayerScreen(
             viewModel = nowPlayingBottomSheetViewModel,
             backgroundColor = sheetBg,
             accentColor = activeAccentColor,
-            contentColor = TextBackgroundColor,
+            contentColor = animatedTitleText,
             onLyricsClick = {
                 queueSheetState.collapseSoft()
                 showInlineLyrics = true
@@ -1342,7 +1338,7 @@ fun NewPlayerScreen(
                 songTitle = trackTitle,
                 artistName = trackArtist,
                 artwork = extractedBitmap,
-                seedColor = startColor.value,
+                seedColor = animatedSliderActive,
                 initialLineIndex = shareInitialLineIndex,
                 onDismiss = { showShareLyricsSheet = false }
             )
@@ -1351,11 +1347,11 @@ fun NewPlayerScreen(
         if (showSleepTimerDialog) {
             val activeRemaining = sleepTimerState.timeRemaining
             var sleepTimerDefault by remember { mutableFloatStateOf(30f) }
-            val initialSliderValue = remember {
-                val activeMins = if (activeRemaining > 0) (activeRemaining / 60).toFloat() else sleepTimerDefault
+            val initialSliderValue = remember(activeRemaining) {
+                val activeMins = if (activeRemaining > 0) activeRemaining.toFloat() else sleepTimerDefault
                 activeMins.coerceIn(5f, 120f)
             }
-            var sleepTimerValue by remember { mutableFloatStateOf(initialSliderValue) }
+            var sleepTimerValue by remember(initialSliderValue) { mutableFloatStateOf(initialSliderValue) }
 
             AlertDialog(
                 onDismissRequest = { showSleepTimerDialog = false },
@@ -1367,12 +1363,15 @@ fun NewPlayerScreen(
                 },
                 text = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        val activeMinutes = activeRemaining / 60
-                        val activeSeconds = activeRemaining % 60
                         Text(
                             text = if (activeRemaining > 0) {
-                                if (activeMinutes > 0) "Active: ${activeMinutes}m ${activeSeconds}s remaining"
-                                else "Active: ${activeSeconds}s remaining"
+                                if (activeRemaining >= 60) {
+                                    val hours = activeRemaining / 60
+                                    val mins = activeRemaining % 60
+                                    if (mins > 0) "Active: ${hours}h ${mins}m remaining" else "Active: ${hours}h remaining"
+                                } else {
+                                    "Active: ${activeRemaining}m remaining"
+                                }
                             } else "${sleepTimerValue.roundToInt()} minutes",
                             style = MaterialTheme.typography.bodyLarge
                         )
@@ -1463,23 +1462,24 @@ fun PlayerQueueButton(
     isActive: Boolean,
     shape: androidx.compose.ui.graphics.Shape,
     modifier: Modifier = Modifier,
-    textButtonColor: Color = Color.White,
-    iconButtonColor: Color = Color.Black,
-    borderColor: Color = Color.White.copy(alpha = 0.3f),
+    activeContainerColor: Color = Color.White,
+    activeContentColor: Color = Color.Black,
+    inactiveBorderColor: Color = Color.White.copy(alpha = 0.3f),
+    inactiveContentColor: Color = Color.White,
     iconSize: androidx.compose.ui.unit.Dp = 24.dp,
     enabled: Boolean = true,
     onClick: () -> Unit = {},
 ) {
     val containerColor by animateColorAsState(
-        targetValue = if (isActive) textButtonColor else Color.Transparent,
+        targetValue = if (isActive) activeContainerColor else Color.Transparent,
         label = "queueButtonContainer"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isActive) iconButtonColor else Color.White,
+        targetValue = if (isActive) activeContentColor else inactiveContentColor,
         label = "queueButtonContent"
     )
     val animatedBorderColor by animateColorAsState(
-        targetValue = if (isActive) Color.Transparent else borderColor,
+        targetValue = if (isActive) Color.Transparent else inactiveBorderColor,
         label = "queueButtonBorder"
     )
     val borderModifier = if (isActive) Modifier else Modifier.border(
@@ -1540,8 +1540,9 @@ fun ResizableIconButton(
 private fun PlayerTimelineSection(
     sharedViewModel: SharedViewModel,
     isPlaying: Boolean,
-    textButtonColor: Color,
-    TextBackgroundColor: Color,
+    sliderActiveColor: Color,
+    sliderInactiveColor: Color,
+    timestampColor: Color,
     horizontalPadding: Dp,
     screenHeight: Dp,
     modifier: Modifier = Modifier,
@@ -1577,13 +1578,13 @@ private fun PlayerTimelineSection(
     val displayPosition = sliderPosition ?: animatedPercent.value.coerceIn(0f, 100f)
 
     val sliderColors = SliderDefaults.colors(
-        activeTrackColor = textButtonColor,
-        activeTickColor = textButtonColor,
-        thumbColor = textButtonColor,
-        inactiveTrackColor = Color.White.copy(alpha = 0.4f),
-        disabledActiveTrackColor = textButtonColor,
-        disabledInactiveTrackColor = Color.White.copy(alpha = 0.4f),
-        disabledThumbColor = textButtonColor,
+        activeTrackColor = sliderActiveColor,
+        activeTickColor = sliderActiveColor,
+        thumbColor = sliderActiveColor,
+        inactiveTrackColor = sliderInactiveColor,
+        disabledActiveTrackColor = sliderActiveColor,
+        disabledInactiveTrackColor = sliderInactiveColor,
+        disabledThumbColor = sliderActiveColor,
     )
 
     val sliderToDurationSpacing = 4.dp
@@ -1621,14 +1622,14 @@ private fun PlayerTimelineSection(
             Text(
                 text = formatDuration(currentElapsedMs),
                 style = MaterialTheme.typography.labelMedium,
-                color = TextBackgroundColor,
+                color = timestampColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = if (timelineState.total > 0) formatDuration(timelineState.total) else "",
                 style = MaterialTheme.typography.labelMedium,
-                color = TextBackgroundColor,
+                color = timestampColor,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

@@ -41,6 +41,8 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.MarqueeAnimationMode
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
@@ -331,6 +333,7 @@ fun NewPlayerScreen(
         val screenWidth = maxWidth
 
         val dynamicHorizontalPadding = (screenWidth * 0.062f).coerceIn(20.dp, 28.dp)
+        val artworkLeftEdge = maxOf(dynamicHorizontalPadding, (screenWidth - 380.dp) / 2)
         val dynamicTopSpacing = (screenHeight * 0.014f).coerceIn(8.dp, 16.dp)
         val dynamicHeaderToArtworkSpacing = (screenHeight * 0.012f).coerceIn(8.dp, 16.dp)
         val dynamicArtworkToInfoSpacing = (screenHeight * 0.018f).coerceIn(12.dp, 22.dp)
@@ -421,9 +424,9 @@ fun NewPlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .padding(horizontal = 8.dp)
+                    .padding(horizontal = artworkLeftEdge)
             ) {
-                FilledIconButton(
+                IconButton(
                     onClick = {
                         scope.launch {
                             offsetYAnimatable.animateTo(
@@ -433,11 +436,6 @@ fun NewPlayerScreen(
                             onDismiss()
                         }
                     },
-                    shape = CircleShape,
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = animatedActionContainer,
-                        contentColor = animatedActionContent
-                    ),
                     modifier = Modifier
                         .size(40.dp)
                         .align(Alignment.CenterStart)
@@ -446,7 +444,7 @@ fun NewPlayerScreen(
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         contentDescription = "Dismiss player",
                         tint = animatedActionContent,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 
@@ -658,11 +656,24 @@ fun NewPlayerScreen(
                             .padding(horizontal = dynamicHorizontalPadding)
                     ) {
                         val thumbnailSize = minOf(maxWidth, maxHeight, 380.dp)
+                        val isPlaying = controllerState.isPlaying
+                        val artworkScale by animateFloatAsState(
+                            targetValue = if (isPlaying) 1.0f else 0.95f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            ),
+                            label = "artworkScalePlaying"
+                        )
 
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
                                 .size(thumbnailSize)
+                                .graphicsLayer {
+                                    scaleX = artworkScale
+                                    scaleY = artworkScale
+                                }
                                 .then(
                                     if (totalPages <= 1) {
                                         Modifier.pointerInput(Unit) {
@@ -812,7 +823,17 @@ fun NewPlayerScreen(
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = animatedTitleText
+                            color = animatedTitleText,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (controllerState.isPlaying) {
+                                        Modifier.basicMarquee(
+                                            iterations = Int.MAX_VALUE,
+                                            animationMode = MarqueeAnimationMode.Immediately
+                                        )
+                                    } else Modifier
+                                )
                         )
                     }
 
@@ -830,20 +851,30 @@ fun NewPlayerScreen(
                             )
                         }
                         Text(
-                            text = firstArtist.ifBlank { "Unknown Artist" },
+                            text = trackArtist.ifBlank { "Unknown Artist" },
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Normal,
                             color = animatedArtistText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.clickable {
-                                val song = nowPlayingState?.songEntity
-                                (song?.artistId?.firstOrNull()?.takeIf { it.isNotEmpty() }
-                                    ?: currentSongData?.songInfoData?.authorId)?.let { channelId ->
-                                    onDismiss()
-                                    navController.navigate(ArtistDestination(channelId = channelId))
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .then(
+                                    if (controllerState.isPlaying) {
+                                        Modifier.basicMarquee(
+                                            iterations = Int.MAX_VALUE,
+                                            animationMode = MarqueeAnimationMode.Immediately
+                                        )
+                                    } else Modifier
+                                )
+                                .clickable {
+                                    val song = nowPlayingState?.songEntity
+                                    (song?.artistId?.firstOrNull()?.takeIf { it.isNotEmpty() }
+                                        ?: currentSongData?.songInfoData?.authorId)?.let { channelId ->
+                                        onDismiss()
+                                        navController.navigate(ArtistDestination(channelId = channelId))
+                                    }
                                 }
-                            }
                         )
                     }
                 }

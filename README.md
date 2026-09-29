@@ -67,7 +67,7 @@
 - **📥 Offline Downloads** — Save your favorite songs, full albums, and playlists directly to your device
 
 ### 📜 **Synced Lyrics**
-- **🎤 Real-Time Synced Lyrics** — Sing along with live, line-by-line synchronized lyrics powered by 7 engines (**LyricsPlus, LRCLIB, KuGou, BetterLyrics, Paxsenix, and YouTube**)
+- **🎤 Real-Time Synced Lyrics** — Sing along with live, line-by-line synchronized lyrics powered by multiple providers (**YouTube Music, LRCLIB, BetterLyrics, and Spotify**)
 - **👆 Interactive Seeking** — Tap on any lyric line to jump playback directly to that exact moment
 
 ### 📂 **Library & Playlist Management**
@@ -106,7 +106,7 @@
 - **🎵 Media Playback:** AndroidX Media3 / ExoPlayer 1.10.1
 - **🌐 HTTP Client:** Ktor 3.3.3 & OkHttp 5.3.2
 - **🖼️ Image Loading:** Coil 3.3.0
-- **🎥 Media Extraction:** NewPipe Extractor & ytdlp-android 0.18.1
+- **🎥 Media Extraction:** NewPipe Extractor & YouTube Music Services
 - **🔊 Audio Processing:** FFmpeg Kit Audio 6.0.1 & Custom Crossfade Adapter
 
 ---

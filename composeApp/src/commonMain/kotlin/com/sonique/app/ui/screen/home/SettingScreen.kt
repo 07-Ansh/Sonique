@@ -18,7 +18,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.mohamedrejeb.calf.core.ExperimentalCalfApi
 import com.sonique.app.Platform
+import com.sonique.app.expect.ui.PlatformBackdrop
+import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.getPlatform
+import com.sonique.app.ui.component.LiquidGlassIconButton
 import com.sonique.app.ui.component.Material3SettingsGroup
 import com.sonique.app.ui.component.Material3SettingsItem
 import com.sonique.app.ui.component.SettingBasicDialog
@@ -47,6 +50,7 @@ fun SettingScreen(
     val sharedViewModel: SharedViewModel = koinInject()
     val updateViewModel: UpdateViewModel = koinViewModel()
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
 
     var activeSubCategory by rememberSaveable {
         mutableStateOf(
@@ -84,6 +88,7 @@ fun SettingScreen(
             MainSettingsList(
                 innerPadding = innerPadding,
                 enableLiquidGlass = enableLiquidGlass,
+                backdrop = backdrop,
                 navController = navController,
                 onCategoryClick = { activeSubCategory = it }
             )
@@ -104,6 +109,7 @@ fun SettingScreen(
                         SettingsSubCategory.ABOUT -> stringResource(Res.string.about_us)
                         SettingsSubCategory.STORAGE -> stringResource(Res.string.storage)
                     },
+                    backdrop = backdrop,
                     onBack = { activeSubCategory = null }
                 ) {
                     when (category) {
@@ -129,6 +135,7 @@ fun SettingScreen(
 private fun MainSettingsList(
     innerPadding: PaddingValues,
     enableLiquidGlass: Boolean,
+    backdrop: PlatformBackdrop,
     navController: NavController,
     onCategoryClick: (SettingsSubCategory) -> Unit
 ) {
@@ -137,14 +144,25 @@ private fun MainSettingsList(
             .fillMaxSize()
     ) {
         TopAppBar(
-            title = { Text(stringResource(Res.string.settings), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    text = stringResource(Res.string.settings),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            },
             navigationIcon = {
-                IconButton(
-                    onClick = { navController.navigateUp() },
-                    modifier = Modifier.clip(CircleShape)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
+                LiquidGlassIconButton(
+                    backdrop = backdrop,
+                    imageVector = Icons.Default.ArrowBackIosNew,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                        .size(42.dp),
+                    onClick = { navController.navigateUp() }
+                )
             }
         )
 
@@ -268,19 +286,31 @@ private fun MainSettingsList(
 @Composable
 private fun SubSettingsContainer(
     title: String,
+    backdrop: PlatformBackdrop,
     onBack: () -> Unit,
     content: @Composable () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+            title = {
+                Text(
+                    title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            },
             navigationIcon = {
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.clip(CircleShape)
-                ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                }
+                LiquidGlassIconButton(
+                    backdrop = backdrop,
+                    imageVector = Icons.Default.ArrowBackIosNew,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .padding(start = 12.dp)
+                        .size(42.dp),
+                    onClick = onBack
+                )
             }
         )
         Box(modifier = Modifier.weight(1f)) {

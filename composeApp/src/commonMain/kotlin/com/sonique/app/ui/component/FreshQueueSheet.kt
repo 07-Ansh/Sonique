@@ -189,10 +189,45 @@ fun FreshQueueContent(
         indexFromId ?: indexFromTitle ?: musicServiceHandler.currentOrderIndex().coerceAtLeast(0)
     }
 
-    val visibleQueue = remember(queue, currentSongIndex) {
+    val visibleQueueItems = remember(queue, currentSongIndex) {
         if (queue.isEmpty()) emptyList()
-        else queue.drop(currentSongIndex.coerceAtMost(queue.size))
+        else {
+            val dropped = queue.drop(currentSongIndex.coerceAtMost(queue.size))
+            val counts = mutableMapOf<String, Int>()
+            dropped.map { track ->
+                val count = counts.getOrElse(track.videoId) { 0 }
+                counts[track.videoId] = count + 1
+                QueueDisplayItem(
+                    stableKey = "${track.videoId}_#$count",
+                    originalTrack = track,
+                )
+            }
+        }
     }
+
+    var localQueueItems by remember(visibleQueueItems) {
+        mutableStateOf(visibleQueueItems)
+    }
+
+    val dragDropState = rememberDragDropState(
+        lazyListState = lazyListState,
+        minDragIndex = 1,
+        onMove = { from, to ->
+            val currentList = localQueueItems.toMutableList()
+            if (from in currentList.indices && to in currentList.indices && from != to) {
+                val moved = currentList.removeAt(from)
+                currentList.add(to, moved)
+                localQueueItems = currentList
+            }
+        },
+        onDrop = { from, to ->
+            val actualFrom = currentSongIndex + from
+            val actualTo = currentSongIndex + to
+            scope.launch {
+                musicServiceHandler.swap(actualFrom, actualTo)
+            }
+        },
+    )
 
     // Precalculate total duration only when the queue list instance changes
     val totalDurationText = remember(queue) {
@@ -394,13 +429,15 @@ fun FreshQueueContent(
                 ),
                 modifier = Modifier
                     .fillMaxSize()
+                    .dragDropList(dragDropState)
                     .then(if (nestedScrollConnection != null) Modifier.nestedScroll(nestedScrollConnection) else Modifier)
             ) {
                     itemsIndexed(
-                        items = visibleQueue,
-                        key = { index, track -> "${track.videoId}_${currentSongIndex + index}" },
+                        items = localQueueItems,
+                        key = { _, item -> item.stableKey },
                         contentType = { index, _ -> if (index == 0) "active_track" else "upcoming_track" }
-                    ) { index, track ->
+                    ) { index, item ->
+                        val track = item.originalTrack
                         val actualIndex = currentSongIndex + index
                         val isCurrentTrack = index == 0
                         val artistNames = remember(track.artists) {
@@ -497,75 +534,88 @@ fun FreshQueueContent(
                                 }
                             }
                         } else {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable {
-                                        localPendingVideoId = track.videoId
-                                        musicServiceHandler.playMediaItemInMediaSource(actualIndex)
-                                    }
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
+                            DraggableItem(
+                                dragDropState = dragDropState,
+                                key = item.stableKey,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) { isDragging ->
+                                val itemBg = if (isDragging) {
+                                    if (isMonochrome) Color.White.copy(alpha = 0.18f).compositeOver(sheetBg)
+                                    else tint.copy(alpha = 0.28f).compositeOver(sheetBg)
+                                } else {
+                                    Color.Transparent
+                                }
+                                Row(
                                     modifier = Modifier
-                                        .size(52.dp)
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isMonochrome) Color.White.copy(alpha = 0.08f) else tint.copy(alpha = 0.14f))
-                                ) {
-                                    AsyncImage(
-                                        model = track.thumbnails?.lastOrNull()?.url ?: "",
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier.fillMaxSize()
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = (track.title ?: "").cleanSongTitle(),
-                                        style = MaterialTheme.typography.titleMedium.copy(
-                                            fontWeight = FontWeight.Normal,
-                                            fontSize = 15.sp
-                                        ),
-                                        color = finalContent,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                    val subtitleText = remember(artistNames, track.duration) {
-                                        val dur = track.duration
-                                        if (!dur.isNullOrBlank()) {
-                                            if (artistNames.isNotBlank()) "$artistNames • $dur" else dur
-                                        } else {
-                                            artistNames
+                                        .background(itemBg)
+                                        .clickable(enabled = !isDragging) {
+                                            localPendingVideoId = track.videoId
+                                            musicServiceHandler.playMediaItemInMediaSource(actualIndex)
                                         }
-                                    }
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = subtitleText,
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            fontSize = 13.sp
-                                        ),
-                                        color = finalContent.copy(alpha = 0.72f),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = { selectedItemForMenu = actualIndex },
-                                    modifier = Modifier.size(36.dp)
+                                        .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        painter = painterResource(Res.drawable.baseline_more_vert_24),
-                                        contentDescription = "Track options",
-                                        tint = finalContent.copy(alpha = 0.75f),
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(52.dp)
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(if (isMonochrome) Color.White.copy(alpha = 0.08f) else tint.copy(alpha = 0.14f))
+                                    ) {
+                                        AsyncImage(
+                                            model = track.thumbnails?.lastOrNull()?.url ?: "",
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = (track.title ?: "").cleanSongTitle(),
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Normal,
+                                                fontSize = 15.sp
+                                            ),
+                                            color = finalContent,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        val subtitleText = remember(artistNames, track.duration) {
+                                            val dur = track.duration
+                                            if (!dur.isNullOrBlank()) {
+                                                if (artistNames.isNotBlank()) "$artistNames • $dur" else dur
+                                            } else {
+                                                artistNames
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = subtitleText,
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontSize = 13.sp
+                                            ),
+                                            color = finalContent.copy(alpha = 0.72f),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = { selectedItemForMenu = actualIndex },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(Res.drawable.baseline_more_vert_24),
+                                            contentDescription = "Track options",
+                                            tint = finalContent.copy(alpha = 0.75f),
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -704,3 +754,4 @@ private fun PlayingEqualizerBars(
         )
     }
 }
+

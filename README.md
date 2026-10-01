@@ -1,7 +1,6 @@
 # Sonique
 
-<video src="https://github.com/user-attachments/assets/07425c07-aa30-4384-8a06-e81503de3ec0" autoplay loop muted playsinline width="100%">
-</video>
+![Sonique Banner](asset/banner.webp)
 
 <div align="center">
 

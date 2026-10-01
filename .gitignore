@@ -11,9 +11,9 @@
 *.class
 
 # Generated files
-bin/
-gen/
-out/
+/bin/
+/gen/
+/out/
 /build
 .gradle
 .kotlin

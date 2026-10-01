@@ -1,6 +1,7 @@
 # Sonique
 
-![Sonique Banner](asset/Banner.png)
+<video src="https://github.com/user-attachments/assets/07425c07-aa30-4384-8a06-e81503de3ec0" autoplay loop muted playsinline width="100%">
+</video>
 
 <div align="center">
 

@@ -116,7 +116,6 @@ import com.sonique.app.expect.ui.toImageBitmap
 import com.sonique.app.extension.angledGradientBackground
 import com.sonique.app.extension.getColorFromPalette
 import com.sonique.app.extension.getScreenSizeInfo
-import com.sonique.app.extension.getStringBlocking
 import com.sonique.app.extension.toImmersiveBackground
 import com.sonique.app.extension.isScrollingUp
 import com.sonique.app.getPlatform
@@ -299,6 +298,7 @@ fun PlaylistScreen(
     var currentItem by remember {
         mutableStateOf<Track?>(null)
     }
+    val downloadingString = stringResource(Res.string.downloading)
 
     var itemBottomSheetShow by remember {
         mutableStateOf(false)
@@ -956,9 +956,7 @@ fun PlaylistScreen(
                                                                                     Modifier
                                                                                         .fillMaxSize()
                                                                                         .clickable {
-                                                                                            viewModel.makeToast(
-                                                                                                getStringBlocking(Res.string.downloading),
-                                                                                            )
+                                                                                                viewModel.makeToast(downloadingString)
                                                                                         },
                                                                                 contentAlignment = Alignment.Center,
                                                                             ) {
@@ -1071,7 +1069,7 @@ fun PlaylistScreen(
                                                                                     .clip(
                                                                                         CircleShape,
                                                                                     ).clickable {
-                                                                                        viewModel.makeToast(getStringBlocking(Res.string.downloading))
+                                                                                        viewModel.makeToast(downloadingString)
                                                                                     },
                                                                         ) {
                                                                             Image(

@@ -1,7 +1,7 @@
 [versions]
 # App version
-version-name="4.0.0"
-version-code="400"
+version-name="4.1.0"
+version-code="410"
 
 android = "9.0.0"
 kotlin = "2.2.21"
@@ -55,7 +55,6 @@ kermit = "2.0.8"
 paging-common = "3.3.6"
 glance = "1.1.1"
 liquid-glass = "1.0.2"
-ytdlp = "0.18.1"
 ffmpeg-kit-audio="6.0.1"
 composeHotReload = "1.0.0"
 kuromoji-ipadic = "0.9.0"
@@ -181,8 +180,6 @@ glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", versi
 glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 
 liquid-glass = { module = "io.github.kyant0:backdrop", version.ref = "liquid-glass" }
-
-ytdlp-android = { module = "io.github.junkfood02.youtubedl-android:library", version.ref = "ytdlp" }
 
 ffmpeg-kit-audio = { module = "io.github.maxrave-dev:ffmpeg-kit-audio", version.ref = "ffmpeg-kit-audio" }
 

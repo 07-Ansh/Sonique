@@ -436,7 +436,7 @@ class Ytmusic {
     }
 
     suspend fun getSuggestQuery(query: String) =
-        httpClient.get("http://suggestqueries.google.com/complete/search") {
+        httpClient.get("https://suggestqueries.google.com/complete/search") {
             contentType(ContentType.Application.Json)
             parameter("client", "firefox")
             parameter("ds", "yt")

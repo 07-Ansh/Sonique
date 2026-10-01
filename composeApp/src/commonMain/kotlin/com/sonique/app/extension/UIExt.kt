@@ -580,6 +580,149 @@ fun Color.darkenForAmbience(): Color {
     }
 }
 
+/**
+ * Cohesive dynamic color palette for the player screen.
+ * Implements modern color science where the background is a rich solid ambient shade,
+ * the hero Play/Pause pill is a soft pastel accent, skip controls use a luminous primary tint,
+ * and bottom bar switches highlight dynamically from the album cover's palette.
+ */
+data class PlayerPaletteTheme(
+    val solidBackgroundColor: Color,
+    val primaryContainer: Color,
+    val onPrimaryContainer: Color,
+    val secondaryContainer: Color,
+    val onSecondaryContainer: Color,
+    val actionButtonContainer: Color,
+    val actionButtonContent: Color,
+    val sliderActive: Color,
+    val sliderInactive: Color,
+    val bottomBarContainer: Color,
+    val bottomBarActiveContainer: Color,
+    val bottomBarActiveContent: Color,
+    val bottomBarInactiveBorder: Color,
+    val bottomBarInactiveIcon: Color,
+    val titleTextColor: Color,
+    val artistTextColor: Color,
+    val headerTextColor: Color,
+) {
+    companion object {
+        fun defaultTheme(): PlayerPaletteTheme =
+            PlayerPaletteTheme(
+                solidBackgroundColor = Color(0xFF101214),
+                primaryContainer = Color(0xFFE2E2E6),
+                onPrimaryContainer = Color(0xFF121214),
+                secondaryContainer = Color(0xFF2C2D32),
+                onSecondaryContainer = Color(0xFFE2E2E6),
+                actionButtonContainer = Color.White.copy(alpha = 0.12f),
+                actionButtonContent = Color(0xFFE2E2E6),
+                sliderActive = Color(0xFFE2E2E6),
+                sliderInactive = Color.White.copy(alpha = 0.20f),
+                bottomBarContainer = Color.White.copy(alpha = 0.08f),
+                bottomBarActiveContainer = Color(0xFFE2E2E6),
+                bottomBarActiveContent = Color(0xFF121214),
+                bottomBarInactiveBorder = Color.White.copy(alpha = 0.15f),
+                bottomBarInactiveIcon = Color(0xFFD0D0D4),
+                titleTextColor = Color(0xFFF2F2F4),
+                artistTextColor = Color(0xFFD0D0D4).copy(alpha = 0.75f),
+                headerTextColor = Color(0xFFD0D0D4).copy(alpha = 0.60f),
+            )
+    }
+}
+
+/**
+ * Extracts a complete PlayerPaletteTheme adhering to modern player color science.
+ * Guarantees contrast, comfort, and pure solid ambient backgrounds.
+ */
+fun Palette?.extractPlayerPaletteTheme(): PlayerPaletteTheme {
+    val p = this ?: return PlayerPaletteTheme.defaultTheme()
+
+    val colorSwatch =
+        p.vibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.08f }
+            ?: p.dominantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.08f }
+            ?: p.lightVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.08f }
+            ?: p.darkVibrantSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.08f }
+            ?: p.mutedSwatch?.takeIf { Color(it.rgb).toHsl()[1] >= 0.08f }
+            ?: p.swatches.filter { Color(it.rgb).toHsl()[1] >= 0.08f }.maxByOrNull { it.population }
+
+    if (colorSwatch == null) {
+        return PlayerPaletteTheme.defaultTheme()
+    }
+
+    val dominantHsl = Color(colorSwatch.rgb).toHsl()
+    val primaryHue = dominantHsl[0]
+    val primarySat = dominantHsl[1].coerceIn(0.35f, 0.65f)
+
+    // 1. Solid Background: Rich, deep, immersive solid color (18-20% lightness)
+    val solidBg = hslToColor(primaryHue, primarySat.coerceIn(0.30f, 0.55f), 0.19f, 1f)
+
+    // 2. Secondary Luminous Pastel (Skip Previous / Next & Active Slider)
+    val secondaryCont = hslToColor(primaryHue, primarySat.coerceIn(0.45f, 0.70f), 0.81f, 1f)
+    val onSecondaryCont = hslToColor(primaryHue, primarySat.coerceIn(0.60f, 0.90f), 0.12f, 1f)
+
+    // 3. Hero Play/Pause Button (Primary Container)
+    // Look for a distinct secondary / light vibrant / accent swatch in the palette
+    val accentSwatch =
+        p.lightVibrantSwatch?.takeIf {
+            val h = Color(it.rgb).toHsl()[0]
+            kotlin.math.abs(h - primaryHue) in 25f..335f
+        } ?: p.mutedSwatch?.takeIf {
+            val h = Color(it.rgb).toHsl()[0]
+            kotlin.math.abs(h - primaryHue) in 25f..335f
+        } ?: p.darkVibrantSwatch?.takeIf {
+            val h = Color(it.rgb).toHsl()[0]
+            kotlin.math.abs(h - primaryHue) in 25f..335f
+        }
+
+    val heroHue =
+        if (accentSwatch != null) {
+            Color(accentSwatch.rgb).toHsl()[0]
+        } else {
+            (primaryHue + 45f) % 360f
+        }
+    val heroCont = hslToColor(heroHue, 0.42f, 0.83f, 1f)
+    val onHeroCont = hslToColor(heroHue, 0.55f, 0.13f, 1f)
+
+    // 4. Slider
+    val sliderAct = secondaryCont
+    val sliderInact = secondaryCont.copy(alpha = 0.24f)
+
+    // 5. Actions (Share / Like / Dismiss / More)
+    val actionContnt = hslToColor(primaryHue, primarySat.coerceIn(0.40f, 0.75f), 0.86f, 1f)
+    val actionCont = secondaryCont.copy(alpha = 0.14f)
+
+    // 6. Bottom Bar
+    val bBarCont = hslToColor(primaryHue, primarySat * 0.30f, 0.11f, 0.48f)
+    val bBarActiveCont = secondaryCont
+    val bBarActiveContnt = onSecondaryCont
+    val bBarInactiveBorder = secondaryCont.copy(alpha = 0.22f)
+    val bBarInactiveIcon = actionContnt.copy(alpha = 0.82f)
+
+    // 7. Typography
+    val titleText = hslToColor(primaryHue, primarySat.coerceIn(0.12f, 0.30f), 0.94f, 1f)
+    val artistText = titleText.copy(alpha = 0.72f)
+    val headerText = titleText.copy(alpha = 0.60f)
+
+    return PlayerPaletteTheme(
+        solidBackgroundColor = solidBg,
+        primaryContainer = heroCont,
+        onPrimaryContainer = onHeroCont,
+        secondaryContainer = secondaryCont,
+        onSecondaryContainer = onSecondaryCont,
+        actionButtonContainer = actionCont,
+        actionButtonContent = actionContnt,
+        sliderActive = sliderAct,
+        sliderInactive = sliderInact,
+        bottomBarContainer = bBarCont,
+        bottomBarActiveContainer = bBarActiveCont,
+        bottomBarActiveContent = bBarActiveContnt,
+        bottomBarInactiveBorder = bBarInactiveBorder,
+        bottomBarInactiveIcon = bBarInactiveIcon,
+        titleTextColor = titleText,
+        artistTextColor = artistText,
+        headerTextColor = headerText,
+    )
+}
+
 fun Modifier.isElementVisible(onVisibilityChanged: (Boolean) -> Unit) =
     composed {
         val isVisible by remember { derivedStateOf { mutableStateOf(false) } }
@@ -638,6 +781,10 @@ fun ImageBitmap.toResizedBitmap(
     return resized
 }
 
+@Deprecated(
+    message = "Blocks the calling thread. Use stringResource() in @Composable or suspend getString() in a coroutine.",
+    level = DeprecationLevel.WARNING,
+)
 fun getStringBlocking(res: StringResource): String =
     runBlocking {
         getString(res)

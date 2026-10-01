@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.component
+package com.sonique.app.ui.component
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
@@ -85,7 +85,6 @@ import com.sonique.app.ui.navigation.destination.list.PodcastDestination
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.viewModel.LibraryViewModel
 import com.sonique.app.viewModel.SharedViewModel
-import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -357,6 +356,7 @@ fun LibraryItem(
                         ) {
                             items(state.data) { item ->
                                 val song = item as? SongEntity ?: return@items
+                                val radioString = stringResource(Res.string.radio)
                                 Box(
                                     Modifier
                                         .padding(horizontal = 10.dp)
@@ -369,7 +369,7 @@ fun LibraryItem(
                                                     listTracks = arrayListOf(firstQueue),
                                                     firstPlayedTrack = firstQueue,
                                                     playlistId = "RDAMVM${firstQueue.videoId}",
-                                                    playlistName = "\"${song.title}\" ${runBlocking { getString(Res.string.radio) }}",
+                                                    playlistName = "\"${song.title}\" $radioString",
                                                     playlistType = DomainPlaylistType.RADIO,
                                                     continuation = null,
                                                 ),

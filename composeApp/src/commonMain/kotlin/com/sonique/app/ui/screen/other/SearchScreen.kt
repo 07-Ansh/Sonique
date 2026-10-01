@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.other
+package com.sonique.app.ui.screen.other
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -89,7 +89,6 @@ import com.sonique.domain.mediaservice.handler.QueueData
 import com.sonique.domain.utils.connectArtists
 import com.sonique.domain.utils.toSongEntity
 import com.sonique.domain.utils.toTrack
-import com.sonique.app.extension.getStringBlocking
 import com.sonique.app.ui.component.ArtistFullWidthItems
 import com.sonique.app.ui.component.Chip
 import com.sonique.app.ui.component.EndOfPage
@@ -362,6 +361,7 @@ fun SearchScreen(
         Crossfade(targetState = searchUIType) {
             when (it) {
                 SearchUIType.SEARCH_SUGGESTIONS -> {
+                    val inSearchString = stringResource(Res.string.in_search)
                     LazyColumn(
                         Modifier.padding(
                             horizontal = 16.dp,
@@ -380,7 +380,7 @@ fun SearchScreen(
                                                     listTracks = arrayListOf(firstTrack),
                                                     firstPlayedTrack = firstTrack,
                                                     playlistId = "RDAMVM${firstTrack.videoId}",
-                                                    playlistName = "\"${searchText}\" ${getStringBlocking(Res.string.in_search)}",
+                                                    playlistName = "\"${searchText}\" $inSearchString",
                                                     playlistType = PlaylistType.RADIO,
                                                     continuation = null,
                                                 ),
@@ -554,7 +554,7 @@ fun SearchScreen(
                                     }
 
                                     is SearchScreenUIState.Success -> {
-                                         
+                                        val inSearchString = stringResource(Res.string.in_search)
                                         Column(modifier = Modifier.fillMaxSize()) {
                                              
                                             val currentResults =
@@ -592,12 +592,7 @@ fun SearchScreen(
                                                                                     listTracks = arrayListOf(firstTrack),
                                                                                     firstPlayedTrack = firstTrack,
                                                                                     playlistId = "RDAMVM${result.videoId}",
-                                                                                    playlistName =
-                                                                                        "\"${searchText}\" ${
-                                                                                            getStringBlocking(
-                                                                                                Res.string.in_search,
-                                                                                            )
-                                                                                        }",
+                                                                                    playlistName = "\"${searchText}\" $inSearchString",
                                                                                     playlistType = PlaylistType.RADIO,
                                                                                     continuation = null,
                                                                                 ),
@@ -625,12 +620,7 @@ fun SearchScreen(
                                                                                     listTracks = arrayListOf(firstTrack),
                                                                                     firstPlayedTrack = firstTrack,
                                                                                     playlistId = "RDAMVM${result.videoId}",
-                                                                                    playlistName =
-                                                                                        "\"${searchText}\" ${
-                                                                                            getStringBlocking(
-                                                                                                Res.string.in_search,
-                                                                                            )
-                                                                                        }",
+                                                                                    playlistName = "\"${searchText}\" $inSearchString",
                                                                                     playlistType = PlaylistType.RADIO,
                                                                                     continuation = null,
                                                                                 ),

@@ -1,10 +1,10 @@
-﻿package com.sonique.app.ui.screen.settings
+package com.sonique.app.ui.screen.settings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,6 +18,7 @@ import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.LiquidGlassIconButton
 import com.sonique.app.ui.component.Material3SettingsGroup
 import com.sonique.app.ui.component.Material3SettingsItem
 import com.sonique.app.ui.component.liquidGlass
@@ -63,19 +64,21 @@ fun SettingsUpdateScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = stringResource(Res.string.app_updates)
+                        text = stringResource(Res.string.app_updates),
+                        modifier = Modifier.padding(start = 8.dp)
                     )
                 },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.clip(CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
+                    LiquidGlassIconButton(
+                        backdrop = backdrop,
+                        imageVector = Icons.Default.ArrowBackIosNew,
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .padding(start = 12.dp)
+                            .size(42.dp),
+                        onClick = onBack
+                    )
                 }
             )
         },

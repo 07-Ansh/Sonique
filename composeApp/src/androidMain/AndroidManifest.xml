@@ -11,7 +11,7 @@
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
 <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
 <uses-feature
@@ -214,9 +214,6 @@
     <meta-data
         android:name="com.google.android.gms.car.application"
         android:resource="@xml/automotive_app_desc" />
-
-
-    <meta-data android:name="io.sentry.auto-init" android:value="false" />
 
     <receiver android:name=".ui.widget.AppWidgetReceiver"
         android:exported="true">

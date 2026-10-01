@@ -34,7 +34,7 @@ import com.sonique.common.Config
 import com.sonique.app.expect.ui.PlatformWebView
 import com.sonique.app.expect.ui.createWebViewCookieManager
 import com.sonique.app.expect.ui.rememberWebViewState
-import com.sonique.app.extension.getStringBlocking
+import org.jetbrains.compose.resources.stringResource
 import com.sonique.app.ui.component.DevCookieLogInBottomSheet
 import com.sonique.app.ui.component.DevLogInBottomSheet
 import com.sonique.app.ui.component.DevLogInType
@@ -73,6 +73,7 @@ fun SpotifyLoginScreen(
     var devLoginSheet by rememberSaveable {
         mutableStateOf(false)
     }
+    val loginSuccessString = stringResource(Res.string.login_success)
 
     var showCookiesBottomSheet by rememberSaveable {
         mutableStateOf(false)
@@ -142,7 +143,7 @@ fun SpotifyLoginScreen(
                                 devLoginSheet = false
                                 val spdcText = "sp_dc=$spdc"
                                 viewModel.saveSpotifySpdc(spdcText)
-                                viewModel.makeToast(getStringBlocking(Res.string.login_success))
+                                viewModel.makeToast(loginSuccessString)
                                 navController.navigateUp()
                             },
                             type = DevLogInType.Spotify,

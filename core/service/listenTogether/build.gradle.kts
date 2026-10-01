@@ -14,29 +14,6 @@ kotlin {
         minSdk = 26
     }
 
-    val xcfName = "listenTogetherKit"
-
-    iosX64 {
-        binaries.framework {
-            baseName = xcfName
-        }
-    }
-
-    iosArm64 {
-        binaries.framework {
-            baseName = xcfName
-        }
-    }
-
-    iosSimulatorArm64 {
-        binaries.framework {
-            baseName = xcfName
-        }
-    }
-
-    jvm {
-    }
-
     sourceSets {
         commonMain {
             dependencies {

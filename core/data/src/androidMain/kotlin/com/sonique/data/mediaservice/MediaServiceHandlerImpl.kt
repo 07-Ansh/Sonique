@@ -410,7 +410,7 @@ internal class MediaServiceHandlerImpl(
                     _controlState.update { it.copy(isLiked = songEntity.liked) }
                     var thumbUrl =
                         track?.thumbnails?.lastOrNull()?.url
-                            ?: "http://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg"
+                            ?: "https://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg"
                     if (thumbUrl.contains("w120")) {
                         thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
                     }
@@ -953,15 +953,19 @@ internal class MediaServiceHandlerImpl(
         from: Int,
         to: Int,
     ) {
- 
- 
- 
- 
- 
- 
- 
- 
- 
+        val currentTracks = _queueData.value.data.listTracks.toMutableList()
+        if (from in currentTracks.indices && to in currentTracks.indices && from != to) {
+            val item = currentTracks.removeAt(from)
+            currentTracks.add(to, item)
+            _queueData.update {
+                it.copy(
+                    data =
+                        it.data.copy(
+                            listTracks = currentTracks,
+                        ),
+                )
+            }
+        }
         moveMediaItem(from, to)
     }
 
@@ -1404,7 +1408,7 @@ internal class MediaServiceHandlerImpl(
             val track = listTrack[i]
             var thumbUrl =
                 track.thumbnails?.lastOrNull()?.url
-                    ?: "http://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
+                    ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
             if (thumbUrl.contains("w120")) {
                 thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
             }
@@ -1544,7 +1548,7 @@ internal class MediaServiceHandlerImpl(
                 if (track == current) continue
                 var thumbUrl =
                     track.thumbnails?.lastOrNull()?.url
-                        ?: "http://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
+                        ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
                 if (thumbUrl.contains("w120")) {
                     thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
                 }
@@ -1770,7 +1774,7 @@ internal class MediaServiceHandlerImpl(
                 .toCollection(arrayListOf())
         var thumbUrl =
             track.thumbnails?.lastOrNull()?.url
-                ?: "http://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
+                ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
         if (thumbUrl.contains("w120")) {
             thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
         }

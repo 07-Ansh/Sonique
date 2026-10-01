@@ -1,9 +1,6 @@
 # Sonique
 
-<picture>
-  <source srcset="asset/banner.webp" type="image/webp">
-  <img src="asset/Banner.png" alt="Sonique Banner" width="100%">
-</picture>
+<img src="asset/banner.webp" alt="Sonique Banner" width="100%">
 
 <div align="center">
 

@@ -387,178 +387,234 @@ fun QueueBottomSheet(
 
 @Composable
 @ExperimentalMaterial3Api
-private enum class QueueItemAction {
-    UP,
-    DOWN,
-    DELETE,
-}
-
-@Composable
-@ExperimentalMaterial3Api
 fun QueueItemBottomSheet(
     onDismiss: () -> Unit,
     index: Int,
     musicServiceHandler: MediaPlayerHandler = koinInject<MediaPlayerHandler>(),
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val modelBottomSheetState =
-        rememberModalBottomSheetState(
-            skipPartiallyExpanded = true,
-        )
-    val hideModalBottomSheet: () -> Unit =
-        {
-            coroutineScope.launch {
-                modelBottomSheetState.hide()
-                onDismiss()
-            }
+    val modelBottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val hideModalBottomSheet: () -> Unit = {
+        coroutineScope.launch {
+            modelBottomSheetState.hide()
+            onDismiss()
         }
-    val listAction =
-        listOf(
-            QueueItemAction.UP,
-            QueueItemAction.DOWN,
-            QueueItemAction.DELETE,
-        )
+    }
+
+    val track = remember(musicServiceHandler.queueData, index) {
+        musicServiceHandler.queueData.value?.data?.listTracks?.getOrNull(index)
+    }
+
+    val canMoveUp = index > 0 && index < (musicServiceHandler.queueData.value?.data?.listTracks?.size ?: 0)
+    val canMoveDown = index >= 0 && index < (musicServiceHandler.queueData.value?.data?.listTracks?.size ?: 0) - 1
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = modelBottomSheetState,
         containerColor = Color.Transparent,
         contentColor = Color.Transparent,
         dragHandle = null,
-        scrimColor = Color.Black.copy(alpha = .5f),
+        scrimColor = Color.Black.copy(alpha = 0.55f),
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
     ) {
         Card(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .wrapContentHeight(),
-            shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            colors = CardDefaults.cardColors().copy(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFF18171C)
+            ),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f)),
         ) {
             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 16.dp)
+                    .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Spacer(modifier = Modifier.height(5.dp))
-                Card(
-                    modifier =
-                        Modifier
-                            .width(60.dp)
-                            .height(4.dp),
-                    colors =
-                        CardDefaults.cardColors().copy(
-                            containerColor = Color(0xFF474545),
-                        ),
-                    shape = RoundedCornerShape(50),
-                ) {}
-                Spacer(modifier = Modifier.height(5.dp))
-                LazyColumn {
-                    val canMoveUp =
-                        index > 0 &&
-                            index < (
-                                musicServiceHandler.queueData.value
-                                    ?.data
-                                    ?.listTracks
-                                    ?.size ?: 0
-                            )
-                    val canMoveDown =
-                        index >= 0 &&
-                            index < (
-                                musicServiceHandler.queueData.value
-                                    ?.data
-                                    ?.listTracks
-                                    ?.size ?: 0
-                            ) - 1
-                    items(listAction) { action ->
-                        val disable =
-                            when (action) {
-                                QueueItemAction.UP -> !canMoveUp
-                                QueueItemAction.DOWN -> !canMoveDown
-                                QueueItemAction.DELETE -> false
-                            }
-                        if (disable) return@items
+                // Drag handle pill
+                Box(
+                    modifier = Modifier
+                        .width(36.dp)
+                        .height(4.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.35f))
+                )
+
+                // Track Info Header
+                if (track != null) {
+                    val artistNames = remember(track.artists) {
+                        track.artists?.mapNotNull { it.name }?.connectArtists() ?: ""
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Box(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        hideModalBottomSheet()
-                                        when (action) {
-                                            QueueItemAction.UP -> {
-                                                coroutineScope.launch {
-                                                    musicServiceHandler.moveItemUp(index)
-                                                }
-                                            }
-
-                                            QueueItemAction.DOWN -> {
-                                                coroutineScope.launch {
-                                                    musicServiceHandler.moveItemDown(index)
-                                                }
-                                            }
-
-                                            QueueItemAction.DELETE -> {
-                                                musicServiceHandler.removeMediaItem(index)
-                                            }
-                                        }
-                                    },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color.White.copy(alpha = 0.08f))
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier =
-                                    Modifier
-                                        .padding(20.dp)
-                                        .align(Alignment.CenterStart),
-                            ) {
-                                when (action) {
-                                    QueueItemAction.UP -> {
-                                        Image(
-                                            painter =
-                                                painterResource(
-                                                    Res.drawable.baseline_keyboard_double_arrow_up_24,
-                                                ),
-                                            contentDescription = "Move up",
-                                        )
-                                    }
+                            AsyncImage(
+                                model = track.thumbnails?.lastOrNull()?.url ?: "",
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
 
-                                    QueueItemAction.DOWN -> {
-                                        Image(
-                                            painter =
-                                                painterResource(
-                                                    Res.drawable.baseline_keyboard_double_arrow_down_24,
-                                                ),
-                                            contentDescription = "Move down",
-                                        )
-                                    }
+                        Spacer(modifier = Modifier.width(14.dp))
 
-                                    QueueItemAction.DELETE -> {
-                                        Image(
-                                            painter =
-                                                painterResource(
-                                                    Res.drawable.baseline_delete_24,
-                                                ),
-                                            contentDescription = "Delete",
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.width(10.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = (track.title ?: "").cleanSongTitle(),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                ),
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            if (artistNames.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text =
-                                        stringResource(
-                                            when (action) {
-                                                QueueItemAction.UP -> Res.string.move_up
-                                                QueueItemAction.DOWN -> Res.string.move_down
-                                                QueueItemAction.DELETE -> Res.string.delete
-                                            },
-                                        ),
-                                    style = typo().labelSmall,
+                                    text = artistNames,
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 13.sp,
+                                    ),
+                                    color = Color.White.copy(alpha = 0.65f),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
                         }
                     }
-                    item {
-                        EndOfModalBottomSheet()
+
+                    HorizontalDivider(
+                        color = Color.White.copy(alpha = 0.08f),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Actions List
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    if (canMoveUp) {
+                        QueueActionRow(
+                            iconRes = Res.drawable.baseline_keyboard_double_arrow_up_24,
+                            iconTint = Color.White,
+                            iconBgColor = Color.White.copy(alpha = 0.08f),
+                            title = stringResource(Res.string.move_up),
+                            titleColor = Color.White,
+                            description = "Move this song earlier in the queue",
+                            onClick = {
+                                hideModalBottomSheet()
+                                coroutineScope.launch {
+                                    musicServiceHandler.moveItemUp(index)
+                                }
+                            }
+                        )
                     }
+
+                    if (canMoveDown) {
+                        QueueActionRow(
+                            iconRes = Res.drawable.baseline_keyboard_double_arrow_down_24,
+                            iconTint = Color.White,
+                            iconBgColor = Color.White.copy(alpha = 0.08f),
+                            title = stringResource(Res.string.move_down),
+                            titleColor = Color.White,
+                            description = "Move this song later in the queue",
+                            onClick = {
+                                hideModalBottomSheet()
+                                coroutineScope.launch {
+                                    musicServiceHandler.moveItemDown(index)
+                                }
+                            }
+                        )
+                    }
+
+                    QueueActionRow(
+                        iconRes = Res.drawable.baseline_delete_24,
+                        iconTint = Color(0xFFFF453A),
+                        iconBgColor = Color(0xFFFF3B30).copy(alpha = 0.14f),
+                        title = stringResource(Res.string.delete),
+                        titleColor = Color(0xFFFF453A),
+                        description = "Remove this song from the current queue",
+                        onClick = {
+                            hideModalBottomSheet()
+                            musicServiceHandler.removeMediaItem(index)
+                        }
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QueueActionRow(
+    iconRes: org.jetbrains.compose.resources.DrawableResource,
+    iconTint: Color,
+    iconBgColor: Color,
+    title: String,
+    titleColor: Color,
+    description: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(iconBgColor),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = title,
+                tint = iconTint,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+
+        Spacer(modifier = Modifier.width(14.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 15.sp,
+                ),
+                color = titleColor,
+            )
+            Spacer(modifier = Modifier.height(1.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = 12.sp,
+                ),
+                color = Color.White.copy(alpha = 0.5f),
+            )
         }
     }
 }

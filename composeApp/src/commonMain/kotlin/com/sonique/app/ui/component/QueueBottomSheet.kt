@@ -1,12 +1,10 @@
 package com.sonique.app.ui.component
 
-import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.gestures.animateScrollBy
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +12,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -25,10 +25,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,15 +55,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.sonique.app.extension.cleanSongTitle
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.typo
+import com.sonique.domain.utils.connectArtists
 import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
@@ -104,23 +114,48 @@ fun QueueBottomSheet(
             skipPartiallyExpanded = true,
         )
     val lazyListState = rememberLazyListState()
-    val dragDropState =
-        rememberDragDropState(lazyListState) { from, to ->
-            coroutineScope.launch {
-                musicServiceHandler.swap(from, to)
-            }
-        }
-    var overscrollJob by remember { mutableStateOf<Job?>(null) }
-    var shouldShowQueueItemBottomSheet by rememberSaveable { mutableStateOf(false) }
-    var clickMoreIndex by rememberSaveable { mutableIntStateOf(0) }
-    val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
-    val songEntity by sharedViewModel.nowPlayingState.map { it?.songEntity }.collectAsState(null)
     val queueData by musicServiceHandler.queueData.collectAsStateWithLifecycle()
     val queue by remember {
         derivedStateOf {
             queueData?.data?.listTracks ?: emptyList()
         }
     }
+    val queueItems = remember(queue) {
+        val counts = mutableMapOf<String, Int>()
+        queue.map { track ->
+            val count = counts.getOrElse(track.videoId) { 0 }
+            counts[track.videoId] = count + 1
+            QueueDisplayItem(
+                stableKey = "${track.videoId}_#$count",
+                originalTrack = track,
+            )
+        }
+    }
+    var localQueueItems by remember(queueItems) {
+        mutableStateOf(queueItems)
+    }
+    val dragDropState =
+        rememberDragDropState(
+            lazyListState = lazyListState,
+            minDragIndex = 0,
+            onMove = { from, to ->
+                val currentList = localQueueItems.toMutableList()
+                if (from in currentList.indices && to in currentList.indices && from != to) {
+                    val moved = currentList.removeAt(from)
+                    currentList.add(to, moved)
+                    localQueueItems = currentList
+                }
+            },
+            onDrop = { from, to ->
+                coroutineScope.launch {
+                    musicServiceHandler.swap(from, to)
+                }
+            },
+        )
+    var shouldShowQueueItemBottomSheet by rememberSaveable { mutableStateOf(false) }
+    var clickMoreIndex by rememberSaveable { mutableIntStateOf(0) }
+    val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
+    val songEntity by sharedViewModel.nowPlayingState.map { it?.songEntity }.collectAsState(null)
     val loadMoreState by remember {
         derivedStateOf {
             queueData?.queueState ?: QueueData.StateSource.STATE_CREATED
@@ -299,81 +334,36 @@ fun QueueBottomSheet(
                 LazyColumn(
                     horizontalAlignment = Alignment.Start,
                     state = lazyListState,
-                    modifier =
-                        Modifier
-                            .pointerInput(Unit) {
-                                detectDragGesturesAfterLongPress(
-                                    onDrag = { change, offset ->
-                                        Logger.d("QueueBottomSheet", "onDrag $offset")
-                                        change.consume()
-                                        dragDropState.onDrag(offset = offset)
-
-                                        if (overscrollJob?.isActive == true) {
-                                            return@detectDragGesturesAfterLongPress
-                                        }
-
-                                        dragDropState
-                                            .checkForOverScroll()
-                                            .takeIf { it != 0f }
-                                            ?.let {
-                                                overscrollJob =
-                                                    coroutineScope.launch {
-                                                        dragDropState.state.animateScrollBy(
-                                                            it * 1.3f,
-                                                            tween(easing = FastOutLinearInEasing),
-                                                        )
-                                                    }
-                                            }
-                                            ?: run { overscrollJob?.cancel() }
-                                    },
-                                    onDragStart = { offset ->
-                                        Logger.d("QueueBottomSheet", "onDragStart $offset")
-                                        dragDropState.onDragStart(offset)
-                                    },
-                                    onDragEnd = {
-                                        Logger.d("QueueBottomSheet", "onDragEnd")
-                                        dragDropState.onDragInterrupted(true)
-                                        overscrollJob?.cancel()
-                                    },
-                                    onDragCancel = {
-                                        Logger.d("QueueBottomSheet", "onDragCancel")
-                                        dragDropState.onDragInterrupted()
-                                        overscrollJob?.cancel()
-                                    },
-                                )
-                            },
+                    modifier = Modifier.dragDropList(dragDropState),
                 ) {
                     itemsIndexed(
-                        queue,
-                        key = { i, t -> i.toString() + t.videoId },
-                    ) { index, track ->
-                        if (index != -1) {
-                            DraggableItem(
-                                dragDropState = dragDropState,
-                                index = index,
-                                modifier = Modifier,
-                            ) { _ ->
-                                SongFullWidthItems(
-                                    track = track,
-                                    isPlaying = track.videoId == songEntity?.videoId,
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth(),
-                                    onClickListener = { videoId ->
-                                        if (videoId == track.videoId) {
-                                            musicServiceHandler.playMediaItemInMediaSource(index)
-                                        }
-                                    },
-                                    onMoreClickListener = {
-                                        showQueueItemBottomSheet(index)
-                                    },
-                                    onAddToQueue = {
-                                        sharedViewModel.addListToQueue(
-                                            arrayListOf(track),
-                                        )
-                                    },
-                                )
-                            }
+                        localQueueItems,
+                        key = { _, item -> item.stableKey },
+                    ) { index, item ->
+                        val track = item.originalTrack
+                        DraggableItem(
+                            dragDropState = dragDropState,
+                            key = item.stableKey,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) { isDragging ->
+                            SongFullWidthItems(
+                                track = track,
+                                isPlaying = track.videoId == songEntity?.videoId,
+                                modifier = Modifier.fillMaxWidth(),
+                                onClickListener = { videoId ->
+                                    if (videoId == track.videoId) {
+                                        musicServiceHandler.playMediaItemInMediaSource(index)
+                                    }
+                                },
+                                onMoreClickListener = {
+                                    showQueueItemBottomSheet(index)
+                                },
+                                onAddToQueue = {
+                                    sharedViewModel.addListToQueue(
+                                        arrayListOf(track),
+                                    )
+                                },
+                            )
                         }
                     }
                     item {
@@ -395,6 +385,8 @@ fun QueueBottomSheet(
     }
 }
 
+@Composable
+@ExperimentalMaterial3Api
 private enum class QueueItemAction {
     UP,
     DOWN,

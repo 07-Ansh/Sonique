@@ -1,6 +1,8 @@
 # Sonique
 
-![Sonique Banner](asset/Banner.png)
+<video src="asset/banner.webm" autoplay loop muted playsinline width="100%">
+  <img src="asset/Banner.png" alt="Sonique Banner">
+</video>
 
 <div align="center">
 

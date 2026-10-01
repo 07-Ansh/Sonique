@@ -1,7 +1,7 @@
 # Sonique
 
-<video src="asset/banner.webm" autoplay loop muted playsinline width="100%">
-  <img src="asset/Banner.png" alt="Sonique Banner">
+<video src="asset/banner.webm" poster="asset/Banner.png" autoplay loop muted playsinline width="100%">
+  <img src="asset/Banner.png" alt="Sonique Banner" width="100%">
 </video>
 
 <div align="center">

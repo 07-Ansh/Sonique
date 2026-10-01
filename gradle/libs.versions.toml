@@ -1,7 +1,7 @@
 [versions]
 # App version
-version-name="4.0.0"
-version-code="400"
+version-name="4.1.0"
+version-code="410"
 
 android = "9.0.0"
 kotlin = "2.2.21"
@@ -180,7 +180,6 @@ glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", versi
 glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
 
 liquid-glass = { module = "io.github.kyant0:backdrop", version.ref = "liquid-glass" }
-
 
 ffmpeg-kit-audio = { module = "io.github.maxrave-dev:ffmpeg-kit-audio", version.ref = "ffmpeg-kit-audio" }
 

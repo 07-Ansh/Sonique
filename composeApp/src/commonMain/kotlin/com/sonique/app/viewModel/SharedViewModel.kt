@@ -63,6 +63,7 @@ import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
 import com.sonique.app.Platform
+import com.sonique.app.expect.preloadImage
 import com.sonique.app.expect.getDownloadFolderPath
 import com.sonique.app.expect.ui.toByteArray
 import com.sonique.app.getPlatform
@@ -448,6 +449,15 @@ class SharedViewModel(
                         ?: state.track?.thumbnails?.lastOrNull()?.url
                         ?: state.mediaItem.metadata.artworkUri?.toString()
 
+                    val isVideoTrack = state.mediaItem.isVideo() || isVideoThumbnailUrl(resolvedThumbnail)
+                    val isArtAlreadyResolved = currentSongEntity?.thumbnails?.let { !isVideoThumbnailUrl(it) } == true
+                    val isArtworkLoading = isVideoTrack && !isArtAlreadyResolved
+                    val displayThumbnail = if (isArtworkLoading) {
+                        null
+                    } else {
+                        resolvedThumbnail?.toHighResThumbnailUrl()
+                    }
+
                     val isNewTrack = state.mediaItem.mediaId.isNotEmpty() && state.mediaItem.mediaId != lastMediaIdForLyrics
                     if (isNewTrack) {
                         lastMediaIdForLyrics = state.mediaItem.mediaId
@@ -458,7 +468,8 @@ class SharedViewModel(
                             nowPlayingTitle = resolvedTitle,
                             artistName = resolvedArtist,
                             isVideo = false,
-                            thumbnailURL = resolvedThumbnail?.toHighResThumbnailUrl(),
+                            thumbnailURL = displayThumbnail,
+                            isArtworkLoading = isArtworkLoading,
                             isExplicit = currentSongEntity?.isExplicit ?: false,
                             playlistName =
                                 mediaPlayerHandler.queueData.value
@@ -482,8 +493,12 @@ class SharedViewModel(
                             launch { getLikeStatus(now.mediaId) }
                             launch { getSongInfo(now.mediaId) }
                             launch { getFormat(now.mediaId) }
-                            if (now.isVideo() || isVideoThumbnailUrl(resolvedThumbnail)) {
-                                launch { resolveAndApplyAudioArtwork(now) }
+                            if (isArtworkLoading) {
+                                launch { resolveAndApplyAudioArtwork(now, resolvedThumbnail) }
+                            }
+                            val currentQueue = mediaPlayerHandler.queueData.value?.data?.listTracks
+                            if (!currentQueue.isNullOrEmpty()) {
+                                prefetchQueueArtwork(currentQueue, now.mediaId)
                             }
                         }
                     }
@@ -581,9 +596,13 @@ class SharedViewModel(
                 }
             val playlistNameJob =
                 launch {
-                    mediaPlayerHandler.queueData.collectLatest {
+                    mediaPlayerHandler.queueData.collectLatest { queueData ->
                         _nowPlayingScreenData.update {
                             it.copy(playlistName = it.playlistName)
+                        }
+                        val tracks = queueData?.data?.listTracks
+                        if (!tracks.isNullOrEmpty()) {
+                            prefetchQueueArtwork(tracks, _nowPlayingState.value?.mediaItem?.mediaId)
                         }
                     }
                 }
@@ -1034,7 +1053,10 @@ class SharedViewModel(
     private var songInfoJob: Job? = null
     private var artworkResolutionJob: Job? = null
 
-    private fun resolveAndApplyAudioArtwork(mediaItem: com.sonique.domain.data.player.GenericMediaItem) {
+    private fun resolveAndApplyAudioArtwork(
+        mediaItem: com.sonique.domain.data.player.GenericMediaItem,
+        fallbackThumbnail: String?,
+    ) {
         artworkResolutionJob?.cancel()
         artworkResolutionJob = viewModelScope.launch(Dispatchers.IO) {
             val resolvedArt = songRepository.resolveAudioTrackArtwork(
@@ -1042,12 +1064,72 @@ class SharedViewModel(
                 title = mediaItem.metadata.title ?: "",
                 artist = mediaItem.metadata.artist,
             )
-            if (resolvedArt != null && _nowPlayingState.value?.mediaItem?.mediaId == mediaItem.mediaId) {
-                mediaPlayerHandler.updateArtworkUri(resolvedArt)
-                _nowPlayingScreenData.update { current ->
-                    current.copy(
-                        thumbnailURL = resolvedArt,
-                    )
+            if (_nowPlayingState.value?.mediaItem?.mediaId == mediaItem.mediaId) {
+                if (resolvedArt != null) {
+                    mediaPlayerHandler.updateArtworkUri(resolvedArt)
+                    mediaPlayerHandler.updateQueueTrackArtwork(mediaItem.mediaId.removePrefix("Video"), resolvedArt)
+                    preloadImage(resolvedArt)
+                    _nowPlayingScreenData.update { current ->
+                        current.copy(
+                            thumbnailURL = resolvedArt,
+                            isArtworkLoading = false,
+                        )
+                    }
+                } else {
+                    val fallback = fallbackThumbnail?.toHighResThumbnailUrl()
+                        ?: mediaItem.metadata.artworkUri?.toHighResThumbnailUrl()
+                    _nowPlayingScreenData.update { current ->
+                        current.copy(
+                            thumbnailURL = fallback,
+                            isArtworkLoading = false,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private var queueArtworkPreloadJob: Job? = null
+
+    private fun prefetchQueueArtwork(tracks: List<Track>, currentMediaId: String?) {
+        queueArtworkPreloadJob?.cancel()
+        queueArtworkPreloadJob = viewModelScope.launch(Dispatchers.IO) {
+            if (tracks.isEmpty()) return@launch
+
+            val cleanCurrentId = currentMediaId?.removePrefix("Video")
+            val currentIndex = if (cleanCurrentId != null) {
+                tracks.indexOfFirst { it.videoId == cleanCurrentId }.takeIf { it >= 0 } ?: 0
+            } else {
+                0
+            }
+
+            val upcomingTracks = tracks.drop(currentIndex + 1).take(5)
+
+            for (track in upcomingTracks) {
+                val thumbUrl = track.thumbnails?.lastOrNull()?.url
+                val isVideo = isVideoThumbnailUrl(thumbUrl) || track.videoType != null || track.thumbnails.isNullOrEmpty()
+
+                if (isVideo) {
+                    val existingSong = songRepository.getSongById(track.videoId).firstOrNull()
+                    val existingThumb = existingSong?.thumbnails
+                    if (!existingThumb.isNullOrBlank() && !isVideoThumbnailUrl(existingThumb)) {
+                        val highRes = existingThumb.toHighResThumbnailUrl()
+                        mediaPlayerHandler.updateQueueTrackArtwork(track.videoId, highRes)
+                        preloadImage(highRes)
+                    } else {
+                        val resolvedArt = songRepository.resolveAudioTrackArtwork(
+                            videoId = track.videoId,
+                            title = track.title,
+                            artist = track.artists?.firstOrNull()?.name,
+                        )
+                        if (resolvedArt != null) {
+                            mediaPlayerHandler.updateQueueTrackArtwork(track.videoId, resolvedArt)
+                            preloadImage(resolvedArt)
+                        }
+                    }
+                } else if (!thumbUrl.isNullOrBlank()) {
+                    val highRes = thumbUrl.toHighResThumbnailUrl()
+                    preloadImage(highRes)
                 }
             }
         }
@@ -1728,6 +1810,7 @@ data class NowPlayingScreenData(
     val isVideo: Boolean,
     val isExplicit: Boolean = false,
     val thumbnailURL: String?,
+    val isArtworkLoading: Boolean = false,
     val canvasData: CanvasData? = null,
     val lyricsData: LyricsData? = null,
     val songInfoData: SongInfoEntity? = null,
@@ -1751,6 +1834,7 @@ data class NowPlayingScreenData(
                 artistName = "",
                 isVideo = false,
                 thumbnailURL = null,
+                isArtworkLoading = false,
                 canvasData = null,
                 lyricsData = null,
                 songInfoData = null,

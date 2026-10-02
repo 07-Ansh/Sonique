@@ -30,6 +30,7 @@ import com.sonique.domain.data.entities.SongEntity
 import com.sonique.domain.data.model.browse.album.Track
 import com.sonique.domain.data.model.mediaService.SponsorSkipSegments
 import com.sonique.domain.data.model.searchResult.songs.Artist
+import com.sonique.domain.data.model.searchResult.songs.Thumbnail
 import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
 import com.sonique.domain.data.player.AudioEffects
 import com.sonique.domain.data.player.DelayEffect
@@ -415,7 +416,13 @@ internal class MediaServiceHandlerImpl(
                             ?: "https://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg")
                             .toHighResThumbnailUrl()
                     runCatching {
-                        if (songEntity.thumbnails != thumbUrl) {
+                        val isExistingArtResolved = !songEntity.thumbnails.isNullOrBlank() && !isVideoThumbnailUrl(songEntity.thumbnails)
+                        val shouldUpdateThumb = if (isExistingArtResolved) {
+                            false
+                        } else {
+                            songEntity.thumbnails != thumbUrl
+                        }
+                        if (shouldUpdateThumb) {
                             songRepository.updateThumbnailsSongEntity(thumbUrl, songEntity.videoId).firstOrNull()?.let {
                                 Logger.w(TAG, "getDataOfNowPlayingState: Updated thumbs $it")
                             }
@@ -942,6 +949,37 @@ internal class MediaServiceHandlerImpl(
         val currentIndex = player.currentMediaItemIndex
         if (currentIndex in 0 until player.mediaItemCount) {
             player.replaceMediaItem(currentIndex, updatedItem)
+        }
+    }
+
+    override fun updateQueueTrackArtwork(videoId: String, artworkUrl: String) {
+        _queueData.update { current ->
+            current.copy(
+                data = current.data.copy(
+                    listTracks = current.data.listTracks.map { track ->
+                        if (track.videoId == videoId) {
+                            track.copy(
+                                thumbnails = listOf(
+                                    Thumbnail(height = 1080, width = 1080, url = artworkUrl),
+                                ),
+                            )
+                        } else {
+                            track
+                        }
+                    },
+                ),
+            )
+        }
+
+        val count = player.mediaItemCount
+        for (i in 0 until count) {
+            val item = player.getMediaItemAt(i) ?: continue
+            val cleanMediaId = item.mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
+            if (cleanMediaId == videoId) {
+                val updatedMetadata = item.metadata.copy(artworkUri = artworkUrl)
+                val updatedItem = item.copy(metadata = updatedMetadata)
+                player.replaceMediaItem(i, updatedItem)
+            }
         }
     }
 

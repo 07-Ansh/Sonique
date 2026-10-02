@@ -77,6 +77,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -737,26 +738,45 @@ fun NewPlayerScreen(
                                         modifier = Modifier
                                             .size(thumbnailSize)
                                             .clip(RoundedCornerShape(ThumbnailCornerRadius * 2))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        if (artUrl.isNotEmpty()) {
-                                            AsyncImage(
-                                                model = ImageRequest
-                                                    .Builder(LocalPlatformContext.current)
-                                                    .data(artUrl)
-                                                    .crossfade(150)
-                                                    .build(),
-                                                contentDescription = null,
-                                                contentScale = ContentScale.Crop,
-                                                onSuccess = {
-                                                    if (page == currentQueueIndex || (queue.isEmpty() && page == 0)) {
-                                                        val bm = it.result.image.toImageBitmap()
-                                                        extractedBitmap = bm
-                                                        sharedViewModel.setBitmap(bm)
-                                                    }
-                                                },
-                                                modifier = Modifier.fillMaxSize()
-                                            )
+                                        val isArtLoadingForPage = isCurrentActivePage && currentSongData?.isArtworkLoading == true
+                                        AnimatedContent(
+                                            targetState = isArtLoadingForPage || artUrl.isEmpty(),
+                                            transitionSpec = {
+                                                fadeIn(animationSpec = tween(250)) togetherWith
+                                                    fadeOut(animationSpec = tween(250))
+                                            },
+                                            label = "ArtworkLoadingTransition",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) { showLoader ->
+                                            if (showLoader) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(44.dp),
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    strokeWidth = 3.dp,
+                                                )
+                                            } else {
+                                                AsyncImage(
+                                                    model = ImageRequest
+                                                        .Builder(LocalPlatformContext.current)
+                                                        .data(artUrl)
+                                                        .crossfade(250)
+                                                        .build(),
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                    onSuccess = {
+                                                        if (page == currentQueueIndex || (queue.isEmpty() && page == 0)) {
+                                                            val bm = it.result.image.toImageBitmap()
+                                                            extractedBitmap = bm
+                                                            sharedViewModel.setBitmap(bm)
+                                                        }
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -791,9 +811,16 @@ fun NewPlayerScreen(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(RoundedCornerShape(ThumbnailCornerRadius * 2))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center
                             ) {
-                                if (trackArtwork.isNotEmpty()) {
+                                if (currentSongData?.isArtworkLoading == true || trackArtwork.isEmpty()) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        strokeWidth = 2.dp,
+                                    )
+                                } else {
                                     AsyncImage(
                                         model = ImageRequest
                                             .Builder(LocalPlatformContext.current)

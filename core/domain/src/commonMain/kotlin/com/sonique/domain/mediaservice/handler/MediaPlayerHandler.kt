@@ -59,6 +59,8 @@ interface MediaPlayerHandler {
 
     fun updateArtworkUri(artworkUri: String)
 
+    fun updateQueueTrackArtwork(videoId: String, artworkUrl: String)
+
     fun addMediaItemList(mediaItemList: List<GenericMediaItem>)
 
     fun playMediaItemInMediaSource(index: Int)

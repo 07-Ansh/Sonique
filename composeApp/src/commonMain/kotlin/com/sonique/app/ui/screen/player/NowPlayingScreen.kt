@@ -533,7 +533,7 @@ fun NowPlayingScreenContent(
         KeepScreenOn()
     }
     Box(modifier = Modifier.fillMaxSize().background(md_theme_dark_background)) {
-        if (blurBg && screenDataState.canvasData == null) {
+        if (blurBg && screenDataState.canvasData == null && !screenDataState.thumbnailURL.isNullOrEmpty()) {
             AsyncImage(
                 model =
                     ImageRequest
@@ -826,39 +826,62 @@ fun NowPlayingScreenContent(
                                                 ambientColor = spotShadowColor.copy(alpha = 0.3f),
                                             ),
                                 ) {
-                                    AsyncImage(
-                                        model =
-                                            ImageRequest
-                                                .Builder(LocalPlatformContext.current)
-                                                .data(screenDataState.thumbnailURL)
-                                                .diskCachePolicy(CachePolicy.ENABLED)
-                                                .diskCacheKey(screenDataState.thumbnailURL + "BIGGER")
-                                                .crossfade(550)
-                                                .build(),
-                                        contentDescription = "",
-                                        onSuccess = {
-                                            sharedViewModel.setBitmap(
-                                                it.result.image
-                                                    .toBitmap()
-                                                    .asImageBitmap(),
+                                    Crossfade(
+                                        targetState = screenDataState.isArtworkLoading || screenDataState.thumbnailURL.isNullOrEmpty(),
+                                        animationSpec = tween(300),
+                                        label = "ArtworkCrossfade",
+                                    ) { isArtworkBlankOrLoading ->
+                                        if (isArtworkBlankOrLoading) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .aspectRatio(1f)
+                                                    .clip(RoundedCornerShape(24.dp))
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                                contentAlignment = Alignment.Center,
+                                            ) {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier.size(44.dp),
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                    strokeWidth = 3.dp,
+                                                )
+                                            }
+                                        } else {
+                                            AsyncImage(
+                                                model =
+                                                    ImageRequest
+                                                        .Builder(LocalPlatformContext.current)
+                                                        .data(screenDataState.thumbnailURL)
+                                                        .diskCachePolicy(CachePolicy.ENABLED)
+                                                        .diskCacheKey(screenDataState.thumbnailURL + "BIGGER")
+                                                        .crossfade(350)
+                                                        .build(),
+                                                contentDescription = "",
+                                                onSuccess = {
+                                                    sharedViewModel.setBitmap(
+                                                        it.result.image
+                                                            .toBitmap()
+                                                            .asImageBitmap(),
+                                                    )
+                                                },
+                                                contentScale = ContentScale.Crop,
+                                                placeholder = painterResource(Res.drawable.holder),
+                                                modifier =
+                                                    Modifier
+                                                        .align(Alignment.Center)
+                                                        .padding(3.dp)
+                                                        .fillMaxWidth()
+                                                        .background(Color.Transparent)
+                                                        .aspectRatio(
+                                                            if (!screenDataState.isVideo) 1f else 16f / 9,
+                                                        ).clip(
+                                                            RoundedCornerShape(24.dp),
+                                                        ).alpha(
+                                                            if (!screenDataState.isVideo || !shouldShowVideo) 1f else 0f,
+                                                        ),
                                             )
-                                        },
-                                        contentScale = ContentScale.Crop,
-                                        placeholder = painterResource(Res.drawable.holder),
-                                        modifier =
-                                            Modifier
-                                                .align(Alignment.Center)
-                                                .padding(3.dp)
-                                                .fillMaxWidth()
-                                                .background(Color.Transparent)
-                                                .aspectRatio(
-                                                    if (!screenDataState.isVideo) 1f else 16f / 9,
-                                                ).clip(
-                                                    RoundedCornerShape(24.dp),
-                                                ).alpha(
-                                                    if (!screenDataState.isVideo || !shouldShowVideo) 1f else 0f,
-                                                ),
-                                    )
+                                        }
+                                    }
                                      
                                     Box(
                                         modifier = Modifier

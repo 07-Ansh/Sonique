@@ -3,6 +3,7 @@ package com.sonique.data.parser.search
 import com.sonique.domain.data.model.searchResult.songs.Album
 import com.sonique.domain.data.model.searchResult.songs.SongsResult
 import com.sonique.domain.data.model.searchResult.songs.Thumbnail
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.kotlinytmusicscraper.models.SongItem
 import com.sonique.kotlinytmusicscraper.pages.SearchResult
 
@@ -39,7 +40,7 @@ internal fun parseSearchSong(result: SearchResult): ArrayList<SongsResult> {
                 feedbackTokens = null,
                 isExplicit = song.explicit,
                 resultType = "Song",
-                thumbnails = listOf(Thumbnail(544, Regex("([wh])120").replace(song.thumbnail, "$1544"), 544)),
+                thumbnails = listOf(Thumbnail(1200, song.thumbnail.toHighResThumbnailUrl(1200), 1200)),
                 title = song.title,
                 videoId = song.id,
                 videoType = "Song",

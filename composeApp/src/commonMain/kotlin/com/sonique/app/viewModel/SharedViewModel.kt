@@ -58,6 +58,8 @@ import com.sonique.domain.utils.toLyricsEntity
 import com.sonique.domain.utils.toSongEntity
 import com.sonique.domain.utils.toSyncedLyrics
 import com.sonique.domain.utils.toTrack
+import com.sonique.domain.utils.isVideoThumbnailUrl
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
 import com.sonique.app.Platform
@@ -456,7 +458,7 @@ class SharedViewModel(
                             nowPlayingTitle = resolvedTitle,
                             artistName = resolvedArtist,
                             isVideo = false,
-                            thumbnailURL = resolvedThumbnail,
+                            thumbnailURL = resolvedThumbnail?.toHighResThumbnailUrl(),
                             isExplicit = currentSongEntity?.isExplicit ?: false,
                             playlistName =
                                 mediaPlayerHandler.queueData.value
@@ -480,6 +482,9 @@ class SharedViewModel(
                             launch { getLikeStatus(now.mediaId) }
                             launch { getSongInfo(now.mediaId) }
                             launch { getFormat(now.mediaId) }
+                            if (now.isVideo() || isVideoThumbnailUrl(resolvedThumbnail)) {
+                                launch { resolveAndApplyAudioArtwork(now) }
+                            }
                         }
                     }
                 }
@@ -1027,6 +1032,26 @@ class SharedViewModel(
     }
 
     private var songInfoJob: Job? = null
+    private var artworkResolutionJob: Job? = null
+
+    private fun resolveAndApplyAudioArtwork(mediaItem: com.sonique.domain.data.player.GenericMediaItem) {
+        artworkResolutionJob?.cancel()
+        artworkResolutionJob = viewModelScope.launch(Dispatchers.IO) {
+            val resolvedArt = songRepository.resolveAudioTrackArtwork(
+                videoId = mediaItem.mediaId,
+                title = mediaItem.metadata.title ?: "",
+                artist = mediaItem.metadata.artist,
+            )
+            if (resolvedArt != null && _nowPlayingState.value?.mediaItem?.mediaId == mediaItem.mediaId) {
+                mediaPlayerHandler.updateArtworkUri(resolvedArt)
+                _nowPlayingScreenData.update { current ->
+                    current.copy(
+                        thumbnailURL = resolvedArt,
+                    )
+                }
+            }
+        }
+    }
 
     fun getSongInfo(mediaId: String?) {
         songInfoJob?.cancel()
@@ -1045,6 +1070,7 @@ class SharedViewModel(
     }
 
     fun stopPlayer() {
+        artworkResolutionJob?.cancel()
         _nowPlayingScreenData.value = NowPlayingScreenData.initial()
         _nowPlayingState.value = null
         mediaPlayerHandler.resetSongAndQueue()

@@ -1,5 +1,6 @@
 package com.sonique.kotlinytmusicscraper.models
 
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
@@ -18,7 +19,7 @@ data class ThumbnailRenderer(
         val thumbnailCrop: String?,
         val thumbnailScale: String?,
     ) {
-        fun getThumbnailUrl() = thumbnail.thumbnails.lastOrNull()?.url
+        fun getThumbnailUrl() = thumbnail.thumbnails.lastOrNull()?.url?.toHighResThumbnailUrl()
     }
 
     @Serializable

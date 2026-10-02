@@ -15,6 +15,8 @@ import com.sonique.domain.data.model.browse.album.Track
 import com.sonique.domain.data.player.GenericCommandButton
 import com.sonique.domain.mediaservice.handler.RepeatState
 import com.sonique.domain.utils.connectArtists
+import com.sonique.domain.utils.isVideoThumbnailUrl
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.domain.utils.toListName
 import com.sonique.media3.R
 
@@ -47,7 +49,8 @@ fun MediaItem?.toSongEntity(): SongEntity? =
 @JvmName("MediaItemtoSongEntity")
 @UnstableApi
 fun SongEntity.toMediaItem(): MediaItem {
-    val isSong = (this.thumbnails?.contains("w544") == true && this.thumbnails?.contains("h544") == true)
+    val highResThumb = this.thumbnails?.toHighResThumbnailUrl()
+    val isSong = !isVideoThumbnailUrl(highResThumb)
     return MediaItem
         .Builder()
         .setMediaId(this.videoId)
@@ -58,7 +61,7 @@ fun SongEntity.toMediaItem(): MediaItem {
                 .Builder()
                 .setTitle(this.title)
                 .setArtist(this.artistName?.connectArtists())
-                .setArtworkUri(this.thumbnails?.toUri())
+                .setArtworkUri(highResThumb?.toUri())
                 .setAlbumTitle(this.albumName)
                 .setDescription(
                     if (isSong) MERGING_DATA_TYPE.SONG else MERGING_DATA_TYPE.VIDEO,
@@ -69,20 +72,16 @@ fun SongEntity.toMediaItem(): MediaItem {
 @JvmName("TracktoMediaItem")
 @UnstableApi
 fun Track.toMediaItem(): MediaItem {
-    var thumbUrl =
-        this.thumbnails?.last()?.url
-            ?: "https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg"
-    if (thumbUrl.contains("w120")) {
-        thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-    }
+    val thumbUrl =
+        (this.thumbnails?.lastOrNull()?.url
+            ?: "https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg").toHighResThumbnailUrl()
     val artistName: String = this.artists.toListName().connectArtists()
     val isSong =
         (
-            this.thumbnails?.last()?.height != 0 &&
-                this.thumbnails?.last()?.height == this.thumbnails?.last()?.width &&
-                this.thumbnails?.last()?.height != null
-        ) &&
-            (!thumbUrl.contains("hq720") && !thumbUrl.contains("maxresdefault"))
+            this.thumbnails?.lastOrNull()?.height != 0 &&
+                this.thumbnails?.lastOrNull()?.height == this.thumbnails?.lastOrNull()?.width &&
+                this.thumbnails?.lastOrNull()?.height != null
+        ) && !isVideoThumbnailUrl(thumbUrl)
     return MediaItem
         .Builder()
         .setMediaId(this.videoId)

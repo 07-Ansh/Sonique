@@ -58,6 +58,8 @@ import com.sonique.domain.mediaservice.handler.QueueData
 import com.sonique.domain.mediaservice.handler.RepeatState
 import com.sonique.domain.mediaservice.handler.SimpleMediaState
 import com.sonique.domain.mediaservice.handler.SleepTimerState
+import com.sonique.domain.utils.isVideoThumbnailUrl
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.domain.mediaservice.handler.ToastType
 import com.sonique.domain.mediaservice.player.MediaPlayerInterface
 import com.sonique.domain.mediaservice.player.MediaPlayerListener
@@ -408,12 +410,10 @@ internal class MediaServiceHandlerImpl(
                 }.getOrNull()
                 if (songEntity != null) {
                     _controlState.update { it.copy(isLiked = songEntity.liked) }
-                    var thumbUrl =
-                        track?.thumbnails?.lastOrNull()?.url
-                            ?: "https://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg"
-                    if (thumbUrl.contains("w120")) {
-                        thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-                    }
+                    val thumbUrl =
+                        (track?.thumbnails?.lastOrNull()?.url
+                            ?: "https://i.ytimg.com/vi/${songEntity.videoId}/maxresdefault.jpg")
+                            .toHighResThumbnailUrl()
                     runCatching {
                         if (songEntity.thumbnails != thumbUrl) {
                             songRepository.updateThumbnailsSongEntity(thumbUrl, songEntity.videoId).firstOrNull()?.let {
@@ -934,6 +934,17 @@ internal class MediaServiceHandlerImpl(
         player.clearMediaItems()
     }
 
+    override fun updateArtworkUri(artworkUri: String) {
+        val current = _nowPlaying.value ?: return
+        val updatedMetadata = current.metadata.copy(artworkUri = artworkUri)
+        val updatedItem = current.copy(metadata = updatedMetadata)
+        _nowPlaying.value = updatedItem
+        val currentIndex = player.currentMediaItemIndex
+        if (currentIndex in 0 until player.mediaItemCount) {
+            player.replaceMediaItem(currentIndex, updatedItem)
+        }
+    }
+
     override fun addMediaItemList(mediaItemList: List<GenericMediaItem>) {
         for (mediaItem in mediaItemList) {
             addMediaItemNotSet(mediaItem)
@@ -1406,26 +1417,12 @@ internal class MediaServiceHandlerImpl(
         val catalogMetadata: ArrayList<Track> = arrayListOf()
         for (i in 0 until listTrack.size) {
             val track = listTrack[i]
-            var thumbUrl =
-                track.thumbnails?.lastOrNull()?.url
-                    ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
-            if (thumbUrl.contains("w120")) {
-                thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-            }
+            val thumbUrl =
+                (track.thumbnails?.lastOrNull()?.url
+                    ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg")
+                    .toHighResThumbnailUrl()
             val artistName: String = track.artists.toListName().connectArtists()
-            val isSong =
-                (
-                    track.thumbnails?.lastOrNull()?.height != 0 &&
-                        track.thumbnails?.lastOrNull()?.height == track.thumbnails?.lastOrNull()?.width &&
-                        track.thumbnails?.lastOrNull()?.height != null
-                ) &&
-                    (
-                        !thumbUrl
-                            .contains("hq720") &&
-                            !thumbUrl
-                                .contains("maxresdefault") &&
-                            !thumbUrl.contains("sddefault")
-                    )
+            val isSong = !isVideoThumbnailUrl(thumbUrl)
             if (track.artists.isNullOrEmpty()) {
                 songRepository
                     .getSongInfo(track.videoId)
@@ -1546,25 +1543,11 @@ internal class MediaServiceHandlerImpl(
             for (i in list.indices) {
                 val track = list[i]
                 if (track == current) continue
-                var thumbUrl =
-                    track.thumbnails?.lastOrNull()?.url
-                        ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
-                if (thumbUrl.contains("w120")) {
-                    thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-                }
-                val isSong =
-                    (
-                        track.thumbnails?.lastOrNull()?.height != 0 &&
-                            track.thumbnails?.lastOrNull()?.height == track.thumbnails?.lastOrNull()?.width &&
-                            track.thumbnails?.lastOrNull()?.height != null
-                    ) &&
-                        (
-                            !thumbUrl
-                                .contains("hq720") &&
-                                !thumbUrl
-                                    .contains("maxresdefault") &&
-                                !thumbUrl.contains("sddefault")
-                        )
+                val thumbUrl =
+                    (track.thumbnails?.lastOrNull()?.url
+                        ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg")
+                        .toHighResThumbnailUrl()
+                val isSong = !isVideoThumbnailUrl(thumbUrl)
                 if (downloaded == 1) {
                     if (track.artists.isNullOrEmpty()) {
                         songRepository.getSongInfo(track.videoId).lastOrNull().let { songInfo ->
@@ -1772,26 +1755,12 @@ internal class MediaServiceHandlerImpl(
         val catalogMetadata: ArrayList<Track> =
             queueData.value.data.listTracks
                 .toCollection(arrayListOf())
-        var thumbUrl =
-            track.thumbnails?.lastOrNull()?.url
-                ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg"
-        if (thumbUrl.contains("w120")) {
-            thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-        }
+        val thumbUrl =
+            (track.thumbnails?.lastOrNull()?.url
+                ?: "https://i.ytimg.com/vi/${track.videoId}/maxresdefault.jpg")
+                .toHighResThumbnailUrl()
         val artistName: String = track.artists.toListName().connectArtists()
-        val isSong =
-            (
-                track.thumbnails?.lastOrNull()?.height != 0 &&
-                    track.thumbnails?.lastOrNull()?.height == track.thumbnails?.lastOrNull()?.width &&
-                    track.thumbnails?.lastOrNull()?.height != null
-            ) &&
-                (
-                    !thumbUrl
-                        .contains("hq720") &&
-                        !thumbUrl
-                            .contains("maxresdefault") &&
-                        !thumbUrl.contains("sddefault")
-                )
+        val isSong = !isVideoThumbnailUrl(thumbUrl)
         if ((player.currentMediaItemIndex + 1 in 0..queueData.value.data.listTracks.size)) {
             if (track.artists.isNullOrEmpty()) {
                 songRepository.getSongInfo(track.videoId).cancellable().lastOrNull().let { songInfo ->

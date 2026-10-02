@@ -102,6 +102,7 @@ class SoniqueApplication :
         ImageLoader
             .Builder(context)
             .components {
+                add(com.sonique.app.image.HighResImageInterceptor())
                 add(
                     OkHttpNetworkFetcherFactory(
                         callFactory = {

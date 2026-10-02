@@ -16,6 +16,7 @@ import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.utils.Resource
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.kotlinytmusicscraper.YouTube
 import com.sonique.kotlinytmusicscraper.models.SongItem
 import com.sonique.kotlinytmusicscraper.models.WatchEndpoint
@@ -403,5 +404,48 @@ internal class SongRepositoryImpl(
                     }
             }
         }
+
+    override suspend fun resolveAudioTrackArtwork(
+        videoId: String,
+        title: String,
+        artist: String?,
+    ): String? = withContext(Dispatchers.IO) {
+        try {
+            // 1. Check local DB first
+            val existingSong = localDataSource.getSong(videoId)
+            val currentThumb = existingSong?.thumbnails
+            if (!currentThumb.isNullOrBlank() && !com.sonique.domain.utils.isVideoThumbnailUrl(currentThumb)) {
+                return@withContext currentThumb.toHighResThumbnailUrl()
+            }
+
+            // 2. Clean video title (remove "Official Video", "[Music Video]", etc.)
+            val cleanTitle = com.sonique.domain.utils.cleanVideoTitle(title)
+            val searchQuery = if (!artist.isNullOrBlank() && !cleanTitle.contains(artist, ignoreCase = true)) {
+                "$cleanTitle $artist"
+            } else {
+                cleanTitle
+            }
+
+            // 3. Search specifically for Songs (FILTER_SONG) to get official 1:1 album art
+            val searchResult = youTube.search(
+                query = searchQuery,
+                filter = YouTube.SearchFilter.FILTER_SONG,
+            ).getOrNull()
+
+            val matchingSong = searchResult?.items?.filterIsInstance<SongItem>()?.firstOrNull { item ->
+                !item.thumbnail.isNullOrBlank() && !com.sonique.domain.utils.isVideoThumbnailUrl(item.thumbnail)
+            }
+
+            val highResArt = matchingSong?.thumbnail?.toHighResThumbnailUrl()
+            if (highResArt != null) {
+                Logger.d(TAG, "Resolved audio artwork for video $videoId ($title) -> $highResArt")
+                localDataSource.updateThumbnailsSongEntity(highResArt, videoId)
+                return@withContext highResArt
+            }
+        } catch (e: Exception) {
+            Logger.e(TAG, "Failed to resolve audio artwork for $videoId: ${e.message}")
+        }
+        null
+    }
 }
 

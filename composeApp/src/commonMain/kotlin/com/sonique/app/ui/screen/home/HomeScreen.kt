@@ -219,7 +219,7 @@ fun HomeScreen(
     val regionChart by viewModel.regionCodeChart.collectAsStateWithLifecycle()
     val reloadDestination by sharedViewModel.reloadDestination.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
-    var isRefreshing by remember { mutableStateOf(false) }
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val chipRowState = rememberScrollState()
     val params by viewModel.params.collectAsStateWithLifecycle()
     val homeListState by viewModel.homeListState.collectAsStateWithLifecycle()
@@ -305,7 +305,6 @@ fun HomeScreen(
     }
 
     val onRefresh: () -> Unit = {
-        isRefreshing = true
         viewModel.getHomeItemList(params, forceRefresh = true)
         Logger.w("HomeScreen", "onRefresh")
     }
@@ -321,9 +320,8 @@ fun HomeScreen(
             }
         }
     }
-    LaunchedEffect(key1 = loading) {
-        if (!loading) {
-            isRefreshing = false
+    LaunchedEffect(key1 = isRefreshing) {
+        if (!isRefreshing) {
             sharedViewModel.reloadDestinationDone()
             coroutineScope.launch {
                 pullToRefreshState.animateToHidden()

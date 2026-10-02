@@ -1,3 +1,5 @@
+@file:OptIn(kotlin.time.ExperimentalTime::class)
+
 package com.sonique.data.repository
 
 import com.sonique.data.parser.parseChart
@@ -5,6 +7,7 @@ import com.sonique.data.parser.parseGenreObject
 import com.sonique.data.parser.parseMixedContent
 import com.sonique.data.parser.parseMoodsMomentObject
 import com.sonique.data.parser.parseNewRelease
+import com.sonique.domain.data.model.home.CachedHomeData
 import com.sonique.domain.data.model.home.HomeItem
 import com.sonique.domain.data.model.home.chart.Chart
 import com.sonique.domain.data.model.mood.Genre
@@ -23,9 +26,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
+import kotlin.time.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
+
+private const val TAG = "HomeRepositoryImpl"
+private const val CACHE_HOME_DATA_KEY = "cache_home_data_v2"
+private const val HOME_CACHE_TTL_MS = 12 * 60 * 60 * 1000L // 12 hours
 
 internal class HomeRepositoryImpl(
     private val dataStoreManager: DataStoreManager,
@@ -36,6 +45,21 @@ internal class HomeRepositoryImpl(
         coerceInputValues = true
         encodeDefaults = true
     }
+
+    override suspend fun getCachedHomeData(): CachedHomeData? =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val cachedJson = dataStoreManager.getString(CACHE_HOME_DATA_KEY).first()
+                if (!cachedJson.isNullOrEmpty()) {
+                    json.decodeFromString<CachedHomeData>(cachedJson)
+                } else {
+                    null
+                }
+            }.onFailure {
+                Logger.e(TAG, "Failed to deserialize cached home data: ${it.message}")
+            }.getOrNull()
+        }
+
     override fun getHomeData(
         params: String?,
         viewString: String,
@@ -44,12 +68,76 @@ internal class HomeRepositoryImpl(
     ): Flow<Resource<Pair<String?, List<HomeItem>>>> =
         flow {
             var cacheLoaded = false
-            if (params == null && !forceRefresh) {
-                runCatching {
-                    val cachedJson = dataStoreManager.getString("cache_home_data").first()
-                    if (!cachedJson.isNullOrEmpty()) {
-                        val result = json.decodeFromString<com.sonique.kotlinytmusicscraper.models.response.BrowseResponse>(cachedJson)
-                        val list: ArrayList<HomeItem> = arrayListOf()
+            if (params == null) {
+                val cached = getCachedHomeData()
+                if (cached != null && cached.homeItems.isNotEmpty()) {
+                    emit(Resource.Success(cached.continuation to cached.homeItems))
+                    cacheLoaded = true
+                    val currentTime = Clock.System.now().toEpochMilliseconds()
+                    val isFresh = (currentTime - cached.timestamp) < HOME_CACHE_TTL_MS
+                    if (isFresh && !forceRefresh) {
+                        Logger.d(TAG, "Serving fresh home cache (age: ${(currentTime - cached.timestamp) / 1000 / 60}m), skipping network fetch")
+                        return@flow
+                    }
+                    Logger.d(TAG, "Home cache is stale or forceRefresh requested (forceRefresh=$forceRefresh), fetching from network in background")
+                }
+            }
+
+            runCatching {
+                val limit = dataStoreManager.homeLimit.first()
+                youTube
+                    .customQuery(browseId = "FEmusic_home", params = params)
+                    .onSuccess { result ->
+                        if (result.contents
+                                ?.singleColumnBrowseResultsRenderer
+                                ?.tabs
+                                ?.get(0)?.tabRenderer
+                                ?.content
+                                ?.sectionListRenderer
+                                ?.contents
+                                ?.get(0)?.musicCarouselShelfRenderer
+                                ?.header
+                                ?.musicCarouselShelfBasicHeaderRenderer
+                                ?.strapline
+                                ?.runs
+                                ?.get(0)?.text != null
+                        ) {
+                            val accountName =
+                                result.contents
+                                    ?.singleColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.get(0)?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                                    ?.contents
+                                    ?.get(0)?.musicCarouselShelfRenderer
+                                    ?.header
+                                    ?.musicCarouselShelfBasicHeaderRenderer
+                                    ?.strapline
+                                    ?.runs
+                                    ?.get(0)?.text ?: ""
+                            val accountThumbUrl =
+                                result.contents
+                                    ?.singleColumnBrowseResultsRenderer
+                                    ?.tabs
+                                    ?.get(0)?.tabRenderer
+                                    ?.content
+                                    ?.sectionListRenderer
+                                    ?.contents
+                                    ?.get(0)?.musicCarouselShelfRenderer
+                                    ?.header
+                                    ?.musicCarouselShelfBasicHeaderRenderer
+                                    ?.thumbnail
+                                    ?.musicThumbnailRenderer
+                                    ?.thumbnail
+                                    ?.thumbnails
+                                    ?.get(0)?.url
+                                    ?.replace("s88", "s352") ?: ""
+                            if (accountName != "" && accountThumbUrl != "") {
+                                dataStoreManager.putString("AccountName", accountName)
+                                dataStoreManager.putString("AccountThumbUrl", accountThumbUrl)
+                            }
+                        }
                         val continueParam =
                             result.contents
                                 ?.singleColumnBrowseResultsRenderer
@@ -68,6 +156,7 @@ internal class HomeRepositoryImpl(
                                 ?.content
                                 ?.sectionListRenderer
                                 ?.contents
+                        val list: ArrayList<HomeItem> = arrayListOf()
                         list.addAll(
                             parseMixedContent(
                                 data,
@@ -75,108 +164,31 @@ internal class HomeRepositoryImpl(
                                 songString,
                             ),
                         )
-                        emit(Resource.Success(continueParam to list.toList()))
-                        cacheLoaded = true
-                    }
-                }
-            }
-
-            if (!cacheLoaded || forceRefresh) {
-                runCatching {
-                    val limit = dataStoreManager.homeLimit.first()
-                    youTube
-                        .customQuery(browseId = "FEmusic_home", params = params)
-                        .onSuccess { result ->
-                            if (params == null) {
-                                runCatching {
-                                    val jsonString = json.encodeToString(result)
-                                    dataStoreManager.putString("cache_home_data", jsonString)
-                                }
+                        Logger.d("Repository", "List size: ${list.size}")
+                        if (params == null && list.isNotEmpty()) {
+                            runCatching {
+                                val cachedData = CachedHomeData(
+                                    homeItems = list.toList(),
+                                    continuation = continueParam,
+                                    timestamp = Clock.System.now().toEpochMilliseconds(),
+                                )
+                                val jsonString = json.encodeToString(cachedData)
+                                dataStoreManager.putString(CACHE_HOME_DATA_KEY, jsonString)
+                            }.onFailure {
+                                Logger.e(TAG, "Failed to persist home cache: ${it.message}")
                             }
-                            val list: ArrayList<HomeItem> = arrayListOf()
-                            if (result.contents
-                                    ?.singleColumnBrowseResultsRenderer
-                                    ?.tabs
-                                    ?.get(0)?.tabRenderer
-                                    ?.content
-                                    ?.sectionListRenderer
-                                    ?.contents
-                                    ?.get(0)?.musicCarouselShelfRenderer
-                                    ?.header
-                                    ?.musicCarouselShelfBasicHeaderRenderer
-                                    ?.strapline
-                                    ?.runs
-                                    ?.get(0)?.text != null
-                            ) {
-                                val accountName =
-                                    result.contents
-                                        ?.singleColumnBrowseResultsRenderer
-                                        ?.tabs
-                                        ?.get(0)?.tabRenderer
-                                        ?.content
-                                        ?.sectionListRenderer
-                                        ?.contents
-                                        ?.get(0)?.musicCarouselShelfRenderer
-                                        ?.header
-                                        ?.musicCarouselShelfBasicHeaderRenderer
-                                        ?.strapline
-                                        ?.runs
-                                        ?.get(0)?.text ?: ""
-                                val accountThumbUrl =
-                                    result.contents
-                                        ?.singleColumnBrowseResultsRenderer
-                                        ?.tabs
-                                        ?.get(0)?.tabRenderer
-                                        ?.content
-                                        ?.sectionListRenderer
-                                        ?.contents
-                                        ?.get(0)?.musicCarouselShelfRenderer
-                                        ?.header
-                                        ?.musicCarouselShelfBasicHeaderRenderer
-                                        ?.thumbnail
-                                        ?.musicThumbnailRenderer
-                                        ?.thumbnail
-                                        ?.thumbnails
-                                        ?.get(0)?.url
-                                        ?.replace("s88", "s352") ?: ""
-                                if (accountName != "" && accountThumbUrl != "") {
-                                    dataStoreManager.putString("AccountName", accountName)
-                                    dataStoreManager.putString("AccountThumbUrl", accountThumbUrl)
-                                }
-                            }
-                            val continueParam =
-                                result.contents
-                                    ?.singleColumnBrowseResultsRenderer
-                                    ?.tabs
-                                    ?.get(0)?.tabRenderer
-                                    ?.content
-                                    ?.sectionListRenderer
-                                    ?.continuations
-                                    ?.get(0)?.nextContinuationData
-                                    ?.continuation
-                            val data =
-                                result.contents
-                                    ?.singleColumnBrowseResultsRenderer
-                                    ?.tabs
-                                    ?.get(0)?.tabRenderer
-                                    ?.content
-                                    ?.sectionListRenderer
-                                    ?.contents
-                            list.addAll(
-                                parseMixedContent(
-                                    data,
-                                    viewString,
-                                    songString,
-                                ),
-                            )
-                            Logger.d("Repository", "List size: ${list.size}")
-                            emit(Resource.Success(continueParam to list.toList()))
-                        }.onFailure { error ->
-                            emit(Resource.Error<Pair<String?, List<HomeItem>>>(error.message.toString()))
                         }
-                }
+                        emit(Resource.Success(continueParam to list.toList()))
+                    }.onFailure { error ->
+                        if (!cacheLoaded) {
+                            emit(Resource.Error<Pair<String?, List<HomeItem>>>(error.message.toString()))
+                        } else {
+                            Logger.w(TAG, "Network refresh failed, keeping cached items: ${error.message}")
+                        }
+                    }
             }
         }.flowOn(Dispatchers.IO)
+
 
     override fun getHomeDataContinue(
         continueParam: String,

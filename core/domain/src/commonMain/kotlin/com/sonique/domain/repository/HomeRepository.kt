@@ -1,5 +1,6 @@
 package com.sonique.domain.repository
 
+import com.sonique.domain.data.model.home.CachedHomeData
 import com.sonique.domain.data.model.home.HomeItem
 import com.sonique.domain.data.model.home.chart.Chart
 import com.sonique.domain.data.model.mood.Mood
@@ -9,8 +10,10 @@ import com.sonique.domain.utils.Resource
 import kotlinx.coroutines.flow.Flow
 
 interface HomeRepository {
-     
+    suspend fun getCachedHomeData(): CachedHomeData?
+
     fun getHomeData(
+
         params: String? = null,
         viewString: String,
         songString: String,

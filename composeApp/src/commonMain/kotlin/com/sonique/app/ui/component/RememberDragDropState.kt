@@ -1,7 +1,9 @@
 package com.sonique.app.ui.component
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -26,6 +28,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -47,6 +50,7 @@ data class QueueDisplayItem(
  *
  * @param lazyListState The state of the LazyColumn.
  * @param minDragIndex The minimum index that can be dragged or swapped (e.g. 1 to keep index 0 pinned).
+ * @param itemKeys Lambda providing the current list of item keys in logical order.
  * @param onMove Callback triggered in real-time as items swap during dragging.
  * @param onDrop Callback triggered when the item is released to commit the final position to the backend.
  */
@@ -54,21 +58,25 @@ data class QueueDisplayItem(
 fun rememberDragDropState(
     lazyListState: LazyListState,
     minDragIndex: Int = 0,
+    itemKeys: () -> List<Any> = { emptyList() },
     onMove: (fromIndex: Int, toIndex: Int) -> Unit = { _, _ -> },
     onDrop: (fromIndex: Int, toIndex: Int) -> Unit,
 ): DragDropState {
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
-    return remember(lazyListState, minDragIndex) {
+    val state = remember(lazyListState, minDragIndex) {
         DragDropState(
             state = lazyListState,
             scope = scope,
             minDragIndex = minDragIndex,
+            itemKeys = itemKeys,
             onMove = onMove,
             onDrop = onDrop,
             haptic = haptic,
         )
     }
+    state.itemKeys = itemKeys
+    return state
 }
 
 /**
@@ -94,7 +102,7 @@ fun Modifier.dragDropList(dragDropState: DragDropState): Modifier = this.pointer
 
 /**
  * Wraps a list item inside a reorderable [LazyColumn] using its persistent [key] to handle lift elevation,
- * scale, translation during drag, drop settling animation, and [animateItem] for neighboring items.
+ * scale, translation during drag, drop settling animation, and silky-smooth [animateItem] for neighboring items.
  */
 @Composable
 fun LazyItemScope.DraggableItem(
@@ -109,43 +117,37 @@ fun LazyItemScope.DraggableItem(
     val scale by animateFloatAsState(
         targetValue = if (isDragging) 1.03f else 1.0f,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMediumLow,
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessLow,
         ),
         label = "dragItemScale",
     )
 
-    val translationY = when {
-        isDragging -> dragDropState.draggingItemOffset
-        isSettling -> dragDropState.settlingOffset.value
-        else -> 0f
-    }
-
     val zIndex = if (isDragging || isSettling) 2f else 0f
 
-    val animateItemModifier = if (!isDragging && !isSettling) {
-        Modifier.animateItem(
-            fadeInSpec = null,
-            fadeOutSpec = null,
-            placementSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMediumLow,
-            ),
-        )
-    } else {
-        Modifier
-    }
-
     Box(
-        modifier = modifier
+        modifier = Modifier
+            .animateItem(
+                fadeInSpec = null,
+                fadeOutSpec = null,
+                placementSpec = if (isDragging || isSettling) null else spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessLow,
+                    visibilityThreshold = IntOffset.VisibilityThreshold,
+                ),
+            )
             .zIndex(zIndex)
             .graphicsLayer {
-                this.translationY = translationY
+                this.translationY = when {
+                    isDragging -> dragDropState.draggingItemOffset
+                    isSettling -> dragDropState.settlingAnimatable?.value ?: dragDropState.settlingOffset.value
+                    else -> 0f
+                }
                 this.scaleX = scale
                 this.scaleY = scale
                 this.shadowElevation = if (isDragging) 12f else 0f
             }
-            .then(animateItemModifier),
+            .then(modifier),
     ) {
         content(isDragging)
     }
@@ -173,6 +175,7 @@ class DragDropState internal constructor(
     val state: LazyListState,
     private val scope: CoroutineScope,
     private val minDragIndex: Int = 0,
+    internal var itemKeys: () -> List<Any> = { emptyList() },
     private val onMove: (fromIndex: Int, toIndex: Int) -> Unit,
     private val onDrop: (fromIndex: Int, toIndex: Int) -> Unit,
     private val haptic: HapticFeedback? = null,
@@ -181,12 +184,18 @@ class DragDropState internal constructor(
         private set
     var initialIndexOfDraggedItem by mutableStateOf<Int?>(null)
         private set
-    var currentIndexOfDraggedItem by mutableStateOf<Int?>(null)
+    var currentLogicalIndex by mutableStateOf<Int?>(null)
         private set
+
+    val currentIndexOfDraggedItem: Int?
+        get() = currentLogicalIndex
 
     var settlingItemKey by mutableStateOf<Any?>(null)
         private set
     var settlingItemIndex by mutableStateOf<Int?>(null)
+        private set
+
+    var settlingAnimatable by mutableStateOf<Animatable<Float, AnimationVector1D>?>(null)
         private set
     val settlingOffset = Animatable(0f)
 
@@ -212,7 +221,7 @@ class DragDropState internal constructor(
             draggedItemKey = hitItem.key
             initialItemOffset = hitItem.offset
             initialIndexOfDraggedItem = hitItem.index
-            currentIndexOfDraggedItem = hitItem.index
+            currentLogicalIndex = hitItem.index
             draggedDistance = 0f
             haptic?.performHapticFeedback(HapticFeedbackType.LongPress)
         }
@@ -222,33 +231,63 @@ class DragDropState internal constructor(
         val key = draggedItemKey ?: return
         draggedDistance += offset.y
 
-        val currentItem = state.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key }
-        if (currentItem != null) {
-            val currentCenter = currentItem.offset + draggingItemOffset + currentItem.size / 2f
-            val currentIndex = currentItem.index
+        handleOverScroll()
 
-            // Find target item whose center was crossed
-            val targetItem = if (draggedDistance > 0) {
-                // Moving down: find furthest item below whose center has been passed
-                state.layoutInfo.visibleItemsInfo
-                    .filter { it.index > currentIndex && it.index >= minDragIndex && currentCenter > (it.offset + it.size / 2f) }
-                    .maxByOrNull { it.index }
-            } else {
-                // Moving up: find furthest item above whose center has been passed
-                state.layoutInfo.visibleItemsInfo
-                    .filter { it.index < currentIndex && it.index >= minDragIndex && currentCenter < (it.offset + it.size / 2f) }
-                    .minByOrNull { it.index }
-            }
+        val currentItem = state.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return
+        val currentIdx = currentLogicalIndex ?: currentItem.index
 
-            if (targetItem != null) {
-                val targetIndex = targetItem.index
-                currentIndexOfDraggedItem = targetIndex
-                onMove(currentIndex, targetIndex)
+        // Ensure layout pass has matched currentLogicalIndex before checking next swap,
+        // preventing stale index collisions and rapid oscillation.
+        if (currentItem.index != currentIdx) {
+            return
+        }
+
+        val draggedCenter = currentItem.offset + draggingItemOffset + currentItem.size / 2f
+        val currentCenter = currentItem.offset + currentItem.size / 2f
+        val hysteresisPx = (currentItem.size * 0.10f).coerceIn(6f, 14f)
+        val keys = itemKeys()
+
+        // Check downward move (towards next item)
+        val nextItem = if (keys.isNotEmpty()) {
+            val nextKey = keys.getOrNull(currentIdx + 1)
+            if (nextKey != null) state.layoutInfo.visibleItemsInfo.firstOrNull { it.key == nextKey } else null
+        } else {
+            state.layoutInfo.visibleItemsInfo.firstOrNull { it.index == currentIdx + 1 }
+        }
+
+        if (nextItem != null) {
+            val nextCenter = nextItem.offset + nextItem.size / 2f
+            val midpointDown = (currentCenter + nextCenter) / 2f
+            if (draggedCenter > midpointDown + hysteresisPx) {
+                val nextIdx = currentIdx + 1
+                currentLogicalIndex = nextIdx
+                onMove(currentIdx, nextIdx)
                 haptic?.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                return
             }
         }
 
-        handleOverScroll()
+        // Check upward move (towards previous item)
+        if (currentIdx - 1 >= minDragIndex) {
+            val prevItem = if (keys.isNotEmpty()) {
+                val prevKey = keys.getOrNull(currentIdx - 1)
+                if (prevKey != null) state.layoutInfo.visibleItemsInfo.firstOrNull { it.key == prevKey } else null
+            } else {
+                state.layoutInfo.visibleItemsInfo.firstOrNull { it.index == currentIdx - 1 }
+            }
+
+            if (prevItem != null) {
+                val prevCenter = prevItem.offset + prevItem.size / 2f
+                val midpointUp = (currentCenter + prevCenter) / 2f
+                if (draggedCenter < midpointUp - hysteresisPx) {
+                    val prevIdx = currentIdx - 1
+                    currentLogicalIndex = prevIdx
+                    onMove(currentIdx, prevIdx)
+                    haptic?.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    return
+                }
+            }
+        }
     }
 
     /**
@@ -279,11 +318,11 @@ class DragDropState internal constructor(
         val scrollDelta = when {
             currentBottom > viewportEnd - edgeThreshold -> {
                 val proximity = (currentBottom - (viewportEnd - edgeThreshold)).coerceIn(0f, edgeThreshold)
-                (proximity / edgeThreshold) * 22f
+                (proximity / edgeThreshold) * 18f
             }
-            currentTop < viewportStart + edgeThreshold && currentItem.index > minDragIndex -> {
+            currentTop < viewportStart + edgeThreshold && (currentLogicalIndex ?: currentItem.index) > minDragIndex -> {
                 val proximity = ((viewportStart + edgeThreshold) - currentTop).coerceIn(0f, edgeThreshold)
-                -(proximity / edgeThreshold) * 22f
+                -(proximity / edgeThreshold) * 18f
             }
             else -> 0f
         }
@@ -306,7 +345,7 @@ class DragDropState internal constructor(
         overscrollJob?.cancel()
         val key = draggedItemKey
         val initial = initialIndexOfDraggedItem
-        val current = currentIndexOfDraggedItem
+        val current = currentLogicalIndex
 
         if (initial != null && current != null && initial != current) {
             onDrop(initial, current)
@@ -314,45 +353,47 @@ class DragDropState internal constructor(
 
         if (key != null) {
             val dropOffset = draggingItemOffset
+            val animatable = Animatable(dropOffset)
+            settlingAnimatable = animatable
             settlingItemKey = key
             settlingItemIndex = current
+
             draggedItemKey = null
             initialIndexOfDraggedItem = null
-            currentIndexOfDraggedItem = null
+            currentLogicalIndex = null
             draggedDistance = 0f
             initialItemOffset = 0
 
             scope.launch {
-                settlingOffset.snapTo(dropOffset)
-                settlingOffset.animateTo(
-                    0f,
-                    spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow,
+                animatable.animateTo(
+                    targetValue = 0f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessLow,
                     ),
                 )
                 settlingItemKey = null
                 settlingItemIndex = null
+                settlingAnimatable = null
             }
         } else {
-            draggedItemKey = null
-            settlingItemKey = null
-            settlingItemIndex = null
-            draggedDistance = 0f
-            initialItemOffset = 0
-            currentIndexOfDraggedItem = null
-            initialIndexOfDraggedItem = null
+            resetState()
         }
     }
 
     fun onDragCancel() {
         overscrollJob?.cancel()
+        resetState()
+    }
+
+    private fun resetState() {
         draggedItemKey = null
         settlingItemKey = null
         settlingItemIndex = null
+        settlingAnimatable = null
         draggedDistance = 0f
         initialItemOffset = 0
-        currentIndexOfDraggedItem = null
+        currentLogicalIndex = null
         initialIndexOfDraggedItem = null
     }
 }

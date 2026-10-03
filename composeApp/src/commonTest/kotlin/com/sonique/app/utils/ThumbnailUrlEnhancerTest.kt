@@ -65,6 +65,30 @@ class ThumbnailUrlEnhancerTest {
     }
 
     @Test
+    fun testExtractSongTitleAndArtist() {
+        val (title1, artist1) = com.sonique.domain.utils.extractSongTitleAndArtist(
+            "Alan Walker - Faded",
+            "AlanWalkerVEVO",
+        )
+        assertEquals("Faded", title1)
+        assertEquals("Alan Walker", artist1)
+
+        val (title2, artist2) = com.sonique.domain.utils.extractSongTitleAndArtist(
+            "Twenty One Pilots - Stressed Out [Official Video]",
+            "Fueled By Ramen",
+        )
+        assertEquals("Stressed Out", title2)
+        assertEquals("Twenty One Pilots", artist2)
+
+        val (title3, artist3) = com.sonique.domain.utils.extractSongTitleAndArtist(
+            "Starboy (Official Music Video)",
+            "TheWeekndVEVO",
+        )
+        assertEquals("Starboy", title3)
+        assertEquals("TheWeeknd", artist3)
+    }
+
+    @Test
     fun testSongMatchingAndSimilarity() {
         val match = com.sonique.domain.utils.isSongMatch(
             videoTitle = "Coldplay - Sparks (Live in Madrid)",
@@ -73,6 +97,38 @@ class ThumbnailUrlEnhancerTest {
             candidateArtists = listOf("Coldplay"),
         )
         assertTrue(match)
+
+        val matchFaded = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Alan Walker - Faded",
+            videoArtist = "AlanWalkerVEVO",
+            candidateTitle = "Faded",
+            candidateArtists = listOf("Alan Walker"),
+        )
+        assertTrue(matchFaded)
+
+        val matchStressedOut = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Twenty One Pilots - Stressed Out [Official Video]",
+            videoArtist = "Fueled By Ramen",
+            candidateTitle = "Stressed Out",
+            candidateArtists = listOf("twenty one pilots"),
+        )
+        assertTrue(matchStressedOut)
+
+        val matchLunch = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Billie Eilish - LUNCH (Official Music Video)",
+            videoArtist = "BillieEilishVEVO",
+            candidateTitle = "LUNCH",
+            candidateArtists = listOf("Billie Eilish"),
+        )
+        assertTrue(matchLunch)
+
+        val matchKesariya = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Arijit Singh, Pritam - Kesariya (From \"Brahmastra\")",
+            videoArtist = "SonyMusicIndiaVEVO",
+            candidateTitle = "Kesariya",
+            candidateArtists = listOf("Pritam", "Arijit Singh"),
+        )
+        assertTrue(matchKesariya)
 
         val mismatchWrongSong = com.sonique.domain.utils.isSongMatch(
             videoTitle = "Coldplay - Sparks",

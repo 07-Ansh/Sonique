@@ -411,19 +411,21 @@ internal class SongRepositoryImpl(
         artist: String?,
     ): String? = withContext(Dispatchers.IO) {
         try {
+            val cleanVideoId = videoId.removePrefix("Video")
+
             // 1. Check local DB first
-            val existingSong = localDataSource.getSong(videoId)
+            val existingSong = localDataSource.getSong(cleanVideoId)
             val currentThumb = existingSong?.thumbnails
             if (!currentThumb.isNullOrBlank() && !com.sonique.domain.utils.isVideoThumbnailUrl(currentThumb)) {
-                return@withContext currentThumb.toHighResThumbnailUrl()
+                return@withContext currentThumb.toHighResThumbnailUrl(1200)
             }
 
-            // 2. Clean video title (remove "Official Video", "[Music Video]", etc.)
-            val cleanTitle = com.sonique.domain.utils.cleanVideoTitle(title)
-            val searchQuery = if (!artist.isNullOrBlank() && !cleanTitle.contains(artist, ignoreCase = true)) {
-                "$cleanTitle $artist"
+            // 2. Extract clean song title and artist (e.g. split "Alan Walker - Faded" or clean channel name)
+            val (extractedTitle, extractedArtist) = com.sonique.domain.utils.extractSongTitleAndArtist(title, artist)
+            val searchQuery = if (extractedArtist.isNotBlank() && !extractedTitle.contains(extractedArtist, ignoreCase = true)) {
+                "$extractedTitle $extractedArtist"
             } else {
-                cleanTitle
+                extractedTitle
             }
 
             // 3. Search specifically for Songs (FILTER_SONG) to get official 1:1 album art
@@ -442,17 +444,17 @@ internal class SongRepositoryImpl(
                         candidateArtists = item.artists?.map { it.name },
                     )
             }?.sortedByDescending { item ->
-                com.sonique.domain.utils.calculateTitleSimilarity(title, item.title)
+                com.sonique.domain.utils.calculateTitleSimilarity(extractedTitle, item.title)
             }
 
             val bestMatch = matchingSongs?.firstOrNull()
             if (bestMatch != null) {
                 val highResArt = bestMatch.thumbnail.toHighResThumbnailUrl(1200)
-                Logger.d(TAG, "Resolved verified audio artwork for video $videoId ('$title' -> '${bestMatch.title}') -> $highResArt")
-                localDataSource.updateThumbnailsSongEntity(highResArt, videoId)
+                Logger.d(TAG, "Resolved verified audio artwork for video $cleanVideoId ('$title' -> '${bestMatch.title}') -> $highResArt")
+                localDataSource.updateThumbnailsSongEntity(highResArt, cleanVideoId)
                 return@withContext highResArt
             } else {
-                Logger.d(TAG, "No verified audio match found for video $videoId ('$title'). Preserving original video thumbnail.")
+                Logger.d(TAG, "No verified audio match found for video $cleanVideoId ('$title'). Preserving original video thumbnail.")
             }
         } catch (e: Exception) {
             Logger.e(TAG, "Failed to resolve audio artwork for $videoId: ${e.message}")

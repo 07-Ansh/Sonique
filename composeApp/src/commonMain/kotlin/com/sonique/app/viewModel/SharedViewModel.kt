@@ -500,7 +500,7 @@ class SharedViewModel(
                             launch { getSongInfo(now.mediaId) }
                             launch { getFormat(now.mediaId) }
                             if (isArtworkLoading) {
-                                launch { resolveAndApplyAudioArtwork(now, resolvedThumbnail) }
+                                launch { resolveAndApplyAudioArtwork(now, resolvedTitle, resolvedArtist, resolvedThumbnail) }
                             }
                             val currentQueue = mediaPlayerHandler.queueData.value?.data?.listTracks
                             if (!currentQueue.isNullOrEmpty()) {
@@ -1061,19 +1061,22 @@ class SharedViewModel(
 
     private fun resolveAndApplyAudioArtwork(
         mediaItem: com.sonique.domain.data.player.GenericMediaItem,
+        title: String,
+        artist: String?,
         fallbackThumbnail: String?,
     ) {
         artworkResolutionJob?.cancel()
         artworkResolutionJob = viewModelScope.launch(Dispatchers.IO) {
+            val cleanMediaId = mediaItem.mediaId.removePrefix("Video")
             val resolvedArt = songRepository.resolveAudioTrackArtwork(
-                videoId = mediaItem.mediaId,
-                title = mediaItem.metadata.title ?: "",
-                artist = mediaItem.metadata.artist,
+                videoId = cleanMediaId,
+                title = title.ifBlank { mediaItem.metadata.title ?: "" },
+                artist = artist ?: mediaItem.metadata.artist,
             )
             if (_nowPlayingState.value?.mediaItem?.mediaId == mediaItem.mediaId) {
                 if (resolvedArt != null) {
                     mediaPlayerHandler.updateArtworkUri(resolvedArt)
-                    mediaPlayerHandler.updateQueueTrackArtwork(mediaItem.mediaId.removePrefix("Video"), resolvedArt)
+                    mediaPlayerHandler.updateQueueTrackArtwork(cleanMediaId, resolvedArt)
                     preloadImage(resolvedArt)
                     _nowPlayingScreenData.update { current ->
                         current.copy(

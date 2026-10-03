@@ -18,35 +18,44 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.domain.repository.ListenTogetherRepository
 import org.koin.compose.koinInject
 
+import com.sonique.app.expect.ui.PlatformBackdrop
+import com.sonique.app.expect.ui.rememberBackdrop
+
 @Composable
-fun ListenTogetherIconButton(onClick: () -> Unit) {
+fun ListenTogetherIconButton(
+    enableLiquidGlass: Boolean = false,
+    backdrop: PlatformBackdrop? = null,
+    onClick: () -> Unit,
+) {
     val repository = koinInject<ListenTogetherRepository>()
     val room by repository.room.collectAsStateWithLifecycle()
 
-    Box {
-        RippleIconButton(
-            imageVector = Icons.Default.Groups,
-            tint = MaterialTheme.colorScheme.onBackground,
-            onClick = onClick,
-        )
-        if (room.inRoom) {
-            Box(
-                modifier =
-                    Modifier
+    TopBarCircularIconButton(
+        enableLiquidGlass = enableLiquidGlass && backdrop != null,
+        backdrop = backdrop ?: rememberBackdrop(),
+        imageVector = Icons.Default.Groups,
+        tint = MaterialTheme.colorScheme.onSurface,
+        onClick = onClick,
+        badge = {
+            if (room.inRoom) {
+                Box(
+                    modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 8.dp, bottom = 8.dp)
+                        .padding(end = 4.dp, bottom = 4.dp)
                         .size(11.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(
-                    Modifier
-                        .size(7.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.error),
-                )
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(
+                        Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.error),
+                    )
+                }
             }
         }
-    }
+    )
 }
+

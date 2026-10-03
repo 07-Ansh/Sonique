@@ -6,11 +6,20 @@ import com.sonique.app.viewModel.base.BaseViewModel
 import com.sonique.domain.repository.ReleaseInfo
 import com.sonique.domain.repository.UpdateRepository
 import com.sonique.domain.repository.UpdateStatus
+import com.sonique.app.ui.screen.changelog.ChangelogData
+import com.sonique.app.ui.screen.changelog.ChangelogRelease
+import com.sonique.app.ui.screen.changelog.parseReleaseNotes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
+sealed interface ChangelogUiState {
+    data object Loading : ChangelogUiState
+    data class Success(val releases: List<ChangelogRelease>, val isOffline: Boolean = false) : ChangelogUiState
+    data class Error(val message: String, val fallbackReleases: List<ChangelogRelease>) : ChangelogUiState
+}
 
 class UpdateViewModel(
     private val updateRepository: UpdateRepository,
@@ -22,6 +31,11 @@ class UpdateViewModel(
     private val _latestReleaseInfo = MutableStateFlow<ReleaseInfo?>(null)
     val latestReleaseInfo: StateFlow<ReleaseInfo?> = _latestReleaseInfo.asStateFlow()
 
+    private val _changelogState = MutableStateFlow<ChangelogUiState>(ChangelogUiState.Loading)
+    val changelogState: StateFlow<ChangelogUiState> = _changelogState.asStateFlow()
+
+    private var cachedReleases: List<ChangelogRelease>? = null
+
     val currentVersion: String = BuildKonfig.versionName
 
     private val _isChecking = MutableStateFlow(false)
@@ -30,6 +44,39 @@ class UpdateViewModel(
     init {
         checkForUpdate()
     }
+
+    fun loadChangelog(forceRefresh: Boolean = false) {
+        val currentCached = cachedReleases
+        if (!forceRefresh && currentCached != null) {
+            _changelogState.value = ChangelogUiState.Success(currentCached)
+            return
+        }
+
+        viewModelScope.launch {
+            _changelogState.value = ChangelogUiState.Loading
+            val result = updateRepository.fetchAllReleases()
+            result.onSuccess { releaseInfos ->
+                val localVersion = BuildKonfig.versionName
+                val parsed = releaseInfos.map { release ->
+                    parseReleaseNotes(
+                        version = release.version,
+                        publishedAt = release.publishedAt,
+                        name = release.title,
+                        body = release.changelog,
+                        htmlUrl = release.htmlUrl,
+                        installedVersion = localVersion,
+                    )
+                }
+                val finalReleases = if (parsed.isNotEmpty()) parsed else ChangelogData.fallbackReleases
+                cachedReleases = finalReleases
+                _changelogState.value = ChangelogUiState.Success(finalReleases)
+            }.onFailure { error ->
+                val fallback = ChangelogData.fallbackReleases
+                _changelogState.value = ChangelogUiState.Success(fallback, isOffline = true)
+            }
+        }
+    }
+
 
     fun manualCheckForUpdate() {
         viewModelScope.launch {

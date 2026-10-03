@@ -35,18 +35,30 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sonique.app.utils.VersionManager
 
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.koin.compose.viewmodel.koinViewModel
+import com.sonique.app.ui.component.GoogleCircularProgressIndicator
+import com.sonique.app.viewModel.ChangelogUiState
+import com.sonique.app.viewModel.UpdateViewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogBottomSheet(
     onDismissRequest: () -> Unit,
+    updateViewModel: UpdateViewModel = koinViewModel(),
 ) {
     // skipPartiallyExpanded = false allows the sheet to open at half-screen height first,
     // and seamlessly expand to full height when dragged upwards.
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
-    val currentAppVersion = VersionManager.getVersionName().ifEmpty { ChangelogData.currentRelease.version }
-    val releases = listOf(
-        ChangelogData.currentRelease.copy(version = currentAppVersion)
-    ) + ChangelogData.previousReleases
+    val changelogState by updateViewModel.changelogState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        updateViewModel.loadChangelog()
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -79,18 +91,58 @@ fun ChangelogBottomSheet(
                 )
             }
 
-            items(releases, key = { it.version }) { release ->
-                ReleaseSection(release = release)
+            when (val state = changelogState) {
+                is ChangelogUiState.Loading -> {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            GoogleCircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                    }
+                }
+                is ChangelogUiState.Success -> {
+                    if (state.isOffline) {
+                        item {
+                            Text(
+                                text = "Showing cached release history (offline)",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    items(state.releases, key = { it.version }) { release ->
+                        ReleaseSection(release = release)
+                    }
+                }
+                is ChangelogUiState.Error -> {
+                    items(state.fallbackReleases, key = { it.version }) { release ->
+                        ReleaseSection(release = release)
+                    }
+                }
             }
         }
     }
 }
+
 
 @Composable
 private fun ReleaseSection(
     release: ChangelogRelease,
     modifier: Modifier = Modifier,
 ) {
+    val uriHandler = LocalUriHandler.current
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(14.dp)
@@ -101,17 +153,37 @@ private fun ReleaseSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = release.version,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = release.version,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                if (release.isCurrentVersion) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "Installed",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                }
             }
 
             Text(
@@ -163,6 +235,28 @@ private fun ReleaseSection(
                             color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 22.sp
                         )
+                    }
+                }
+
+                if (!release.htmlUrl.isNullOrBlank()) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                        thickness = 0.8.dp,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = { uriHandler.openUri(release.htmlUrl) }
+                        ) {
+                            Text(
+                                text = "View on GitHub",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
             }

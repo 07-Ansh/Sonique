@@ -128,6 +128,8 @@ import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.ui.theme.white
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.TopBarCircularIconButton
 import com.sonique.app.viewModel.HomeViewModel
 import com.sonique.app.viewModel.HomeViewModel.Companion.HOME_PARAMS_COMMUTE
 import com.sonique.app.viewModel.HomeViewModel.Companion.HOME_PARAMS_ENERGIZE
@@ -599,8 +601,14 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String>? = null) {
+fun HomeTopAppBar(
+    navController: NavController,
+    accountInfo: Pair<String, String>? = null,
+    sharedViewModel: SharedViewModel = koinInject(),
+) {
     var showChangelogSheet by rememberSaveable { mutableStateOf(false) }
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
 
     val hour =
         remember {
@@ -640,15 +648,27 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
+            ListenTogetherIconButton(
+                enableLiquidGlass = enableLiquidGlass,
+                backdrop = backdrop,
+                onClick = { navController.navigate(ListenTogetherDestination) }
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            RippleIconButton(resId = Res.drawable.metro_newspaper) {
-                showChangelogSheet = true
-            }
+            TopBarCircularIconButton(
+                enableLiquidGlass = enableLiquidGlass,
+                backdrop = backdrop,
+                resId = Res.drawable.metro_newspaper,
+                contentDescription = "Changelogs",
+                onClick = { showChangelogSheet = true }
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            RippleIconButton(resId = Res.drawable.baseline_settings_24) {
-                navController.navigate(SettingsDestination())
-            }
+            TopBarCircularIconButton(
+                enableLiquidGlass = enableLiquidGlass,
+                backdrop = backdrop,
+                resId = Res.drawable.baseline_settings_24,
+                contentDescription = "Settings",
+                onClick = { navController.navigate(SettingsDestination()) }
+            )
         }
     }
 

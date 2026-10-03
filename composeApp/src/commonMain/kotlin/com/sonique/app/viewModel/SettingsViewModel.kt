@@ -221,7 +221,7 @@ class SettingsViewModel(
     val enableLiquidGlass: StateFlow<Boolean> = _enableLiquidGlass
 
 
-    private var _enablePageTransitions: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    private var _enablePageTransitions: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val enablePageTransitions: StateFlow<Boolean> = _enablePageTransitions
 
     private var _liquidGlassGlassiness: MutableStateFlow<Float> = MutableStateFlow(0.5f)

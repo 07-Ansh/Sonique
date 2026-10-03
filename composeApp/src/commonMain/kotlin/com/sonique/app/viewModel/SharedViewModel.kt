@@ -298,7 +298,7 @@ class SharedViewModel(
 
     val enablePageTransitions: StateFlow<Boolean> = dataStoreManager.enablePageTransitions
         .map { it == DataStoreManager.TRUE }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
 
     val continueListeningLayout: StateFlow<String> = dataStoreManager.getString("continue_listening_layout")

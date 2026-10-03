@@ -151,32 +151,53 @@ internal fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
             )
         }
 
+        item {
+            Material3SettingsGroup(
+                title = "Animations",
+                items = listOf(
+                    Material3SettingsItem(
+                        title = { Text("Screen Transitions") },
+                        description = {
+                            Text(if (enablePageTransitions) "Slide" else "Fade (Default)")
+                        },
+                        onClick = {
+                            coroutineScope.launch {
+                                viewModel.setAlertData(
+                                    SettingAlertState(
+                                        title = "Screen Transitions",
+                                        selectOne = SettingAlertState.SelectData(
+                                            listSelect = listOf(
+                                                (!enablePageTransitions) to "Fade (Default)",
+                                                enablePageTransitions to "Slide"
+                                            )
+                                        ),
+                                        confirm = "Change" to { state ->
+                                            val selected = state.selectOne?.getSelected() ?: ""
+                                            viewModel.setEnablePageTransitions(selected == "Slide")
+                                        },
+                                        dismiss = "Cancel"
+                                    )
+                                )
+                            }
+                        }
+                    )
+                )
+            )
+        }
+
         if (getPlatform() == Platform.Android) {
             item {
                 Material3SettingsGroup(
                     title = "Liquid Glass",
-                    items = buildList {
-                        add(
-                            Material3SettingsItem(
-                                title = { Text("Apple Liquid Glass") },
-                                description = { Text("Apple-style floating bottom layout with real-time backdrop luminance sensing") },
-                                isSwitch = true,
-                                checked = enableLiquidGlass,
-                                onCheckedChange = { viewModel.setEnableLiquidGlass(it) }
-                            )
+                    items = listOf(
+                        Material3SettingsItem(
+                            title = { Text("Apple Liquid Glass") },
+                            description = { Text("Apple-style floating bottom layout with real-time backdrop luminance sensing") },
+                            isSwitch = true,
+                            checked = enableLiquidGlass,
+                            onCheckedChange = { viewModel.setEnableLiquidGlass(it) }
                         )
-                        if (!enableLiquidGlass) {
-                            add(
-                                Material3SettingsItem(
-                                    title = { Text("Page Transitions") },
-                                    description = { Text("Enable sliding animation when switching pages") },
-                                    isSwitch = true,
-                                    checked = enablePageTransitions,
-                                    onCheckedChange = { viewModel.setEnablePageTransitions(it) }
-                                )
-                            )
-                        }
-                    }
+                    )
                 )
             }
 

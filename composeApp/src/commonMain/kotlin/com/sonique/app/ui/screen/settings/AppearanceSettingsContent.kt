@@ -156,30 +156,18 @@ internal fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                 title = "Animations",
                 items = listOf(
                     Material3SettingsItem(
-                        title = { Text("Screen Transitions") },
+                        title = { Text("Slide Transitions") },
                         description = {
-                            Text(if (enablePageTransitions) "Slide" else "Fade (Default)")
+                            Text(
+                                if (enablePageTransitions)
+                                    "Horizontal slide transitions enabled"
+                                else
+                                    "Fade transitions enabled (Default)"
+                            )
                         },
-                        onClick = {
-                            coroutineScope.launch {
-                                viewModel.setAlertData(
-                                    SettingAlertState(
-                                        title = "Screen Transitions",
-                                        selectOne = SettingAlertState.SelectData(
-                                            listSelect = listOf(
-                                                (!enablePageTransitions) to "Fade (Default)",
-                                                enablePageTransitions to "Slide"
-                                            )
-                                        ),
-                                        confirm = "Change" to { state ->
-                                            val selected = state.selectOne?.getSelected() ?: ""
-                                            viewModel.setEnablePageTransitions(selected == "Slide")
-                                        },
-                                        dismiss = "Cancel"
-                                    )
-                                )
-                            }
-                        }
+                        isSwitch = true,
+                        checked = enablePageTransitions,
+                        onCheckedChange = { viewModel.setEnablePageTransitions(it) }
                     )
                 )
             )

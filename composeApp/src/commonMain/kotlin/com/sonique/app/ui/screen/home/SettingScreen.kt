@@ -224,7 +224,7 @@ private fun MainSettingsList(
                         Material3SettingsItem(
                             icon = Icons.Default.Palette,
                             title = { Text("Appearance") },
-                            description = { Text("Theme, Liquid Glass, player styling & visual effects") },
+                            description = { Text("Theme, Liquid Glass, transitions, player styling & visual effects") },
                             onClick = { onCategoryClick(SettingsSubCategory.APPEARANCE) }
                         )
                     )

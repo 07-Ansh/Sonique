@@ -130,6 +130,49 @@ class ThumbnailUrlEnhancerTest {
         )
         assertTrue(matchKesariya)
 
+        // Real-world Bollywood / Record label video song titles
+        val matchTumHoToh = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Tum Ho Toh (Official Video) | Saiyaara | Ahan Shetty, Pooja Hegde | Vishal Mishra, Hansika Pareek",
+            videoArtist = "T-Series",
+            candidateTitle = "Tum Ho Toh",
+            candidateArtists = listOf("Vishal Mishra", "Hansika Pareek"),
+        )
+        assertTrue(matchTumHoToh)
+
+        val matchVaaroon = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Vaaroon Forever (Official Video) | Anand Bhaskar, Shreya Ghoshal | Mirzapur Season 3",
+            videoArtist = "Sony Music India",
+            candidateTitle = "Vaaroon Forever",
+            candidateArtists = listOf("Anand Bhaskar", "Shreya Ghoshal"),
+        )
+        assertTrue(matchVaaroon)
+
+        val matchKesariyaReal = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Kesariya - Brahmāstra | Ranbir Kapoor | Alia Bhatt | Pritam | Arijit Singh | Amitabh B",
+            videoArtist = "Sony Music India",
+            candidateTitle = "Kesariya",
+            candidateArtists = listOf("Pritam", "Arijit Singh"),
+        )
+        assertTrue(matchKesariyaReal)
+
+        // Label video title without singer mentioned in title
+        val matchLabelSongNoSinger = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Tum Ho Toh (From \"Saiyaara\")",
+            videoArtist = "T-Series",
+            candidateTitle = "Tum Ho Toh",
+            candidateArtists = listOf("Vishal Mishra"),
+        )
+        assertTrue(matchLabelSongNoSinger)
+
+        // Title - Artist reversed format
+        val matchFlowersReversed = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Flowers - Miley Cyrus",
+            videoArtist = "Miley Cyrus",
+            candidateTitle = "Flowers",
+            candidateArtists = listOf("Miley Cyrus"),
+        )
+        assertTrue(matchFlowersReversed)
+
         val mismatchWrongSong = com.sonique.domain.utils.isSongMatch(
             videoTitle = "Coldplay - Sparks",
             videoArtist = "Coldplay",
@@ -145,5 +188,13 @@ class ThumbnailUrlEnhancerTest {
             candidateArtists = listOf("Lionel Richie"),
         )
         assertFalse(mismatchWrongArtist)
+
+        val mismatchHoldOn = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Hold On",
+            videoArtist = "Chord Overstreet",
+            candidateTitle = "Hold On",
+            candidateArtists = listOf("Justin Bieber"),
+        )
+        assertFalse(mismatchHoldOn)
     }
 }

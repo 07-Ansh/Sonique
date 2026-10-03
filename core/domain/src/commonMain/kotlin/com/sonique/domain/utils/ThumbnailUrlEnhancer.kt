@@ -42,6 +42,38 @@ fun isVideoThumbnailUrl(url: String?): Boolean {
 }
 
 /**
+ * Known record labels, publishers, or generic video distribution channels.
+ * When the video artist is one of these, it represents the channel/distributor, not the music performer.
+ */
+fun isRecordLabelOrDistributor(artistName: String?): Boolean {
+    if (artistName.isNullOrBlank()) return false
+    val clean = artistName.lowercase().trim()
+    val labelKeywords = listOf(
+        "t-series", "tseries", "series", "zee music", "zeemusic", "sony music", "sonymusic",
+        "yrf", "yash raj", "saregama", "tips official", "tips music", "tips bhojpuri",
+        "speed records", "white hill", "geet mp3", "universal music", "warner music",
+        "warner records", "atlantic records", "columbia records", "def jam", "spinnin",
+        "ultra records", "monstercat", "vevo", "records", "recordings", "entertainment",
+        "films", "studios", "music company", "official channel", "topic", "channel",
+        "bhakti", "desire music", "dm music", "jjust music", "svf", "bongo",
+        "times music", "junglee music", "venus", "eros now", "pen movies"
+    )
+    return labelKeywords.any { clean.contains(it) }
+}
+
+/**
+ * Parsed components of a video song title for high-accuracy audio counterpart discovery.
+ */
+data class ParsedVideoSong(
+    val primaryTitle: String,
+    val alternateTitle: String? = null,
+    val artistOrContext: String? = null,
+    val allSegments: List<String> = emptyList(),
+    val searchQueries: List<String> = emptyList(),
+    val isLabelChannel: Boolean = false,
+)
+
+/**
  * Cleans video titles by stripping common music video tags (e.g. "[Official Video]", "(Music Video)", etc.)
  * to allow accurate song-matching searches on YouTube Music.
  */
@@ -56,23 +88,132 @@ fun cleanVideoTitle(title: String): String {
 }
 
 /**
- * Extracts the song title and artist from a video title.
- * Most YouTube music videos follow "Artist - Title", "Artist : Title", or "Artist | Title".
- * If no separator is present, returns the cleaned title and sanitized fallback artist.
+ * Extracts structured metadata from a video title and fallback uploader channel.
+ * Parses pipe segments ("|") and delimiter dashes ("-", ":") to accurately identify
+ * the core song title, album/movie context, and performer.
  */
-fun extractSongTitleAndArtist(videoTitle: String, fallbackArtist: String?): Pair<String, String> {
-    val cleaned = cleanVideoTitle(videoTitle)
-    val parts = cleaned.split(Regex("\\s+[-–—:]\\s+"), limit = 2)
-    return if (parts.size == 2) {
-        val artistPart = parts[0].trim()
-        val titlePart = parts[1].trim()
-        Pair(titlePart, artistPart)
-    } else {
-        val cleanFallback = fallbackArtist
+fun parseVideoSongMetadata(videoTitle: String, videoArtist: String?): ParsedVideoSong {
+    val isLabel = isRecordLabelOrDistributor(videoArtist) || videoArtist.isNullOrBlank()
+
+    // 1. Split on pipes "|" to isolate segments (e.g. "Song | Movie | Singers")
+    val rawSegments = videoTitle.split(Regex("\\s*\\|\\s*"))
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    val segment0 = rawSegments.firstOrNull() ?: videoTitle
+    val otherSegments = if (rawSegments.size > 1) rawSegments.drop(1) else emptyList()
+
+    // Filter out video descriptor tags from secondary context segments
+    val meaningfulContext = otherSegments.filterNot { seg ->
+        val lower = seg.lowercase()
+        lower.contains("official") || lower.contains("video") || lower.contains("visualizer") ||
+            lower.contains("visualiser") || lower.contains("lyrics") || lower.contains("audio") ||
+            lower.contains("4k") || lower.contains("hd") || lower.contains("teaser") ||
+            lower.contains("trailer") || isRecordLabelOrDistributor(seg)
+    }
+
+    val cleanSeg0 = cleanVideoTitle(segment0)
+
+    var primaryTitle: String
+    var alternateTitle: String? = null
+    var artistPart: String? = null
+
+    // 2. Check for dash / colon separators in segment 0 (e.g. "Artist - Title" or "Title - Movie")
+    val dashParts = cleanSeg0.split(Regex("\\s+[-–—:]\\s+"), limit = 2)
+    if (dashParts.size == 2) {
+        val part0 = cleanVideoTitle(dashParts[0])
+        val part1 = cleanVideoTitle(dashParts[1])
+
+        val cleanChannel = videoArtist
             ?.replace(Regex("(?i)\\s*(?:vevo|official|records?|music|channel|topic)\\s*"), "")
             ?.trim() ?: ""
-        Pair(cleaned, cleanFallback)
+
+        val normChannel = normalizeString(cleanChannel).replace(" ", "")
+        val normPart0 = normalizeString(part0).replace(" ", "")
+        val normPart1 = normalizeString(part1).replace(" ", "")
+
+        when {
+            // Part 1 matches artist/channel (e.g. "Flowers - Miley Cyrus")
+            normChannel.isNotEmpty() && normPart1.isNotEmpty() && (normChannel.contains(normPart1) || normPart1.contains(normChannel)) -> {
+                primaryTitle = part0
+                alternateTitle = part1
+                artistPart = part1
+            }
+            // Multi-segment label video (Bollywood format: "Kesariya - Brahmāstra | Ranbir Kapoor | ...")
+            rawSegments.size > 1 && isLabel -> {
+                primaryTitle = part0
+                alternateTitle = part1
+                artistPart = part0
+            }
+            // Standard "Artist - Title" format (e.g. "Twenty One Pilots - Stressed Out", "Alan Walker - Faded")
+            else -> {
+                primaryTitle = part1
+                alternateTitle = part0
+                artistPart = part0
+            }
+        }
+    } else {
+        primaryTitle = cleanSeg0
+        artistPart = if (!isLabel) {
+            videoArtist
+                ?.replace(Regex("(?i)\\s*(?:vevo|official|records?|music|channel|topic)\\s*"), "")
+                ?.trim()
+        } else {
+            null
+        }
     }
+
+    // Strip feat / ft from primary title if present to get pure song name
+    val coreCleanTitle = primaryTitle
+        .replace(Regex("(?i)\\s*[\\[\\(]?(?:feat\\.?|ft\\.?|featuring)\\s+[^\\]\\)]*[\\]\\)]?"), "")
+        .trim()
+        .ifEmpty { primaryTitle }
+
+    // 3. Build prioritized, clean search queries for YouTube Music
+    val queries = mutableListOf<String>()
+
+    // Priority 1: Primary title + known singer / artist
+    if (!artistPart.isNullOrBlank() && !coreCleanTitle.contains(artistPart, ignoreCase = true)) {
+        queries.add("$coreCleanTitle $artistPart")
+    }
+
+    // Priority 2: Primary title + alternate title (e.g. "Kesariya Brahmāstra" or "Twenty One Pilots Stressed Out")
+    if (alternateTitle != null && !coreCleanTitle.contains(alternateTitle, ignoreCase = true)) {
+        queries.add("$coreCleanTitle $alternateTitle")
+    }
+
+    // Priority 3: Primary title + first meaningful context segment (e.g. "Tum Ho Toh Saiyaara" or "Vaaroon Forever Anand Bhaskar")
+    meaningfulContext.firstOrNull()?.let { ctx ->
+        val cleanCtx = ctx.replace(Regex("(?i)\\s*(?:from|movie|starring|ft\\.?|feat\\.?).*$"), "").trim()
+        if (cleanCtx.isNotBlank() && !coreCleanTitle.contains(cleanCtx, ignoreCase = true)) {
+            val shortCtx = cleanCtx.split(",").firstOrNull()?.trim() ?: cleanCtx
+            queries.add("$coreCleanTitle $shortCtx")
+        }
+    }
+
+    // Priority 4: Fallback to pure core song title
+    queries.add(coreCleanTitle)
+
+    return ParsedVideoSong(
+        primaryTitle = coreCleanTitle,
+        alternateTitle = alternateTitle,
+        artistOrContext = artistPart ?: meaningfulContext.firstOrNull(),
+        allSegments = rawSegments,
+        searchQueries = queries.distinct().filter { it.isNotBlank() },
+        isLabelChannel = isLabel,
+    )
+}
+
+/**
+ * Extracts the song title and artist from a video title.
+ * Backwards-compatible wrapper delegating to parseVideoSongMetadata.
+ */
+fun extractSongTitleAndArtist(videoTitle: String, fallbackArtist: String?): Pair<String, String> {
+    val parsed = parseVideoSongMetadata(videoTitle, fallbackArtist)
+    val artist = parsed.artistOrContext ?: fallbackArtist
+        ?.replace(Regex("(?i)\\s*(?:vevo|official|records?|music|channel|topic)\\s*"), "")
+        ?.trim() ?: ""
+    return Pair(parsed.primaryTitle, artist)
 }
 
 /**
@@ -109,6 +250,8 @@ private fun normalizeString(text: String): String {
 
 /**
  * Validates whether a candidate song from search results is a reliable match for a video song.
+ * Prevents picking wrong songs while ensuring official releases from record labels
+ * (T-Series, Sony Music, Zee, etc.) are matched reliably.
  */
 fun isSongMatch(
     videoTitle: String,
@@ -116,56 +259,131 @@ fun isSongMatch(
     candidateTitle: String,
     candidateArtists: List<String>?,
 ): Boolean {
-    val (extractedTitle, extractedArtist) = extractSongTitleAndArtist(videoTitle, videoArtist)
-    val normCandTitle = normalizeString(candidateTitle)
-    val normExtTitle = normalizeString(extractedTitle)
+    val parsed = parseVideoSongMetadata(videoTitle, videoArtist)
+    val normCandTitle = normalizeString(cleanVideoTitle(candidateTitle))
+    val normPrimaryTitle = normalizeString(parsed.primaryTitle)
+    val normAlternateTitle = parsed.alternateTitle?.let { normalizeString(it) }
     val normFullVidTitle = normalizeString(cleanVideoTitle(videoTitle))
-    val normExtArtist = normalizeString(extractedArtist)
-    val normFallbackArtist = normalizeString(videoArtist ?: "")
+    val candArtistList = candidateArtists?.map { normalizeString(it) } ?: emptyList()
 
     if (normCandTitle.isEmpty()) return false
 
-    // Check title match
-    val titleMatches = normCandTitle == normExtTitle ||
-        (normCandTitle.length >= 3 && normFullVidTitle.contains(normCandTitle)) ||
-        normFullVidTitle.split(" ").contains(normCandTitle) ||
-        calculateTitleSimilarity(extractedTitle, candidateTitle) >= 0.5f ||
-        calculateTitleSimilarity(videoTitle, candidateTitle) >= 0.5f
+    // 1. Title matching check
+    val isTitleExact = normCandTitle == normPrimaryTitle ||
+        (normAlternateTitle != null && normCandTitle == normAlternateTitle)
+
+    val isTitlePrefixOrSuffix = normPrimaryTitle.startsWith(normCandTitle) ||
+        normCandTitle.startsWith(normPrimaryTitle) ||
+        (normAlternateTitle != null && (normAlternateTitle.startsWith(normCandTitle) || normCandTitle.startsWith(normAlternateTitle)))
+
+    val isTitleInFullVideo = normCandTitle.length >= 3 && (
+        normFullVidTitle == normCandTitle ||
+        normFullVidTitle.startsWith("$normCandTitle ") ||
+        normFullVidTitle.endsWith(" $normCandTitle") ||
+        normFullVidTitle.contains(" $normCandTitle ") ||
+        normFullVidTitle.contains(normCandTitle)
+    )
+
+    val simPrimary = calculateTitleSimilarity(parsed.primaryTitle, candidateTitle)
+    val simAlternate = parsed.alternateTitle?.let { calculateTitleSimilarity(it, candidateTitle) } ?: 0f
+    val simFull = calculateTitleSimilarity(videoTitle, candidateTitle)
+    val maxSim = maxOf(simPrimary, simAlternate, simFull)
+
+    val titleMatches = isTitleExact || isTitlePrefixOrSuffix || (isTitleInFullVideo && normCandTitle.length >= 3) || maxSim >= 0.45f
 
     if (!titleMatches) return false
 
-    // Check artist match if artists are available
-    val hasCandidateArtists = !candidateArtists.isNullOrEmpty()
-    val hasAnyVideoArtist = normExtArtist.isNotEmpty() || normFallbackArtist.isNotEmpty()
+    // 2. Artist validation check
+    val isLabel = parsed.isLabelChannel
 
-    if (hasCandidateArtists && hasAnyVideoArtist) {
-        val cleanExtArtistAlpha = normExtArtist.replace(" ", "")
-        val cleanFallbackAlpha = normFallbackArtist.replace(" ", "")
-
-        val artistMatches = candidateArtists.any { candidateArtist ->
-            val normCandArtist = normalizeString(candidateArtist)
-            val cleanCandArtistAlpha = normCandArtist.replace(" ", "")
-            if (cleanCandArtistAlpha.isEmpty()) return@any false
-
-            // Match against extracted artist (e.g. "Alan Walker" vs "Alan Walker")
-            normExtArtist == normCandArtist ||
-                (cleanExtArtistAlpha.isNotEmpty() && (
-                    cleanExtArtistAlpha.contains(cleanCandArtistAlpha) ||
-                    cleanCandArtistAlpha.contains(cleanExtArtistAlpha)
-                )) ||
-                // Match against fallback/channel name (e.g. "Alan Walker" in "AlanWalkerVEVO")
-                (cleanFallbackAlpha.isNotEmpty() && (
-                    cleanFallbackAlpha.contains(cleanCandArtistAlpha) ||
-                    cleanCandArtistAlpha.contains(cleanFallbackAlpha)
-                )) ||
-                // Candidate artist mentioned in full video title
-                normFullVidTitle.contains(normCandArtist)
+    if (isLabel) {
+        // For record label uploads (T-Series, Sony, Zee, etc.):
+        // Check if candidate artist appears anywhere in the video title or description segments
+        val candArtistInVidTitle = candArtistList.any { artist ->
+            artist.length >= 3 && normFullVidTitle.contains(artist)
+        }
+        val candArtistInSegments = parsed.allSegments.any { seg ->
+            val normSeg = normalizeString(seg)
+            candArtistList.any { artist -> artist.length >= 3 && normSeg.contains(artist) }
         }
 
-        if (!artistMatches) {
-            return false
+        if (candArtistInVidTitle || candArtistInSegments) {
+            return true
         }
+
+        // If candidate artist is not in video title, accept if the song title match is strong
+        // (YouTube Music FILTER_SONG returns the official audio for the exact title)
+        val strongTitleMatch = isTitleExact || maxSim >= 0.65f || (normCandTitle.length >= 4 && isTitleInFullVideo)
+        return strongTitleMatch
+    } else {
+        // For specific artist uploads (Alan Walker, Adele, Coldplay, etc.):
+        val normVidArtist = normalizeString(videoArtist ?: "")
+        val cleanVidArtistAlpha = normVidArtist.replace(" ", "").replace("vevo", "").replace("official", "")
+
+        val artistMatchesChannel = candArtistList.any { cand ->
+            val cleanCand = cand.replace(" ", "")
+            (cleanCand.length >= 3 && (cleanVidArtistAlpha.contains(cleanCand) || cleanCand.contains(cleanVidArtistAlpha))) ||
+                cand == normVidArtist
+        }
+
+        val artistMatchesVidTitle = candArtistList.any { cand ->
+            cand.length >= 3 && normFullVidTitle.contains(cand)
+        }
+
+        val artistMatchesAlternate = normAlternateTitle != null && candArtistList.any { cand ->
+            cand.length >= 3 && (normAlternateTitle.contains(cand) || cand.contains(normAlternateTitle))
+        }
+
+        // If artist channel is known and candidate artist doesn't match at all, reject to prevent wrong artwork
+        return artistMatchesChannel || artistMatchesVidTitle || artistMatchesAlternate
+    }
+}
+
+/**
+ * Scores a candidate song to find the highest-confidence match among YouTube Music search results.
+ */
+fun scoreSongCandidate(
+    candidateTitle: String,
+    candidateArtists: List<String>?,
+    parsed: ParsedVideoSong,
+    fullVideoTitle: String,
+    videoArtist: String?,
+): Float {
+    var score = 0f
+    val normCandTitle = normalizeString(cleanVideoTitle(candidateTitle))
+    val normPrimary = normalizeString(parsed.primaryTitle)
+    val normAlternate = parsed.alternateTitle?.let { normalizeString(it) }
+    val candArtists = candidateArtists?.map { normalizeString(it) } ?: emptyList()
+    val normFullVid = normalizeString(cleanVideoTitle(fullVideoTitle))
+    val normArtist = normalizeString(videoArtist ?: "").replace(" ", "")
+
+    // Title score (up to 10 points)
+    when {
+        normCandTitle == normPrimary -> score += 10f
+        normAlternate != null && normCandTitle == normAlternate -> score += 9f
+        normPrimary.startsWith(normCandTitle) || normCandTitle.startsWith(normPrimary) -> score += 8f
+        else -> score += calculateTitleSimilarity(parsed.primaryTitle, candidateTitle) * 7f
     }
 
-    return true
+    // Artist score (up to 10 points)
+    val hasArtistInChannel = candArtists.any { artist ->
+        val clean = artist.replace(" ", "")
+        clean.length >= 3 && normArtist.contains(clean)
+    }
+    if (hasArtistInChannel) score += 6f
+
+    val hasArtistInTitle = candArtists.any { artist ->
+        artist.length >= 3 && normFullVid.contains(artist)
+    }
+    if (hasArtistInTitle) score += 5f
+
+    // Segment score: does candidate title or album match any segment?
+    val matchesSegment = parsed.allSegments.any { seg ->
+        val normSeg = normalizeString(seg)
+        normSeg.length >= 3 && (normSeg == normCandTitle || normCandTitle.contains(normSeg))
+    }
+    if (matchesSegment) score += 3f
+
+    return score
 }
+

@@ -420,42 +420,48 @@ internal class SongRepositoryImpl(
                 return@withContext currentThumb.toHighResThumbnailUrl(1200)
             }
 
-            // 2. Extract clean song title and artist (e.g. split "Alan Walker - Faded" or clean channel name)
-            val (extractedTitle, extractedArtist) = com.sonique.domain.utils.extractSongTitleAndArtist(title, artist)
-            val searchQuery = if (extractedArtist.isNotBlank() && !extractedTitle.contains(extractedArtist, ignoreCase = true)) {
-                "$extractedTitle $extractedArtist"
-            } else {
-                extractedTitle
+            // 2. Parse video title and metadata
+            val parsed = com.sonique.domain.utils.parseVideoSongMetadata(title, artist)
+
+            // 3. Try prioritized search queries for YouTube Music (FILTER_SONG) to get official 1:1 album art
+            for (query in parsed.searchQueries) {
+                val searchResult = youTube.search(
+                    query = query,
+                    filter = YouTube.SearchFilter.FILTER_SONG,
+                ).getOrNull()
+
+                val candidateSongs = searchResult?.items?.filterIsInstance<SongItem>()?.filter { item ->
+                    !item.thumbnail.isNullOrBlank() &&
+                        !com.sonique.domain.utils.isVideoThumbnailUrl(item.thumbnail) &&
+                        com.sonique.domain.utils.isSongMatch(
+                            videoTitle = title,
+                            videoArtist = artist,
+                            candidateTitle = item.title,
+                            candidateArtists = item.artists?.map { it.name },
+                        )
+                }
+
+                if (!candidateSongs.isNullOrEmpty()) {
+                    val bestMatch = candidateSongs.maxByOrNull { item ->
+                        com.sonique.domain.utils.scoreSongCandidate(
+                            candidateTitle = item.title,
+                            candidateArtists = item.artists?.map { it.name },
+                            parsed = parsed,
+                            fullVideoTitle = title,
+                            videoArtist = artist,
+                        )
+                    }
+
+                    if (bestMatch != null) {
+                        val highResArt = bestMatch.thumbnail.toHighResThumbnailUrl(1200)
+                        Logger.d(TAG, "Resolved verified audio artwork for video $cleanVideoId ('$title' -> '${bestMatch.title}') using query '$query' -> $highResArt")
+                        localDataSource.updateThumbnailsSongEntity(highResArt, cleanVideoId)
+                        return@withContext highResArt
+                    }
+                }
             }
 
-            // 3. Search specifically for Songs (FILTER_SONG) to get official 1:1 album art
-            val searchResult = youTube.search(
-                query = searchQuery,
-                filter = YouTube.SearchFilter.FILTER_SONG,
-            ).getOrNull()
-
-            val matchingSongs = searchResult?.items?.filterIsInstance<SongItem>()?.filter { item ->
-                !item.thumbnail.isNullOrBlank() &&
-                    !com.sonique.domain.utils.isVideoThumbnailUrl(item.thumbnail) &&
-                    com.sonique.domain.utils.isSongMatch(
-                        videoTitle = title,
-                        videoArtist = artist,
-                        candidateTitle = item.title,
-                        candidateArtists = item.artists?.map { it.name },
-                    )
-            }?.sortedByDescending { item ->
-                com.sonique.domain.utils.calculateTitleSimilarity(extractedTitle, item.title)
-            }
-
-            val bestMatch = matchingSongs?.firstOrNull()
-            if (bestMatch != null) {
-                val highResArt = bestMatch.thumbnail.toHighResThumbnailUrl(1200)
-                Logger.d(TAG, "Resolved verified audio artwork for video $cleanVideoId ('$title' -> '${bestMatch.title}') -> $highResArt")
-                localDataSource.updateThumbnailsSongEntity(highResArt, cleanVideoId)
-                return@withContext highResArt
-            } else {
-                Logger.d(TAG, "No verified audio match found for video $cleanVideoId ('$title'). Preserving original video thumbnail.")
-            }
+            Logger.d(TAG, "No verified audio match found for video $cleanVideoId ('$title'). Preserving original video thumbnail.")
         } catch (e: Exception) {
             Logger.e(TAG, "Failed to resolve audio artwork for $videoId: ${e.message}")
         }

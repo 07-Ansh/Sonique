@@ -137,7 +137,7 @@ fun ChangelogBottomSheet(
     updateViewModel: UpdateViewModel = koinViewModel(),
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val changelogState by updateViewModel.changelogState.collectAsStateWithLifecycle()
 
     fun animateDismiss() {

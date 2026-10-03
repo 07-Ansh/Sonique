@@ -34,6 +34,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -482,14 +487,22 @@ fun NewPlayerScreen(
                     )
                     if (!showInlineLyrics) {
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = trackTitle.ifBlank { "Unknown Title" },
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Normal,
-                            color = animatedTitleText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        AnimatedContent(
+                            targetState = trackTitle.ifBlank { "Unknown Title" },
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(200))
+                            },
+                            label = "headerTrackTitle"
+                        ) { title ->
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                color = animatedTitleText,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
 
@@ -510,6 +523,32 @@ fun NewPlayerScreen(
             }
 
             Spacer(modifier = Modifier.height(dynamicHeaderToArtworkSpacing))
+
+            val queue = activeQueueData?.data?.listTracks?.ifEmpty { null }
+                ?: queueData?.data?.listTracks
+                ?: emptyList()
+            val currentVideoId = nowPlayingState?.mediaItem?.mediaId?.takeIf { it.isNotBlank() }
+                ?: nowPlayingState?.track?.videoId?.takeIf { it.isNotBlank() }
+                ?: currentSongData?.songInfoData?.videoId?.takeIf { it.isNotBlank() }
+            val currentQueueIndex = remember(queue, currentVideoId, trackTitle) {
+                val idMatch = if (!currentVideoId.isNullOrBlank()) {
+                    queue.indexOfFirst { it.videoId == currentVideoId }
+                } else -1
+                if (idMatch != -1) {
+                    idMatch
+                } else {
+                    val titleMatch = queue.indexOfFirst {
+                        it.title.equals(rawTrackTitle, ignoreCase = true) ||
+                        it.title?.cleanSongTitle().equals(trackTitle, ignoreCase = true)
+                    }
+                    if (titleMatch != -1) {
+                        titleMatch
+                    } else {
+                        val orderIdx = musicServiceHandler.currentOrderIndex()
+                        if (orderIdx in queue.indices) orderIdx else 0
+                    }
+                }
+            }
 
             Box(
                 contentAlignment = Alignment.Center,
@@ -579,32 +618,6 @@ fun NewPlayerScreen(
                     }
                 } else {
                     // Album artwork — smooth stable queue-based swipe (zero flicker, fast & slow)
-                    val queue = activeQueueData?.data?.listTracks?.ifEmpty { null }
-                        ?: queueData?.data?.listTracks
-                        ?: emptyList()
-                    val currentVideoId = nowPlayingState?.mediaItem?.mediaId?.takeIf { it.isNotBlank() }
-                        ?: nowPlayingState?.track?.videoId?.takeIf { it.isNotBlank() }
-                        ?: currentSongData?.songInfoData?.videoId?.takeIf { it.isNotBlank() }
-                    val currentQueueIndex = remember(queue, currentVideoId, trackTitle) {
-                        val idMatch = if (!currentVideoId.isNullOrBlank()) {
-                            queue.indexOfFirst { it.videoId == currentVideoId }
-                        } else -1
-                        if (idMatch != -1) {
-                            idMatch
-                        } else {
-                            val titleMatch = queue.indexOfFirst {
-                                it.title.equals(rawTrackTitle, ignoreCase = true) ||
-                                it.title?.cleanSongTitle().equals(trackTitle, ignoreCase = true)
-                            }
-                            if (titleMatch != -1) {
-                                titleMatch
-                            } else {
-                                val orderIdx = musicServiceHandler.currentOrderIndex()
-                                if (orderIdx in queue.indices) orderIdx else 0
-                            }
-                        }
-                    }
-
                     val totalPages = if (queue.isNotEmpty()) queue.size else 1
                     val safeInitialPage = currentQueueIndex.coerceIn(0, maxOf(0, totalPages - 1))
 
@@ -634,7 +647,18 @@ fun NewPlayerScreen(
                             currentQueueIndex != pagerState.currentPage &&
                             !pagerState.isScrollInProgress
                         ) {
-                            pagerState.scrollToPage(currentQueueIndex)
+                            val pageDiff = kotlin.math.abs(currentQueueIndex - pagerState.currentPage)
+                            if (pageDiff in 1..2) {
+                                pagerState.animateScrollToPage(
+                                    page = currentQueueIndex,
+                                    animationSpec = tween(
+                                        durationMillis = 380,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            } else {
+                                pagerState.scrollToPage(currentQueueIndex)
+                            }
                         }
                     }
 
@@ -838,11 +862,25 @@ fun NewPlayerScreen(
                     }
                 }
 
+                var previousQueueIndex by remember { mutableIntStateOf(currentQueueIndex) }
+                val isAdvancingForward = currentQueueIndex >= previousQueueIndex
+                LaunchedEffect(currentQueueIndex) {
+                    previousQueueIndex = currentQueueIndex
+                }
+
                 Column(modifier = Modifier.weight(1f)) {
                     AnimatedContent(
                         targetState = trackTitle,
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        label = "title"
+                        transitionSpec = {
+                            if (isAdvancingForward) {
+                                (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { it / 3 } + fadeIn(tween(350)))
+                                    .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -it / 3 } + fadeOut(tween(250)))
+                            } else {
+                                (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { -it / 3 } + fadeIn(tween(350)))
+                                    .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { it / 3 } + fadeOut(tween(250)))
+                            }.using(SizeTransform(clip = false))
+                        },
+                        label = "trackTitleTransition"
                     ) { title ->
                         Text(
                             text = title,
@@ -877,32 +915,47 @@ fun NewPlayerScreen(
                                     .padding(end = 4.dp)
                             )
                         }
-                        Text(
-                            text = trackArtist.ifBlank { "Unknown Artist" },
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Normal,
-                            color = animatedArtistText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier
-                                .weight(1f, fill = false)
-                                .then(
-                                    if (controllerState.isPlaying) {
-                                        Modifier.basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            animationMode = MarqueeAnimationMode.Immediately
-                                        )
-                                    } else Modifier
-                                )
-                                .clickable {
-                                    val song = nowPlayingState?.songEntity
-                                    (song?.artistId?.firstOrNull()?.takeIf { it.isNotEmpty() }
-                                        ?: currentSongData?.songInfoData?.authorId)?.let { channelId ->
-                                        onDismiss()
-                                        navController.navigate(ArtistDestination(channelId = channelId))
+                        AnimatedContent(
+                            targetState = trackArtist.ifBlank { "Unknown Artist" },
+                            transitionSpec = {
+                                if (isAdvancingForward) {
+                                    (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { it / 3 } + fadeIn(tween(350)))
+                                        .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -it / 3 } + fadeOut(tween(250)))
+                                } else {
+                                    (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { -it / 3 } + fadeIn(tween(350)))
+                                        .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { it / 3 } + fadeOut(tween(250)))
+                                }.using(SizeTransform(clip = false))
+                            },
+                            label = "trackArtistTransition",
+                            modifier = Modifier.weight(1f, fill = false)
+                        ) { artist ->
+                            Text(
+                                text = artist,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                color = animatedArtistText,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(
+                                        if (controllerState.isPlaying) {
+                                            Modifier.basicMarquee(
+                                                iterations = Int.MAX_VALUE,
+                                                animationMode = MarqueeAnimationMode.Immediately
+                                            )
+                                        } else Modifier
+                                    )
+                                    .clickable {
+                                        val song = nowPlayingState?.songEntity
+                                        (song?.artistId?.firstOrNull()?.takeIf { it.isNotEmpty() }
+                                            ?: currentSongData?.songInfoData?.authorId)?.let { channelId ->
+                                            onDismiss()
+                                            navController.navigate(ArtistDestination(channelId = channelId))
+                                        }
                                     }
-                                }
-                        )
+                            )
+                        }
                     }
                 }
 

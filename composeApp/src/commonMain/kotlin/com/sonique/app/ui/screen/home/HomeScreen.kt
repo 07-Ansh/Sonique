@@ -119,8 +119,8 @@ import com.sonique.app.ui.component.ListenTogetherIconButton
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.ListenTogetherDestination
 import com.sonique.app.ui.navigation.destination.home.MoodDestination
-import com.sonique.app.ui.navigation.destination.home.NotificationDestination
 import com.sonique.app.ui.navigation.destination.home.SettingsDestination
+import com.sonique.app.ui.screen.changelog.ChangelogBottomSheet
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
@@ -148,8 +148,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.app_name
+import sonique.composeapp.generated.resources.metro_newspaper
 import sonique.composeapp.generated.resources.baseline_settings_24
-import com.sonique.app.expect.ui.rememberNotificationPermissionLauncher
 import sonique.composeapp.generated.resources.app_icon
 import sonique.composeapp.generated.resources.energize
 import sonique.composeapp.generated.resources.feel_good
@@ -600,6 +600,8 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String>? = null) {
+    var showChangelogSheet by rememberSaveable { mutableStateOf(false) }
+
     val hour =
         remember {
             val date = now().time
@@ -638,13 +640,8 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val notificationPermissionLauncher = rememberNotificationPermissionLauncher {
-                if (it) {
-                    navController.navigate(NotificationDestination)
-                }
-            }
-            RippleIconButton(resId = Res.drawable.outline_notifications_24) {
-                notificationPermissionLauncher()
+            RippleIconButton(resId = Res.drawable.metro_newspaper) {
+                showChangelogSheet = true
             }
             Spacer(modifier = Modifier.width(8.dp))
             ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
@@ -653,6 +650,12 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
                 navController.navigate(SettingsDestination())
             }
         }
+    }
+
+    if (showChangelogSheet) {
+        ChangelogBottomSheet(
+            onDismissRequest = { showChangelogSheet = false }
+        )
     }
 }
 

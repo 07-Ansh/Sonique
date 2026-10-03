@@ -9,7 +9,6 @@ import com.sonique.app.viewModel.LocalPlaylistViewModel
 import com.sonique.app.viewModel.LogInViewModel
 import com.sonique.app.viewModel.MoodViewModel
 import com.sonique.app.viewModel.MoreAlbumsViewModel
-import com.sonique.app.viewModel.NotificationViewModel
 import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
 import com.sonique.app.viewModel.PlaylistViewModel
 import com.sonique.app.viewModel.PodcastViewModel
@@ -131,11 +130,6 @@ val viewModelModule =
             LocalPlaylistViewModel(
                 get(),
                 get(),
-                get(),
-            )
-        }
-        viewModel {
-            NotificationViewModel(
                 get(),
             )
         }

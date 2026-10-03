@@ -68,7 +68,6 @@ import com.sonique.app.ui.component.AppNavigationRail
 import com.sonique.app.ui.component.LiquidGlassAppBottomNavigationBar
 
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
-import com.sonique.app.ui.navigation.destination.home.NotificationDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.list.AlbumDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
@@ -202,12 +201,7 @@ fun App(
         val data = intent.data
         Logger.d("MainActivity", "onCreate: $data")
         if (data != null) {
-            if (data == "com.sonique.com.sonique.app://notification".toUri()) {
-                viewModel.setIntent(null)
-                navController.navigate(
-                    NotificationDestination,
-                )
-            } else if (data == "com.sonique.com.sonique.app://downloads".toUri()) {
+            if (data == "com.sonique.com.sonique.app://downloads".toUri()) {
                 viewModel.setIntent(null)
                 navController.navigate(
                     LibraryDestination(

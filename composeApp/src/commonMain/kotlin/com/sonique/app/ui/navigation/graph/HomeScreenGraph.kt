@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import com.sonique.app.ui.navigation.destination.home.*
 import com.sonique.app.ui.screen.home.MoodScreen
-import com.sonique.app.ui.screen.home.NotificationScreen
 import com.sonique.app.ui.screen.home.RecentlySongsScreen
 import com.sonique.app.ui.screen.home.SettingScreen
 import com.sonique.app.ui.screen.other.CreditScreen
@@ -41,12 +40,6 @@ fun NavGraphBuilder.homeScreenGraph(
             navController = navController,
             params = params,
             onScrolling = onScrolling,
-        )
-    }
-    composable<NotificationDestination> {
-        NotificationScreen(
-            navController = navController,
-            innerPadding = innerPadding,
         )
     }
     composable<RecentlySongsDestination> {

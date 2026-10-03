@@ -349,8 +349,8 @@ fun NewPlayerScreen(
         val dynamicControlsHeight = (screenHeight * 0.095f).coerceIn(72.dp, 80.dp)
         val dynamicControlsToBottomSpacing = (screenHeight * 0.038f).coerceIn(26.dp, 34.dp)
         val dynamicActionButtonSize = 42.dp
-        val dynamicBottomBarContentHeight = (screenHeight * 0.076f).coerceIn(60.dp, 68.dp)
-        val dynamicBottomButtonSize = 42.dp
+        val dynamicBottomBarContentHeight = (screenHeight * 0.082f).coerceIn(66.dp, 74.dp)
+        val dynamicBottomButtonSize = 48.dp
 
         val bottomInsets = WindowInsets.systemBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
         val collapsedBarHeight = dynamicBottomBarContentHeight + bottomInsets
@@ -1356,14 +1356,14 @@ fun NewPlayerScreen(
                         .fillMaxHeight()
                 ) {
                     val buttonSize = dynamicBottomButtonSize
-                    val iconSize = 24.dp
+                    val iconSize = 26.dp
                     val queueShape = RoundedCornerShape(
                         topStart = 50.dp, bottomStart = 50.dp,
-                        topEnd = 3.dp, bottomEnd = 3.dp
+                        topEnd = 4.dp, bottomEnd = 4.dp
                     )
-                    val middleShape = RoundedCornerShape(3.dp)
+                    val middleShape = RoundedCornerShape(4.dp)
                     val repeatShape = RoundedCornerShape(
-                        topStart = 3.dp, bottomStart = 3.dp,
+                        topStart = 4.dp, bottomStart = 4.dp,
                         topEnd = 50.dp, bottomEnd = 50.dp
                     )
 

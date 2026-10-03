@@ -31,10 +31,12 @@ class UpdateViewModel(
     private val _latestReleaseInfo = MutableStateFlow<ReleaseInfo?>(null)
     val latestReleaseInfo: StateFlow<ReleaseInfo?> = _latestReleaseInfo.asStateFlow()
 
-    private val _changelogState = MutableStateFlow<ChangelogUiState>(ChangelogUiState.Loading)
-    val changelogState: StateFlow<ChangelogUiState> = _changelogState.asStateFlow()
-
     private var cachedReleases: List<ChangelogRelease>? = null
+
+    private val _changelogState = MutableStateFlow<ChangelogUiState>(
+        ChangelogUiState.Success(cachedReleases ?: ChangelogData.fallbackReleases)
+    )
+    val changelogState: StateFlow<ChangelogUiState> = _changelogState.asStateFlow()
 
     val currentVersion: String = BuildKonfig.versionName
 
@@ -53,7 +55,9 @@ class UpdateViewModel(
         }
 
         viewModelScope.launch {
-            _changelogState.value = ChangelogUiState.Loading
+            if (_changelogState.value !is ChangelogUiState.Success) {
+                _changelogState.value = ChangelogUiState.Loading
+            }
             val result = updateRepository.fetchAllReleases()
             result.onSuccess { releaseInfos ->
                 val localVersion = BuildKonfig.versionName
@@ -71,8 +75,10 @@ class UpdateViewModel(
                 cachedReleases = finalReleases
                 _changelogState.value = ChangelogUiState.Success(finalReleases)
             }.onFailure { error ->
-                val fallback = ChangelogData.fallbackReleases
-                _changelogState.value = ChangelogUiState.Success(fallback, isOffline = true)
+                if (_changelogState.value !is ChangelogUiState.Success) {
+                    val fallback = ChangelogData.fallbackReleases
+                    _changelogState.value = ChangelogUiState.Success(fallback, isOffline = true)
+                }
             }
         }
     }

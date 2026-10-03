@@ -23,6 +23,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -32,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,7 +54,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sonique.app.ui.component.GoogleCircularProgressIndicator
 import com.sonique.app.viewModel.ChangelogUiState
 import com.sonique.app.viewModel.UpdateViewModel
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import sonique.composeapp.generated.resources.Res
+import sonique.composeapp.generated.resources.baseline_close_24
+
+private val MARKDOWN_REGEX = Regex("(\\*\\*(.*?)\\*\\*|`(.*?)`|\\[(.*?)\\]\\((.*?)\\))")
 
 /**
  * Parses inline markdown (bold **text**, inline `code`, and [links](url))
@@ -63,8 +73,7 @@ fun formatMarkdownText(
 ): AnnotatedString {
     return buildAnnotatedString {
         var cursor = 0
-        val pattern = Regex("(\\*\\*(.*?)\\*\\*|`(.*?)`|\\[(.*?)\\]\\((.*?)\\))")
-        val matches = pattern.findAll(text)
+        val matches = MARKDOWN_REGEX.findAll(text)
 
         for (match in matches) {
             val range = match.range
@@ -127,8 +136,19 @@ fun ChangelogBottomSheet(
     onDismissRequest: () -> Unit,
     updateViewModel: UpdateViewModel = koinViewModel(),
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val coroutineScope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val changelogState by updateViewModel.changelogState.collectAsStateWithLifecycle()
+
+    fun animateDismiss() {
+        coroutineScope.launch {
+            sheetState.hide()
+        }.invokeOnCompletion {
+            if (!sheetState.isVisible) {
+                onDismissRequest()
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         updateViewModel.loadChangelog()
@@ -158,15 +178,32 @@ fun ChangelogBottomSheet(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Text(
-                    text = "Changelog",
-                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 4.dp),
-                    textAlign = TextAlign.Center
-                )
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Changelog",
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    IconButton(
+                        onClick = { animateDismiss() },
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(Res.drawable.baseline_close_24),
+                            contentDescription = "Close",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
 
             when (val state = changelogState) {

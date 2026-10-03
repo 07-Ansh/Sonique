@@ -344,8 +344,8 @@ fun NewPlayerScreen(
         val dynamicTopSpacing = (screenHeight * 0.014f).coerceIn(8.dp, 16.dp)
         val dynamicHeaderToArtworkSpacing = (screenHeight * 0.012f).coerceIn(8.dp, 16.dp)
         val dynamicArtworkToInfoSpacing = (screenHeight * 0.018f).coerceIn(12.dp, 22.dp)
-        val dynamicInfoToSliderSpacing = (screenHeight * 0.030f).coerceIn(22.dp, 28.dp)
-        val dynamicSliderToControlsSpacing = (screenHeight * 0.030f).coerceIn(22.dp, 28.dp)
+        val dynamicInfoToSliderSpacing = (screenHeight * 0.020f).coerceIn(14.dp, 20.dp)
+        val dynamicSliderToControlsSpacing = (screenHeight * 0.020f).coerceIn(14.dp, 20.dp)
         val dynamicControlsHeight = (screenHeight * 0.095f).coerceIn(72.dp, 80.dp)
         val dynamicControlsToBottomSpacing = (screenHeight * 0.038f).coerceIn(26.dp, 34.dp)
         val dynamicActionButtonSize = 42.dp
@@ -971,7 +971,7 @@ fun NewPlayerScreen(
                 )
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     FilledIconButton(
@@ -1236,7 +1236,7 @@ fun NewPlayerScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 androidx.compose.material3.Button(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.PlayPause) },
@@ -1260,7 +1260,7 @@ fun NewPlayerScreen(
                             tint = animatedOnPrimaryContainer,
                             modifier = Modifier.size(34.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = if (controllerState.isPlaying) "Pause" else "Play",
                             style = MaterialTheme.typography.titleLarge.copy(
@@ -1272,7 +1272,7 @@ fun NewPlayerScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 FilledIconButton(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Next) },

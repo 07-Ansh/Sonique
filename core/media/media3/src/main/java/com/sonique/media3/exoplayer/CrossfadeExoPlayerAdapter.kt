@@ -739,6 +739,9 @@ internal class CrossfadeExoPlayerAdapter(
         if (index !in playlist.indices) return
 
         coroutineScope.launch {
+            if (index !in playlist.indices) return@launch
+
+            val oldItem = playlist.getOrNull(index)
             playlist[index] = mediaItem
 
             precachedPlayers.remove(mediaItem.mediaId)?.let { cached ->
@@ -751,7 +754,8 @@ internal class CrossfadeExoPlayerAdapter(
 
             notifyTimelineChanged("TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED")
 
-            if (index == localCurrentMediaItemIndex) {
+            val mediaIdChanged = oldItem != null && oldItem.mediaId != mediaItem.mediaId
+            if (index == localCurrentMediaItemIndex && mediaIdChanged) {
                 loadAndPlayTrackInternal(index, 0, internalPlayWhenReady)
             } else {
                 triggerPrecachingInternal()
@@ -1463,8 +1467,8 @@ internal class CrossfadeExoPlayerAdapter(
 
         coroutineScope.launch {
             try {
+                val nextMediaItem = playlist.getOrNull(nextIndex) ?: return@launch
                 setCrossfading(true)
-                val nextMediaItem = playlist[nextIndex]
                 val nextVideoId = nextMediaItem.mediaId
 
                 Logger.d(TAG, "Starting crossfade to track $nextIndex")

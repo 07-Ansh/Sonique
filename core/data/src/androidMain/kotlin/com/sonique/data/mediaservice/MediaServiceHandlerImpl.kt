@@ -948,7 +948,10 @@ internal class MediaServiceHandlerImpl(
         _nowPlaying.value = updatedItem
         val currentIndex = player.currentMediaItemIndex
         if (currentIndex in 0 until player.mediaItemCount) {
-            player.replaceMediaItem(currentIndex, updatedItem)
+            val itemAtCurrent = player.getMediaItemAt(currentIndex)
+            if (itemAtCurrent?.mediaId == current.mediaId) {
+                player.replaceMediaItem(currentIndex, updatedItem)
+            }
         }
     }
 
@@ -1383,13 +1386,15 @@ internal class MediaServiceHandlerImpl(
     override suspend fun moveItemUp(position: Int) {
         moveMediaItem(position, position - 1)
         queueData.value.data.listTracks.toMutableList().let { list ->
-            val temp = list[position]
-            list[position] = list[position - 1]
-            list[position - 1] = temp
-            _queueData.update {
-                it.copy(
-                    data = it.data.copy(listTracks = list),
-                )
+            if (position in list.indices && position - 1 in list.indices) {
+                val temp = list[position]
+                list[position] = list[position - 1]
+                list[position - 1] = temp
+                _queueData.update {
+                    it.copy(
+                        data = it.data.copy(listTracks = list),
+                    )
+                }
             }
         }
         _currentSongIndex.value = player.currentMediaItemIndex
@@ -1398,13 +1403,15 @@ internal class MediaServiceHandlerImpl(
     override suspend fun moveItemDown(position: Int) {
         moveMediaItem(position, position + 1)
         queueData.value.data.listTracks.toMutableList().let { list ->
-            val temp = list[position]
-            list[position] = list[position + 1]
-            list[position + 1] = temp
-            _queueData.update {
-                it.copy(
-                    data = it.data.copy(listTracks = list),
-                )
+            if (position in list.indices && position + 1 in list.indices) {
+                val temp = list[position]
+                list[position] = list[position + 1]
+                list[position + 1] = temp
+                _queueData.update {
+                    it.copy(
+                        data = it.data.copy(listTracks = list),
+                    )
+                }
             }
         }
         _currentSongIndex.value = player.currentMediaItemIndex

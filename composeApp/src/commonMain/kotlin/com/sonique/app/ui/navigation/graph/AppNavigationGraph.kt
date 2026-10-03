@@ -1,10 +1,13 @@
 package com.sonique.app.ui.navigation.graph
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +29,17 @@ import com.sonique.app.ui.navigation.destination.library.AlbumsDestination
 import com.sonique.app.ui.screen.player.FullscreenPlayer
 import com.sonique.common.LibraryChipType
 
+private const val TRANSITION_DURATION = 350
+private val transitionEasing = FastOutSlowInEasing
+
+private fun isTabRoute(route: String?): Boolean {
+    if (route == null) return false
+    return route.contains("HomeDestination") ||
+        route.contains("SearchDestination") ||
+        route.contains("AlbumsDestination") ||
+        route.contains("LibraryDestination")
+}
+
 @Composable
 @ExperimentalMaterial3Api
 @ExperimentalFoundationApi
@@ -33,7 +47,7 @@ fun AppNavigationGraph(
     innerPadding: PaddingValues,
     navController: NavHostController,
     startDestination: Any = HomeDestination,
-    enablePageTransitions: Boolean = false,
+    enablePageTransitions: Boolean = true,
     hideNavBar: () -> Unit = { },
     showNavBar: (shouldShowNowPlayingSheet: Boolean) -> Unit = { },
     showNowPlayingSheet: () -> Unit = {},
@@ -44,77 +58,134 @@ fun AppNavigationGraph(
         startDestination = startDestination,
         enterTransition = {
             if (!enablePageTransitions) {
-                fadeIn(animationSpec = tween(300))
+                fadeIn(animationSpec = tween(TRANSITION_DURATION))
             } else {
-                val initialIndex = getTabExtensionIndex(initialState.destination.route)
-                val targetIndex = getTabExtensionIndex(targetState.destination.route)
-                if (targetIndex > initialIndex) {
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (targetRoute?.contains("FullscreenDestination") == true) {
+                    slideInVertically(
+                        initialOffsetY = { it },
+                        animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                    ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
+                } else if (isTabRoute(initialRoute) && isTabRoute(targetRoute)) {
+                    val initialIndex = getTabExtensionIndex(initialRoute)
+                    val targetIndex = getTabExtensionIndex(targetRoute)
+                    if (targetIndex > initialIndex) {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
+                    } else {
+                        slideInHorizontally(
+                            initialOffsetX = { -it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
+                    }
+                } else {
+                    // Forward navigation (Push): new screen slides in from right to left
                     slideInHorizontally(
                         initialOffsetX = { it },
-                        animationSpec = tween(300)
-                    ) + fadeIn(animationSpec = tween(300))
-                } else {
-                    slideInHorizontally(
-                        initialOffsetX = { -it },
-                        animationSpec = tween(300)
-                    ) + fadeIn(animationSpec = tween(300))
+                        animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                    ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
                 }
             }
         },
         exitTransition = {
             if (!enablePageTransitions) {
-                fadeOut(animationSpec = tween(300))
+                fadeOut(animationSpec = tween(TRANSITION_DURATION))
             } else {
-                val initialIndex = getTabExtensionIndex(initialState.destination.route)
-                val targetIndex = getTabExtensionIndex(targetState.destination.route)
-                if (targetIndex > initialIndex) {
-                    slideOutHorizontally(
-                        targetOffsetX = { -it },
-                        animationSpec = tween(300)
-                    ) + fadeOut(animationSpec = tween(300))
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (targetRoute?.contains("FullscreenDestination") == true) {
+                    // Screen underneath player fades out cleanly without horizontal slide
+                    fadeOut(animationSpec = tween(TRANSITION_DURATION))
+                } else if (isTabRoute(initialRoute) && isTabRoute(targetRoute)) {
+                    val initialIndex = getTabExtensionIndex(initialRoute)
+                    val targetIndex = getTabExtensionIndex(targetRoute)
+                    if (targetIndex > initialIndex) {
+                        slideOutHorizontally(
+                            targetOffsetX = { -it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
+                    } else {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
+                    }
                 } else {
+                    // Forward navigation: current screen slides out to the left with subtle parallax
                     slideOutHorizontally(
-                        targetOffsetX = { it },
-                        animationSpec = tween(300)
-                    ) + fadeOut(animationSpec = tween(300))
+                        targetOffsetX = { -it / 4 },
+                        animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                    ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
                 }
             }
         },
         popEnterTransition = {
             if (!enablePageTransitions) {
-                fadeIn(animationSpec = tween(300))
+                fadeIn(animationSpec = tween(TRANSITION_DURATION))
             } else {
-                val initialIndex = getTabExtensionIndex(initialState.destination.route)
-                val targetIndex = getTabExtensionIndex(targetState.destination.route)
-                if (targetIndex > initialIndex) {
-                    slideInHorizontally(
-                        initialOffsetX = { it },
-                        animationSpec = tween(300)
-                    ) + fadeIn(animationSpec = tween(300))
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (initialRoute?.contains("FullscreenDestination") == true) {
+                    // Returning from Fullscreen player: underneath screen simply fades in
+                    fadeIn(animationSpec = tween(TRANSITION_DURATION))
+                } else if (isTabRoute(initialRoute) && isTabRoute(targetRoute)) {
+                    val initialIndex = getTabExtensionIndex(initialRoute)
+                    val targetIndex = getTabExtensionIndex(targetRoute)
+                    if (targetIndex > initialIndex) {
+                        slideInHorizontally(
+                            initialOffsetX = { it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
+                    } else {
+                        slideInHorizontally(
+                            initialOffsetX = { -it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
+                    }
                 } else {
+                    // Back navigation: parent screen slides in from the left
                     slideInHorizontally(
-                        initialOffsetX = { -it },
-                        animationSpec = tween(300)
-                    ) + fadeIn(animationSpec = tween(300))
+                        initialOffsetX = { -it / 4 },
+                        animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                    ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
                 }
             }
         },
         popExitTransition = {
             if (!enablePageTransitions) {
-                fadeOut(animationSpec = tween(300))
+                fadeOut(animationSpec = tween(TRANSITION_DURATION))
             } else {
-                val initialIndex = getTabExtensionIndex(initialState.destination.route)
-                val targetIndex = getTabExtensionIndex(targetState.destination.route)
-                if (targetIndex > initialIndex) {
-                    slideOutHorizontally(
-                        targetOffsetX = { -it },
-                        animationSpec = tween(300)
-                    ) + fadeOut(animationSpec = tween(300))
+                val initialRoute = initialState.destination.route
+                val targetRoute = targetState.destination.route
+                if (initialRoute?.contains("FullscreenDestination") == true) {
+                    // Fullscreen player slides down to the bottom
+                    slideOutVertically(
+                        targetOffsetY = { it },
+                        animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                    ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
+                } else if (isTabRoute(initialRoute) && isTabRoute(targetRoute)) {
+                    val initialIndex = getTabExtensionIndex(initialRoute)
+                    val targetIndex = getTabExtensionIndex(targetRoute)
+                    if (targetIndex > initialIndex) {
+                        slideOutHorizontally(
+                            targetOffsetX = { -it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
+                    } else {
+                        slideOutHorizontally(
+                            targetOffsetX = { it },
+                            animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                        ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
+                    }
                 } else {
+                    // Back navigation: popping screen slides out to the right (left-to-right exit)
                     slideOutHorizontally(
                         targetOffsetX = { it },
-                        animationSpec = tween(300)
-                    ) + fadeOut(animationSpec = tween(300))
+                        animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                    ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
                 }
             }
         },
@@ -147,7 +218,29 @@ fun AppNavigationGraph(
                 onScrolling = onScrolling,
             )
         }
-        composable<FullscreenDestination> {
+        composable<FullscreenDestination>(
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                ) + fadeIn(animationSpec = tween(TRANSITION_DURATION))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(TRANSITION_DURATION))
+            },
+            popExitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
+                ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
+            },
+        ) {
             FullscreenPlayer(
                 navController,
                 hideNavBar = hideNavBar,

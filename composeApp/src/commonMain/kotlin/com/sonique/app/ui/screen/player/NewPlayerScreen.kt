@@ -1232,7 +1232,7 @@ fun NewPlayerScreen(
                         painter = painterResource(Res.drawable.skip_previous),
                         contentDescription = null,
                         tint = animatedOnSecondaryContainer,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(34.dp)
                     )
                 }
 
@@ -1258,12 +1258,15 @@ fun NewPlayerScreen(
                             ),
                             contentDescription = null,
                             tint = animatedOnPrimaryContainer,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(34.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = if (controllerState.isPlaying) "Pause" else "Play",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             color = animatedOnPrimaryContainer
                         )
                     }
@@ -1288,7 +1291,7 @@ fun NewPlayerScreen(
                         painter = painterResource(Res.drawable.skip_next),
                         contentDescription = null,
                         tint = animatedOnSecondaryContainer,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(34.dp)
                     )
                 }
             }

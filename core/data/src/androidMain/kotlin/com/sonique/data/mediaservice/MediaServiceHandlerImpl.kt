@@ -2068,9 +2068,14 @@ internal class MediaServiceHandlerImpl(
                 }
             }
             else -> {
-                // Other player errors
-                pushPlayerError(error)
-                player.pause()
+                // Other player errors: if there is a next track in queue, skip to it so playback continues!
+                if (player.hasNextMediaItem()) {
+                    Logger.w("Player Error", "Current track unplayable (${error.errorCode}), skipping to next track")
+                    player.seekToNext()
+                } else {
+                    pushPlayerError(error)
+                    player.pause()
+                }
             }
         }
     }

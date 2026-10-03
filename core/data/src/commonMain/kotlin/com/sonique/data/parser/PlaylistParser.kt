@@ -260,14 +260,15 @@ internal fun parsePlaylistData(
                             ?.find {
                                 it.menuNavigationItemRenderer?.icon?.iconType == "ALBUM"
                             }?.let {
-                                Album(
-                                    id =
-                                        it.menuNavigationItemRenderer
-                                            ?.navigationEndpoint
-                                            ?.browseEndpoint
-                                            ?.browseId ?: return null,
-                                    name = "Album",
-                                )
+                                it.menuNavigationItemRenderer
+                                    ?.navigationEndpoint
+                                    ?.browseEndpoint
+                                    ?.browseId?.let { id ->
+                                        Album(
+                                            id = id,
+                                            name = "Album",
+                                        )
+                                    }
                             },
                     artists =
                         content.musicResponsiveListItemRenderer?.let {
@@ -339,7 +340,11 @@ internal fun parsePlaylistData(
                                 0,
                             )?.navigationEndpoint
                             ?.watchEndpoint
-                            ?.videoId ?: "",
+                            ?.videoId
+                            ?: content.musicResponsiveListItemRenderer?.playlistItemData?.videoId
+                            ?: content.musicResponsiveListItemRenderer?.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId
+                            ?: content.musicResponsiveListItemRenderer?.navigationEndpoint?.watchEndpoint?.videoId
+                            ?: "",
                     videoType = "video",
                     category = null,
                     feedbackTokens = null,

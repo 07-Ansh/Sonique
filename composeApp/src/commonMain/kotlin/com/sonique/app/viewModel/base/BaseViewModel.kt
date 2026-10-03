@@ -2,13 +2,20 @@ package com.sonique.app.viewModel.base
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sonique.common.Config.RADIO_CLICK
+import com.sonique.domain.data.model.browse.album.Track
+import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
 import com.sonique.domain.mediaservice.handler.MediaPlayerHandler
+import com.sonique.domain.mediaservice.handler.PlaylistType
 import com.sonique.domain.mediaservice.handler.QueueData
+import com.sonique.domain.repository.SongRepository
+import com.sonique.domain.utils.Resource
 import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -25,6 +32,7 @@ abstract class BaseViewModel :
     ViewModel(),
     KoinComponent {
     protected val mediaPlayerHandler: MediaPlayerHandler by inject<MediaPlayerHandler>()
+    private val baseSongRepository: SongRepository by inject<SongRepository>()
     private val _nowPlayingVideoId: MutableStateFlow<String> = MutableStateFlow("")
 
      
@@ -116,6 +124,55 @@ abstract class BaseViewModel :
 
     fun shufflePlaylist(firstPlayIndex: Int = 0) {
         mediaPlayerHandler.shufflePlaylist(firstPlayIndex)
+    }
+
+    fun playRadio(
+        playlistId: String,
+        videoId: String? = null,
+        title: String? = null,
+    ) {
+        viewModelScope.launch {
+            baseSongRepository
+                .getRadioFromEndpoint(
+                    YouTubeWatchEndpoint(
+                        videoId = videoId,
+                        playlistId = playlistId,
+                    ),
+                )
+                .collectLatest { res ->
+                    val result = res.data
+                    when (res) {
+                        is Resource.Success -> {
+                            val tracks = result?.first
+                            if (!tracks.isNullOrEmpty()) {
+                                val firstTrack = tracks.first()
+                                mediaPlayerHandler.reset()
+                                mediaPlayerHandler.setQueueData(
+                                    QueueData.Data(
+                                        listTracks = tracks.toCollection(arrayListOf()),
+                                        firstPlayedTrack = firstTrack,
+                                        playlistId = playlistId,
+                                        playlistName = title ?: firstTrack.title,
+                                        playlistType = PlaylistType.RADIO,
+                                        continuation = result.second,
+                                    ),
+                                )
+                                mediaPlayerHandler.loadMediaItem(
+                                    anyTrack = firstTrack,
+                                    type = RADIO_CLICK,
+                                    index = 0,
+                                )
+                            } else {
+                                makeToast("No tracks found for this station")
+                            }
+                        }
+                        is Resource.Error -> {
+                            Logger.e(tag, "playRadio error: ${res.message}")
+                            makeToast(res.message)
+                        }
+                    }
+                }
+        }
     }
 }
 

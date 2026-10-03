@@ -1,7 +1,6 @@
 package com.sonique.app.ui.screen.changelog
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -37,9 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -48,18 +44,22 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.sonique.app.expect.ui.PlatformBackdrop
+import com.sonique.app.expect.ui.rememberBackdrop
 import com.sonique.app.ui.component.GoogleCircularProgressIndicator
+import com.sonique.app.ui.component.liquidGlass
 import com.sonique.app.viewModel.ChangelogUiState
+import com.sonique.app.viewModel.SharedViewModel
 import com.sonique.app.viewModel.UpdateViewModel
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 /**
  * Parses inline markdown (bold **text**, inline `code`, and [links](url))
- * into an AnnotatedString with Material 3 styling.
+ * into an AnnotatedString with dynamic Material 3 styling.
  */
 fun formatMarkdownText(
     text: String,
@@ -126,71 +126,27 @@ fun formatMarkdownText(
     }
 }
 
-/**
- * An audio soundwave / equalizer visualizer divider rendered cleanly using Compose Canvas.
- */
-@Composable
-fun SoundWaveDivider(
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.primary,
-    maxHeight: Dp = 18.dp,
-    minHeight: Dp = 3.dp,
-) {
-    // Symmetrical, organic acoustic frequency harmonics
-    val amplitudes = remember {
-        listOf(
-            0.18f, 0.28f, 0.42f, 0.65f, 0.40f, 0.85f, 0.60f, 0.95f,
-            0.72f, 0.88f, 1.00f, 0.75f, 0.55f, 0.90f, 0.70f, 0.95f,
-            0.82f, 1.00f, 0.82f, 0.95f, 0.70f, 0.90f, 0.55f, 0.75f,
-            1.00f, 0.88f, 0.72f, 0.95f, 0.60f, 0.85f, 0.40f, 0.65f,
-            0.42f, 0.28f, 0.18f
-        )
-    }
-
-    Canvas(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(maxHeight)
-    ) {
-        val totalBars = amplitudes.size
-        val availableWidth = size.width
-        val barWidth = 3.dp.toPx()
-        val spacing = if (totalBars > 1) {
-            (availableWidth - (totalBars * barWidth)) / (totalBars - 1)
-        } else 0f
-        val centerY = size.height / 2f
-        val maxH = maxHeight.toPx()
-        val minH = minHeight.toPx()
-
-        for (i in 0 until totalBars) {
-            val barH = minH + (maxH - minH) * amplitudes[i]
-            val x = i * (barWidth + spacing) + barWidth / 2f
-            drawLine(
-                color = color,
-                start = Offset(x, centerY - barH / 2f),
-                end = Offset(x, centerY + barH / 2f),
-                strokeWidth = barWidth,
-                cap = StrokeCap.Round
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChangelogBottomSheet(
     onDismissRequest: () -> Unit,
     updateViewModel: UpdateViewModel = koinViewModel(),
+    sharedViewModel: SharedViewModel = koinInject(),
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val changelogState by updateViewModel.changelogState.collectAsStateWithLifecycle()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
 
     LaunchedEffect(Unit) {
         updateViewModel.loadChangelog()
     }
 
-    // Completely solid and opaque container color in both Normal & Liquid Glass modes
-    val sheetBgColor = MaterialTheme.colorScheme.surfaceContainerLowest
+    val sheetBgColor = if (enableLiquidGlass) {
+        Color(0xFF0F0F12).copy(alpha = 0.95f)
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerLowest
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -213,26 +169,15 @@ fun ChangelogBottomSheet(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Changelog",
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
-                    )
-
-                    // Audio soundwave divider under Changelog title
-                    SoundWaveDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
+                Text(
+                    text = "Changelog",
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                    textAlign = TextAlign.Center
+                )
             }
 
             when (val state = changelogState) {
@@ -266,12 +211,20 @@ fun ChangelogBottomSheet(
                     }
 
                     items(state.releases, key = { it.version }) { release ->
-                        ReleaseSection(release = release)
+                        ReleaseSection(
+                            release = release,
+                            enableLiquidGlass = enableLiquidGlass,
+                            backdrop = backdrop,
+                        )
                     }
                 }
                 is ChangelogUiState.Error -> {
                     items(state.fallbackReleases, key = { it.version }) { release ->
-                        ReleaseSection(release = release)
+                        ReleaseSection(
+                            release = release,
+                            enableLiquidGlass = enableLiquidGlass,
+                            backdrop = backdrop,
+                        )
                     }
                 }
             }
@@ -282,6 +235,8 @@ fun ChangelogBottomSheet(
 @Composable
 private fun ReleaseSection(
     release: ChangelogRelease,
+    enableLiquidGlass: Boolean,
+    backdrop: PlatformBackdrop,
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -304,13 +259,16 @@ private fun ReleaseSection(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.20f))
+                        .background(
+                            if (enableLiquidGlass) Color.White.copy(alpha = 0.12f)
+                            else MaterialTheme.colorScheme.primaryContainer
+                        )
                         .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = release.version,
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.primary
+                        color = if (enableLiquidGlass) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
 
@@ -318,13 +276,16 @@ private fun ReleaseSection(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .background(
+                                if (enableLiquidGlass) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                                else MaterialTheme.colorScheme.secondaryContainer
+                            )
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = "Installed",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            color = if (enableLiquidGlass) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
@@ -337,22 +298,40 @@ private fun ReleaseSection(
             )
         }
 
-        // What's New Card - Completely solid & opaque in both themes
+        // What's New Card
         val cardShape = RoundedCornerShape(24.dp)
-        val cardModifier = Modifier
-            .fillMaxWidth()
-            .clip(cardShape)
-            .border(
-                BorderStroke(
-                    1.dp,
-                    if (release.isCurrentVersion) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-                    else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
-                ),
-                cardShape
-            )
+        val cardModifier = if (enableLiquidGlass) {
+            Modifier
+                .fillMaxWidth()
+                .clip(cardShape)
+                .background(Color.White.copy(alpha = 0.06f))
+                .border(
+                    BorderStroke(
+                        0.5.dp,
+                        if (release.isCurrentVersion) MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+                        else Color.White.copy(alpha = 0.10f)
+                    ),
+                    cardShape
+                )
+                .liquidGlass(backdrop, shape = cardShape, interactive = false)
+        } else {
+            Modifier
+                .fillMaxWidth()
+                .clip(cardShape)
+                .border(
+                    BorderStroke(
+                        1.dp,
+                        if (release.isCurrentVersion) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
+                    ),
+                    cardShape
+                )
+        }
 
         val cardColors = CardDefaults.cardColors(
-            containerColor = if (release.isCurrentVersion) {
+            containerColor = if (enableLiquidGlass) {
+                Color.Transparent
+            } else if (release.isCurrentVersion) {
                 MaterialTheme.colorScheme.surfaceContainerHigh
             } else {
                 MaterialTheme.colorScheme.surfaceContainer
@@ -375,12 +354,13 @@ private fun ReleaseSection(
                 )
 
                 val primaryColor = MaterialTheme.colorScheme.primary
-                val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+                val onSurfaceColor = if (enableLiquidGlass) Color(0xFFECECEC) else MaterialTheme.colorScheme.onSurface
 
                 release.highlights.forEachIndexed { index, highlight ->
                     if (index > 0) {
                         HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                            color = if (enableLiquidGlass) Color.White.copy(alpha = 0.08f)
+                            else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
                             thickness = 0.8.dp,
                             modifier = Modifier.padding(vertical = 2.dp)
                         )
@@ -417,7 +397,8 @@ private fun ReleaseSection(
 
                 if (!release.htmlUrl.isNullOrBlank()) {
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
+                        color = if (enableLiquidGlass) Color.White.copy(alpha = 0.08f)
+                        else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
                         thickness = 0.8.dp,
                         modifier = Modifier.padding(top = 4.dp)
                     )

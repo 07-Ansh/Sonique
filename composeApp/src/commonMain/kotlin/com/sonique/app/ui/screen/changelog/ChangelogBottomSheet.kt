@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -137,16 +139,13 @@ fun ChangelogBottomSheet(
     updateViewModel: UpdateViewModel = koinViewModel(),
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val changelogState by updateViewModel.changelogState.collectAsStateWithLifecycle()
 
     fun animateDismiss() {
         coroutineScope.launch {
             sheetState.hide()
-        }.invokeOnCompletion {
-            if (!sheetState.isVisible) {
-                onDismissRequest()
-            }
+            onDismissRequest()
         }
     }
 
@@ -154,16 +153,13 @@ fun ChangelogBottomSheet(
         updateViewModel.loadChangelog()
     }
 
-    // Completely solid and opaque container - zero transparency in all themes
-    val sheetBgColor = MaterialTheme.colorScheme.surfaceContainerLowest
-
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = sheetBgColor,
-        scrimColor = BottomSheetDefaults.ScrimColor,
-        dragHandle = { BottomSheetDefaults.DragHandle() },
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f),
+        dragHandle = null,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
     ) {
         val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
@@ -177,6 +173,16 @@ fun ChangelogBottomSheet(
                     .padding(horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Minimal pill drag handle
+                Box(
+                    modifier = Modifier
+                        .padding(top = 10.dp, bottom = 6.dp)
+                        .width(48.dp)
+                        .height(4.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                )
+
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()

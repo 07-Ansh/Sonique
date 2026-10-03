@@ -29,7 +29,7 @@ import com.sonique.app.ui.navigation.destination.library.AlbumsDestination
 import com.sonique.app.ui.screen.player.FullscreenPlayer
 import com.sonique.common.LibraryChipType
 
-private const val TRANSITION_DURATION = 350
+private const val TRANSITION_DURATION = 300
 private val transitionEasing = FastOutSlowInEasing
 
 private fun isTabRoute(route: String?): Boolean {
@@ -104,12 +104,12 @@ fun AppNavigationGraph(
                     val targetIndex = getTabExtensionIndex(targetRoute)
                     if (targetIndex > initialIndex) {
                         slideOutHorizontally(
-                            targetOffsetX = { -it },
+                            targetOffsetX = { -it / 3 },
                             animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
                         ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
                     } else {
                         slideOutHorizontally(
-                            targetOffsetX = { it },
+                            targetOffsetX = { it / 3 },
                             animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
                         ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
                     }
@@ -171,12 +171,12 @@ fun AppNavigationGraph(
                     val targetIndex = getTabExtensionIndex(targetRoute)
                     if (targetIndex > initialIndex) {
                         slideOutHorizontally(
-                            targetOffsetX = { -it },
+                            targetOffsetX = { -it / 3 },
                             animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
                         ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
                     } else {
                         slideOutHorizontally(
-                            targetOffsetX = { it },
+                            targetOffsetX = { it / 3 },
                             animationSpec = tween(TRANSITION_DURATION, easing = transitionEasing),
                         ) + fadeOut(animationSpec = tween(TRANSITION_DURATION))
                     }

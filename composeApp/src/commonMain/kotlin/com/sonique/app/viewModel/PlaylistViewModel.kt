@@ -1,4 +1,4 @@
-﻿@file:Suppress("ktlint:standard:no-wildcard-imports")
+@file:Suppress("ktlint:standard:no-wildcard-imports")
 
 package com.sonique.app.viewModel
 
@@ -513,8 +513,19 @@ class PlaylistViewModel(
                 viewModelScope.launch {
                     val videoId = event.videoId
                     val loadedList = tracks.value
-                    val clickedSong = loadedList.first { it.videoId == videoId }
+                    val clickedSong = loadedList.firstOrNull { it.videoId == videoId } ?: return@launch
                     val index = loadedList.indexOf(clickedSong)
+
+                    val currentQueue = mediaPlayerHandler.queueData.value
+                    if (currentQueue?.data?.playlistId == data.id &&
+                        index in 0 until mediaPlayerHandler.player.mediaItemCount
+                    ) {
+                        mediaPlayerHandler.player.seekTo(index, 0)
+                        mediaPlayerHandler.player.prepare()
+                        mediaPlayerHandler.player.playWhenReady = true
+                        return@launch
+                    }
+
                     setQueueData(
                         QueueData.Data(
                             listTracks = loadedList.toCollection(arrayListOf<Track>()),

@@ -574,20 +574,21 @@ internal class CrossfadeExoPlayerAdapter(
 
 
     override fun setMediaItem(mediaItem: GenericMediaItem) {
+        currentLoadJob?.cancel()
+
+        playlist.clear()
+        localCurrentMediaItemIndex = 0
+        playlist.add(mediaItem)
+
+        if (internalShuffleModeEnabled) {
+            createShuffleOrder()
+        }
+
+        notifyTimelineChanged("TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED")
+
         coroutineScope.launch {
-            currentLoadJob?.cancel()
             cancelPrecaching()
-
-            playlist.clear()
             clearAllPrecacheInternal()
-            playlist.add(mediaItem)
-            localCurrentMediaItemIndex = 0
-
-            if (internalShuffleModeEnabled) {
-                createShuffleOrder()
-            }
-
-            notifyTimelineChanged("TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED")
             loadAndPlayTrackInternal(0, 0, internalPlayWhenReady)
         }
     }
@@ -690,43 +691,44 @@ internal class CrossfadeExoPlayerAdapter(
     ) {
         if (fromIndex !in playlist.indices || toIndex !in playlist.indices) return
 
-        coroutineScope.launch {
-            val item = playlist.removeAt(fromIndex)
-            playlist.add(toIndex, item)
+        val item = playlist.removeAt(fromIndex)
+        playlist.add(toIndex, item)
 
-            localCurrentMediaItemIndex =
-                when {
-                    localCurrentMediaItemIndex == fromIndex -> {
-                        toIndex
-                    }
-                    fromIndex < localCurrentMediaItemIndex && toIndex >= localCurrentMediaItemIndex -> {
-                        localCurrentMediaItemIndex - 1
-                    }
-                    fromIndex > localCurrentMediaItemIndex && toIndex <= localCurrentMediaItemIndex -> {
-                        localCurrentMediaItemIndex + 1
-                    }
-                    else -> {
-                        localCurrentMediaItemIndex
-                    }
+        localCurrentMediaItemIndex =
+            when {
+                localCurrentMediaItemIndex == fromIndex -> {
+                    toIndex
                 }
-
-            if (internalShuffleModeEnabled) {
-                createShuffleOrder()
+                fromIndex < localCurrentMediaItemIndex && toIndex >= localCurrentMediaItemIndex -> {
+                    localCurrentMediaItemIndex - 1
+                }
+                fromIndex > localCurrentMediaItemIndex && toIndex <= localCurrentMediaItemIndex -> {
+                    localCurrentMediaItemIndex + 1
+                }
+                else -> {
+                    localCurrentMediaItemIndex
+                }
             }
 
-            notifyTimelineChanged("TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED")
+        if (internalShuffleModeEnabled) {
+            createShuffleOrder()
+        }
 
+        notifyTimelineChanged("TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED")
+
+        coroutineScope.launch {
             clearPrecacheExceptCurrentInternal()
             triggerPrecachingInternal()
         }
     }
 
     override fun clearMediaItems() {
+        playlist.clear()
+        localCurrentMediaItemIndex = -1
+        clearShuffleOrder()
+        notifyTimelineChanged("TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED")
+
         coroutineScope.launch {
-            playlist.clear()
-            localCurrentMediaItemIndex = -1
-            clearShuffleOrder()
-            notifyTimelineChanged("TIMELINE_CHANGE_REASON_PLAYLIST_CHANGED")
             cleanupCurrentPlayerInternal()
             clearAllPrecacheInternal()
         }

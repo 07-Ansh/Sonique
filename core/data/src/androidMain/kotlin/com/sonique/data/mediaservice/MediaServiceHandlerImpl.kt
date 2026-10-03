@@ -617,10 +617,6 @@ internal class MediaServiceHandlerImpl(
         index?.let {
             player.addMediaItem(it, mediaItem)
         } ?: player.addMediaItem(mediaItem)
-        if (player.mediaItemCount == 1) {
-            player.prepare()
-            player.playWhenReady = true
-        }
         updateNextPreviousTrackAvailability()
     }
 

@@ -752,12 +752,24 @@ class LocalPlaylistViewModel(
                 viewModelScope.launch {
                     val loadedList = lazyTrackPagingItems.value?.itemSnapshotList?.toList() ?: return@launch
                     val clickedSong = loadedList.find { it?.first?.videoId == ev.videoId }?.first ?: return@launch
+                    val playlistId = LOCAL_PLAYLIST_ID + uiState.value.id
+                    val index = loadedList.map { it?.first }.indexOf(clickedSong)
+
+                    val currentQueue = mediaPlayerHandler.queueData.value
+                    if (currentQueue?.data?.playlistId == playlistId &&
+                        index in 0 until mediaPlayerHandler.player.mediaItemCount
+                    ) {
+                        mediaPlayerHandler.player.seekTo(index, 0)
+                        mediaPlayerHandler.player.prepare()
+                        mediaPlayerHandler.player.playWhenReady = true
+                        return@launch
+                    }
 
                     setQueueData(
                         QueueData.Data(
                             listTracks = loadedList.mapNotNull { it?.first }.toArrayListTrack(),
                             firstPlayedTrack = clickedSong.toTrack(),
-                            playlistId = LOCAL_PLAYLIST_ID + uiState.value.id,
+                            playlistId = playlistId,
                             playlistName = "${
                                 getString(
                                     Res.string.playlist,
@@ -791,7 +803,7 @@ class LocalPlaylistViewModel(
                     loadMediaItem(
                         clickedSong,
                         Config.PLAYLIST_CLICK,
-                        loadedList.map { it?.first }.indexOf(clickedSong),
+                        index,
                     )
                 }
             }

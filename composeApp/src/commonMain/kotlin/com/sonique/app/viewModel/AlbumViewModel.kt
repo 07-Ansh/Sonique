@@ -210,18 +210,31 @@ class AlbumViewModel(
 
     fun playTrack(track: Track) {
         viewModelScope.launch {
+            val playlistId = uiState.value.browseId.replaceFirst("VL", "")
+            val index = uiState.value.listTrack.indexOf(track)
+            val effectiveIndex = if (index == -1) 0 else index
+
+            val currentQueue = mediaPlayerHandler.queueData.value
+            if (currentQueue?.data?.playlistId == playlistId &&
+                effectiveIndex in 0 until mediaPlayerHandler.player.mediaItemCount
+            ) {
+                mediaPlayerHandler.player.seekTo(effectiveIndex, 0)
+                mediaPlayerHandler.player.prepare()
+                mediaPlayerHandler.player.playWhenReady = true
+                return@launch
+            }
+
             setQueueData(
                 QueueData.Data(
                     listTracks = uiState.value.listTrack.toCollection(ArrayList()),
                     firstPlayedTrack = track,
-                    playlistId = uiState.value.browseId.replaceFirst("VL", ""),
+                    playlistId = playlistId,
                     playlistName = "${getString(Res.string.album)} \"${uiState.value.title}\"",
                     playlistType = PlaylistType.ALBUM,
                     continuation = null,
                 ),
             )
-            val index = uiState.value.listTrack.indexOf(track)
-            loadMediaItem(track, Config.ALBUM_CLICK, if (index == -1) 0 else index)
+            loadMediaItem(track, Config.ALBUM_CLICK, effectiveIndex)
         }
     }
 

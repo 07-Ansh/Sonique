@@ -167,31 +167,31 @@ fun ChangelogBottomSheet(
     ) {
         val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp),
-            contentPadding = PaddingValues(
-                top = 4.dp,
-                bottom = navBarPadding + 32.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            item {
-                Row(
+            // Pinned Top Header (Never scrolls out of view)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(top = 2.dp, bottom = 12.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Changelog",
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
                     )
                     IconButton(
                         onClick = { animateDismiss() },
+                        modifier = Modifier.align(Alignment.CenterEnd),
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -204,9 +204,27 @@ fun ChangelogBottomSheet(
                         )
                     }
                 }
+
+                // Clean straight line divider
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)
+                )
             }
 
-            when (val state = changelogState) {
+            // Scrollable Content (Only the content below the line scrolls)
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                contentPadding = PaddingValues(
+                    top = 16.dp,
+                    bottom = navBarPadding + 32.dp
+                ),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                when (val state = changelogState) {
                 is ChangelogUiState.Loading -> {
                     item {
                         Box(
@@ -248,6 +266,7 @@ fun ChangelogBottomSheet(
             }
         }
     }
+}
 }
 
 @Composable

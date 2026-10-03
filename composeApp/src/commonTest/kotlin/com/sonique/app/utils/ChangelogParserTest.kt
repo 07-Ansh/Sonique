@@ -40,6 +40,8 @@ class ChangelogParserTest {
         assertEquals("Oct 1, 2026", parsed.releaseDate)
         assertEquals("Sonique v4.1.0 — Dynamic Palette", parsed.title)
         assertTrue(parsed.isCurrentVersion)
+        assertTrue(parsed.body.contains("Adaptive Color Theming"))
+        assertTrue(parsed.body.contains("Smooth Queues"))
         assertEquals(2, parsed.highlights.size)
         assertEquals("Adaptive Color Theming**: Player controls adapt to artwork.", parsed.highlights[0])
         assertEquals("Smooth Queues**: Fluid reordering physics.", parsed.highlights[1])

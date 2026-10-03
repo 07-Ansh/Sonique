@@ -1242,9 +1242,8 @@ class YouTube {
         listUrlSig.forEach {
             Logger.d(TAG, "YouTube NewPipe URL $it")
         }
-        val randomUrl = listUrlSig.randomOrNull() ?: return null
-        if (listUrlSig.isNotEmpty() && !is403Url(randomUrl)) {
-            Logger.d(TAG, "YouTube NewPipe Found URL $randomUrl")
+        if (listUrlSig.isNotEmpty()) {
+            Logger.d(TAG, "YouTube NewPipe Found ${listUrlSig.size} URLs")
             return decodedSigResponse
         } else {
             Logger.d(TAG, "YouTube NewPipe No URL Found")

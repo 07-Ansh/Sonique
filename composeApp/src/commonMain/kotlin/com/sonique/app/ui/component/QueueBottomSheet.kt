@@ -175,7 +175,7 @@ fun QueueBottomSheet(
                 val layoutInfo = lazyListState.layoutInfo
                 val lastVisibleItem =
                     layoutInfo.visibleItemsInfo.lastOrNull()
-                        ?: return@derivedStateOf true
+                        ?: return@derivedStateOf false
 
                 lastVisibleItem.index >= layoutInfo.totalItemsCount - 3 && layoutInfo.totalItemsCount > 0
             }

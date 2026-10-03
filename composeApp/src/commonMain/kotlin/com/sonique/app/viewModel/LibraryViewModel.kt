@@ -1,4 +1,4 @@
-﻿package com.sonique.app.viewModel
+package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import com.sonique.common.Config
@@ -29,10 +29,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.SharingStarted
@@ -381,9 +383,15 @@ class LibraryViewModel(
     fun getYouTubeAlbums() {
         _youTubeAlbums.value = LocalResource.Loading()
         viewModelScope.launch {
-            playlistRepository.getLibraryAlbums().collect { data ->
-                _youTubeAlbums.value = LocalResource.Success(data ?: emptyList())
+            if (dataStoreManager.loggedIn.firstOrNull() != DataStoreManager.TRUE) {
+                _youTubeAlbums.value = LocalResource.Success(emptyList())
+                return@launch
             }
+            playlistRepository.getLibraryAlbums()
+                .catch { emit(null) }
+                .collect { data ->
+                    _youTubeAlbums.value = LocalResource.Success(data ?: emptyList())
+                }
         }
     }
 

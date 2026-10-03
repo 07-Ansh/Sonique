@@ -671,65 +671,71 @@ internal class PlaylistRepositoryImpl(
             youTube
                 .getMixedForYou()
                 .onSuccess { data ->
-                    val input =
-                        data.contents
-                            ?.singleColumnBrowseResultsRenderer
-                            ?.tabs
-                            ?.get(
-                                0,
-                            )?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.get(
-                                0,
-                            )?.gridRenderer
-                            ?.items
-                    val listItem = mutableListOf<PlaylistsResult>()
-                    if (input.isNullOrEmpty()) {
-                        Logger.w("Mixed For You", "No playlists found")
+                    runCatching {
+                        val input =
+                            data.contents
+                                ?.singleColumnBrowseResultsRenderer
+                                ?.tabs
+                                ?.firstOrNull()
+                                ?.tabRenderer
+                                ?.content
+                                ?.sectionListRenderer
+                                ?.contents
+                                ?.firstOrNull()
+                                ?.gridRenderer
+                                ?.items
+                        val listItem = mutableListOf<PlaylistsResult>()
+                        if (input.isNullOrEmpty()) {
+                            Logger.w("Mixed For You", "No playlists found")
+                            emit(null)
+                            return@runCatching
+                        }
+                        listItem.addAll(
+                            parseLibraryPlaylist(input),
+                        )
+                        var continuation =
+                            data.contents
+                                ?.singleColumnBrowseResultsRenderer
+                                ?.tabs
+                                ?.firstOrNull()
+                                ?.tabRenderer
+                                ?.content
+                                ?.sectionListRenderer
+                                ?.contents
+                                ?.firstOrNull()
+                                ?.gridRenderer
+                                ?.continuations
+                                ?.firstOrNull()
+                                ?.nextContinuationData
+                                ?.continuation
+                        while (continuation != null) {
+                            youTube
+                                .nextYouTubePlaylists(continuation)
+                                .onSuccess { nextData ->
+                                    continuation = nextData.second
+                                    Logger.w("Mixed For You", "continuation: $continuation")
+                                    val nextInput = nextData.first
+                                    listItem.addAll(
+                                        parseNextLibraryPlaylist(nextInput),
+                                    )
+                                }.onFailure { exception ->
+                                    exception.printStackTrace()
+                                    Logger.e("Mixed For You", "Error: ${exception.message}")
+                                    continuation = null
+                                }
+                        }
+                        if (listItem.isNotEmpty()) {
+                            emit(listItem)
+                        } else {
+                            emit(null)
+                        }
+                    }.onFailure { e ->
+                        Logger.e("Mixed For You", "Parse error: ${e.message}")
                         emit(null)
-                        return@onSuccess
                     }
-                    listItem.addAll(
-                        parseLibraryPlaylist(input),
-                    )
-                    var continuation =
-                        data.contents
-                            ?.singleColumnBrowseResultsRenderer
-                            ?.tabs
-                            ?.firstOrNull()
-                            ?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.firstOrNull()
-                            ?.gridRenderer
-                            ?.continuations
-                            ?.firstOrNull()
-                            ?.nextContinuationData
-                            ?.continuation
-                    while (continuation != null) {
-                        youTube
-                            .nextYouTubePlaylists(continuation)
-                            .onSuccess { nextData ->
-                                continuation = nextData.second
-                                Logger.w("Mixed For You", "continuation: $continuation")
-                                val nextInput = nextData.first
-                                listItem.addAll(
-                                    parseNextLibraryPlaylist(nextInput),
-                                )
-                            }.onFailure { exception ->
-                                exception.printStackTrace()
-                                Logger.e("Mixed For You", "Error: ${exception.message}")
-                                continuation = null
-                            }
-                    }
-                    if (listItem.isNotEmpty()) {
-                        emit(listItem)
-                    } else {
-                        emit(null)
-                    }
+                }.onFailure { e ->
+                    Logger.e("Mixed For You", "Error: ${e.message}")
+                    emit(null)
                 }
         }.flowOn(Dispatchers.IO)
 
@@ -738,56 +744,61 @@ internal class PlaylistRepositoryImpl(
             youTube
                 .getLibraryAlbums()
                 .onSuccess { data ->
-                    val input =
-                        data.contents
-                            ?.singleColumnBrowseResultsRenderer
-                            ?.tabs
-                            ?.get(0)
-                            ?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.get(0)
-                            ?.gridRenderer
-                            ?.items
-                    val listItem = mutableListOf<PlaylistsResult>()
-                    if (input.isNullOrEmpty()) {
-                        Logger.w("LibraryAlbums", "No albums found")
-                        emit(null)
-                        return@onSuccess
-                    }
-                    listItem.addAll(parseLibraryPlaylist(input))
-                    var continuation =
-                        data.contents
-                            ?.singleColumnBrowseResultsRenderer
-                            ?.tabs
-                            ?.firstOrNull()
-                            ?.tabRenderer
-                            ?.content
-                            ?.sectionListRenderer
-                            ?.contents
-                            ?.firstOrNull()
-                            ?.gridRenderer
-                            ?.continuations
-                            ?.firstOrNull()
-                            ?.nextContinuationData
-                            ?.continuation
-                    while (continuation != null) {
-                        youTube
-                            .nextYouTubePlaylists(continuation)
-                            .onSuccess { nextData ->
-                                continuation = nextData.second
-                                Logger.w("LibraryAlbums", "continuation: $continuation")
-                                listItem.addAll(parseNextLibraryPlaylist(nextData.first))
-                            }.onFailure { exception ->
-                                exception.printStackTrace()
-                                Logger.e("LibraryAlbums", "Error: ${exception.message}")
-                                continuation = null
-                            }
-                    }
-                    if (listItem.isNotEmpty()) {
-                        emit(listItem)
-                    } else {
+                    runCatching {
+                        val input =
+                            data.contents
+                                ?.singleColumnBrowseResultsRenderer
+                                ?.tabs
+                                ?.firstOrNull()
+                                ?.tabRenderer
+                                ?.content
+                                ?.sectionListRenderer
+                                ?.contents
+                                ?.firstOrNull()
+                                ?.gridRenderer
+                                ?.items
+                        val listItem = mutableListOf<PlaylistsResult>()
+                        if (input.isNullOrEmpty()) {
+                            Logger.w("LibraryAlbums", "No albums found")
+                            emit(null)
+                            return@runCatching
+                        }
+                        listItem.addAll(parseLibraryPlaylist(input))
+                        var continuation =
+                            data.contents
+                                ?.singleColumnBrowseResultsRenderer
+                                ?.tabs
+                                ?.firstOrNull()
+                                ?.tabRenderer
+                                ?.content
+                                ?.sectionListRenderer
+                                ?.contents
+                                ?.firstOrNull()
+                                ?.gridRenderer
+                                ?.continuations
+                                ?.firstOrNull()
+                                ?.nextContinuationData
+                                ?.continuation
+                        while (continuation != null) {
+                            youTube
+                                .nextYouTubePlaylists(continuation)
+                                .onSuccess { nextData ->
+                                    continuation = nextData.second
+                                    Logger.w("LibraryAlbums", "continuation: $continuation")
+                                    listItem.addAll(parseNextLibraryPlaylist(nextData.first))
+                                }.onFailure { exception ->
+                                    exception.printStackTrace()
+                                    Logger.e("LibraryAlbums", "Error: ${exception.message}")
+                                    continuation = null
+                                }
+                        }
+                        if (listItem.isNotEmpty()) {
+                            emit(listItem)
+                        } else {
+                            emit(null)
+                        }
+                    }.onFailure { e ->
+                        Logger.e("LibraryAlbums", "Parse error: ${e.message}")
                         emit(null)
                     }
                 }.onFailure { e ->

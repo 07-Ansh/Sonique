@@ -136,6 +136,7 @@ import com.sonique.app.extension.getAmbientTintedWhiteColor
 import com.sonique.app.extension.cleanSongTitle
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.ui.component.BottomSheet
+import com.sonique.domain.utils.isVideoThumbnailUrl
 import com.sonique.app.ui.component.rememberBottomSheetState
 import com.sonique.app.ui.component.collapsedAnchor
 import com.sonique.app.ui.component.FreshQueueContent
@@ -721,6 +722,7 @@ fun NewPlayerScreen(
                                 key = { page -> "${page}_${queue.getOrNull(page)?.videoId ?: page}" },
                                 modifier = Modifier.fillMaxSize(),
                                 userScrollEnabled = totalPages > 1,
+                                pageSpacing = 16.dp,
                             ) { page ->
                                 val song = queue.getOrNull(page)
                                 val isCurrentActivePage = (page == currentQueueIndex) || (queue.isEmpty() && page == 0)
@@ -741,9 +743,10 @@ fun NewPlayerScreen(
                                             .background(MaterialTheme.colorScheme.surfaceVariant),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        val isArtLoadingForPage = isCurrentActivePage && currentSongData?.isArtworkLoading == true
+                                        val isArtResolved = artUrl.isNotEmpty() && !isVideoThumbnailUrl(artUrl)
+                                        val showLoader = !isArtResolved && (artUrl.isEmpty() || (isCurrentActivePage && currentSongData?.isArtworkLoading == true))
                                         AnimatedContent(
-                                            targetState = isArtLoadingForPage || artUrl.isEmpty(),
+                                            targetState = showLoader,
                                             transitionSpec = {
                                                 fadeIn(animationSpec = tween(250)) togetherWith
                                                     fadeOut(animationSpec = tween(250))
@@ -751,10 +754,9 @@ fun NewPlayerScreen(
                                             label = "ArtworkLoadingTransition",
                                             modifier = Modifier.fillMaxSize(),
                                             contentAlignment = Alignment.Center
-                                        ) { showLoader ->
-                                            if (showLoader) {
+                                        ) { isLoaderVisible ->
+                                            if (isLoaderVisible) {
                                                 GoogleCircularProgressIndicator(
-                                                    modifier = Modifier.size(44.dp),
                                                     color = MaterialTheme.colorScheme.primary,
                                                 )
                                             } else {

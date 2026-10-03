@@ -29,17 +29,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sonique.app.utils.VersionManager
-
-private val AccentGreen = Color(0xFF8CD8A4)
-private val ChipGreenBg = Color(0xFF0D3E24)
-private val ChipGreenText = Color(0xFF7DDC96)
-private val CardBackground = Color(0xFF1C221F)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,8 +51,8 @@ fun ChangelogBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        containerColor = Color(0xFF131514),
-        scrimColor = Color.Black.copy(alpha = 0.6f),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+        scrimColor = BottomSheetDefaults.ScrimColor,
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
@@ -77,7 +71,7 @@ fun ChangelogBottomSheet(
                 Text(
                     text = "Changelog",
                     style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 8.dp),
@@ -110,20 +104,20 @@ private fun ReleaseSection(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(ChipGreenBg)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 Text(
                     text = release.version,
                     style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = ChipGreenText
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
 
             Text(
                 text = release.releaseDate,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                color = Color.White.copy(alpha = 0.85f)
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
@@ -131,7 +125,7 @@ private fun ReleaseSection(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = CardBackground)
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
         ) {
             Column(
                 modifier = Modifier.padding(20.dp),
@@ -140,13 +134,13 @@ private fun ReleaseSection(
                 Text(
                     text = release.title,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = AccentGreen
+                    color = MaterialTheme.colorScheme.primary
                 )
 
                 release.highlights.forEachIndexed { index, highlight ->
                     if (index > 0) {
                         HorizontalDivider(
-                            color = Color.White.copy(alpha = 0.06f),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
                             thickness = 0.8.dp,
                             modifier = Modifier.padding(vertical = 2.dp)
                         )
@@ -161,12 +155,12 @@ private fun ReleaseSection(
                                 .padding(top = 7.dp, end = 12.dp)
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(AccentGreen)
+                                .background(MaterialTheme.colorScheme.primary)
                         )
                         Text(
                             text = highlight,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White.copy(alpha = 0.92f),
+                            color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 22.sp
                         )
                     }

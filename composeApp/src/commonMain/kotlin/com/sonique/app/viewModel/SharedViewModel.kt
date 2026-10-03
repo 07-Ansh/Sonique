@@ -455,7 +455,8 @@ class SharedViewModel(
                         ?: state.mediaItem.metadata.artworkUri?.toString()
 
                     val isVideoTrack = state.mediaItem.isVideo() || isVideoThumbnailUrl(resolvedThumbnail)
-                    val isArtAlreadyResolved = currentSongEntity?.thumbnails?.let { !isVideoThumbnailUrl(it) } == true
+                    val isArtAlreadyResolved = (!resolvedThumbnail.isNullOrBlank() && !isVideoThumbnailUrl(resolvedThumbnail)) ||
+                        (currentSongEntity?.thumbnails?.let { !isVideoThumbnailUrl(it) } == true)
                     val isArtworkLoading = isVideoTrack && !isArtAlreadyResolved
                     val displayThumbnail = if (isArtworkLoading) {
                         null

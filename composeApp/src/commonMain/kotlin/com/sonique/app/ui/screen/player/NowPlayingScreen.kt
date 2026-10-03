@@ -842,7 +842,6 @@ fun NowPlayingScreenContent(
                                                 contentAlignment = Alignment.Center,
                                             ) {
                                                 GoogleCircularProgressIndicator(
-                                                    modifier = Modifier.size(48.dp),
                                                     color = MaterialTheme.colorScheme.primary,
                                                 )
                                             }

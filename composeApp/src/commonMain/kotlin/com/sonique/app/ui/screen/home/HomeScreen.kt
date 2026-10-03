@@ -640,11 +640,11 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
+            ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
+            Spacer(modifier = Modifier.width(8.dp))
             RippleIconButton(resId = Res.drawable.metro_newspaper) {
                 showChangelogSheet = true
             }
-            Spacer(modifier = Modifier.width(8.dp))
-            ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
             Spacer(modifier = Modifier.width(8.dp))
             RippleIconButton(resId = Res.drawable.baseline_settings_24) {
                 navController.navigate(SettingsDestination())

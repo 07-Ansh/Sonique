@@ -672,11 +672,10 @@ fun HomeTopAppBar(
         }
     }
 
-    if (showChangelogSheet) {
-        ChangelogBottomSheet(
-            onDismissRequest = { showChangelogSheet = false }
-        )
-    }
+    ChangelogBottomSheet(
+        visible = showChangelogSheet,
+        onDismiss = { showChangelogSheet = false }
+    )
 }
 
 @Composable

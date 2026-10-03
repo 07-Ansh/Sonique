@@ -971,7 +971,7 @@ fun NewPlayerScreen(
                 )
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     FilledIconButton(
@@ -1236,7 +1236,7 @@ fun NewPlayerScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 androidx.compose.material3.Button(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.PlayPause) },
@@ -1260,7 +1260,7 @@ fun NewPlayerScreen(
                             tint = animatedOnPrimaryContainer,
                             modifier = Modifier.size(34.dp)
                         )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = if (controllerState.isPlaying) "Pause" else "Play",
                             style = MaterialTheme.typography.titleLarge.copy(
@@ -1272,7 +1272,7 @@ fun NewPlayerScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 FilledIconButton(
                     onClick = { sharedViewModel.onUIEvent(UIEvent.Next) },

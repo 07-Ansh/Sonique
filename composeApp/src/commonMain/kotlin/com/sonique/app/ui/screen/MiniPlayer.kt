@@ -342,10 +342,9 @@ fun MiniPlayer(
                                     label = "MiniPlayerArt1",
                                 ) { isArtLoading ->
                                     if (isArtLoading) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
+                                        GoogleCircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
                                             color = MaterialTheme.colorScheme.primary,
-                                            strokeWidth = 2.dp,
                                         )
                                     } else {
                                         AsyncImage(
@@ -567,10 +566,9 @@ fun MiniPlayer(
                                 label = "MiniPlayerArt2",
                             ) { isArtLoading ->
                                 if (isArtLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(20.dp),
+                                    GoogleCircularProgressIndicator(
+                                        modifier = Modifier.size(22.dp),
                                         color = MaterialTheme.colorScheme.primary,
-                                        strokeWidth = 2.dp,
                                     )
                                 } else {
                                     AsyncImage(

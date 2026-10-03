@@ -72,6 +72,9 @@ import com.sonique.app.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -344,6 +347,8 @@ class SharedViewModel(
 
     private val _shareSavedLyrics: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val shareSavedLyrics: StateFlow<Boolean> get() = _shareSavedLyrics
+
+    private val viewModelInitTimestamp = TimeSource.Monotonic.markNow()
 
     init {
         viewModelScope.launch {
@@ -1095,6 +1100,11 @@ class SharedViewModel(
         queueArtworkPreloadJob?.cancel()
         queueArtworkPreloadJob = viewModelScope.launch(Dispatchers.IO) {
             if (tracks.isEmpty()) return@launch
+
+            val elapsed = viewModelInitTimestamp.elapsedNow()
+            if (elapsed < 3500.milliseconds) {
+                delay(3500.milliseconds - elapsed)
+            }
 
             val cleanCurrentId = currentMediaId?.removePrefix("Video")
             val currentIndex = if (cleanCurrentId != null) {

@@ -35,11 +35,14 @@ class ThumbnailUrlEnhancerTest {
     @Test
     fun testYouTubeVideoThumbnailUpgrade() {
         val hqDefault = "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg"
-        val maxRes = hqDefault.toHighResThumbnailUrl()
+        val maxRes = hqDefault.toHighResThumbnailUrl(1200)
         assertEquals("https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg", maxRes)
 
+        val defaultRes = hqDefault.toHighResThumbnailUrl(544)
+        assertEquals("https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg", defaultRes)
+
         val mqDefault = "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
-        assertEquals("https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg", mqDefault.toHighResThumbnailUrl())
+        assertEquals("https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg", mqDefault.toHighResThumbnailUrl(1200))
     }
 
     @Test
@@ -59,5 +62,32 @@ class ThumbnailUrlEnhancerTest {
         assertEquals("Save Your Tears", cleanVideoTitle("Save Your Tears (Remix) [Lyric Video]"))
         assertEquals("Stay", cleanVideoTitle("Stay | 4K Visualizer"))
         assertEquals("Normal Title", cleanVideoTitle("Normal Title"))
+    }
+
+    @Test
+    fun testSongMatchingAndSimilarity() {
+        val match = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Coldplay - Sparks (Live in Madrid)",
+            videoArtist = "Coldplay",
+            candidateTitle = "Sparks",
+            candidateArtists = listOf("Coldplay"),
+        )
+        assertTrue(match)
+
+        val mismatchWrongSong = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Coldplay - Sparks",
+            videoArtist = "Coldplay",
+            candidateTitle = "Yellow",
+            candidateArtists = listOf("Coldplay"),
+        )
+        assertFalse(mismatchWrongSong)
+
+        val mismatchWrongArtist = com.sonique.domain.utils.isSongMatch(
+            videoTitle = "Hello",
+            videoArtist = "Adele",
+            candidateTitle = "Hello",
+            candidateArtists = listOf("Lionel Richie"),
+        )
+        assertFalse(mismatchWrongArtist)
     }
 }

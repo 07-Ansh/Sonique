@@ -149,6 +149,7 @@ import com.sonique.app.extension.parseTimestampToMilliseconds
 import com.sonique.app.extension.rememberIsInPipMode
 import com.sonique.app.getPlatform
 import com.sonique.app.ui.component.AIBadge
+import com.sonique.app.ui.component.GoogleCircularProgressIndicator
 import com.sonique.app.ui.component.DescriptionView
 import com.sonique.app.ui.component.ExplicitBadge
 import com.sonique.app.ui.component.FullscreenLyricsSheet
@@ -840,10 +841,9 @@ fun NowPlayingScreenContent(
                                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                                 contentAlignment = Alignment.Center,
                                             ) {
-                                                CircularProgressIndicator(
-                                                    modifier = Modifier.size(44.dp),
+                                                GoogleCircularProgressIndicator(
+                                                    modifier = Modifier.size(48.dp),
                                                     color = MaterialTheme.colorScheme.primary,
-                                                    strokeWidth = 3.dp,
                                                 )
                                             }
                                         } else {

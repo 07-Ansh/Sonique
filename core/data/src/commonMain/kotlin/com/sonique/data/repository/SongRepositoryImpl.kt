@@ -432,15 +432,27 @@ internal class SongRepositoryImpl(
                 filter = YouTube.SearchFilter.FILTER_SONG,
             ).getOrNull()
 
-            val matchingSong = searchResult?.items?.filterIsInstance<SongItem>()?.firstOrNull { item ->
-                !item.thumbnail.isNullOrBlank() && !com.sonique.domain.utils.isVideoThumbnailUrl(item.thumbnail)
+            val matchingSongs = searchResult?.items?.filterIsInstance<SongItem>()?.filter { item ->
+                !item.thumbnail.isNullOrBlank() &&
+                    !com.sonique.domain.utils.isVideoThumbnailUrl(item.thumbnail) &&
+                    com.sonique.domain.utils.isSongMatch(
+                        videoTitle = title,
+                        videoArtist = artist,
+                        candidateTitle = item.title,
+                        candidateArtists = item.artists?.map { it.name },
+                    )
+            }?.sortedByDescending { item ->
+                com.sonique.domain.utils.calculateTitleSimilarity(title, item.title)
             }
 
-            val highResArt = matchingSong?.thumbnail?.toHighResThumbnailUrl()
-            if (highResArt != null) {
-                Logger.d(TAG, "Resolved audio artwork for video $videoId ($title) -> $highResArt")
+            val bestMatch = matchingSongs?.firstOrNull()
+            if (bestMatch != null) {
+                val highResArt = bestMatch.thumbnail.toHighResThumbnailUrl(1200)
+                Logger.d(TAG, "Resolved verified audio artwork for video $videoId ('$title' -> '${bestMatch.title}') -> $highResArt")
                 localDataSource.updateThumbnailsSongEntity(highResArt, videoId)
                 return@withContext highResArt
+            } else {
+                Logger.d(TAG, "No verified audio match found for video $videoId ('$title'). Preserving original video thumbnail.")
             }
         } catch (e: Exception) {
             Logger.e(TAG, "Failed to resolve audio artwork for $videoId: ${e.message}")

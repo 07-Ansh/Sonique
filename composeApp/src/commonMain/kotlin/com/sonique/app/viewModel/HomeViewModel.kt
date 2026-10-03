@@ -126,9 +126,6 @@ class HomeViewModel(
         homeJob = Job()
         viewModelScope.launch {
             regionCodeChart.value = dataStoreManager.chartKey.first()
-            if (cachedChart == null) {
-                exploreChart(regionCodeChart.value ?: "ZZ")
-            }
             language = dataStoreManager.getString(SELECTED_LANGUAGE).first()
                 ?: SUPPORTED_LANGUAGE.codes.first()
 

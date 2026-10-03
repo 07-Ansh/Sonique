@@ -753,10 +753,9 @@ fun NewPlayerScreen(
                                             contentAlignment = Alignment.Center
                                         ) { showLoader ->
                                             if (showLoader) {
-                                                CircularProgressIndicator(
+                                                GoogleCircularProgressIndicator(
                                                     modifier = Modifier.size(44.dp),
                                                     color = MaterialTheme.colorScheme.primary,
-                                                    strokeWidth = 3.dp,
                                                 )
                                             } else {
                                                 AsyncImage(
@@ -815,10 +814,9 @@ fun NewPlayerScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (currentSongData?.isArtworkLoading == true || trackArtwork.isEmpty()) {
-                                    CircularProgressIndicator(
+                                    GoogleCircularProgressIndicator(
                                         modifier = Modifier.size(24.dp),
                                         color = MaterialTheme.colorScheme.primary,
-                                        strokeWidth = 2.dp,
                                     )
                                 } else {
                                     AsyncImage(

@@ -344,8 +344,8 @@ fun NewPlayerScreen(
         val dynamicTopSpacing = (screenHeight * 0.014f).coerceIn(8.dp, 16.dp)
         val dynamicHeaderToArtworkSpacing = (screenHeight * 0.012f).coerceIn(8.dp, 16.dp)
         val dynamicArtworkToInfoSpacing = (screenHeight * 0.018f).coerceIn(12.dp, 22.dp)
-        val dynamicInfoToSliderSpacing = (screenHeight * 0.020f).coerceIn(14.dp, 20.dp)
-        val dynamicSliderToControlsSpacing = (screenHeight * 0.020f).coerceIn(14.dp, 20.dp)
+        val dynamicInfoToSliderSpacing = (screenHeight * 0.024f).coerceIn(16.dp, 22.dp)
+        val dynamicSliderToControlsSpacing = (screenHeight * 0.024f).coerceIn(16.dp, 22.dp)
         val dynamicControlsHeight = (screenHeight * 0.095f).coerceIn(72.dp, 80.dp)
         val dynamicControlsToBottomSpacing = (screenHeight * 0.038f).coerceIn(26.dp, 34.dp)
         val dynamicActionButtonSize = 42.dp

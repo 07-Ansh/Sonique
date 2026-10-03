@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.component
+package com.sonique.app.ui.component
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -49,10 +49,9 @@ import com.sonique.app.viewModel.UIEvent
 fun PlayerControlLayout(
     controllerState: ControlState,
     isSmallSize: Boolean = false,
-    enableExpressive: Boolean = false,
     onUIEvent: (UIEvent) -> Unit,
 ) {
-    val contentColor = if (enableExpressive) Color(0xFFFAF9F6) else Color.White
+    val contentColor = Color.White
     val height = if (isSmallSize) 48.dp else 96.dp
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -63,123 +62,9 @@ fun PlayerControlLayout(
                 .height(height)
                 .padding(horizontal = 20.dp),
     ) {
-        if (enableExpressive) {
-            val mainHeight = if (isSmallSize) 48.dp else 80.dp
-            val skipWidth = if (isSmallSize) 32.dp else 48.dp
-            val playSize = if (isSmallSize) 48.dp else 80.dp
-            val controlSize = if (isSmallSize) 32.dp else 48.dp
-            val borderStroke = BorderStroke(1.dp, contentColor.copy(alpha = 0.2f))
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(controlSize)
-                        .border(borderStroke, CircleShape)
-                        .clip(CircleShape)
-                        .rubberyClick { onUIEvent(UIEvent.Shuffle) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(targetState = controllerState.isShuffle, label = "Shuffle Button") { isShuffle ->
-                        Icon(
-                            imageVector = Icons.Rounded.Shuffle,
-                            tint = if (isShuffle) seed else Color.Gray,
-                            contentDescription = "",
-                            modifier = Modifier.size(if (isSmallSize) 18.dp else 24.dp),
-                        )
-                    }
-                }
-            }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(width = skipWidth, height = mainHeight)
-                        .background(contentColor.copy(alpha = 0.12f), RoundedCornerShape(percent = 50))
-                        .clip(RoundedCornerShape(percent = 50))
-                        .rubberyClick {
-                            if (controllerState.isPreviousAvailable) {
-                                onUIEvent(UIEvent.Previous)
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.SkipPrevious,
-                        tint = if (controllerState.isPreviousAvailable) contentColor else Color.Gray,
-                        contentDescription = "",
-                        modifier = Modifier.size(if (isSmallSize) 20.dp else 28.dp),
-                    )
-                }
-            }
-            Box(Modifier.weight(1.2f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(playSize)
-                        .background(Color(0xFFFAF9F6), RoundedCornerShape(if (isSmallSize) 14.dp else 24.dp))
-                        .clip(RoundedCornerShape(if (isSmallSize) 14.dp else 24.dp))
-                        .rubberyClick { onUIEvent(UIEvent.PlayPause) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(targetState = controllerState.isPlaying) { isPlaying ->
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                            tint = Color.Black,
-                            contentDescription = "",
-                            modifier = Modifier.size(if (isSmallSize) 28.dp else 40.dp),
-                        )
-                    }
-                }
-            }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(width = skipWidth, height = mainHeight)
-                        .background(contentColor.copy(alpha = 0.12f), RoundedCornerShape(percent = 50))
-                        .clip(RoundedCornerShape(percent = 50))
-                        .rubberyClick {
-                            if (controllerState.isNextAvailable) {
-                                onUIEvent(UIEvent.Next)
-                            }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.SkipNext,
-                        tint = if (controllerState.isNextAvailable) contentColor else Color.Gray,
-                        contentDescription = "",
-                        modifier = Modifier.size(if (isSmallSize) 20.dp else 28.dp),
-                    )
-                }
-            }
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Box(
-                    modifier = Modifier
-                        .size(controlSize)
-                        .border(borderStroke, CircleShape)
-                        .clip(CircleShape)
-                        .rubberyClick { onUIEvent(UIEvent.Repeat) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Crossfade(targetState = controllerState.repeatState) { rs ->
-                        val icon = when (rs) {
-                            RepeatState.One -> Icons.Rounded.RepeatOne
-                            else -> Icons.Rounded.Repeat
-                        }
-                        val tint = when (rs) {
-                            RepeatState.None -> Color.Gray
-                            else -> seed
-                        }
-                        Icon(
-                            imageVector = icon,
-                            tint = tint,
-                            contentDescription = "",
-                            modifier = Modifier.size(if (isSmallSize) 18.dp else 24.dp),
-                        )
-                    }
-                }
-            }
-        } else {
-            val smallIcon = if (isSmallSize) 20.dp to 28.dp else 32.dp to 42.dp
-            val mediumIcon = if (isSmallSize) 28.dp to 38.dp else 42.dp to 52.dp
-            val bigIcon = if (isSmallSize) 38.dp to 48.dp else 72.dp to 96.dp
+        val smallIcon = if (isSmallSize) 20.dp to 28.dp else 32.dp to 42.dp
+        val mediumIcon = if (isSmallSize) 28.dp to 38.dp else 42.dp to 52.dp
+        val bigIcon = if (isSmallSize) 38.dp to 48.dp else 72.dp to 96.dp
 
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Box(
@@ -347,7 +232,6 @@ fun PlayerControlLayout(
             }
         }
     }
-}
 
 fun Modifier.rubberyClick(
     onClick: () -> Unit

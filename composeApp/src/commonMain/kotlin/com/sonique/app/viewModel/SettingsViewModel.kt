@@ -220,8 +220,6 @@ class SettingsViewModel(
     private var _enableLiquidGlass: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val enableLiquidGlass: StateFlow<Boolean> = _enableLiquidGlass
 
-    private var _enableExpressivePlayerControls: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val enableExpressivePlayerControls: StateFlow<Boolean> = _enableExpressivePlayerControls
 
     private var _enablePageTransitions: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val enablePageTransitions: StateFlow<Boolean> = _enablePageTransitions
@@ -229,8 +227,6 @@ class SettingsViewModel(
     private var _liquidGlassGlassiness: MutableStateFlow<Float> = MutableStateFlow(0.5f)
     val liquidGlassGlassiness: StateFlow<Float> = _liquidGlassGlassiness
 
-    private var _blurPlayerBackground: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val blurPlayerBackground: StateFlow<Boolean> = _blurPlayerBackground
 
     private var _continueListeningLayout: MutableStateFlow<String> = MutableStateFlow("list")
     val continueListeningLayout: StateFlow<String> = _continueListeningLayout
@@ -327,9 +323,7 @@ class SettingsViewModel(
         getYoutubeSubtitleLanguage()
         getAmbienceMode()
         getEnableLiquidGlass()
-        getEnableExpressivePlayerControls()
         getLiquidGlassGlassiness()
-        getBlurPlayerBackground()
         getContinueListeningLayout()
         getEnablePageTransitions()
         getPlayerScreenStyle()
@@ -1224,20 +1218,6 @@ class SettingsViewModel(
         }
     }
 
-    fun getEnableExpressivePlayerControls() {
-        viewModelScope.launch {
-            dataStoreManager.enableExpressivePlayerControls.collect {
-                _enableExpressivePlayerControls.emit(it == DataStoreManager.TRUE)
-            }
-        }
-    }
-
-    fun setEnableExpressivePlayerControls(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setEnableExpressivePlayerControls(enabled)
-            getEnableExpressivePlayerControls()
-        }
-    }
 
     fun getLiquidGlassGlassiness() {
         viewModelScope.launch {
@@ -1254,20 +1234,6 @@ class SettingsViewModel(
         }
     }
 
-    fun getBlurPlayerBackground() {
-        viewModelScope.launch {
-            dataStoreManager.blurPlayerBackground.collect {
-                _blurPlayerBackground.emit(it == DataStoreManager.TRUE)
-            }
-        }
-    }
-
-    fun setBlurPlayerBackground(enabled: Boolean) {
-        viewModelScope.launch {
-            dataStoreManager.setBlurPlayerBackground(enabled)
-            getBlurPlayerBackground()
-        }
-    }
 
     fun getContinueListeningLayout() {
         viewModelScope.launch {

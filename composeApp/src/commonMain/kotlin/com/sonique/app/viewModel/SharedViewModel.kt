@@ -231,28 +231,6 @@ class SharedViewModel(
         }
     }
 
-    /**
-     * One-shot migration: enables the Modern Player by default for any user who has
-     * never explicitly set this preference (fresh install OR update before this version).
-     *
-     * Logic:
-     *  - If the raw DataStore key is null → user never touched it → turn ON modern player.
-     *  - If the raw DataStore key is "TRUE" or "FALSE" → user explicitly set it → leave it alone.
-     *  - The migration flag "modern_player_forced_v1" ensures this runs exactly once.
-     */
-    private fun migrateModernPlayerDefault() {
-        viewModelScope.launch {
-            if (dataStoreManager.getString("modern_player_forced_v1").first() != STATUS_DONE) {
-                // null means the key was never written — user never explicitly chose a value
-                val wasNeverSet = dataStoreManager.getString("expressive_player_controls").first() == null
-                if (wasNeverSet) {
-                    dataStoreManager.setEnableExpressivePlayerControls(true)
-                }
-                dataStoreManager.putString("modern_player_forced_v1", STATUS_DONE)
-            }
-        }
-    }
-
     private val _showGitHubPopup = MutableStateFlow<Boolean>(false)
     val showGitHubPopup: StateFlow<Boolean> = _showGitHubPopup.asStateFlow()
 
@@ -313,9 +291,6 @@ class SharedViewModel(
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
-    val blurBg: StateFlow<Boolean> = dataStoreManager.blurPlayerBackground
-        .map { it == DataStoreManager.TRUE }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
 
     val enableLiquidGlass: StateFlow<Boolean> = dataStoreManager.enableLiquidGlass
         .map { it == DataStoreManager.TRUE }
@@ -325,9 +300,6 @@ class SharedViewModel(
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
 
-    val enableExpressivePlayerControls: StateFlow<Boolean> = dataStoreManager.enableExpressivePlayerControls
-        .map { it == DataStoreManager.TRUE }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
     val continueListeningLayout: StateFlow<String> = dataStoreManager.getString("continue_listening_layout")
         .map { it ?: "list" }
@@ -360,10 +332,6 @@ class SharedViewModel(
                 )
             }
             dataStoreManager.openApp()
-            if (dataStoreManager.getString("frosted_force_disabled_v4").first() != STATUS_DONE) {
-                dataStoreManager.setBlurPlayerBackground(false)
-                dataStoreManager.putString("frosted_force_disabled_v4", STATUS_DONE)
-            }
             dataStoreManager.getString("miniplayer_guide").first().let {
                 isFirstMiniplayer = it != STATUS_DONE
             }
@@ -377,8 +345,6 @@ class SharedViewModel(
             dataStoreManager.getString("liked_guide").first().let {
                 isFirstLiked = it != STATUS_DONE
             }
-
-            migrateModernPlayerDefault()
             checkChangelog()
             checkGitHubPopup()
 

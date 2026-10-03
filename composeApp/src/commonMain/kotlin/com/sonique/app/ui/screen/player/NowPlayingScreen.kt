@@ -127,11 +127,6 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.toBitmap
 import com.kmpalette.rememberPaletteState
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
-import dev.chrisbanes.haze.materials.ExperimentalHazeMaterialsApi
-import dev.chrisbanes.haze.materials.HazeMaterials
-import dev.chrisbanes.haze.rememberHazeState
 import com.sonique.common.Config.MAIN_PLAYER
 import com.sonique.logger.Logger
 import com.sonique.app.Platform
@@ -159,7 +154,6 @@ import com.sonique.app.ui.component.LyricsView
 import com.sonique.app.ui.component.NowPlayingBottomSheet
 import com.sonique.app.ui.component.PlayPauseButton
 import com.sonique.app.ui.component.PlayerControlLayout
-import com.sonique.app.ui.component.WavySliderTrack
 import com.sonique.app.ui.component.QueueBottomSheet
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.player.FullscreenDestination
@@ -231,7 +225,7 @@ fun NowPlayingScreen(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalHazeMaterialsApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NowPlayingScreenContent(
     sharedViewModel: SharedViewModel = koinInject(),
@@ -260,11 +254,7 @@ fun NowPlayingScreenContent(
     val isInPipMode = rememberIsInPipMode()
 
     val ambienceMode by sharedViewModel.ambienceMode.collectAsStateWithLifecycle()
-    val enableExpressivePlayerControls by sharedViewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
-    val playerContentColor = if (enableExpressivePlayerControls) Color(0xFFFAF9F6) else Color.White
-    val blurBg by sharedViewModel.blurBg.collectAsStateWithLifecycle()
-
-    val hazeState = rememberHazeState()
+    val playerContentColor = Color.White
     val bottomSheetViewModel: NowPlayingBottomSheetViewModel = koinViewModel()
     val bsUiState by bottomSheetViewModel.uiState.collectAsStateWithLifecycle()
     var showCancelDlDialog by rememberSaveable { mutableStateOf(false) }
@@ -534,27 +524,6 @@ fun NowPlayingScreenContent(
         KeepScreenOn()
     }
     Box(modifier = Modifier.fillMaxSize().background(md_theme_dark_background)) {
-        if (blurBg && screenDataState.canvasData == null && !screenDataState.thumbnailURL.isNullOrEmpty()) {
-            AsyncImage(
-                model =
-                    ImageRequest
-                        .Builder(LocalPlatformContext.current)
-                        .data(screenDataState.thumbnailURL)
-                        .diskCachePolicy(CachePolicy.ENABLED)
-                        .diskCacheKey(screenDataState.thumbnailURL + "BIGGER")
-                        .crossfade(550)
-                        .build(),
-                contentDescription = "",
-                contentScale = ContentScale.FillHeight,
-                placeholder = painterResource(Res.drawable.holder),
-                error = painterResource(Res.drawable.holder),
-                modifier =
-                    Modifier
-                        .align(Alignment.Center)
-                        .fillMaxSize()
-                        .hazeSource(hazeState),
-            )
-        }
 
         Column(
             Modifier
@@ -587,31 +556,21 @@ fun NowPlayingScreenContent(
                             }
                         }
                     }
-                }.then(
-                    if (blurBg && screenDataState.canvasData == null) {
-                        Modifier
-                            .background(Color.Black.copy(alpha = 0.35f))
-                            .hazeEffect(hazeState, style = HazeMaterials.ultraThin()) {
-                                blurEnabled = true
-                            }
+                }.background(
+                    if (ambienceMode) {
+                        Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0.0f to startColor.value.copy(alpha = 1.0f),
+                                0.5f to midColor.value.copy(alpha = 0.4f),
+                                1.0f to endColor.value
+                            )
+                        )
                     } else {
-                        Modifier.background(
-                            if (ambienceMode) {
-                                Brush.verticalGradient(
-                                    colorStops = arrayOf(
-                                        0.0f to startColor.value.copy(alpha = 1.0f),
-                                        0.5f to midColor.value.copy(alpha = 0.4f),
-                                        1.0f to endColor.value
-                                    )
-                                )
-                            } else {
-                                Brush.linearGradient(
-                                    colors = listOf(md_theme_dark_background, md_theme_dark_background)
-                                )
-                            }
+                        Brush.linearGradient(
+                            colors = listOf(md_theme_dark_background, md_theme_dark_background)
                         )
                     }
-                ),  
+                ),
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                  
@@ -1177,47 +1136,45 @@ fun NowPlayingScreenContent(
                                                         .height(24.dp),
                                                 contentAlignment = Alignment.Center,
                                             ) {
-                                                if (!enableExpressivePlayerControls) {
-    Crossfade(timelineState.loading) {
-                                                        if (it) {
-                                                            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                                                                LinearProgressIndicator(
-                                                                    modifier =
-                                                                        Modifier
-                                                                            .fillMaxWidth()
-                                                                            .height(4.dp)
-                                                                            .padding(
-                                                                                horizontal = 3.dp,
-                                                                            ).clip(
-                                                                                RoundedCornerShape(8.dp),
-                                                                            ),
-                                                                    color = Color.Gray,
-                                                                    trackColor = Color.DarkGray,
-                                                                    strokeCap = StrokeCap.Round,
-                                                                )
-                                                            }
-                                                        } else {
-                                                            CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
-                                                                LinearProgressIndicator(
-                                                                    progress = { timelineState.bufferedPercent.toFloat() / 100 },
-                                                                    modifier =
-                                                                        Modifier
-                                                                            .fillMaxWidth()
-                                                                            .height(4.dp)
-                                                                            .padding(
-                                                                                horizontal = 3.dp,
-                                                                            ).clip(
-                                                                                RoundedCornerShape(8.dp),
-                                                                            ),
-                                                                    color = Color.Gray,
-                                                                    trackColor =
-                                                                        Color.Gray.copy(
-                                                                            alpha = 0.6f,
+                                                Crossfade(timelineState.loading) {
+                                                    if (it) {
+                                                        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                                                            LinearProgressIndicator(
+                                                                modifier =
+                                                                    Modifier
+                                                                        .fillMaxWidth()
+                                                                        .height(4.dp)
+                                                                        .padding(
+                                                                            horizontal = 3.dp,
+                                                                        ).clip(
+                                                                            RoundedCornerShape(8.dp),
                                                                         ),
-                                                                    strokeCap = StrokeCap.Round,
-                                                                    drawStopIndicator = {},
-                                                                )
-                                                            }
+                                                                color = Color.Gray,
+                                                                trackColor = Color.DarkGray,
+                                                                strokeCap = StrokeCap.Round,
+                                                            )
+                                                        }
+                                                    } else {
+                                                        CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
+                                                            LinearProgressIndicator(
+                                                                progress = { timelineState.bufferedPercent.toFloat() / 100 },
+                                                                modifier =
+                                                                    Modifier
+                                                                        .fillMaxWidth()
+                                                                        .height(4.dp)
+                                                                        .padding(
+                                                                            horizontal = 3.dp,
+                                                                        ).clip(
+                                                                            RoundedCornerShape(8.dp),
+                                                                        ),
+                                                                color = Color.Gray,
+                                                                trackColor =
+                                                                    Color.Gray.copy(
+                                                                        alpha = 0.6f,
+                                                                    ),
+                                                                strokeCap = StrokeCap.Round,
+                                                                drawStopIndicator = {},
+                                                            )
                                                         }
                                                     }
                                                 }
@@ -1244,63 +1201,45 @@ fun NowPlayingScreenContent(
                                                                 Alignment.TopCenter,
                                                             ),
                                                     track = { sliderState ->
-                                                        if (enableExpressivePlayerControls) {
-                                                            WavySliderTrack(
-                                                                sliderState = sliderState,
-                                                                isPlaying = controllerState.isPlaying,
-                                                                activeColor = playerContentColor,
-                                                                inactiveColor = Color.DarkGray.copy(alpha = 0.5f)
-                                                            )
-                                                        } else {
-                                                            SliderDefaults.Track(
-                                                                modifier =
-                                                                    Modifier
-                                                                        .height(5.dp),
-                                                                enabled = true,
-                                                                sliderState = sliderState,
-                                                                colors =
-                                                                    SliderDefaults.colors().copy(
-                                                                        thumbColor = seed,
-                                                                        activeTrackColor = seed,
-                                                                        inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
-                                                                    ),
-                                                                thumbTrackGapSize = 0.dp,
-                                                                drawTick = { _, _ -> },
-                                                                drawStopIndicator = null,
-                                                            )
-                                                        }
+                                                        SliderDefaults.Track(
+                                                            modifier =
+                                                                Modifier
+                                                                    .height(5.dp),
+                                                            enabled = true,
+                                                            sliderState = sliderState,
+                                                            colors =
+                                                                SliderDefaults.colors().copy(
+                                                                    thumbColor = seed,
+                                                                    activeTrackColor = seed,
+                                                                    inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
+                                                                ),
+                                                            thumbTrackGapSize = 0.dp,
+                                                            drawTick = { _, _ -> },
+                                                            drawStopIndicator = null,
+                                                        )
                                                     },
                                                     thumb = { sliderState ->
-                                                        if (enableExpressivePlayerControls) {
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .width(4.dp)
-                                                                    .height(20.dp)
-                                                                    .background(playerContentColor, RoundedCornerShape(2.dp))
-                                                            )
-                                                        } else {
-                                                            SliderDefaults.Thumb(
-                                                                modifier =
-                                                                    Modifier
-                                                                        .height(18.dp)
-                                                                        .width(8.dp)
-                                                                        .padding(
-                                                                            vertical = 4.dp,
-                                                                        ),
-                                                                thumbSize = DpSize(8.dp, 8.dp),
-                                                                interactionSource =
-                                                                    remember {
-                                                                        MutableInteractionSource()
-                                                                    },
-                                                                colors =
-                                                                    SliderDefaults.colors().copy(
-                                                                        thumbColor = seed,
-                                                                        activeTrackColor = seed,
-                                                                        inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
+                                                        SliderDefaults.Thumb(
+                                                            modifier =
+                                                                Modifier
+                                                                    .height(18.dp)
+                                                                    .width(8.dp)
+                                                                    .padding(
+                                                                        vertical = 4.dp,
                                                                     ),
-                                                                enabled = true,
-                                                            )
-                                                        }
+                                                            thumbSize = DpSize(8.dp, 8.dp),
+                                                            interactionSource =
+                                                                remember {
+                                                                    MutableInteractionSource()
+                                                                },
+                                                            colors =
+                                                                SliderDefaults.colors().copy(
+                                                                    thumbColor = seed,
+                                                                    activeTrackColor = seed,
+                                                                    inactiveTrackColor = Color.DarkGray.copy(alpha = 0.5f),
+                                                                ),
+                                                            enabled = true,
+                                                        )
                                                     },
                                                 )
                                             }
@@ -1334,7 +1273,6 @@ fun NowPlayingScreenContent(
                                          
                                         PlayerControlLayout(
                                             controllerState = controllerState,
-                                            enableExpressive = enableExpressivePlayerControls,
                                         ) {
                                             sharedViewModel.onUIEvent(it)
                                         }

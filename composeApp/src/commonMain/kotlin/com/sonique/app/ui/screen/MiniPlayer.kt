@@ -144,7 +144,6 @@ fun MiniPlayer(
 ) {
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
-    val enableExpressivePlayerControls by sharedViewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
 
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
@@ -645,7 +644,6 @@ fun MiniPlayer(
                             PlayerControlLayout(
                                 controllerState = controllerState,
                                 isSmallSize = true,
-                                enableExpressive = enableExpressivePlayerControls,
                             ) {
                                 sharedViewModel.onUIEvent(it)
                             }

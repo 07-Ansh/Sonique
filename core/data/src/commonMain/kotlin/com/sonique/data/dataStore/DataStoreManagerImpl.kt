@@ -989,25 +989,6 @@ internal class DataStoreManagerImpl(
         }
     }
 
-    override val blurPlayerBackground =
-        settingsDataStore.data.map { preferences ->
-            preferences[BLUR_PLAYER_BACKGROUND] ?: FALSE
-        }
-
-    override suspend fun setBlurPlayerBackground(blur: Boolean) {
-        withContext(Dispatchers.IO) {
-            if (blur) {
-                settingsDataStore.edit { settings ->
-                    settings[BLUR_PLAYER_BACKGROUND] = TRUE
-                }
-            } else {
-                settingsDataStore.edit { settings ->
-                    settings[BLUR_PLAYER_BACKGROUND] = FALSE
-                }
-            }
-        }
-    }
-
     override val playbackSpeed =
         settingsDataStore.data.map { preferences ->
             preferences[PLAYBACK_SPEED] ?: 1.0f
@@ -1262,25 +1243,6 @@ internal class DataStoreManagerImpl(
         }
     }
 
-    override val enableExpressivePlayerControls: Flow<String>
-        get() =
-            settingsDataStore.data.map { preferences ->
-                preferences[EXPRESSIVE_PLAYER_CONTROLS] ?: FALSE
-            }
-
-    override suspend fun setEnableExpressivePlayerControls(enable: Boolean) {
-        withContext(Dispatchers.IO) {
-            if (enable) {
-                settingsDataStore.edit { settings ->
-                    settings[EXPRESSIVE_PLAYER_CONTROLS] = TRUE
-                }
-            } else {
-                settingsDataStore.edit { settings ->
-                    settings[EXPRESSIVE_PLAYER_CONTROLS] = FALSE
-                }
-            }
-        }
-    }
 
 
     override val liquidGlassGlassiness: Flow<Float> =
@@ -1568,7 +1530,6 @@ internal class DataStoreManagerImpl(
         val AUTO_CHECK_FOR_UPDATES = stringPreferencesKey("auto_check_for_updates")
         val UPDATE_CHANNEL = stringPreferencesKey("update_channel")
         val BLUR_FULLSCREEN_LYRICS = stringPreferencesKey("blur_fullscreen_lyrics")
-        val BLUR_PLAYER_BACKGROUND = stringPreferencesKey("blur_player_background")
         val PLAYBACK_SPEED = floatPreferencesKey("playback_speed")
         val PITCH = intPreferencesKey("pitch")
         val OPEN_APP_TIME = intPreferencesKey("open_app_time")
@@ -1586,7 +1547,6 @@ internal class DataStoreManagerImpl(
         val LIQUID_GLASS = stringPreferencesKey("liquid_glass")
         val PAGE_TRANSITIONS = stringPreferencesKey("page_transitions")
         val LIQUID_GLASS_GLASSINESS = floatPreferencesKey("liquid_glass_glassiness")
-        val EXPRESSIVE_PLAYER_CONTROLS = stringPreferencesKey("expressive_player_controls")
 
         val EXPLICIT_CONTENT_ENABLED = stringPreferencesKey("explicit_content_enabled")
 

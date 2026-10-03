@@ -433,7 +433,7 @@ fun NewPlayerScreen(
                     .height(48.dp)
                     .padding(horizontal = artworkLeftEdge)
             ) {
-                IconButton(
+                FilledIconButton(
                     onClick = {
                         scope.launch {
                             offsetYAnimatable.animateTo(
@@ -443,6 +443,11 @@ fun NewPlayerScreen(
                             onDismiss()
                         }
                     },
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = animatedActionContainer,
+                        contentColor = animatedActionContent
+                    ),
                     modifier = Modifier
                         .size(40.dp)
                         .align(Alignment.CenterStart)
@@ -451,7 +456,7 @@ fun NewPlayerScreen(
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         contentDescription = "Dismiss player",
                         tint = animatedActionContent,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
 
@@ -506,17 +511,48 @@ fun NewPlayerScreen(
                     }
                 }
 
-                if (showInlineLyrics) {
-                    val hasLyrics = currentSongData?.lyricsData != null
-                    IconButton(
-                        onClick = { if (hasLyrics) showShareLyricsSheet = true },
-                        enabled = hasLyrics,
-                        modifier = Modifier.align(Alignment.CenterEnd)
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (showInlineLyrics) {
+                        val hasLyrics = currentSongData?.lyricsData != null
+                        FilledIconButton(
+                            onClick = { if (hasLyrics) showShareLyricsSheet = true },
+                            enabled = hasLyrics,
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = animatedActionContainer,
+                                contentColor = animatedActionContent,
+                                disabledContainerColor = animatedActionContainer.copy(alpha = 0.4f),
+                                disabledContentColor = animatedActionContent.copy(alpha = 0.4f)
+                            ),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share Lyrics",
+                                tint = if (hasLyrics) animatedActionContent else animatedActionContent.copy(alpha = 0.4f),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+
+                    FilledIconButton(
+                        onClick = { showMoreOptions = true },
+                        shape = CircleShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = animatedActionContainer,
+                            contentColor = animatedActionContent
+                        ),
+                        modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Share Lyrics",
-                            tint = if (hasLyrics) animatedTitleText else animatedHeaderText.copy(alpha = 0.38f)
+                            painter = painterResource(Res.drawable.more_horiz),
+                            contentDescription = "More Options",
+                            tint = animatedActionContent,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
@@ -1311,7 +1347,7 @@ fun NewPlayerScreen(
             },
             collapsedContent = {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1400,24 +1436,6 @@ fun NewPlayerScreen(
                         iconSize = iconSize,
                         onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
                     )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Box(
-                        modifier = Modifier
-                            .size(buttonSize)
-                            .clip(CircleShape)
-                            .background(animatedActionContainer)
-                            .clickable { showMoreOptions = true },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.more_horiz),
-                            contentDescription = null,
-                            tint = animatedActionContent,
-                            modifier = Modifier.size(iconSize)
-                        )
-                    }
                 }
             }
         ) {

@@ -89,12 +89,7 @@ fun parseReleaseNotes(
         if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("• ")) {
             val content = line.substring(2).trim()
             if (content.isNotBlank()) {
-                val cleaned = content
-                    .replace(Regex("^\\*\\*|\\*\\*$"), "")
-                    .trim()
-                if (cleaned.isNotBlank()) {
-                    bulletHighlights.add(cleaned)
-                }
+                bulletHighlights.add(content)
             }
         }
     }

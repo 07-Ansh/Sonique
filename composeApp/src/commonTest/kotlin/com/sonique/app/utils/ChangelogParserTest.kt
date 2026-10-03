@@ -43,8 +43,18 @@ class ChangelogParserTest {
         assertTrue(parsed.body.contains("Adaptive Color Theming"))
         assertTrue(parsed.body.contains("Smooth Queues"))
         assertEquals(2, parsed.highlights.size)
-        assertEquals("Adaptive Color Theming**: Player controls adapt to artwork.", parsed.highlights[0])
-        assertEquals("Smooth Queues**: Fluid reordering physics.", parsed.highlights[1])
+        assertEquals("**Adaptive Color Theming**: Player controls adapt to artwork.", parsed.highlights[0])
+        assertEquals("**Smooth Queues**: Fluid reordering physics.", parsed.highlights[1])
+    }
+
+    @Test
+    fun testFormatMarkdownText() {
+        val formatted = com.sonique.app.ui.screen.changelog.formatMarkdownText(
+            text = "**Adaptive Color Theming**: Player controls `ExoPlayer` [Sonique](https://github.com)",
+            primaryColor = androidx.compose.ui.graphics.Color.Blue,
+            onSurfaceColor = androidx.compose.ui.graphics.Color.White,
+        )
+        assertEquals("Adaptive Color Theming: Player controls ExoPlayer Sonique", formatted.text)
     }
 
     @Test

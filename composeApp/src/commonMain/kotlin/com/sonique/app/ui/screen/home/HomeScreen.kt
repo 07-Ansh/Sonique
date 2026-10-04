@@ -218,6 +218,9 @@ fun HomeScreen(
     var accountShow by rememberSaveable {
         mutableStateOf(false)
     }
+    var showChangelogSheet by rememberSaveable {
+        mutableStateOf(false)
+    }
     val regionChart by viewModel.regionCodeChart.collectAsStateWithLifecycle()
     val reloadDestination by sharedViewModel.reloadDestination.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
@@ -548,7 +551,10 @@ fun HomeScreen(
                             }
                         },
             ) {
-                HomeTopAppBar(navController)
+                HomeTopAppBar(
+                    navController = navController,
+                    onChangelogClick = { showChangelogSheet = true },
+                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     modifier =
@@ -596,6 +602,11 @@ fun HomeScreen(
                 }
             }
         }
+
+        ChangelogBottomSheet(
+            visible = showChangelogSheet,
+            onDismiss = { showChangelogSheet = false },
+        )
     }
 }
 
@@ -603,10 +614,10 @@ fun HomeScreen(
 @Composable
 fun HomeTopAppBar(
     navController: NavController,
+    onChangelogClick: () -> Unit = {},
     accountInfo: Pair<String, String>? = null,
     sharedViewModel: SharedViewModel = koinInject(),
 ) {
-    var showChangelogSheet by rememberSaveable { mutableStateOf(false) }
     val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val backdrop = rememberBackdrop()
 
@@ -659,7 +670,7 @@ fun HomeTopAppBar(
                 backdrop = backdrop,
                 resId = Res.drawable.metro_newspaper,
                 contentDescription = "Changelogs",
-                onClick = { showChangelogSheet = true }
+                onClick = onChangelogClick
             )
             Spacer(modifier = Modifier.width(8.dp))
             TopBarCircularIconButton(
@@ -671,11 +682,6 @@ fun HomeTopAppBar(
             )
         }
     }
-
-    ChangelogBottomSheet(
-        visible = showChangelogSheet,
-        onDismiss = { showChangelogSheet = false }
-    )
 }
 
 @Composable

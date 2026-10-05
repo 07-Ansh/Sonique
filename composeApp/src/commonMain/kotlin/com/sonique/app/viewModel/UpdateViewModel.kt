@@ -6,7 +6,6 @@ import com.sonique.app.viewModel.base.BaseViewModel
 import com.sonique.domain.repository.ReleaseInfo
 import com.sonique.domain.repository.UpdateRepository
 import com.sonique.domain.repository.UpdateStatus
-import com.sonique.app.ui.screen.changelog.ChangelogData
 import com.sonique.app.ui.screen.changelog.ChangelogRelease
 import com.sonique.app.ui.screen.changelog.parseReleaseNotes
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +17,7 @@ import kotlinx.coroutines.launch
 sealed interface ChangelogUiState {
     data object Loading : ChangelogUiState
     data class Success(val releases: List<ChangelogRelease>, val isOffline: Boolean = false) : ChangelogUiState
-    data class Error(val message: String, val fallbackReleases: List<ChangelogRelease>) : ChangelogUiState
+    data class Error(val message: String) : ChangelogUiState
 }
 
 class UpdateViewModel(
@@ -33,9 +32,7 @@ class UpdateViewModel(
 
     private var cachedReleases: List<ChangelogRelease>? = null
 
-    private val _changelogState = MutableStateFlow<ChangelogUiState>(
-        ChangelogUiState.Success(cachedReleases ?: ChangelogData.fallbackReleases)
-    )
+    private val _changelogState = MutableStateFlow<ChangelogUiState>(ChangelogUiState.Loading)
     val changelogState: StateFlow<ChangelogUiState> = _changelogState.asStateFlow()
 
     val currentVersion: String = BuildKonfig.versionName
@@ -71,13 +68,18 @@ class UpdateViewModel(
                         installedVersion = localVersion,
                     )
                 }
-                val finalReleases = if (parsed.isNotEmpty()) parsed else ChangelogData.fallbackReleases
-                cachedReleases = finalReleases
-                _changelogState.value = ChangelogUiState.Success(finalReleases)
+                if (parsed.isNotEmpty()) {
+                    cachedReleases = parsed
+                    _changelogState.value = ChangelogUiState.Success(parsed)
+                } else {
+                    _changelogState.value = ChangelogUiState.Error("No releases found on GitHub.")
+                }
             }.onFailure { error ->
-                if (_changelogState.value !is ChangelogUiState.Success) {
-                    val fallback = ChangelogData.fallbackReleases
-                    _changelogState.value = ChangelogUiState.Success(fallback, isOffline = true)
+                val current = cachedReleases
+                if (current != null) {
+                    _changelogState.value = ChangelogUiState.Success(current, isOffline = true)
+                } else {
+                    _changelogState.value = ChangelogUiState.Error(error.message ?: "Unable to fetch releases from GitHub.")
                 }
             }
         }

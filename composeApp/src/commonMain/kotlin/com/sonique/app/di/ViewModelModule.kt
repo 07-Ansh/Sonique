@@ -41,6 +41,7 @@ val viewModelModule =
                 get(),
                 get(),
                 get(),
+                get(),
             )
         }
         viewModel {
@@ -74,6 +75,8 @@ val viewModelModule =
             AlbumViewModel(
                 get(),
                 get(),
+                get(),
+                get(),
             )
         }
         viewModel {
@@ -101,6 +104,8 @@ val viewModelModule =
         }
         viewModel {
             PlaylistViewModel(
+                get(),
+                get(),
                 get(),
                 get(),
                 get(),

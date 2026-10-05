@@ -66,6 +66,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import com.sonique.app.ui.component.AppBottomNavigationBar
 import com.sonique.app.ui.component.AppNavigationRail
 import com.sonique.app.ui.component.LiquidGlassAppBottomNavigationBar
+import com.sonique.app.ui.screen.changelog.ChangelogBottomSheet
 
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
@@ -372,12 +373,17 @@ fun App(
                 )
             }
 
+            val showChangelogSheet by viewModel.showChangelogSheet.collectAsStateWithLifecycle()
+
             val showChangelog by viewModel.showChangelog.collectAsStateWithLifecycle()
             if (showChangelog) {
                 val changelogText by viewModel.changelogText.collectAsStateWithLifecycle()
+                val changelogVersion by viewModel.changelogVersionName.collectAsStateWithLifecycle()
                 com.sonique.app.ui.component.ChangelogDialog(
                     changelog = changelogText,
-                    onDismiss = { viewModel.dismissChangelog() }
+                    versionName = changelogVersion,
+                    onDismiss = { viewModel.dismissChangelog() },
+                    onViewFullChangelog = { viewModel.viewFullChangelogFromWhatsNew() }
                 )
             }
 
@@ -688,6 +694,10 @@ fun App(
                         }
                     }
                 }
+                ChangelogBottomSheet(
+                    visible = showChangelogSheet,
+                    onDismiss = { viewModel.dismissChangelogSheet() },
+                )
                 com.sonique.app.ui.component.SoniqueToastHost()
             }
         }

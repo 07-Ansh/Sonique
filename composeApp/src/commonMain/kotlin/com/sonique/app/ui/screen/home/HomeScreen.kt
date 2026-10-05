@@ -120,7 +120,6 @@ import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.ListenTogetherDestination
 import com.sonique.app.ui.navigation.destination.home.MoodDestination
 import com.sonique.app.ui.navigation.destination.home.SettingsDestination
-import com.sonique.app.ui.screen.changelog.ChangelogBottomSheet
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
@@ -216,9 +215,6 @@ fun HomeScreen(
     val chartLoading by viewModel.loadingChart.collectAsStateWithLifecycle()
     val loading by viewModel.loading.collectAsStateWithLifecycle()
     var accountShow by rememberSaveable {
-        mutableStateOf(false)
-    }
-    var showChangelogSheet by rememberSaveable {
         mutableStateOf(false)
     }
     val regionChart by viewModel.regionCodeChart.collectAsStateWithLifecycle()
@@ -553,7 +549,7 @@ fun HomeScreen(
             ) {
                 HomeTopAppBar(
                     navController = navController,
-                    onChangelogClick = { showChangelogSheet = true },
+                    onChangelogClick = { sharedViewModel.openChangelogSheet() },
                 )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
@@ -602,11 +598,6 @@ fun HomeScreen(
                 }
             }
         }
-
-        ChangelogBottomSheet(
-            visible = showChangelogSheet,
-            onDismiss = { showChangelogSheet = false },
-        )
     }
 }
 

@@ -40,10 +40,11 @@ import com.sonique.app.viewModel.UpdateViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import com.sonique.app.expect.isDebugBuild
 import sonique.composeapp.generated.resources.*
 
 enum class SettingsSubCategory {
-    APPEARANCE, GENERAL, UPDATES, AUDIO, PLAYBACK, SPOTIFY, SPONSORBLOCK, BACKUP, ABOUT, STORAGE
+    APPEARANCE, GENERAL, UPDATES, AUDIO, PLAYBACK, SPOTIFY, SPONSORBLOCK, BACKUP, ABOUT, STORAGE, DEVELOPER
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalCalfApi::class)
@@ -154,6 +155,7 @@ fun SettingScreen(
                         SettingsSubCategory.BACKUP -> stringResource(Res.string.backup)
                         SettingsSubCategory.ABOUT -> stringResource(Res.string.about_us)
                         SettingsSubCategory.STORAGE -> stringResource(Res.string.storage)
+                        SettingsSubCategory.DEVELOPER -> "Developer Options"
                     },
                     backdrop = backdrop,
                     onBack = { activeSubCategory = null }
@@ -168,6 +170,7 @@ fun SettingScreen(
                         SettingsSubCategory.BACKUP -> BackupSettingsContent(viewModel)
                         SettingsSubCategory.ABOUT -> AboutSettingsContent(navController)
                         SettingsSubCategory.STORAGE -> StorageSettingsContent(viewModel)
+                        SettingsSubCategory.DEVELOPER -> DeveloperSettingsContent(sharedViewModel)
                         SettingsSubCategory.UPDATES -> {}
                     }
                 }
@@ -323,6 +326,22 @@ private fun MainSettingsList(
                         )
                     )
                 )
+            }
+
+            if (isDebugBuild()) {
+                item {
+                    Material3SettingsGroup(
+                        title = "Developer",
+                        items = listOf(
+                            Material3SettingsItem(
+                                icon = Icons.Default.Code,
+                                title = { Text("Developer Options") },
+                                description = { Text("Test modals, dialogs, simulation tools & environment specs") },
+                                onClick = { onCategoryClick(SettingsSubCategory.DEVELOPER) }
+                            )
+                        )
+                    )
+                }
             }
         }
     }

@@ -201,6 +201,8 @@ class DragDropState internal constructor(
 
     private var draggedDistance by mutableFloatStateOf(0f)
     private var initialItemOffset by mutableIntStateOf(0)
+    private var currentPointerY by mutableFloatStateOf(0f)
+    private var scrollVelocity by mutableFloatStateOf(0f)
 
     val draggingItemOffset: Float
         get() {
@@ -223,16 +225,23 @@ class DragDropState internal constructor(
             initialIndexOfDraggedItem = hitItem.index
             currentLogicalIndex = hitItem.index
             draggedDistance = 0f
+            currentPointerY = offset.y
+            scrollVelocity = 0f
             haptic?.performHapticFeedback(HapticFeedbackType.LongPress)
         }
     }
 
     fun onDrag(offset: Offset) {
-        val key = draggedItemKey ?: return
+        if (draggedItemKey == null) return
         draggedDistance += offset.y
+        currentPointerY += offset.y
 
-        handleOverScroll()
+        checkForSwap()
+        updateOverScroll()
+    }
 
+    private fun checkForSwap() {
+        val key = draggedItemKey ?: return
         val currentItem = state.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return
         val currentIdx = currentLogicalIndex ?: currentItem.index
 
@@ -302,47 +311,71 @@ class DragDropState internal constructor(
      */
     fun checkForOverScroll(): Float = 0f
 
-    private fun handleOverScroll() {
-        val key = draggedItemKey ?: run {
-            overscrollJob?.cancel()
+    private fun updateOverScroll() {
+        if (draggedItemKey == null) {
+            stopOverScroll()
             return
         }
-        val currentItem = state.layoutInfo.visibleItemsInfo.firstOrNull { it.key == key } ?: return
-        val currentTop = currentItem.offset + draggingItemOffset
-        val currentBottom = currentTop + currentItem.size
 
-        val viewportStart = state.layoutInfo.viewportStartOffset
-        val viewportEnd = state.layoutInfo.viewportEndOffset
-        val edgeThreshold = 180f // Threshold from edge in px
+        val layoutInfo = state.layoutInfo
+        val viewportHeight = (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset).toFloat()
+        if (viewportHeight <= 0f) return
 
-        val scrollDelta = when {
-            currentBottom > viewportEnd - edgeThreshold -> {
-                val proximity = (currentBottom - (viewportEnd - edgeThreshold)).coerceIn(0f, edgeThreshold)
-                (proximity / edgeThreshold) * 18f
+        val edgeThreshold = 140f
+        val maxScrollSpeed = 24f
+
+        val topBound = layoutInfo.viewportStartOffset + edgeThreshold
+        val bottomBound = layoutInfo.viewportEndOffset - edgeThreshold
+
+        val velocity = when {
+            currentPointerY < topBound && state.canScrollBackward -> {
+                val ratio = ((topBound - currentPointerY) / edgeThreshold).coerceIn(0f, 1f)
+                -ratio * maxScrollSpeed
             }
-            currentTop < viewportStart + edgeThreshold && (currentLogicalIndex ?: currentItem.index) > minDragIndex -> {
-                val proximity = ((viewportStart + edgeThreshold) - currentTop).coerceIn(0f, edgeThreshold)
-                -(proximity / edgeThreshold) * 18f
+            currentPointerY > bottomBound && state.canScrollForward -> {
+                val ratio = ((currentPointerY - bottomBound) / edgeThreshold).coerceIn(0f, 1f)
+                ratio * maxScrollSpeed
             }
             else -> 0f
         }
 
-        if (scrollDelta != 0f) {
+        scrollVelocity = velocity
+
+        if (velocity != 0f) {
             if (overscrollJob?.isActive != true) {
-                overscrollJob = scope.launch {
-                    while (isActive && draggedItemKey != null) {
-                        state.scrollBy(scrollDelta)
-                        delay(16)
-                    }
-                }
+                startOverScrollJob()
             }
         } else {
-            overscrollJob?.cancel()
+            stopOverScroll()
         }
     }
 
-    fun onDragEnd() {
+    private fun startOverScrollJob() {
         overscrollJob?.cancel()
+        overscrollJob = scope.launch {
+            while (isActive && draggedItemKey != null && scrollVelocity != 0f) {
+                val delta = scrollVelocity
+                val consumed = state.scrollBy(delta)
+                if (consumed != 0f) {
+                    checkForSwap()
+                    updateOverScroll()
+                } else {
+                    stopOverScroll()
+                    break
+                }
+                delay(16)
+            }
+        }
+    }
+
+    private fun stopOverScroll() {
+        overscrollJob?.cancel()
+        overscrollJob = null
+        scrollVelocity = 0f
+    }
+
+    fun onDragEnd() {
+        stopOverScroll()
         val key = draggedItemKey
         val initial = initialIndexOfDraggedItem
         val current = currentLogicalIndex
@@ -363,6 +396,8 @@ class DragDropState internal constructor(
             currentLogicalIndex = null
             draggedDistance = 0f
             initialItemOffset = 0
+            currentPointerY = 0f
+            scrollVelocity = 0f
 
             scope.launch {
                 animatable.animateTo(
@@ -382,7 +417,7 @@ class DragDropState internal constructor(
     }
 
     fun onDragCancel() {
-        overscrollJob?.cancel()
+        stopOverScroll()
         resetState()
     }
 
@@ -395,5 +430,7 @@ class DragDropState internal constructor(
         initialItemOffset = 0
         currentLogicalIndex = null
         initialIndexOfDraggedItem = null
+        currentPointerY = 0f
+        scrollVelocity = 0f
     }
 }

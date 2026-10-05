@@ -166,7 +166,6 @@ fun ChangelogBottomSheet(
     val density = LocalDensity.current
     val lazyListState = rememberLazyListState()
 
-    val offsetAnimatable = remember { Animatable(10000f) }
     val sheetSpringSpec = remember {
         spring<Float>(
             dampingRatio = Spring.DampingRatioNoBouncy,
@@ -184,14 +183,16 @@ fun ChangelogBottomSheet(
         val halfOffsetPx = (sheetHeightPx - halfHeightPx).coerceAtLeast(0f)
         val hiddenOffsetPx = sheetHeightPx + with(density) { 60.dp.toPx() }
 
+        val offsetAnimatable = remember { Animatable(hiddenOffsetPx) }
+
         // Track where the current drag gesture originated (Fullscreen vs Stage 1)
         var gestureStartOffset by remember { mutableFloatStateOf(halfOffsetPx) }
 
         // When `visible` toggles:
-        LaunchedEffect(visible, sheetHeightPx) {
+        LaunchedEffect(visible) {
             if (visible) {
                 offsetAnimatable.snapTo(hiddenOffsetPx)
-                lazyListState.scrollToItem(0)
+                coroutineScope.launch { runCatching { lazyListState.scrollToItem(0) } }
                 gestureStartOffset = halfOffsetPx
                 updateViewModel.loadChangelog()
                 offsetAnimatable.animateTo(
@@ -596,8 +597,20 @@ fun ChangelogBottomSheet(
                                 }
                             }
                             is ChangelogUiState.Error -> {
-                                items(state.fallbackReleases, key = { it.version }) { release ->
-                                    ReleaseSection(release = release)
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 48.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = state.message,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
                                 }
                             }
                         }

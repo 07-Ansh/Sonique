@@ -34,6 +34,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -74,9 +79,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
@@ -120,11 +127,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.Brush
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.sonique.app.expect.ui.MediaPlayerView
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -135,6 +147,7 @@ import com.sonique.app.extension.getAmbientTintedWhiteColor
 import com.sonique.app.extension.cleanSongTitle
 import com.sonique.app.extension.formatDuration
 import com.sonique.app.ui.component.BottomSheet
+import com.sonique.domain.utils.isVideoThumbnailUrl
 import com.sonique.app.ui.component.rememberBottomSheetState
 import com.sonique.app.ui.component.collapsedAnchor
 import com.sonique.app.ui.component.FreshQueueContent
@@ -228,6 +241,35 @@ fun NewPlayerScreen(
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showMoreOptions by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+
+    val canvasData = currentSongData?.canvasData
+    val isCanvasActive = canvasData != null && !showInlineLyrics
+    var showControls by rememberSaveable { mutableStateOf(true) }
+
+    LaunchedEffect(canvasData, showInlineLyrics) {
+        if (canvasData == null || showInlineLyrics) {
+            showControls = true
+        }
+    }
+
+    LaunchedEffect(isCanvasActive, showControls) {
+        if (isCanvasActive && showControls) {
+            kotlinx.coroutines.delay(4500)
+            showControls = false
+        }
+    }
+
+    val controlsAlpha by animateFloatAsState(
+        targetValue = if (!isCanvasActive || showControls) 1f else 0f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "controlsAlpha"
+    )
+
+    val artworkVisibilityAlpha by animateFloatAsState(
+        targetValue = if (isCanvasActive) 0f else 1f,
+        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        label = "artworkVisibilityAlpha"
+    )
 
     val paletteState = com.kmpalette.rememberPaletteState()
     val defaultBg = MaterialTheme.colorScheme.background
@@ -337,13 +379,13 @@ fun NewPlayerScreen(
         val dynamicTopSpacing = (screenHeight * 0.014f).coerceIn(8.dp, 16.dp)
         val dynamicHeaderToArtworkSpacing = (screenHeight * 0.012f).coerceIn(8.dp, 16.dp)
         val dynamicArtworkToInfoSpacing = (screenHeight * 0.018f).coerceIn(12.dp, 22.dp)
-        val dynamicInfoToSliderSpacing = (screenHeight * 0.030f).coerceIn(22.dp, 28.dp)
-        val dynamicSliderToControlsSpacing = (screenHeight * 0.030f).coerceIn(22.dp, 28.dp)
-        val dynamicControlsHeight = (screenHeight * 0.082f).coerceIn(62.dp, 70.dp)
+        val dynamicInfoToSliderSpacing = (screenHeight * 0.024f).coerceIn(16.dp, 22.dp)
+        val dynamicSliderToControlsSpacing = (screenHeight * 0.024f).coerceIn(16.dp, 22.dp)
+        val dynamicControlsHeight = (screenHeight * 0.095f).coerceIn(72.dp, 80.dp)
         val dynamicControlsToBottomSpacing = (screenHeight * 0.038f).coerceIn(26.dp, 34.dp)
         val dynamicActionButtonSize = 42.dp
-        val dynamicBottomBarContentHeight = (screenHeight * 0.076f).coerceIn(60.dp, 68.dp)
-        val dynamicBottomButtonSize = 42.dp
+        val dynamicBottomBarContentHeight = (screenHeight * 0.082f).coerceIn(66.dp, 74.dp)
+        val dynamicBottomButtonSize = 48.dp
 
         val bottomInsets = WindowInsets.systemBars.only(WindowInsetsSides.Bottom).asPaddingValues().calculateBottomPadding()
         val collapsedBarHeight = dynamicBottomBarContentHeight + bottomInsets
@@ -354,9 +396,23 @@ fun NewPlayerScreen(
             initialAnchor = collapsedAnchor
         )
 
+        LaunchedEffect(queueSheetState.isCollapsed) {
+            if (!queueSheetState.isCollapsed) {
+                showControls = true
+            }
+        }
+
+        val bottomBarBgAlpha by animateFloatAsState(
+            targetValue = if (isCanvasActive && queueSheetState.isCollapsed) controlsAlpha else 1f,
+            animationSpec = tween(300),
+            label = "bottomBarBgAlpha"
+        )
+
         BackHandler(enabled = isVisible && queueSheetState.isCollapsed) {
             if (showInlineLyrics) {
                 showInlineLyrics = false
+            } else if (isCanvasActive && !showControls) {
+                showControls = true
             } else {
                 scope.launch {
                     offsetYAnimatable.animateTo(
@@ -368,12 +424,89 @@ fun NewPlayerScreen(
             }
         }
 
+        if (isCanvasActive) {
+            val currentCanvas = canvasData ?: return@BoxWithConstraints
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        showControls = !showControls
+                    }
+            ) {
+                Crossfade(
+                    targetState = Pair(currentCanvas.isVideo, currentCanvas.url),
+                    animationSpec = tween(400),
+                    label = "CanvasCrossfade"
+                ) { (isVideo, url) ->
+                    key(url) {
+                        if (isVideo) {
+                            MediaPlayerView(
+                                url = url,
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .wrapContentWidth(unbounded = true, align = Alignment.CenterHorizontally)
+                                    .align(Alignment.Center)
+                            )
+                        } else {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalPlatformContext.current)
+                                    .data(url)
+                                    .diskCachePolicy(CachePolicy.ENABLED)
+                                    .crossfade(400)
+                                    .build(),
+                                contentDescription = "Canvas",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
+                }
+
+                // Vertical gradient scrim for text/control legibility
+                val scrimAlpha by animateFloatAsState(
+                    targetValue = if (showControls) 0.85f else 0.2f,
+                    animationSpec = tween(300),
+                    label = "canvasScrimAlpha"
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = scrimAlpha }
+                        .background(
+                            Brush.verticalGradient(
+                                colorStops = arrayOf(
+                                    0.0f to Color.Black.copy(alpha = 0.65f),
+                                    0.22f to Color.Black.copy(alpha = 0.2f),
+                                    0.45f to Color.Transparent,
+                                    0.65f to Color.Black.copy(alpha = 0.45f),
+                                    0.85f to Color.Black.copy(alpha = 0.82f),
+                                    1.0f to Color.Black.copy(alpha = 0.94f)
+                                )
+                            )
+                        )
+                )
+            }
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
                 .padding(bottom = collapsedBarHeight)
+                .then(
+                    if (isCanvasActive) {
+                        Modifier.clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            showControls = !showControls
+                        }
+                    } else Modifier
+                )
                 .then(
                     if (!showInlineLyrics && queueSheetState.isCollapsed) {
                         Modifier.pointerInput(Unit) {
@@ -425,8 +558,9 @@ fun NewPlayerScreen(
                     .fillMaxWidth()
                     .height(48.dp)
                     .padding(horizontal = artworkLeftEdge)
+                    .graphicsLayer { alpha = controlsAlpha }
             ) {
-                IconButton(
+                FilledIconButton(
                     onClick = {
                         scope.launch {
                             offsetYAnimatable.animateTo(
@@ -436,6 +570,11 @@ fun NewPlayerScreen(
                             onDismiss()
                         }
                     },
+                    shape = CircleShape,
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = animatedActionContainer,
+                        contentColor = animatedActionContent
+                    ),
                     modifier = Modifier
                         .size(40.dp)
                         .align(Alignment.CenterStart)
@@ -444,7 +583,7 @@ fun NewPlayerScreen(
                         imageVector = Icons.Rounded.KeyboardArrowDown,
                         contentDescription = "Dismiss player",
                         tint = animatedActionContent,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
 
@@ -480,34 +619,99 @@ fun NewPlayerScreen(
                     )
                     if (!showInlineLyrics) {
                         Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = trackTitle.ifBlank { "Unknown Title" },
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Normal,
-                            color = animatedTitleText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        AnimatedContent(
+                            targetState = trackTitle.ifBlank { "Unknown Title" },
+                            transitionSpec = {
+                                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(200))
+                            },
+                            label = "headerTrackTitle"
+                        ) { title ->
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                color = animatedTitleText,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
 
-                if (showInlineLyrics) {
-                    val hasLyrics = currentSongData?.lyricsData != null
-                    IconButton(
-                        onClick = { if (hasLyrics) showShareLyricsSheet = true },
-                        enabled = hasLyrics,
-                        modifier = Modifier.align(Alignment.CenterEnd)
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (showInlineLyrics) {
+                        val hasLyrics = currentSongData?.lyricsData != null
+                        FilledIconButton(
+                            onClick = { if (hasLyrics) showShareLyricsSheet = true },
+                            enabled = hasLyrics,
+                            shape = CircleShape,
+                            colors = IconButtonDefaults.filledIconButtonColors(
+                                containerColor = animatedActionContainer,
+                                contentColor = animatedActionContent,
+                                disabledContainerColor = animatedActionContainer.copy(alpha = 0.4f),
+                                disabledContentColor = animatedActionContent.copy(alpha = 0.4f)
+                            ),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share Lyrics",
+                                tint = if (hasLyrics) animatedActionContent else animatedActionContent.copy(alpha = 0.4f),
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+
+                    FilledIconButton(
+                        onClick = { showMoreOptions = true },
+                        shape = CircleShape,
+                        colors = IconButtonDefaults.filledIconButtonColors(
+                            containerColor = animatedActionContainer,
+                            contentColor = animatedActionContent
+                        ),
+                        modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Share Lyrics",
-                            tint = if (hasLyrics) animatedTitleText else animatedHeaderText.copy(alpha = 0.38f)
+                            painter = painterResource(Res.drawable.more_horiz),
+                            contentDescription = "More Options",
+                            tint = animatedActionContent,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(dynamicHeaderToArtworkSpacing))
+
+            val queue = activeQueueData?.data?.listTracks?.ifEmpty { null }
+                ?: queueData?.data?.listTracks
+                ?: emptyList()
+            val currentVideoId = nowPlayingState?.mediaItem?.mediaId?.takeIf { it.isNotBlank() }
+                ?: nowPlayingState?.track?.videoId?.takeIf { it.isNotBlank() }
+                ?: currentSongData?.songInfoData?.videoId?.takeIf { it.isNotBlank() }
+            val currentQueueIndex = remember(queue, currentVideoId, trackTitle) {
+                val idMatch = if (!currentVideoId.isNullOrBlank()) {
+                    queue.indexOfFirst { it.videoId == currentVideoId }
+                } else -1
+                if (idMatch != -1) {
+                    idMatch
+                } else {
+                    val titleMatch = queue.indexOfFirst {
+                        it.title.equals(rawTrackTitle, ignoreCase = true) ||
+                        it.title?.cleanSongTitle().equals(trackTitle, ignoreCase = true)
+                    }
+                    if (titleMatch != -1) {
+                        titleMatch
+                    } else {
+                        val orderIdx = musicServiceHandler.currentOrderIndex()
+                        if (orderIdx in queue.indices) orderIdx else 0
+                    }
+                }
+            }
 
             Box(
                 contentAlignment = Alignment.Center,
@@ -577,32 +781,6 @@ fun NewPlayerScreen(
                     }
                 } else {
                     // Album artwork — smooth stable queue-based swipe (zero flicker, fast & slow)
-                    val queue = activeQueueData?.data?.listTracks?.ifEmpty { null }
-                        ?: queueData?.data?.listTracks
-                        ?: emptyList()
-                    val currentVideoId = nowPlayingState?.mediaItem?.mediaId?.takeIf { it.isNotBlank() }
-                        ?: nowPlayingState?.track?.videoId?.takeIf { it.isNotBlank() }
-                        ?: currentSongData?.songInfoData?.videoId?.takeIf { it.isNotBlank() }
-                    val currentQueueIndex = remember(queue, currentVideoId, trackTitle) {
-                        val idMatch = if (!currentVideoId.isNullOrBlank()) {
-                            queue.indexOfFirst { it.videoId == currentVideoId }
-                        } else -1
-                        if (idMatch != -1) {
-                            idMatch
-                        } else {
-                            val titleMatch = queue.indexOfFirst {
-                                it.title.equals(rawTrackTitle, ignoreCase = true) ||
-                                it.title?.cleanSongTitle().equals(trackTitle, ignoreCase = true)
-                            }
-                            if (titleMatch != -1) {
-                                titleMatch
-                            } else {
-                                val orderIdx = musicServiceHandler.currentOrderIndex()
-                                if (orderIdx in queue.indices) orderIdx else 0
-                            }
-                        }
-                    }
-
                     val totalPages = if (queue.isNotEmpty()) queue.size else 1
                     val safeInitialPage = currentQueueIndex.coerceIn(0, maxOf(0, totalPages - 1))
 
@@ -632,7 +810,18 @@ fun NewPlayerScreen(
                             currentQueueIndex != pagerState.currentPage &&
                             !pagerState.isScrollInProgress
                         ) {
-                            pagerState.scrollToPage(currentQueueIndex)
+                            val pageDiff = kotlin.math.abs(currentQueueIndex - pagerState.currentPage)
+                            if (pageDiff in 1..2) {
+                                pagerState.animateScrollToPage(
+                                    page = currentQueueIndex,
+                                    animationSpec = tween(
+                                        durationMillis = 380,
+                                        easing = FastOutSlowInEasing
+                                    )
+                                )
+                            } else {
+                                pagerState.scrollToPage(currentQueueIndex)
+                            }
                         }
                     }
 
@@ -673,6 +862,7 @@ fun NewPlayerScreen(
                                 .graphicsLayer {
                                     scaleX = artworkScale
                                     scaleY = artworkScale
+                                    alpha = artworkVisibilityAlpha
                                 }
                                 .then(
                                     if (totalPages <= 1) {
@@ -719,7 +909,8 @@ fun NewPlayerScreen(
                                 flingBehavior = flingBehavior,
                                 key = { page -> "${page}_${queue.getOrNull(page)?.videoId ?: page}" },
                                 modifier = Modifier.fillMaxSize(),
-                                userScrollEnabled = totalPages > 1,
+                                userScrollEnabled = !isCanvasActive && totalPages > 1,
+                                pageSpacing = 16.dp,
                             ) { page ->
                                 val song = queue.getOrNull(page)
                                 val isCurrentActivePage = (page == currentQueueIndex) || (queue.isEmpty() && page == 0)
@@ -737,31 +928,62 @@ fun NewPlayerScreen(
                                         modifier = Modifier
                                             .size(thumbnailSize)
                                             .clip(RoundedCornerShape(ThumbnailCornerRadius * 2))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant)
+                                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        if (artUrl.isNotEmpty()) {
-                                            AsyncImage(
-                                                model = ImageRequest
-                                                    .Builder(LocalPlatformContext.current)
-                                                    .data(artUrl)
-                                                    .crossfade(150)
-                                                    .build(),
-                                                contentDescription = null,
-                                                contentScale = ContentScale.Crop,
-                                                onSuccess = {
-                                                    if (page == currentQueueIndex || (queue.isEmpty() && page == 0)) {
-                                                        val bm = it.result.image.toImageBitmap()
-                                                        extractedBitmap = bm
-                                                        sharedViewModel.setBitmap(bm)
-                                                    }
-                                                },
-                                                modifier = Modifier.fillMaxSize()
-                                            )
+                                        val isArtResolved = artUrl.isNotEmpty() && !isVideoThumbnailUrl(artUrl)
+                                        val showLoader = !isArtResolved && (artUrl.isEmpty() || (isCurrentActivePage && currentSongData?.isArtworkLoading == true))
+                                        AnimatedContent(
+                                            targetState = showLoader,
+                                            transitionSpec = {
+                                                fadeIn(animationSpec = tween(250)) togetherWith
+                                                    fadeOut(animationSpec = tween(250))
+                                            },
+                                            label = "ArtworkLoadingTransition",
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) { isLoaderVisible ->
+                                            if (isLoaderVisible) {
+                                                GoogleCircularProgressIndicator(
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                )
+                                            } else {
+                                                AsyncImage(
+                                                    model = ImageRequest
+                                                        .Builder(LocalPlatformContext.current)
+                                                        .data(artUrl)
+                                                        .crossfade(250)
+                                                        .build(),
+                                                    contentDescription = null,
+                                                    contentScale = ContentScale.Crop,
+                                                    onSuccess = {
+                                                        if (page == currentQueueIndex || (queue.isEmpty() && page == 0)) {
+                                                            val bm = it.result.image.toImageBitmap()
+                                                            extractedBitmap = bm
+                                                            sharedViewModel.setBitmap(bm)
+                                                        }
+                                                    },
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                    }
+
+                    if (isCanvasActive) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    showControls = !showControls
+                                }
+                        )
                     }
                 }
             }
@@ -780,6 +1002,7 @@ fun NewPlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = dynamicHorizontalPadding)
+                    .graphicsLayer { alpha = controlsAlpha }
             ) {
                 AnimatedContent(
                     targetState = showInlineLyrics,
@@ -791,9 +1014,15 @@ fun NewPlayerScreen(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(RoundedCornerShape(ThumbnailCornerRadius * 2))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center
                             ) {
-                                if (trackArtwork.isNotEmpty()) {
+                                if (currentSongData?.isArtworkLoading == true || trackArtwork.isEmpty()) {
+                                    GoogleCircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                } else {
                                     AsyncImage(
                                         model = ImageRequest
                                             .Builder(LocalPlatformContext.current)
@@ -811,11 +1040,25 @@ fun NewPlayerScreen(
                     }
                 }
 
+                var previousQueueIndex by remember { mutableIntStateOf(currentQueueIndex) }
+                val isAdvancingForward = currentQueueIndex >= previousQueueIndex
+                LaunchedEffect(currentQueueIndex) {
+                    previousQueueIndex = currentQueueIndex
+                }
+
                 Column(modifier = Modifier.weight(1f)) {
                     AnimatedContent(
                         targetState = trackTitle,
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        label = "title"
+                        transitionSpec = {
+                            if (isAdvancingForward) {
+                                (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { it / 3 } + fadeIn(tween(350)))
+                                    .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -it / 3 } + fadeOut(tween(250)))
+                            } else {
+                                (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { -it / 3 } + fadeIn(tween(350)))
+                                    .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { it / 3 } + fadeOut(tween(250)))
+                            }.using(SizeTransform(clip = false))
+                        },
+                        label = "trackTitleTransition"
                     ) { title ->
                         Text(
                             text = title,
@@ -850,32 +1093,47 @@ fun NewPlayerScreen(
                                     .padding(end = 4.dp)
                             )
                         }
-                        Text(
-                            text = trackArtist.ifBlank { "Unknown Artist" },
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Normal,
-                            color = animatedArtistText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier
-                                .weight(1f, fill = false)
-                                .then(
-                                    if (controllerState.isPlaying) {
-                                        Modifier.basicMarquee(
-                                            iterations = Int.MAX_VALUE,
-                                            animationMode = MarqueeAnimationMode.Immediately
-                                        )
-                                    } else Modifier
-                                )
-                                .clickable {
-                                    val song = nowPlayingState?.songEntity
-                                    (song?.artistId?.firstOrNull()?.takeIf { it.isNotEmpty() }
-                                        ?: currentSongData?.songInfoData?.authorId)?.let { channelId ->
-                                        onDismiss()
-                                        navController.navigate(ArtistDestination(channelId = channelId))
+                        AnimatedContent(
+                            targetState = trackArtist.ifBlank { "Unknown Artist" },
+                            transitionSpec = {
+                                if (isAdvancingForward) {
+                                    (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { it / 3 } + fadeIn(tween(350)))
+                                        .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { -it / 3 } + fadeOut(tween(250)))
+                                } else {
+                                    (slideInHorizontally(animationSpec = tween(350, easing = FastOutSlowInEasing)) { -it / 3 } + fadeIn(tween(350)))
+                                        .togetherWith(slideOutHorizontally(animationSpec = tween(280, easing = FastOutSlowInEasing)) { it / 3 } + fadeOut(tween(250)))
+                                }.using(SizeTransform(clip = false))
+                            },
+                            label = "trackArtistTransition",
+                            modifier = Modifier.weight(1f, fill = false)
+                        ) { artist ->
+                            Text(
+                                text = artist,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Normal,
+                                color = animatedArtistText,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(
+                                        if (controllerState.isPlaying) {
+                                            Modifier.basicMarquee(
+                                                iterations = Int.MAX_VALUE,
+                                                animationMode = MarqueeAnimationMode.Immediately
+                                            )
+                                        } else Modifier
+                                    )
+                                    .clickable {
+                                        val song = nowPlayingState?.songEntity
+                                        (song?.artistId?.firstOrNull()?.takeIf { it.isNotEmpty() }
+                                            ?: currentSongData?.songInfoData?.authorId)?.let { channelId ->
+                                            onDismiss()
+                                            navController.navigate(ArtistDestination(channelId = channelId))
+                                        }
                                     }
-                                }
-                        )
+                            )
+                        }
                     }
                 }
 
@@ -1086,15 +1344,21 @@ fun NewPlayerScreen(
 
             Spacer(modifier = Modifier.height(dynamicInfoToSliderSpacing))
 
-            PlayerTimelineSection(
-                sharedViewModel = sharedViewModel,
-                isPlaying = controllerState.isPlaying,
-                sliderActiveColor = animatedSliderActive,
-                sliderInactiveColor = animatedSliderInactive,
-                timestampColor = animatedArtistText,
-                horizontalPadding = dynamicHorizontalPadding,
-                screenHeight = screenHeight,
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = controlsAlpha }
+            ) {
+                PlayerTimelineSection(
+                    sharedViewModel = sharedViewModel,
+                    isPlaying = controllerState.isPlaying,
+                    sliderActiveColor = animatedSliderActive,
+                    sliderInactiveColor = animatedSliderInactive,
+                    timestampColor = animatedArtistText,
+                    horizontalPadding = dynamicHorizontalPadding,
+                    screenHeight = screenHeight,
+                )
+            }
 
             Spacer(modifier = Modifier.height(dynamicSliderToControlsSpacing))
 
@@ -1104,6 +1368,7 @@ fun NewPlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = dynamicHorizontalPadding)
+                    .graphicsLayer { alpha = controlsAlpha }
             ) {
                 val backSource = remember { MutableInteractionSource() }
                 val nextSource = remember { MutableInteractionSource() }
@@ -1152,7 +1417,7 @@ fun NewPlayerScreen(
                         painter = painterResource(Res.drawable.skip_previous),
                         contentDescription = null,
                         tint = animatedOnSecondaryContainer,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(34.dp)
                     )
                 }
 
@@ -1178,12 +1443,15 @@ fun NewPlayerScreen(
                             ),
                             contentDescription = null,
                             tint = animatedOnPrimaryContainer,
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(34.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = if (controllerState.isPlaying) "Pause" else "Play",
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
                             color = animatedOnPrimaryContainer
                         )
                     }
@@ -1208,12 +1476,26 @@ fun NewPlayerScreen(
                         painter = painterResource(Res.drawable.skip_next),
                         contentDescription = null,
                         tint = animatedOnSecondaryContainer,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(34.dp)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(dynamicControlsToBottomSpacing))
+        }
+
+        if (isCanvasActive && !showControls) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = collapsedBarHeight)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        showControls = true
+                    }
+            )
         }
 
         BottomSheet(
@@ -1223,28 +1505,30 @@ fun NewPlayerScreen(
                 Box(
                     Modifier
                         .fillMaxSize()
+                        .graphicsLayer { alpha = bottomBarBgAlpha }
                         .background(sheetBg)
                 )
             },
             collapsedContent = {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = dynamicHorizontalPadding)
                         .padding(bottom = bottomInsets)
                         .fillMaxHeight()
+                        .graphicsLayer { alpha = controlsAlpha }
                 ) {
                     val buttonSize = dynamicBottomButtonSize
-                    val iconSize = 24.dp
+                    val iconSize = 26.dp
                     val queueShape = RoundedCornerShape(
                         topStart = 50.dp, bottomStart = 50.dp,
-                        topEnd = 3.dp, bottomEnd = 3.dp
+                        topEnd = 4.dp, bottomEnd = 4.dp
                     )
-                    val middleShape = RoundedCornerShape(3.dp)
+                    val middleShape = RoundedCornerShape(4.dp)
                     val repeatShape = RoundedCornerShape(
-                        topStart = 3.dp, bottomStart = 3.dp,
+                        topStart = 4.dp, bottomStart = 4.dp,
                         topEnd = 50.dp, bottomEnd = 50.dp
                     )
 
@@ -1317,24 +1601,6 @@ fun NewPlayerScreen(
                         iconSize = iconSize,
                         onClick = { sharedViewModel.onUIEvent(UIEvent.Repeat) }
                     )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Box(
-                        modifier = Modifier
-                            .size(buttonSize)
-                            .clip(CircleShape)
-                            .background(animatedActionContainer)
-                            .clickable { showMoreOptions = true },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            painter = painterResource(Res.drawable.more_horiz),
-                            contentDescription = null,
-                            tint = animatedActionContent,
-                            modifier = Modifier.size(iconSize)
-                        )
-                    }
                 }
             }
         ) {

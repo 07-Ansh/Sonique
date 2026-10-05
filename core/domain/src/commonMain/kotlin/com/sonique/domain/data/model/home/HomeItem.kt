@@ -1,7 +1,9 @@
 package com.sonique.domain.data.model.home
 
 import com.sonique.domain.data.model.searchResult.songs.Thumbnail
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class HomeItem(
     val contents: List<Content?>,
     val title: String,
@@ -9,4 +11,5 @@ data class HomeItem(
     val thumbnail: List<Thumbnail>? = null,
     val channelId: String? = null,
 )
+
 

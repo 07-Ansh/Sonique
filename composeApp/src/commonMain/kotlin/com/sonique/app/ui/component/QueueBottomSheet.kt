@@ -131,13 +131,14 @@ fun QueueBottomSheet(
             )
         }
     }
-    var localQueueItems by remember(queueItems) {
+    var localQueueItems by remember {
         mutableStateOf(queueItems)
     }
     val dragDropState =
         rememberDragDropState(
             lazyListState = lazyListState,
             minDragIndex = 0,
+            itemKeys = { localQueueItems.map { it.stableKey } },
             onMove = { from, to ->
                 val currentList = localQueueItems.toMutableList()
                 if (from in currentList.indices && to in currentList.indices && from != to) {
@@ -152,6 +153,11 @@ fun QueueBottomSheet(
                 }
             },
         )
+    LaunchedEffect(queueItems) {
+        if (dragDropState.draggedItemKey == null && dragDropState.settlingItemKey == null) {
+            localQueueItems = queueItems
+        }
+    }
     var shouldShowQueueItemBottomSheet by rememberSaveable { mutableStateOf(false) }
     var clickMoreIndex by rememberSaveable { mutableIntStateOf(0) }
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
@@ -169,7 +175,7 @@ fun QueueBottomSheet(
                 val layoutInfo = lazyListState.layoutInfo
                 val lastVisibleItem =
                     layoutInfo.visibleItemsInfo.lastOrNull()
-                        ?: return@derivedStateOf true
+                        ?: return@derivedStateOf false
 
                 lastVisibleItem.index >= layoutInfo.totalItemsCount - 3 && layoutInfo.totalItemsCount > 0
             }

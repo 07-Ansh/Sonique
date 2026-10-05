@@ -1,10 +1,9 @@
-﻿package com.sonique.app.viewModel
+package com.sonique.app.viewModel
 
 import androidx.lifecycle.viewModelScope
 import com.sonique.common.SELECTED_LANGUAGE
 import com.sonique.common.SUPPORTED_LANGUAGE
 import com.sonique.domain.data.entities.SongEntity
-import com.sonique.domain.data.model.home.HomeDataCombine
 import com.sonique.domain.data.model.home.HomeItem
 import com.sonique.domain.data.model.home.Content
 import com.sonique.domain.data.model.home.chart.Chart
@@ -69,6 +68,7 @@ class HomeViewModel(
     var regionCodeChart: MutableStateFlow<String?> = MutableStateFlow(null)
 
     val loading = MutableStateFlow<Boolean>(cachedHomeItemList == null)
+    val isRefreshing = MutableStateFlow<Boolean>(false)
     val loadingChart = MutableStateFlow<Boolean>(cachedChart == null)
     private var regionCode: String = ""
     private var language: String = ""
@@ -92,7 +92,27 @@ class HomeViewModel(
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "")
 
     init {
-        _speedDialData.value = calculateSpeedDialData(cachedHomeItemList ?: listOf())
+        if (!cachedHomeItemList.isNullOrEmpty()) {
+            _homeItemList.value = cachedHomeItemList!!
+            _speedDialData.value = calculateSpeedDialData(cachedHomeItemList!!)
+            _continuation.value = cachedContinuation
+            _homeListState.value = if (cachedContinuation.isNullOrEmpty()) ListState.PAGINATION_EXHAUST else ListState.IDLE
+            loading.value = false
+        } else {
+            viewModelScope.launch {
+                val cached = homeRepository.getCachedHomeData()
+                if (cached != null && cached.homeItems.isNotEmpty()) {
+                    cachedHomeItemList = cached.homeItems
+                    cachedContinuation = cached.continuation
+                    _homeItemList.value = cached.homeItems
+                    _speedDialData.value = calculateSpeedDialData(cached.homeItems)
+                    _continuation.value = cached.continuation
+                    _homeListState.value = if (cached.continuation.isNullOrEmpty()) ListState.PAGINATION_EXHAUST else ListState.IDLE
+                    loading.value = false
+                }
+            }
+        }
+
         viewModelScope.launch {
             combine(
                 dataStoreManager.cookie,
@@ -106,61 +126,45 @@ class HomeViewModel(
         homeJob = Job()
         viewModelScope.launch {
             regionCodeChart.value = dataStoreManager.chartKey.first()
-            if (cachedChart == null) {
-                exploreChart(regionCodeChart.value ?: "ZZ")
-            }
             language = dataStoreManager.getString(SELECTED_LANGUAGE).first()
                 ?: SUPPORTED_LANGUAGE.codes.first()
-             
-            val job1 =
-                launch {
-                    val flow = dataStoreManager.location.distinctUntilChanged()
-                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collect {
-                        regionCode = it
-                        getHomeItemList(params.value)
-                    }
+
+            getHomeItemList(params.value, forceRefresh = false)
+
+            launch {
+                dataStoreManager.location.distinctUntilChanged().drop(1).collect {
+                    regionCode = it
+                    getHomeItemList(params.value, forceRefresh = true)
                 }
-             
-            val job2 =
-                launch {
-                    val flow = dataStoreManager.language.distinctUntilChanged()
-                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collect {
-                        language = it
-                        getHomeItemList(params.value)
-                    }
+            }
+
+            launch {
+                dataStoreManager.language.distinctUntilChanged().drop(1).collect {
+                    language = it
+                    getHomeItemList(params.value, forceRefresh = true)
                 }
-            val job3 =
-                launch {
-                    val flow = dataStoreManager.cookie.distinctUntilChanged()
-                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collect {
-                        getHomeItemList(params.value)
+            }
+
+            launch {
+                dataStoreManager.cookie.distinctUntilChanged().drop(1).collect { cookie ->
+                    if (cookie.isNotEmpty()) {
+                        Logger.w(tag, "Cookie changed, refreshing home")
                         _accountInfo.emit(
                             Pair(
                                 dataStoreManager.getString("AccountName").first(),
                                 dataStoreManager.getString("AccountThumbUrl").first(),
                             ),
                         )
+                        getHomeItemList(params.value, forceRefresh = true)
                     }
                 }
-            val job4 =
-                launch {
-                    val flow = params
-                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collectLatest {
-                        getHomeItemList(it, forceRefresh = true)
-                    }
+            }
+
+            launch {
+                params.drop(1).collectLatest {
+                    getHomeItemList(it, forceRefresh = true)
                 }
-            val job5 =
-                launch {
-                    val flow = dataStoreManager.cookie.distinctUntilChanged()
-                    (if (cachedHomeItemList != null) flow.drop(1) else flow).collectLatest {
-                        if (it.isNotEmpty()) {
-                            Logger.w(tag, "Cookie changed, refreshing home")
-                            loading.value = true
-                            delay(1000)  
-                            getHomeItemList(params.value)
-                        }
-                    }
-                }
+            }
         }
     }
 
@@ -174,115 +178,94 @@ class HomeViewModel(
     }
 
     fun getHomeItemList(params: String? = null, forceRefresh: Boolean = false) {
-        loading.value = true
-        _homeListState.value = ListState.LOADING
+        if (_homeItemList.value.isEmpty()) {
+            loading.value = true
+            _homeListState.value = ListState.LOADING
+        }
+        if (forceRefresh) {
+            isRefreshing.value = true
+        }
         homeJob?.cancel()
         homeJob =
             viewModelScope.launch {
-                language =
-                    dataStoreManager.getString(SELECTED_LANGUAGE).first()
-                        ?: SUPPORTED_LANGUAGE.codes.first()
-                regionCode = dataStoreManager.location.first() ?: ""
-                combine(
+                try {
+                    language =
+                        dataStoreManager.getString(SELECTED_LANGUAGE).first()
+                            ?: SUPPORTED_LANGUAGE.codes.first()
+                    regionCode = dataStoreManager.location.first() ?: ""
+
+                    // Fetch secondary endpoints in parallel without blocking the primary home feed
+                    launch {
+                        homeRepository.getMoodAndMomentsData(forceRefresh = forceRefresh).collect { mood ->
+                            if (mood is Resource.Success) {
+                                _exploreMoodItem.value = mood.data
+                                cachedExploreMoodItem = mood.data
+                            }
+                        }
+                    }
+                    launch {
+                        homeRepository.getChartData(dataStoreManager.chartKey.first(), forceRefresh = forceRefresh).collect { chartResult ->
+                            if (chartResult is Resource.Success) {
+                                _chart.value = chartResult.data
+                                cachedChart = chartResult.data
+                            }
+                        }
+                    }
+                    launch {
+                        homeRepository.getNewRelease(
+                            getString(Res.string.new_release),
+                            getString(Res.string.music_video),
+                            forceRefresh = forceRefresh,
+                        ).collect { newReleaseResult ->
+                            if (newReleaseResult is Resource.Success) {
+                                _newRelease.value = newReleaseResult.data ?: arrayListOf()
+                                cachedNewRelease = newReleaseResult.data
+                            }
+                        }
+                    }
+
+                    // Primary home feed
                     homeRepository.getHomeData(
                         params,
                         getString(Res.string.view_count),
                         getString(Res.string.song),
-                        forceRefresh = forceRefresh
-                    ),
-                    homeRepository.getMoodAndMomentsData(forceRefresh = forceRefresh),
-                    homeRepository.getChartData(dataStoreManager.chartKey.first(), forceRefresh = forceRefresh),
-                    homeRepository.getNewRelease(
-                        getString(Res.string.new_release),
-                        getString(Res.string.music_video),
-                        forceRefresh = forceRefresh
-                    ),
-                ) { home, exploreMood, exploreChart, newRelease ->
-                    HomeDataCombine(home, exploreMood, exploreChart, newRelease)
-                }.collect { result ->
-                    _isError.value = false
-                    val home = result.home
-                    Logger.d("home size", "${home.data?.second?.size}")
-                    val exploreMoodItem = result.mood
-                    val chart = result.chart
-                    val newRelease = result.newRelease
-                    when (home) {
-                        is Resource.Success -> {
-                            _continuation.value = home.data?.first
-                            val list = home.data?.second ?: listOf()
-                            _homeItemList.value = list
-                            _speedDialData.value = calculateSpeedDialData(list)
-                        }
-                        is Resource.Error -> {
-                             _isError.value = true
-                            _continuation.value = null
-                            _homeItemList.value = listOf()
-                            _speedDialData.value = null
-                        }
-                    }
-                    if (continuation.value.isNullOrEmpty())
-                        _homeListState.value = ListState.PAGINATION_EXHAUST
-                    else
-                        _homeListState.value = ListState.IDLE
-                    when (chart) {
-                        is Resource.Success -> {
-                            _chart.value = chart.data
-                        }
+                        forceRefresh = forceRefresh,
+                    ).collect { home ->
+                        when (home) {
+                            is Resource.Success -> {
+                                _isError.value = false
+                                _continuation.value = home.data?.first
+                                val list = home.data?.second ?: listOf()
+                                _homeItemList.value = list
+                                _speedDialData.value = calculateSpeedDialData(list)
 
-                        else -> {
-                            _chart.value = null
-                        }
-                    }
-                    when (newRelease) {
-                        is Resource.Success -> {
-                            _newRelease.value = newRelease.data ?: arrayListOf()
-                        }
+                                cachedHomeItemList = list
+                                cachedContinuation = home.data?.first
+                                cachedParams = params
+                            }
 
-                        else -> {
-                            _newRelease.value = arrayListOf()
+                            is Resource.Error -> {
+                                if (_homeItemList.value.isEmpty()) {
+                                    _isError.value = true
+                                    _continuation.value = null
+                                    _homeItemList.value = listOf()
+                                    _speedDialData.value = null
+                                    showSnackBarErrorState.emit(home.message ?: "Unknown error")
+                                }
+                                Logger.w("HomeViewModel", "getHomeItemList Error: ${home.message}")
+                            }
                         }
-                    }
-                    when (exploreMoodItem) {
-                        is Resource.Success -> {
-                            _exploreMoodItem.value = exploreMoodItem.data
+                        if (_continuation.value.isNullOrEmpty()) {
+                            _homeListState.value = ListState.PAGINATION_EXHAUST
+                        } else {
+                            _homeListState.value = ListState.IDLE
                         }
-
-                        else -> {
-                            _exploreMoodItem.value = null
-                        }
+                        loading.value = false
+                        isRefreshing.value = false
                     }
-                    regionCodeChart.value = dataStoreManager.chartKey.first()
-                    Logger.d("HomeViewModel", "getHomeItemList: $result")
-                    dataStoreManager.cookie.first().let {
-                        if (it != "") {
-                            _accountInfo.emit(
-                                Pair(
-                                    dataStoreManager.getString("AccountName").first(),
-                                    dataStoreManager.getString("AccountThumbUrl").first(),
-                                ),
-                            )
-                        }
-                    }
-                    if (home is Resource.Success && home.data?.second?.isNotEmpty() == true) {
-                        cachedHomeItemList = _homeItemList.value
-                        cachedExploreMoodItem = _exploreMoodItem.value
-                        cachedChart = _chart.value
-                        cachedNewRelease = _newRelease.value
-                        cachedContinuation = _continuation.value
-                        cachedParams = params
-                    }
-                    when {
-                        home is Resource.Error -> home.message
-                        exploreMoodItem is Resource.Error -> exploreMoodItem.message
-                        chart is Resource.Error -> chart.message
-                        else -> null
-                    }?.let {
-                        showSnackBarErrorState.emit(it)
-                        Logger.w("Error", "getHomeItemList: ${home.message}")
-                        Logger.w("Error", "getHomeItemList: ${exploreMoodItem.message}")
-                        Logger.w("Error", "getHomeItemList: ${chart.message}")
-                    }
+                } finally {
                     loading.value = false
+                    isRefreshing.value = false
                 }
             }
     }

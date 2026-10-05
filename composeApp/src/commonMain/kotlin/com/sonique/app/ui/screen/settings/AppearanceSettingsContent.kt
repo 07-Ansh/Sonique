@@ -39,8 +39,6 @@ internal fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
     val ambienceMode by viewModel.ambienceMode.collectAsStateWithLifecycle()
     val enableLiquidGlass by viewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val liquidGlassGlassiness by viewModel.liquidGlassGlassiness.collectAsStateWithLifecycle()
-    val blurPlayerBackground by viewModel.blurPlayerBackground.collectAsStateWithLifecycle()
-    val enableExpressivePlayerControls by viewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
     val enablePageTransitions by viewModel.enablePageTransitions.collectAsStateWithLifecycle()
     val continueListeningLayout by viewModel.continueListeningLayout.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
@@ -74,13 +72,6 @@ internal fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                         isSwitch = true,
                         checked = ambienceMode,
                         onCheckedChange = { viewModel.setAmbienceMode(it) }
-                    ),
-                    Material3SettingsItem(
-                        title = { Text("Frosted Player Background") },
-                        description = { Text("Blur background artwork based on album art using frosted glassmorphism") },
-                        isSwitch = true,
-                        checked = blurPlayerBackground,
-                        onCheckedChange = { viewModel.setBlurPlayerBackground(it) }
                     )
                 )
             )
@@ -114,13 +105,6 @@ internal fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
                                 )
                             }
                         }
-                    ),
-                    Material3SettingsItem(
-                        title = { Text("Expressive Player Controls") },
-                        description = { Text("Use Material 3 Expressive shapes for playback buttons") },
-                        isSwitch = true,
-                        checked = enableExpressivePlayerControls,
-                        onCheckedChange = { viewModel.setEnableExpressivePlayerControls(it) }
                     )
                 )
             )
@@ -167,32 +151,41 @@ internal fun AppearanceSettingsContent(viewModel: SettingsViewModel) {
             )
         }
 
+        item {
+            Material3SettingsGroup(
+                title = "Animations",
+                items = listOf(
+                    Material3SettingsItem(
+                        title = { Text("Slide Transitions") },
+                        description = {
+                            Text(
+                                if (enablePageTransitions)
+                                    "Horizontal slide transitions enabled"
+                                else
+                                    "Fade transitions enabled (Default)"
+                            )
+                        },
+                        isSwitch = true,
+                        checked = enablePageTransitions,
+                        onCheckedChange = { viewModel.setEnablePageTransitions(it) }
+                    )
+                )
+            )
+        }
+
         if (getPlatform() == Platform.Android) {
             item {
                 Material3SettingsGroup(
                     title = "Liquid Glass",
-                    items = buildList {
-                        add(
-                            Material3SettingsItem(
-                                title = { Text("Apple Liquid Glass") },
-                                description = { Text("Apple-style floating bottom layout with real-time backdrop luminance sensing") },
-                                isSwitch = true,
-                                checked = enableLiquidGlass,
-                                onCheckedChange = { viewModel.setEnableLiquidGlass(it) }
-                            )
+                    items = listOf(
+                        Material3SettingsItem(
+                            title = { Text("Apple Liquid Glass") },
+                            description = { Text("Apple-style floating bottom layout with real-time backdrop luminance sensing") },
+                            isSwitch = true,
+                            checked = enableLiquidGlass,
+                            onCheckedChange = { viewModel.setEnableLiquidGlass(it) }
                         )
-                        if (!enableLiquidGlass) {
-                            add(
-                                Material3SettingsItem(
-                                    title = { Text("Page Transitions") },
-                                    description = { Text("Enable sliding animation when switching pages") },
-                                    isSwitch = true,
-                                    checked = enablePageTransitions,
-                                    onCheckedChange = { viewModel.setEnablePageTransitions(it) }
-                                )
-                            )
-                        }
-                    }
+                    )
                 )
             }
 

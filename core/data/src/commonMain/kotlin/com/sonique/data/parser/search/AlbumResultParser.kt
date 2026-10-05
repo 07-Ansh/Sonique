@@ -3,6 +3,7 @@ package com.sonique.data.parser.search
 import com.sonique.domain.data.model.searchResult.albums.AlbumsResult
 import com.sonique.domain.data.model.searchResult.songs.Artist
 import com.sonique.domain.data.model.searchResult.songs.Thumbnail
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.kotlinytmusicscraper.models.AlbumItem
 import com.sonique.kotlinytmusicscraper.pages.SearchResult
 
@@ -24,7 +25,7 @@ internal fun parseSearchAlbum(result: SearchResult): ArrayList<AlbumsResult> {
                 duration = "",
                 isExplicit = false,
                 resultType = "Album",
-                thumbnails = listOf(Thumbnail(544, Regex("([wh])120").replace(album.thumbnail, "$1544"), 544)),
+                thumbnails = listOf(Thumbnail(1200, album.thumbnail.toHighResThumbnailUrl(1200), 1200)),
                 title = album.title,
                 type = "Album",
                 year = album.year.toString(),

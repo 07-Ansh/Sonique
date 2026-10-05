@@ -119,7 +119,6 @@ import com.sonique.app.ui.component.ListenTogetherIconButton
 import com.sonique.app.ui.navigation.destination.home.HomeDestination
 import com.sonique.app.ui.navigation.destination.home.ListenTogetherDestination
 import com.sonique.app.ui.navigation.destination.home.MoodDestination
-import com.sonique.app.ui.navigation.destination.home.NotificationDestination
 import com.sonique.app.ui.navigation.destination.home.SettingsDestination
 import com.sonique.app.ui.navigation.destination.library.LibraryDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
@@ -128,6 +127,8 @@ import com.sonique.app.ui.navigation.destination.login.LoginDestination
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.ui.theme.typo
 import com.sonique.app.ui.theme.white
+import com.sonique.app.expect.ui.rememberBackdrop
+import com.sonique.app.ui.component.TopBarCircularIconButton
 import com.sonique.app.viewModel.HomeViewModel
 import com.sonique.app.viewModel.HomeViewModel.Companion.HOME_PARAMS_COMMUTE
 import com.sonique.app.viewModel.HomeViewModel.Companion.HOME_PARAMS_ENERGIZE
@@ -148,8 +149,8 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.app_name
+import sonique.composeapp.generated.resources.metro_newspaper
 import sonique.composeapp.generated.resources.baseline_settings_24
-import com.sonique.app.expect.ui.rememberNotificationPermissionLauncher
 import sonique.composeapp.generated.resources.app_icon
 import sonique.composeapp.generated.resources.energize
 import sonique.composeapp.generated.resources.feel_good
@@ -219,7 +220,7 @@ fun HomeScreen(
     val regionChart by viewModel.regionCodeChart.collectAsStateWithLifecycle()
     val reloadDestination by sharedViewModel.reloadDestination.collectAsStateWithLifecycle()
     val pullToRefreshState = rememberPullToRefreshState()
-    var isRefreshing by remember { mutableStateOf(false) }
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val chipRowState = rememberScrollState()
     val params by viewModel.params.collectAsStateWithLifecycle()
     val homeListState by viewModel.homeListState.collectAsStateWithLifecycle()
@@ -305,7 +306,6 @@ fun HomeScreen(
     }
 
     val onRefresh: () -> Unit = {
-        isRefreshing = true
         viewModel.getHomeItemList(params, forceRefresh = true)
         Logger.w("HomeScreen", "onRefresh")
     }
@@ -321,9 +321,8 @@ fun HomeScreen(
             }
         }
     }
-    LaunchedEffect(key1 = loading) {
-        if (!loading) {
-            isRefreshing = false
+    LaunchedEffect(key1 = isRefreshing) {
+        if (!isRefreshing) {
             sharedViewModel.reloadDestinationDone()
             coroutineScope.launch {
                 pullToRefreshState.animateToHidden()
@@ -548,7 +547,10 @@ fun HomeScreen(
                             }
                         },
             ) {
-                HomeTopAppBar(navController)
+                HomeTopAppBar(
+                    navController = navController,
+                    onChangelogClick = { sharedViewModel.openChangelogSheet() },
+                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     modifier =
@@ -601,7 +603,15 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String>? = null) {
+fun HomeTopAppBar(
+    navController: NavController,
+    onChangelogClick: () -> Unit = {},
+    accountInfo: Pair<String, String>? = null,
+    sharedViewModel: SharedViewModel = koinInject(),
+) {
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val backdrop = rememberBackdrop()
+
     val hour =
         remember {
             val date = now().time
@@ -640,20 +650,27 @@ fun HomeTopAppBar(navController: NavController, accountInfo: Pair<String, String
         }
         
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val notificationPermissionLauncher = rememberNotificationPermissionLauncher {
-                if (it) {
-                    navController.navigate(NotificationDestination)
-                }
-            }
-            RippleIconButton(resId = Res.drawable.outline_notifications_24) {
-                notificationPermissionLauncher()
-            }
+            ListenTogetherIconButton(
+                enableLiquidGlass = enableLiquidGlass,
+                backdrop = backdrop,
+                onClick = { navController.navigate(ListenTogetherDestination) }
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            ListenTogetherIconButton { navController.navigate(ListenTogetherDestination) }
+            TopBarCircularIconButton(
+                enableLiquidGlass = enableLiquidGlass,
+                backdrop = backdrop,
+                resId = Res.drawable.metro_newspaper,
+                contentDescription = "Changelogs",
+                onClick = onChangelogClick
+            )
             Spacer(modifier = Modifier.width(8.dp))
-            RippleIconButton(resId = Res.drawable.baseline_settings_24) {
-                navController.navigate(SettingsDestination())
-            }
+            TopBarCircularIconButton(
+                enableLiquidGlass = enableLiquidGlass,
+                backdrop = backdrop,
+                resId = Res.drawable.baseline_settings_24,
+                contentDescription = "Settings",
+                onClick = { navController.navigate(SettingsDestination()) }
+            )
         }
     }
 }

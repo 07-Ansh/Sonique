@@ -9,7 +9,6 @@ import com.sonique.app.viewModel.LocalPlaylistViewModel
 import com.sonique.app.viewModel.LogInViewModel
 import com.sonique.app.viewModel.MoodViewModel
 import com.sonique.app.viewModel.MoreAlbumsViewModel
-import com.sonique.app.viewModel.NotificationViewModel
 import com.sonique.app.viewModel.NowPlayingBottomSheetViewModel
 import com.sonique.app.viewModel.PlaylistViewModel
 import com.sonique.app.viewModel.PodcastViewModel
@@ -39,6 +38,7 @@ val viewModelModule =
         }
         viewModel {
             SearchViewModel(
+                get(),
                 get(),
                 get(),
                 get(),
@@ -75,6 +75,8 @@ val viewModelModule =
             AlbumViewModel(
                 get(),
                 get(),
+                get(),
+                get(),
             )
         }
         viewModel {
@@ -102,6 +104,8 @@ val viewModelModule =
         }
         viewModel {
             PlaylistViewModel(
+                get(),
+                get(),
                 get(),
                 get(),
                 get(),
@@ -135,11 +139,6 @@ val viewModelModule =
             )
         }
         viewModel {
-            NotificationViewModel(
-                get(),
-            )
-        }
-        viewModel {
             MoodViewModel(
                 get(),
                 get(),
@@ -152,6 +151,7 @@ val viewModelModule =
         }
         viewModel {
             com.sonique.app.viewModel.AlbumsViewModel(
+                get(),
                 get(),
                 get(),
                 get(),

@@ -58,9 +58,12 @@ import com.sonique.domain.utils.toLyricsEntity
 import com.sonique.domain.utils.toSongEntity
 import com.sonique.domain.utils.toSyncedLyrics
 import com.sonique.domain.utils.toTrack
+import com.sonique.domain.utils.isVideoThumbnailUrl
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.logger.LogLevel
 import com.sonique.logger.Logger
 import com.sonique.app.Platform
+import com.sonique.app.expect.preloadImage
 import com.sonique.app.expect.getDownloadFolderPath
 import com.sonique.app.expect.ui.toByteArray
 import com.sonique.app.getPlatform
@@ -69,6 +72,9 @@ import com.sonique.app.viewModel.base.BaseViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -187,8 +193,64 @@ class SharedViewModel(
 
     private val _showChangelog = MutableStateFlow(false)
     val showChangelog = _showChangelog.asStateFlow()
+    private val _showChangelogSheet = MutableStateFlow(false)
+    val showChangelogSheet = _showChangelogSheet.asStateFlow()
     private val _changelogText = MutableStateFlow("")
     val changelogText = _changelogText.asStateFlow()
+    private val _changelogVersionName = MutableStateFlow("")
+    val changelogVersionName = _changelogVersionName.asStateFlow()
+
+    fun openChangelogSheet() {
+        _showChangelogSheet.value = true
+    }
+
+    fun dismissChangelogSheet() {
+        _showChangelogSheet.value = false
+        viewModelScope.launch {
+            dataStoreManager.setLastVersionCode(VersionManager.getVersionCode())
+        }
+    }
+
+    fun fetchAndShowChangelog(forceShow: Boolean = true) {
+        viewModelScope.launch {
+            val versionName = VersionManager.getVersionName()
+            val cleanVersion = versionName.removePrefix("v").trim()
+
+            // 1. Try fetching release notes for current version tag from GitHub
+            val specificResult = try {
+                updateRepository.fetchChangelog(cleanVersion)
+            } catch (e: Exception) {
+                null
+            }
+
+            if (!specificResult.isNullOrBlank()) {
+                _changelogText.value = specificResult
+                _changelogVersionName.value = cleanVersion
+                if (forceShow) {
+                    _showChangelog.value = true
+                }
+                return@launch
+            }
+
+            // 2. If tag not found on GitHub yet (e.g. pre-release development build),
+            // dynamically fetch all published releases and display the latest one
+            val allReleases = updateRepository.fetchAllReleases().getOrNull()
+            val latest = allReleases?.firstOrNull()
+            if (latest != null && latest.changelog.isNotBlank()) {
+                _changelogText.value = latest.changelog
+                _changelogVersionName.value = latest.version.removePrefix("v").trim()
+                if (forceShow) {
+                    _showChangelog.value = true
+                }
+            } else {
+                _changelogText.value = ""
+                _changelogVersionName.value = cleanVersion
+                if (forceShow) {
+                    _showChangelog.value = true
+                }
+            }
+        }
+    }
 
     private fun checkChangelog() {
         viewModelScope.launch {
@@ -199,51 +261,23 @@ class SharedViewModel(
                     // First time or restore - mark it as seen silently
                     dataStoreManager.setLastVersionCode(currentVersion)
                 } else {
-                    val versionString = VersionManager.getVersionName()
-                    val fallback = "Updated to version ${versionString}\n• Bug fixes and performance improvements."
-                    try {
-                        val result = updateRepository.fetchChangelog(versionString)
-                        if (!result.isNullOrBlank()) {
-                            _changelogText.value = result
-                        } else {
-                            _changelogText.value = fallback
-                        }
-                    } catch (e: Exception) {
-                        _changelogText.value = fallback
-                    }
-                    _showChangelog.value = true
+                    fetchAndShowChangelog(forceShow = true)
                     dataStoreManager.setLastVersionCode(currentVersion)
                 }
             }
         }
     }
 
-    fun dismissChangelog() {
+    fun viewFullChangelogFromWhatsNew() {
         _showChangelog.value = false
-        viewModelScope.launch {
-            dataStoreManager.setLastVersionCode(VersionManager.getVersionCode())
-        }
+        _showChangelogSheet.value = true
     }
 
-    /**
-     * One-shot migration: enables the Modern Player by default for any user who has
-     * never explicitly set this preference (fresh install OR update before this version).
-     *
-     * Logic:
-     *  - If the raw DataStore key is null → user never touched it → turn ON modern player.
-     *  - If the raw DataStore key is "TRUE" or "FALSE" → user explicitly set it → leave it alone.
-     *  - The migration flag "modern_player_forced_v1" ensures this runs exactly once.
-     */
-    private fun migrateModernPlayerDefault() {
+    fun dismissChangelog() {
+        _showChangelog.value = false
+        _showChangelogSheet.value = false
         viewModelScope.launch {
-            if (dataStoreManager.getString("modern_player_forced_v1").first() != STATUS_DONE) {
-                // null means the key was never written — user never explicitly chose a value
-                val wasNeverSet = dataStoreManager.getString("expressive_player_controls").first() == null
-                if (wasNeverSet) {
-                    dataStoreManager.setEnableExpressivePlayerControls(true)
-                }
-                dataStoreManager.putString("modern_player_forced_v1", STATUS_DONE)
-            }
+            dataStoreManager.setLastVersionCode(VersionManager.getVersionCode())
         }
     }
 
@@ -307,9 +341,6 @@ class SharedViewModel(
         .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
 
-    val blurBg: StateFlow<Boolean> = dataStoreManager.blurPlayerBackground
-        .map { it == DataStoreManager.TRUE }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
 
     val enableLiquidGlass: StateFlow<Boolean> = dataStoreManager.enableLiquidGlass
         .map { it == DataStoreManager.TRUE }
@@ -317,11 +348,8 @@ class SharedViewModel(
 
     val enablePageTransitions: StateFlow<Boolean> = dataStoreManager.enablePageTransitions
         .map { it == DataStoreManager.TRUE }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), true)
-
-    val enableExpressivePlayerControls: StateFlow<Boolean> = dataStoreManager.enableExpressivePlayerControls
-        .map { it == DataStoreManager.TRUE }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), false)
+
 
     val continueListeningLayout: StateFlow<String> = dataStoreManager.getString("continue_listening_layout")
         .map { it ?: "list" }
@@ -342,6 +370,8 @@ class SharedViewModel(
     private val _shareSavedLyrics: MutableStateFlow<Boolean> = MutableStateFlow(true)
     val shareSavedLyrics: StateFlow<Boolean> get() = _shareSavedLyrics
 
+    private val viewModelInitTimestamp = TimeSource.Monotonic.markNow()
+
     init {
         viewModelScope.launch {
             log("SharedViewModel init")
@@ -352,10 +382,6 @@ class SharedViewModel(
                 )
             }
             dataStoreManager.openApp()
-            if (dataStoreManager.getString("frosted_force_disabled_v4").first() != STATUS_DONE) {
-                dataStoreManager.setBlurPlayerBackground(false)
-                dataStoreManager.putString("frosted_force_disabled_v4", STATUS_DONE)
-            }
             dataStoreManager.getString("miniplayer_guide").first().let {
                 isFirstMiniplayer = it != STATUS_DONE
             }
@@ -369,8 +395,6 @@ class SharedViewModel(
             dataStoreManager.getString("liked_guide").first().let {
                 isFirstLiked = it != STATUS_DONE
             }
-
-            migrateModernPlayerDefault()
             checkChangelog()
             checkGitHubPopup()
 
@@ -381,17 +405,20 @@ class SharedViewModel(
                                 Pair(timeLine, nowPlayingState)
                             }
                         }.distinctUntilChanged { old, new ->
-                            (old.first.total.toString() + old.second.songEntity?.videoId).hashCode() ==
-                                (new.first.total.toString() + new.second.songEntity?.videoId).hashCode()
+                            val oldId = old.second.mediaItem.mediaId.removePrefix("Video")
+                            val newId = new.second.mediaItem.mediaId.removePrefix("Video")
+                            (old.first.total.toString() + oldId).hashCode() ==
+                                (new.first.total.toString() + newId).hashCode()
                         }.collectLatest {
-                            log("Timeline job ${(it.first.total.toString() + it.second.songEntity?.videoId).hashCode()}")
+                            log("Timeline job ${(it.first.total.toString() + it.second.mediaItem.mediaId).hashCode()}")
                             val nowPlaying = it.second
                             val timeline = it.first
                             if (timeline.total > 0) {
-                                if (nowPlaying.mediaItem.isSong() && nowPlayingScreenData.value.canvasData == null) {
+                                val currentVid = nowPlaying.mediaItem.mediaId.removePrefix("Video")
+                                if (nowPlayingScreenData.value.canvasData == null && currentVid.isNotBlank()) {
                                     Logger.w(tag, "Duration is ${timeline.total}")
-                                    Logger.w(tag, "MediaId is ${nowPlaying.mediaItem.mediaId}")
-                                    getCanvas(nowPlaying.mediaItem.mediaId, (timeline.total / 1000).toInt())
+                                    Logger.w(tag, "MediaId is $currentVid")
+                                    getCanvas(currentVid, (timeline.total / 1000).toInt())
                                 }
                                 if (nowPlayingScreenData.value.lyricsData == null) {
                                     Logger.w(tag, "Get lyrics on timeline update")
@@ -410,10 +437,20 @@ class SharedViewModel(
                     setLyricsProvider()
                 }
             }
-
- 
-
- 
+            launch {
+                dataStoreManager.spotifyCanvas.distinctUntilChanged().collectLatest { enabled ->
+                    if (enabled == TRUE) {
+                        val nowPlaying = nowPlayingState.value
+                        val tl = timeline.value
+                        if (nowPlaying != null && tl.total > 0 && nowPlaying.mediaItem.isSong() && nowPlayingScreenData.value.canvasData == null) {
+                            getCanvas(nowPlaying.mediaItem.mediaId, (tl.total / 1000).toInt())
+                        }
+                    } else {
+                        _canvas.value = null
+                        _nowPlayingScreenData.update { it.copy(canvasData = null) }
+                    }
+                }
+            }
         }
         viewModelScope.launch {
             var lastMediaIdForLyrics: String? = null
@@ -446,9 +483,21 @@ class SharedViewModel(
                         ?: state.track?.thumbnails?.lastOrNull()?.url
                         ?: state.mediaItem.metadata.artworkUri?.toString()
 
-                    val isNewTrack = state.mediaItem.mediaId.isNotEmpty() && state.mediaItem.mediaId != lastMediaIdForLyrics
+                    val isVideoTrack = state.mediaItem.isVideo() || isVideoThumbnailUrl(resolvedThumbnail)
+                    val isArtAlreadyResolved = (!resolvedThumbnail.isNullOrBlank() && !isVideoThumbnailUrl(resolvedThumbnail)) ||
+                        (currentSongEntity?.thumbnails?.let { !isVideoThumbnailUrl(it) } == true)
+                    val isArtworkLoading = isVideoTrack && !isArtAlreadyResolved
+                    val displayThumbnail = if (isArtworkLoading) {
+                        null
+                    } else {
+                        resolvedThumbnail?.toHighResThumbnailUrl()
+                    }
+
+                    val isNewTrack = videoId.isNotEmpty() && videoId != lastMediaIdForLyrics
                     if (isNewTrack) {
-                        lastMediaIdForLyrics = state.mediaItem.mediaId
+                        lastMediaIdForLyrics = videoId
+                        _canvas.value = null
+                        canvasJob?.cancel()
                     }
 
                     _nowPlayingScreenData.update { currentData ->
@@ -456,13 +505,15 @@ class SharedViewModel(
                             nowPlayingTitle = resolvedTitle,
                             artistName = resolvedArtist,
                             isVideo = false,
-                            thumbnailURL = resolvedThumbnail,
+                            thumbnailURL = displayThumbnail,
+                            isArtworkLoading = isArtworkLoading,
                             isExplicit = currentSongEntity?.isExplicit ?: false,
                             playlistName =
                                 mediaPlayerHandler.queueData.value
                                     ?.data
                                     ?.playlistName ?: "",
                             lyricsData = if (isNewTrack) null else currentData.lyricsData,
+                            canvasData = if (isNewTrack) null else currentData.canvasData,
                         )
                     }
 
@@ -480,6 +531,13 @@ class SharedViewModel(
                             launch { getLikeStatus(now.mediaId) }
                             launch { getSongInfo(now.mediaId) }
                             launch { getFormat(now.mediaId) }
+                            if (isArtworkLoading) {
+                                launch { resolveAndApplyAudioArtwork(now, resolvedTitle, resolvedArtist, resolvedThumbnail) }
+                            }
+                            val currentQueue = mediaPlayerHandler.queueData.value?.data?.listTracks
+                            if (!currentQueue.isNullOrEmpty()) {
+                                prefetchQueueArtwork(currentQueue, now.mediaId)
+                            }
                         }
                     }
                 }
@@ -576,9 +634,13 @@ class SharedViewModel(
                 }
             val playlistNameJob =
                 launch {
-                    mediaPlayerHandler.queueData.collectLatest {
+                    mediaPlayerHandler.queueData.collectLatest { queueData ->
                         _nowPlayingScreenData.update {
                             it.copy(playlistName = it.playlistName)
+                        }
+                        val tracks = queueData?.data?.listTracks
+                        if (!tracks.isNullOrEmpty()) {
+                            prefetchQueueArtwork(tracks, _nowPlayingState.value?.mediaItem?.mediaId)
                         }
                     }
                 }
@@ -611,38 +673,47 @@ class SharedViewModel(
         duration: Int,
     ) {
         Logger.w(tag, "Start getCanvas: $videoId $duration")
- 
-        viewModelScope.launch {
+
+        canvasJob = viewModelScope.launch {
             if (dataStoreManager.spotifyCanvas.first() == TRUE) {
                 lyricsCanvasRepository.getCanvas(dataStoreManager, videoId, duration).cancellable().collect { response ->
+                    val cleanTargetId = videoId.removePrefix("Video")
+                    val currentMediaId = nowPlayingState.value?.mediaItem?.mediaId?.removePrefix("Video")
+                    if (currentMediaId != cleanTargetId) {
+                        Logger.w(tag, "Ignoring canvas response for stale track: $cleanTargetId (current: $currentMediaId)")
+                        return@collect
+                    }
                     val data = response.data
                     when (response) {
-                        is Resource.Success if (data != null && nowPlayingState.value?.mediaItem?.mediaId == videoId) -> {
-                            _canvas.value = data
-                            _nowPlayingScreenData.update {
-                                it.copy(
-                                    canvasData =
-                                        NowPlayingScreenData.CanvasData(
-                                            isVideo = data.isVideo,
-                                            url = data.canvasUrl,
-                                        ),
-                                )
-                            }
-                             
-                            if (data.isVideo) lyricsCanvasRepository.updateCanvasUrl(videoId, data.canvasUrl)
-                             
-                            data.canvasThumbUrl?.let { lyricsCanvasRepository.updateCanvasThumbUrl(videoId, it) }
-                        }
-
-                        else -> {
-                            log("Get canvas error: ${response.message}", LogLevel.WARN)
-                            nowPlayingState.value?.songEntity?.canvasUrl?.let { url ->
+                        is Resource.Success -> {
+                            if (data != null) {
+                                _canvas.value = data
                                 _nowPlayingScreenData.update {
                                     it.copy(
                                         canvasData =
                                             NowPlayingScreenData.CanvasData(
-                                                isVideo = url.contains(".mp4"),
-                                                url = url,
+                                                isVideo = data.isVideo,
+                                                url = data.canvasUrl,
+                                            ),
+                                    )
+                                }
+
+                                if (data.isVideo) lyricsCanvasRepository.updateCanvasUrl(videoId, data.canvasUrl)
+
+                                data.canvasThumbUrl?.let { lyricsCanvasRepository.updateCanvasThumbUrl(videoId, it) }
+                            }
+                        }
+
+                        else -> {
+                            log("Get canvas error: ${response.message}", LogLevel.WARN)
+                            val cachedUrl = nowPlayingState.value?.songEntity?.canvasUrl
+                            if (currentMediaId == cleanTargetId && !cachedUrl.isNullOrBlank()) {
+                                _nowPlayingScreenData.update {
+                                    it.copy(
+                                        canvasData =
+                                            NowPlayingScreenData.CanvasData(
+                                                isVideo = cachedUrl.contains(".mp4"),
+                                                url = cachedUrl,
                                             ),
                                     )
                                 }
@@ -979,6 +1050,21 @@ class SharedViewModel(
         }
     }
 
+    fun devSimulateAppUpdate() {
+        viewModelScope.launch {
+            dataStoreManager.setLastVersionCode(1)
+            fetchAndShowChangelog(forceShow = true)
+        }
+    }
+
+    fun devResetGitHubPopup() {
+        viewModelScope.launch {
+            dataStoreManager.setNeverShowGithubPopup(false)
+            dataStoreManager.setGithubPopupShownCount(0)
+            _showGitHubPopup.value = true
+        }
+    }
+
     fun setShowMostPlayed(show: Boolean) {
         viewModelScope.launch {
             dataStoreManager.setShowMostPlayed(show)
@@ -1027,6 +1113,97 @@ class SharedViewModel(
     }
 
     private var songInfoJob: Job? = null
+    private var artworkResolutionJob: Job? = null
+
+    private fun resolveAndApplyAudioArtwork(
+        mediaItem: com.sonique.domain.data.player.GenericMediaItem,
+        title: String,
+        artist: String?,
+        fallbackThumbnail: String?,
+    ) {
+        artworkResolutionJob?.cancel()
+        artworkResolutionJob = viewModelScope.launch(Dispatchers.IO) {
+            val cleanMediaId = mediaItem.mediaId.removePrefix("Video")
+            val resolvedArt = songRepository.resolveAudioTrackArtwork(
+                videoId = cleanMediaId,
+                title = title.ifBlank { mediaItem.metadata.title ?: "" },
+                artist = artist ?: mediaItem.metadata.artist,
+            )
+            if (_nowPlayingState.value?.mediaItem?.mediaId == mediaItem.mediaId) {
+                if (resolvedArt != null) {
+                    mediaPlayerHandler.updateArtworkUri(resolvedArt)
+                    mediaPlayerHandler.updateQueueTrackArtwork(cleanMediaId, resolvedArt)
+                    preloadImage(resolvedArt)
+                    _nowPlayingScreenData.update { current ->
+                        current.copy(
+                            thumbnailURL = resolvedArt,
+                            isArtworkLoading = false,
+                        )
+                    }
+                } else {
+                    val fallback = fallbackThumbnail?.toHighResThumbnailUrl()
+                        ?: mediaItem.metadata.artworkUri?.toHighResThumbnailUrl()
+                    _nowPlayingScreenData.update { current ->
+                        current.copy(
+                            thumbnailURL = fallback,
+                            isArtworkLoading = false,
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private var queueArtworkPreloadJob: Job? = null
+
+    private fun prefetchQueueArtwork(tracks: List<Track>, currentMediaId: String?) {
+        queueArtworkPreloadJob?.cancel()
+        queueArtworkPreloadJob = viewModelScope.launch(Dispatchers.IO) {
+            if (tracks.isEmpty()) return@launch
+
+            val elapsed = viewModelInitTimestamp.elapsedNow()
+            if (elapsed < 3500.milliseconds) {
+                delay(3500.milliseconds - elapsed)
+            }
+
+            val cleanCurrentId = currentMediaId?.removePrefix("Video")
+            val currentIndex = if (cleanCurrentId != null) {
+                tracks.indexOfFirst { it.videoId == cleanCurrentId }.takeIf { it >= 0 } ?: 0
+            } else {
+                0
+            }
+
+            val upcomingTracks = tracks.drop(currentIndex + 1).take(5)
+
+            for (track in upcomingTracks) {
+                val thumbUrl = track.thumbnails?.lastOrNull()?.url
+                val isVideo = isVideoThumbnailUrl(thumbUrl) || track.videoType != null || track.thumbnails.isNullOrEmpty()
+
+                if (isVideo) {
+                    val existingSong = songRepository.getSongById(track.videoId).firstOrNull()
+                    val existingThumb = existingSong?.thumbnails
+                    if (!existingThumb.isNullOrBlank() && !isVideoThumbnailUrl(existingThumb)) {
+                        val highRes = existingThumb.toHighResThumbnailUrl()
+                        mediaPlayerHandler.updateQueueTrackArtwork(track.videoId, highRes)
+                        preloadImage(highRes)
+                    } else {
+                        val resolvedArt = songRepository.resolveAudioTrackArtwork(
+                            videoId = track.videoId,
+                            title = track.title,
+                            artist = track.artists?.firstOrNull()?.name,
+                        )
+                        if (resolvedArt != null) {
+                            mediaPlayerHandler.updateQueueTrackArtwork(track.videoId, resolvedArt)
+                            preloadImage(resolvedArt)
+                        }
+                    }
+                } else if (!thumbUrl.isNullOrBlank()) {
+                    val highRes = thumbUrl.toHighResThumbnailUrl()
+                    preloadImage(highRes)
+                }
+            }
+        }
+    }
 
     fun getSongInfo(mediaId: String?) {
         songInfoJob?.cancel()
@@ -1045,6 +1222,7 @@ class SharedViewModel(
     }
 
     fun stopPlayer() {
+        artworkResolutionJob?.cancel()
         _nowPlayingScreenData.value = NowPlayingScreenData.initial()
         _nowPlayingState.value = null
         mediaPlayerHandler.resetSongAndQueue()
@@ -1702,6 +1880,7 @@ data class NowPlayingScreenData(
     val isVideo: Boolean,
     val isExplicit: Boolean = false,
     val thumbnailURL: String?,
+    val isArtworkLoading: Boolean = false,
     val canvasData: CanvasData? = null,
     val lyricsData: LyricsData? = null,
     val songInfoData: SongInfoEntity? = null,
@@ -1725,6 +1904,7 @@ data class NowPlayingScreenData(
                 artistName = "",
                 isVideo = false,
                 thumbnailURL = null,
+                isArtworkLoading = false,
                 canvasData = null,
                 lyricsData = null,
                 songInfoData = null,

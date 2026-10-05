@@ -11,8 +11,10 @@ import com.sonique.domain.extension.now
 import com.sonique.domain.mediaservice.handler.DownloadHandler
 import com.sonique.domain.mediaservice.handler.PlaylistType
 import com.sonique.domain.mediaservice.handler.QueueData
+import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.repository.AlbumRepository
 import com.sonique.domain.repository.SongRepository
+import com.sonique.domain.repository.StreamRepository
 import com.sonique.domain.utils.Resource
 import com.sonique.domain.utils.toAlbumEntity
 import com.sonique.domain.utils.toArrayListTrack
@@ -20,6 +22,8 @@ import com.sonique.domain.utils.toSongEntity
 import com.sonique.logger.LogLevel
 import com.sonique.app.ui.theme.md_theme_dark_background
 import com.sonique.app.viewModel.base.BaseViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,6 +43,8 @@ import sonique.composeapp.generated.resources.playlist_is_empty
 class AlbumViewModel(
     private val songRepository: SongRepository,
     private val albumRepository: AlbumRepository,
+    private val streamRepository: StreamRepository,
+    private val dataStoreManager: DataStoreManager,
 ) : BaseViewModel() {
     private val downloadUtils: DownloadHandler by inject<DownloadHandler>()
     private val _uiState: MutableStateFlow<AlbumUIState> = MutableStateFlow(AlbumUIState.initial())
@@ -73,6 +79,12 @@ class AlbumViewModel(
                                     otherVersion = data.otherVersion,
                                     loadState = LocalPlaylistState.PlaylistLoadState.Success,
                                 )
+                            }
+                            val candidateTracks = data.tracks.take(2)
+                            viewModelScope.launch(Dispatchers.IO) {
+                                for (track in candidateTracks) {
+                                    streamRepository.prefetchStream(dataStoreManager, track.videoId)
+                                }
                             }
                             val localAlbum = albumRepository.getAlbum(browseId).lastOrNull()
                             if (localAlbum != null) {
@@ -210,18 +222,31 @@ class AlbumViewModel(
 
     fun playTrack(track: Track) {
         viewModelScope.launch {
+            val playlistId = uiState.value.browseId.replaceFirst("VL", "")
+            val index = uiState.value.listTrack.indexOf(track)
+            val effectiveIndex = if (index == -1) 0 else index
+
+            val currentQueue = mediaPlayerHandler.queueData.value
+            if (currentQueue?.data?.playlistId == playlistId &&
+                effectiveIndex in 0 until mediaPlayerHandler.player.mediaItemCount
+            ) {
+                mediaPlayerHandler.player.seekTo(effectiveIndex, 0)
+                mediaPlayerHandler.player.prepare()
+                mediaPlayerHandler.player.playWhenReady = true
+                return@launch
+            }
+
             setQueueData(
                 QueueData.Data(
                     listTracks = uiState.value.listTrack.toCollection(ArrayList()),
                     firstPlayedTrack = track,
-                    playlistId = uiState.value.browseId.replaceFirst("VL", ""),
+                    playlistId = playlistId,
                     playlistName = "${getString(Res.string.album)} \"${uiState.value.title}\"",
                     playlistType = PlaylistType.ALBUM,
                     continuation = null,
                 ),
             )
-            val index = uiState.value.listTrack.indexOf(track)
-            loadMediaItem(track, Config.ALBUM_CLICK, if (index == -1) 0 else index)
+            loadMediaItem(track, Config.ALBUM_CLICK, effectiveIndex)
         }
     }
 

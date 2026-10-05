@@ -106,67 +106,15 @@ internal fun parseMixedContent(
                         ?.browseId
                 val listContent = mutableListOf<Content?>()
                 if (!contentList.isNullOrEmpty()) {
+                    val isStationShelf = subtitle?.contains("station", ignoreCase = true) == true ||
+                        subtitle?.contains("radio", ignoreCase = true) == true
                     for (result1 in contentList) {
                         val musicTwoRowItemRenderer = result1.musicTwoRowItemRenderer
                         if (musicTwoRowItemRenderer != null) {
-                             
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+                            val radioPlaylistId = musicTwoRowItemRenderer.playlistId
+                                ?: musicTwoRowItemRenderer.navigationEndpoint?.watchPlaylistEndpoint?.playlistId
+                                ?: musicTwoRowItemRenderer.navigationEndpoint?.watchEndpoint?.playlistId
+                                ?: musicTwoRowItemRenderer.navigationEndpoint?.browseEndpoint?.browseId?.takeIf { it.startsWith("RD") || it.startsWith("VLRD") }?.removePrefix("VL")
                             if (musicTwoRowItemRenderer.isSong) {
                                 val ytItem =
                                     RelatedPage.fromMusicTwoRowItemRenderer(musicTwoRowItemRenderer, songString) as SongItem?
@@ -206,7 +154,7 @@ internal fun parseMixedContent(
                                             artists = artists,
                                             description = null,
                                             isExplicit = ytItem.explicit,
-                                            playlistId = null,
+                                            playlistId = radioPlaylistId ?: ytItem.id,
                                             browseId = null,
                                             thumbnails =
                                                 musicTwoRowItemRenderer.thumbnailRenderer
@@ -219,7 +167,7 @@ internal fun parseMixedContent(
                                             videoId = ytItem.id,
                                             views = null,
                                             durationSeconds = ytItem.duration,
-                                            radio = null,
+                                            radio = radioPlaylistId ?: if (isStationShelf) "RDAMVM${ytItem.id}" else null,
                                         ),
                                     )
                                 }
@@ -417,6 +365,32 @@ internal fun parseMixedContent(
                                             ),
                                         )
                                     }
+                                }
+                            } else if (radioPlaylistId != null || isStationShelf) {
+                                val itemTitle = musicTwoRowItemRenderer.title.runs?.firstOrNull()?.text ?: ""
+                                if (itemTitle.isNotEmpty()) {
+                                    val artists = musicTwoRowItemRenderer.subtitle?.runs?.mapNotNull { run ->
+                                        run.text.takeIf { it.isNotBlank() && it != "•" }?.let { name ->
+                                            Artist(name = name, id = run.navigationEndpoint?.browseEndpoint?.browseId)
+                                        }
+                                    } ?: emptyList()
+                                    val thumbnails = musicTwoRowItemRenderer.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails?.toListThumbnail() ?: emptyList()
+                                    listContent.add(
+                                        Content(
+                                            album = null,
+                                            artists = artists,
+                                            description = null,
+                                            isExplicit = false,
+                                            playlistId = radioPlaylistId,
+                                            browseId = null,
+                                            thumbnails = thumbnails,
+                                            title = itemTitle,
+                                            videoId = musicTwoRowItemRenderer.navigationEndpoint?.watchEndpoint?.videoId,
+                                            views = null,
+                                            durationSeconds = null,
+                                            radio = radioPlaylistId,
+                                        ),
+                                    )
                                 }
                             } else {
                                 continue

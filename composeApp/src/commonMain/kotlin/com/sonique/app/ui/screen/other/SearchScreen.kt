@@ -1,6 +1,7 @@
 package com.sonique.app.ui.screen.other
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -142,7 +143,7 @@ fun SearchScreen(
     navController: NavController,
     onScrolling: (Boolean) -> Unit = {},
 ) {
-    val enableLiquidGlass by settingsViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
+    val enableLiquidGlass by sharedViewModel.enableLiquidGlass.collectAsStateWithLifecycle()
     val searchResultsListState = rememberLazyListState()
     val isScrollingUp by searchResultsListState.isScrollingUp()
     LaunchedEffect(searchResultsListState) {
@@ -343,11 +344,14 @@ fun SearchScreen(
                     .padding(horizontal = 16.dp)
                     .let {
                         if (enableLiquidGlass) {
-                            it.liquidGlass(
-                                backdrop = backdrop,
-                                shape = CircleShape,
-                                interactive = false
-                            )
+                            it.clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.07f))
+                                .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)), CircleShape)
+                                .liquidGlass(
+                                    backdrop = backdrop,
+                                    shape = CircleShape,
+                                    interactive = false
+                                )
                         } else {
                             it.clip(CircleShape)
                         }

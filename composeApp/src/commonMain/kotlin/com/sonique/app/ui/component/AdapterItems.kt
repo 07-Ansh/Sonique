@@ -176,7 +176,49 @@ fun HomeItem(
                 if (temp != null) {
                     val browseId = temp.browseId
                     val playlistId = temp.playlistId
-                    if ((playlistId != null && temp.videoId == null) || (playlistId != null && temp.videoId == "")) {
+                    val isStationShelf = data.subtitle?.contains("station", ignoreCase = true) == true ||
+                        data.subtitle?.contains("radio", ignoreCase = true) == true
+                    val isStation = isStationShelf ||
+                        temp.radio != null ||
+                        playlistId?.startsWith("RD") == true
+
+                    if (isStation) {
+                        HomeItemSong(
+                            onClick = {
+                                val targetPlaylistId = temp.radio
+                                    ?: playlistId?.takeIf { it.startsWith("RD") }
+                                    ?: if (!temp.videoId.isNullOrEmpty()) "RDAMVM${temp.videoId}" else null
+                                if (targetPlaylistId != null) {
+                                    homeViewModel.playRadio(
+                                        playlistId = targetPlaylistId,
+                                        videoId = temp.videoId,
+                                        title = temp.title,
+                                    )
+                                } else if (!temp.videoId.isNullOrEmpty()) {
+                                    val firstQueue: Track = temp.toTrack()
+                                    homeViewModel.setQueueData(
+                                        QueueData.Data(
+                                            listTracks = arrayListOf(firstQueue),
+                                            firstPlayedTrack = firstQueue,
+                                            playlistId = "RDAMVM${temp.videoId}",
+                                            playlistName = temp.title,
+                                            playlistType = PlaylistType.RADIO,
+                                            continuation = null,
+                                        ),
+                                    )
+                                    homeViewModel.loadMediaItem(
+                                        firstQueue,
+                                        Config.SONG_CLICK,
+                                    )
+                                }
+                            },
+                            onLongClick = {
+                                track = temp.toTrack()
+                                bottomSheetShow = true
+                            },
+                            data = temp,
+                        )
+                    } else if ((playlistId != null && temp.videoId == null) || (playlistId != null && temp.videoId == "")) {
                         if (playlistId.startsWith("UC")) {
                             HomeItemArtist(onClick = {
                                 navController.navigate(

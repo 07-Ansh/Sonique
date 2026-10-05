@@ -4,7 +4,9 @@ import com.sonique.domain.data.model.searchResult.songs.Album
 import com.sonique.domain.data.model.searchResult.songs.Artist
 import com.sonique.domain.data.model.searchResult.songs.Thumbnail
 import com.sonique.domain.data.type.HomeContentType
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Content(
     val album: Album?,
     val artists: List<Artist>?,
@@ -19,4 +21,5 @@ data class Content(
     val durationSeconds: Int? = null,
     val radio: String? = null,
 ) : HomeContentType
+
 

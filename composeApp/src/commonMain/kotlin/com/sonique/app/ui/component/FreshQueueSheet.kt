@@ -205,13 +205,14 @@ fun FreshQueueContent(
         }
     }
 
-    var localQueueItems by remember(visibleQueueItems) {
+    var localQueueItems by remember {
         mutableStateOf(visibleQueueItems)
     }
 
     val dragDropState = rememberDragDropState(
         lazyListState = lazyListState,
         minDragIndex = 1,
+        itemKeys = { localQueueItems.map { it.stableKey } },
         onMove = { from, to ->
             val currentList = localQueueItems.toMutableList()
             if (from in currentList.indices && to in currentList.indices && from != to) {
@@ -228,6 +229,12 @@ fun FreshQueueContent(
             }
         },
     )
+
+    LaunchedEffect(visibleQueueItems) {
+        if (dragDropState.draggedItemKey == null && dragDropState.settlingItemKey == null) {
+            localQueueItems = visibleQueueItems
+        }
+    }
 
     // Precalculate total duration only when the queue list instance changes
     val totalDurationText = remember(queue) {

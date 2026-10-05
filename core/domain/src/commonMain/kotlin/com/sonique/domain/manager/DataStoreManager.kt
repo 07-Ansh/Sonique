@@ -247,9 +247,6 @@ interface DataStoreManager {
 
     suspend fun setBlurFullscreenLyrics(blur: Boolean)
 
-    val blurPlayerBackground: Flow<String>
-
-    suspend fun setBlurPlayerBackground(blur: Boolean)
 
     val playbackSpeed: Flow<Float>
 
@@ -315,9 +312,6 @@ interface DataStoreManager {
 
     suspend fun setEnablePageTransitions(enable: Boolean)
 
-    val enableExpressivePlayerControls: Flow<String>
-
-    suspend fun setEnableExpressivePlayerControls(enable: Boolean)
 
     val liquidGlassGlassiness: Flow<Float>
 

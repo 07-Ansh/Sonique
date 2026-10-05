@@ -1,6 +1,13 @@
 package com.sonique.app.ui.screen.home
 
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -33,10 +40,11 @@ import com.sonique.app.viewModel.UpdateViewModel
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import com.sonique.app.expect.isDebugBuild
 import sonique.composeapp.generated.resources.*
 
 enum class SettingsSubCategory {
-    APPEARANCE, GENERAL, UPDATES, AUDIO, PLAYBACK, SPOTIFY, SPONSORBLOCK, BACKUP, ABOUT, STORAGE
+    APPEARANCE, GENERAL, UPDATES, AUDIO, PLAYBACK, SPOTIFY, SPONSORBLOCK, BACKUP, ABOUT, STORAGE, DEVELOPER
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalCalfApi::class)
@@ -83,7 +91,46 @@ fun SettingScreen(
         viewModel.getData()
     }
 
-    Crossfade(targetState = activeSubCategory) { category ->
+    AnimatedContent(
+        targetState = activeSubCategory,
+        transitionSpec = {
+            if (targetState != null && initialState == null) {
+                // Forward navigation: entering subcategory slides in from right, main settings slides out to left with parallax
+                (slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(350, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(350))).togetherWith(
+                    slideOutHorizontally(
+                        targetOffsetX = { -it / 4 },
+                        animationSpec = tween(350, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(350))
+                )
+            } else if (targetState == null && initialState != null) {
+                // Back navigation: returning to main settings slides in from left, subcategory slides out to right
+                (slideInHorizontally(
+                    initialOffsetX = { -it / 4 },
+                    animationSpec = tween(350, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(350))).togetherWith(
+                    slideOutHorizontally(
+                        targetOffsetX = { it },
+                        animationSpec = tween(350, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(350))
+                )
+            } else {
+                // Switching directly between two subcategories
+                (slideInHorizontally(
+                    initialOffsetX = { it },
+                    animationSpec = tween(350, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(350))).togetherWith(
+                    slideOutHorizontally(
+                        targetOffsetX = { -it },
+                        animationSpec = tween(350, easing = FastOutSlowInEasing)
+                    ) + fadeOut(animationSpec = tween(350))
+                )
+            }
+        },
+        label = "SettingsScreenTransition"
+    ) { category ->
         if (category == null) {
             MainSettingsList(
                 innerPadding = innerPadding,
@@ -108,6 +155,7 @@ fun SettingScreen(
                         SettingsSubCategory.BACKUP -> stringResource(Res.string.backup)
                         SettingsSubCategory.ABOUT -> stringResource(Res.string.about_us)
                         SettingsSubCategory.STORAGE -> stringResource(Res.string.storage)
+                        SettingsSubCategory.DEVELOPER -> "Developer Options"
                     },
                     backdrop = backdrop,
                     onBack = { activeSubCategory = null }
@@ -122,6 +170,7 @@ fun SettingScreen(
                         SettingsSubCategory.BACKUP -> BackupSettingsContent(viewModel)
                         SettingsSubCategory.ABOUT -> AboutSettingsContent(navController)
                         SettingsSubCategory.STORAGE -> StorageSettingsContent(viewModel)
+                        SettingsSubCategory.DEVELOPER -> DeveloperSettingsContent(sharedViewModel)
                         SettingsSubCategory.UPDATES -> {}
                     }
                 }
@@ -178,7 +227,7 @@ private fun MainSettingsList(
                         Material3SettingsItem(
                             icon = Icons.Default.Palette,
                             title = { Text("Appearance") },
-                            description = { Text("Theme, Liquid Glass, player styling & visual effects") },
+                            description = { Text("Theme, Liquid Glass, transitions, player styling & visual effects") },
                             onClick = { onCategoryClick(SettingsSubCategory.APPEARANCE) }
                         )
                     )
@@ -277,6 +326,22 @@ private fun MainSettingsList(
                         )
                     )
                 )
+            }
+
+            if (isDebugBuild()) {
+                item {
+                    Material3SettingsGroup(
+                        title = "Developer",
+                        items = listOf(
+                            Material3SettingsItem(
+                                icon = Icons.Default.Code,
+                                title = { Text("Developer Options") },
+                                description = { Text("Test modals, dialogs, simulation tools & environment specs") },
+                                onClick = { onCategoryClick(SettingsSubCategory.DEVELOPER) }
+                            )
+                        )
+                    )
+                }
             }
         }
     }

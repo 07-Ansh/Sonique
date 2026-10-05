@@ -1,4 +1,4 @@
-﻿package com.sonique.app.viewModel
+package com.sonique.app.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,11 +9,15 @@ import com.sonique.domain.data.model.searchResult.songs.Thumbnail
 import com.sonique.domain.repository.AlbumRepository
 import com.sonique.domain.repository.HomeRepository
 import com.sonique.domain.repository.PlaylistRepository
+import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.utils.Resource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 import sonique.composeapp.generated.resources.Res
@@ -26,6 +30,7 @@ class AlbumsViewModel(
     private val homeRepository: HomeRepository,
     private val playlistRepository: PlaylistRepository,
     private val albumRepository: AlbumRepository,
+    private val dataStoreManager: DataStoreManager,
 ) : ViewModel() {
 
     private val _albumsForYou = MutableStateFlow<List<Content>>(emptyList())
@@ -44,22 +49,35 @@ class AlbumsViewModel(
     fun fetchAlbumsData(forceRefresh: Boolean = false) {
         _isLoading.value = true
         viewModelScope.launch {
-            combine(
-                homeRepository.getHomeData(
-                    null,
-                    getString(Res.string.view_count),
-                    getString(Res.string.song),
-                    forceRefresh = forceRefresh
-                ),
-                homeRepository.getNewRelease(
-                    getString(Res.string.new_release),
-                    getString(Res.string.music_video),
-                    forceRefresh = forceRefresh
-                ),
-                playlistRepository.getLibraryAlbums(),
-                playlistRepository.getMixedForYou(),
-                albumRepository.getAllAlbums(100),
-            ) { homeRes, newReleaseRes, libraryAlbums, mixedForYou, localAlbums ->
+            try {
+                val isLoggedIn = dataStoreManager.loggedIn.firstOrNull() == DataStoreManager.TRUE
+                val libraryAlbumsFlow = if (isLoggedIn) {
+                    playlistRepository.getLibraryAlbums().catch { emit(null) }
+                } else {
+                    flowOf(null)
+                }
+                val mixedForYouFlow = if (isLoggedIn) {
+                    playlistRepository.getMixedForYou().catch { emit(null) }
+                } else {
+                    flowOf(null)
+                }
+
+                combine(
+                    homeRepository.getHomeData(
+                        null,
+                        getString(Res.string.view_count),
+                        getString(Res.string.song),
+                        forceRefresh = forceRefresh
+                    ).catch { emit(Resource.Error(it.message ?: "Failed")) },
+                    homeRepository.getNewRelease(
+                        getString(Res.string.new_release),
+                        getString(Res.string.music_video),
+                        forceRefresh = forceRefresh
+                    ).catch { emit(Resource.Error(it.message ?: "Failed")) },
+                    libraryAlbumsFlow,
+                    mixedForYouFlow,
+                    albumRepository.getAllAlbums(100).catch { emit(emptyList()) },
+                ) { homeRes, newReleaseRes, libraryAlbums, mixedForYou, localAlbums ->
                 val albumsList = mutableListOf<Content>()
                 val playlistsList = mutableListOf<Content>()
                 libraryAlbums?.forEach { item ->
@@ -151,9 +169,12 @@ class AlbumsViewModel(
                     albumsList.distinctBy { it.browseId ?: it.playlistId ?: it.title },
                     playlistsList.distinctBy { it.playlistId ?: it.browseId ?: it.title }
                 )
-            }.collect { (albums, playlists) ->
-                _albumsForYou.value = albums
-                _playlistsForYou.value = playlists
+                }.collect { (albums, playlists) ->
+                    _albumsForYou.value = albums
+                    _playlistsForYou.value = playlists
+                    _isLoading.value = false
+                }
+            } finally {
                 _isLoading.value = false
             }
         }

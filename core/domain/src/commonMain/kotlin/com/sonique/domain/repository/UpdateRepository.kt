@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 interface UpdateRepository {
     fun checkForUpdate(): Flow<UpdateStatus>
     suspend fun fetchChangelog(version: String): String?
+    suspend fun fetchAllReleases(): Result<List<ReleaseInfo>>
 }
 
 sealed class UpdateStatus {
@@ -19,5 +20,8 @@ data class ReleaseInfo(
     val changelog: String,
     val downloadUrl: String,
     val title: String,
+    val publishedAt: String = "",
+    val htmlUrl: String = "",
 )
+
 

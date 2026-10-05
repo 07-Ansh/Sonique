@@ -16,6 +16,7 @@ import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.repository.SongRepository
 import com.sonique.domain.utils.Resource
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.kotlinytmusicscraper.YouTube
 import com.sonique.kotlinytmusicscraper.models.SongItem
 import com.sonique.kotlinytmusicscraper.models.WatchEndpoint
@@ -403,5 +404,68 @@ internal class SongRepositoryImpl(
                     }
             }
         }
+
+    override suspend fun resolveAudioTrackArtwork(
+        videoId: String,
+        title: String,
+        artist: String?,
+    ): String? = withContext(Dispatchers.IO) {
+        try {
+            val cleanVideoId = videoId.removePrefix("Video")
+
+            // 1. Check local DB first
+            val existingSong = localDataSource.getSong(cleanVideoId)
+            val currentThumb = existingSong?.thumbnails
+            if (!currentThumb.isNullOrBlank() && !com.sonique.domain.utils.isVideoThumbnailUrl(currentThumb)) {
+                return@withContext currentThumb.toHighResThumbnailUrl(1200)
+            }
+
+            // 2. Parse video title and metadata
+            val parsed = com.sonique.domain.utils.parseVideoSongMetadata(title, artist)
+
+            // 3. Try prioritized search queries for YouTube Music (FILTER_SONG) to get official 1:1 album art
+            for (query in parsed.searchQueries) {
+                val searchResult = youTube.search(
+                    query = query,
+                    filter = YouTube.SearchFilter.FILTER_SONG,
+                ).getOrNull()
+
+                val candidateSongs = searchResult?.items?.filterIsInstance<SongItem>()?.filter { item ->
+                    !item.thumbnail.isNullOrBlank() &&
+                        !com.sonique.domain.utils.isVideoThumbnailUrl(item.thumbnail) &&
+                        com.sonique.domain.utils.isSongMatch(
+                            videoTitle = title,
+                            videoArtist = artist,
+                            candidateTitle = item.title,
+                            candidateArtists = item.artists?.map { it.name },
+                        )
+                }
+
+                if (!candidateSongs.isNullOrEmpty()) {
+                    val bestMatch = candidateSongs.maxByOrNull { item ->
+                        com.sonique.domain.utils.scoreSongCandidate(
+                            candidateTitle = item.title,
+                            candidateArtists = item.artists?.map { it.name },
+                            parsed = parsed,
+                            fullVideoTitle = title,
+                            videoArtist = artist,
+                        )
+                    }
+
+                    if (bestMatch != null) {
+                        val highResArt = bestMatch.thumbnail.toHighResThumbnailUrl(1200)
+                        Logger.d(TAG, "Resolved verified audio artwork for video $cleanVideoId ('$title' -> '${bestMatch.title}') using query '$query' -> $highResArt")
+                        localDataSource.updateThumbnailsSongEntity(highResArt, cleanVideoId)
+                        return@withContext highResArt
+                    }
+                }
+            }
+
+            Logger.d(TAG, "No verified audio match found for video $cleanVideoId ('$title'). Preserving original video thumbnail.")
+        } catch (e: Exception) {
+            Logger.e(TAG, "Failed to resolve audio artwork for $videoId: ${e.message}")
+        }
+        null
+    }
 }
 

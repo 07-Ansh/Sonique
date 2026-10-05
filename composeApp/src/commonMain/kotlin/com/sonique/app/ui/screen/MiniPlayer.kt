@@ -51,6 +51,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.ProgressIndicatorDefaults
@@ -143,7 +144,6 @@ fun MiniPlayer(
 ) {
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
-    val enableExpressivePlayerControls by sharedViewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
 
     val layer = rememberGraphicsLayer()
     val luminanceAnimation = remember { Animatable(0f) }
@@ -324,29 +324,48 @@ fun MiniPlayer(
                                         )
                                     },
                         ) {
-                            AsyncImage(
-                                model =
-                                    ImageRequest
-                                        .Builder(LocalPlatformContext.current)
-                                        .data(thumbnailURL)
-                                        .crossfade(550)
-                                        .build(),
-                                placeholder = painterResource(Res.drawable.holder),
-                                error = painterResource(Res.drawable.holder),
-                                contentDescription = null,
-                                contentScale = ContentScale.FillWidth,
-                                onSuccess = {
-                                    bitmap =
-                                        it.result.image.toImageBitmap()
-                                },
+                            Box(
                                 modifier =
                                     Modifier
                                         .size(36.dp)
                                         .align(Alignment.CenterVertically)
                                         .clip(
                                             RoundedCornerShape(8.dp),
-                                        ),
-                            )
+                                        )
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Crossfade(
+                                    targetState = screenDataState.isArtworkLoading || thumbnailURL.isNullOrEmpty(),
+                                    animationSpec = tween(300),
+                                    label = "MiniPlayerArt1",
+                                ) { isArtLoading ->
+                                    if (isArtLoading) {
+                                        GoogleCircularProgressIndicator(
+                                            modifier = Modifier.size(18.dp),
+                                            color = MaterialTheme.colorScheme.primary,
+                                        )
+                                    } else {
+                                        AsyncImage(
+                                            model =
+                                                ImageRequest
+                                                    .Builder(LocalPlatformContext.current)
+                                                    .data(thumbnailURL)
+                                                    .crossfade(350)
+                                                    .build(),
+                                            placeholder = painterResource(Res.drawable.holder),
+                                            error = painterResource(Res.drawable.holder),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            onSuccess = {
+                                                bitmap =
+                                                    it.result.image.toImageBitmap()
+                                            },
+                                            modifier = Modifier.fillMaxSize(),
+                                        )
+                                    }
+                                }
+                            }
                             Spacer(modifier = Modifier.width(12.dp))
                             AnimatedContent(
                                 targetState = title,
@@ -528,21 +547,7 @@ fun MiniPlayer(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        AsyncImage(
-                            model =
-                                ImageRequest
-                                    .Builder(LocalPlatformContext.current)
-                                    .data(thumbnailURL)
-                                    .crossfade(550)
-                                    .build(),
-                            placeholder = painterResource(Res.drawable.holder),
-                            error = painterResource(Res.drawable.holder),
-                            contentDescription = null,
-                            contentScale = ContentScale.FillWidth,
-                            onSuccess = {
-                                bitmap =
-                                    it.result.image.toImageBitmap()
-                            },
+                        Box(
                             modifier =
                                 Modifier
                                     .fillMaxHeight()
@@ -550,8 +555,41 @@ fun MiniPlayer(
                                     .align(Alignment.CenterVertically)
                                     .clip(
                                         RoundedCornerShape(4.dp),
-                                    ),
-                        )
+                                    )
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Crossfade(
+                                targetState = screenDataState.isArtworkLoading || thumbnailURL.isNullOrEmpty(),
+                                animationSpec = tween(300),
+                                label = "MiniPlayerArt2",
+                            ) { isArtLoading ->
+                                if (isArtLoading) {
+                                    GoogleCircularProgressIndicator(
+                                        modifier = Modifier.size(22.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                    )
+                                } else {
+                                    AsyncImage(
+                                        model =
+                                            ImageRequest
+                                                .Builder(LocalPlatformContext.current)
+                                                .data(thumbnailURL)
+                                                .crossfade(350)
+                                                .build(),
+                                        placeholder = painterResource(Res.drawable.holder),
+                                        error = painterResource(Res.drawable.holder),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        onSuccess = {
+                                            bitmap =
+                                                it.result.image.toImageBitmap()
+                                        },
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                            }
+                        }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
@@ -606,7 +644,6 @@ fun MiniPlayer(
                             PlayerControlLayout(
                                 controllerState = controllerState,
                                 isSmallSize = true,
-                                enableExpressive = enableExpressivePlayerControls,
                             ) {
                                 sharedViewModel.onUIEvent(it)
                             }

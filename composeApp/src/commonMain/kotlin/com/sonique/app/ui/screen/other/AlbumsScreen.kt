@@ -1,4 +1,4 @@
-﻿package com.sonique.app.ui.screen.other
+package com.sonique.app.ui.screen.other
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -54,6 +54,8 @@ fun AlbumsScreen(
 
     val pullToRefreshState = rememberPullToRefreshState()
 
+    val hasData = albumsForYou.isNotEmpty() || playlistsForYou.isNotEmpty()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -63,20 +65,22 @@ fun AlbumsScreen(
             modifier = Modifier.fillMaxSize(),
             state = pullToRefreshState,
             onRefresh = { viewModel.fetchAlbumsData(forceRefresh = true) },
-            isRefreshing = isLoading,
+            isRefreshing = isLoading && hasData,
             indicator = {
-                PullToRefreshDefaults.Indicator(
-                    state = pullToRefreshState,
-                    isRefreshing = isLoading,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 16.dp),
-                    containerColor = PullToRefreshDefaults.indicatorContainerColor,
-                    color = PullToRefreshDefaults.indicatorColor,
-                )
+                if (hasData) {
+                    PullToRefreshDefaults.Indicator(
+                        state = pullToRefreshState,
+                        isRefreshing = isLoading,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 16.dp),
+                        containerColor = PullToRefreshDefaults.indicatorContainerColor,
+                        color = PullToRefreshDefaults.indicatorColor,
+                    )
+                }
             },
         ) {
-            if (isLoading && albumsForYou.isEmpty() && playlistsForYou.isEmpty()) {
+            if (isLoading && !hasData) {
                 CenterLoadingBox(modifier = Modifier.fillMaxSize())
             } else {
                 LazyVerticalGrid(

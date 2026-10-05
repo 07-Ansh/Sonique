@@ -1068,8 +1068,7 @@ fun FullscreenLyricsSheet(
     onDismiss: () -> Unit,
 ) {
     val screenDataState by sharedViewModel.nowPlayingScreenData.collectAsStateWithLifecycle()
-    val enableExpressivePlayerControls by sharedViewModel.enableExpressivePlayerControls.collectAsStateWithLifecycle()
-    val playerContentColor = if (enableExpressivePlayerControls) Color(0xFFFAF9F6) else Color.White
+    val playerContentColor = Color.White
     val timelineState by sharedViewModel.timeline.collectAsStateWithLifecycle()
     val controllerState by sharedViewModel.controllerState.collectAsStateWithLifecycle()
 
@@ -1281,7 +1280,6 @@ fun FullscreenLyricsSheet(
                                         .height(24.dp),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                if (!enableExpressivePlayerControls) {
                                 Crossfade(timelineState.loading) {
                                     if (it) {
                                         CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
@@ -1322,7 +1320,6 @@ fun FullscreenLyricsSheet(
                                     }
                                 }
                             }
-                            }
                             CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                                 Slider(
                                     value = sliderValue,
@@ -1340,63 +1337,45 @@ fun FullscreenLyricsSheet(
                                                 Alignment.TopCenter,
                                             ),
                                     track = { sliderState ->
-                                        if (enableExpressivePlayerControls) {
-                                            WavySliderTrack(
-                                                sliderState = sliderState,
-                                                isPlaying = controllerState.isPlaying,
-                                                activeColor = playerContentColor,
-                                                inactiveColor = playerContentColor.copy(alpha = 0.3f)
-                                            )
-                                        } else {
-                                            SliderDefaults.Track(
-                                                modifier =
-                                                    Modifier
-                                                        .height(5.dp),
-                                                enabled = true,
-                                                sliderState = sliderState,
-                                                colors =
-                                                    SliderDefaults.colors().copy(
-                                                        thumbColor = playerContentColor,
-                                                        activeTrackColor = playerContentColor,
-                                                        inactiveTrackColor = Color.Transparent,
-                                                    ),
-                                                thumbTrackGapSize = 0.dp,
-                                                drawTick = { _, _ -> },
-                                                drawStopIndicator = null,
-                                            )
-                                        }
+                                        SliderDefaults.Track(
+                                            modifier =
+                                                Modifier
+                                                    .height(5.dp),
+                                            enabled = true,
+                                            sliderState = sliderState,
+                                            colors =
+                                                SliderDefaults.colors().copy(
+                                                    thumbColor = playerContentColor,
+                                                    activeTrackColor = playerContentColor,
+                                                    inactiveTrackColor = Color.Transparent,
+                                                ),
+                                            thumbTrackGapSize = 0.dp,
+                                            drawTick = { _, _ -> },
+                                            drawStopIndicator = null,
+                                        )
                                     },
                                     thumb = { sliderState ->
-                                        if (enableExpressivePlayerControls) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .width(4.dp)
-                                                    .height(20.dp)
-                                                    .background(playerContentColor, RoundedCornerShape(2.dp))
-                                            )
-                                        } else {
-                                            SliderDefaults.Thumb(
-                                                modifier =
-                                                    Modifier
-                                                        .height(18.dp)
-                                                        .width(8.dp)
-                                                        .padding(
-                                                            vertical = 4.dp,
-                                                        ),
-                                                thumbSize = DpSize(8.dp, 8.dp),
-                                                interactionSource =
-                                                    remember {
-                                                        MutableInteractionSource()
-                                                    },
-                                                colors =
-                                                    SliderDefaults.colors().copy(
-                                                        thumbColor = playerContentColor,
-                                                        activeTrackColor = playerContentColor,
-                                                        inactiveTrackColor = Color.Transparent,
+                                        SliderDefaults.Thumb(
+                                            modifier =
+                                                Modifier
+                                                    .height(18.dp)
+                                                    .width(8.dp)
+                                                    .padding(
+                                                        vertical = 4.dp,
                                                     ),
-                                                enabled = true,
-                                            )
-                                        }
+                                            thumbSize = DpSize(8.dp, 8.dp),
+                                            interactionSource =
+                                                remember {
+                                                    MutableInteractionSource()
+                                                },
+                                            colors =
+                                                SliderDefaults.colors().copy(
+                                                    thumbColor = playerContentColor,
+                                                    activeTrackColor = playerContentColor,
+                                                    inactiveTrackColor = Color.Transparent,
+                                                ),
+                                            enabled = true,
+                                        )
                                     },
                                 )
                             }
@@ -1445,7 +1424,7 @@ fun FullscreenLyricsSheet(
                                             tween(300),
                                         ),
                                 ) {
-                                    PlayerControlLayout(controllerState = controllerState, enableExpressive = enableExpressivePlayerControls) {
+                                    PlayerControlLayout(controllerState = controllerState) {
                                         sharedViewModel.onUIEvent(it)
                                     }
                                 }

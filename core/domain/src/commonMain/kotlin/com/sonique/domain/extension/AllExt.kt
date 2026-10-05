@@ -7,6 +7,8 @@ import com.sonique.domain.data.model.cookie.CookieItem
 import com.sonique.domain.data.player.GenericMediaItem
 import com.sonique.domain.data.player.GenericMediaMetadata
 import com.sonique.domain.utils.connectArtists
+import com.sonique.domain.utils.isVideoThumbnailUrl
+import com.sonique.domain.utils.toHighResThumbnailUrl
 import com.sonique.domain.utils.toListName
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDateTime
@@ -58,7 +60,8 @@ fun GenericMediaItem.toSongEntity(): SongEntity =
     )
 
 fun SongEntity.toGenericMediaItem(): GenericMediaItem {
-    val isSong = (this.thumbnails?.contains("w544") == true && this.thumbnails.contains("h544"))
+    val thumbUrl = this.thumbnails?.toHighResThumbnailUrl()
+    val isSong = !com.sonique.domain.utils.isVideoThumbnailUrl(thumbUrl)
     return GenericMediaItem(
         mediaId = this.videoId,
         uri = this.videoId,
@@ -67,7 +70,7 @@ fun SongEntity.toGenericMediaItem(): GenericMediaItem {
                 title = this.title,
                 artist = this.artistName?.connectArtists(),
                 albumTitle = this.albumName,
-                artworkUri = this.thumbnails,
+                artworkUri = thumbUrl,
                 description = if (isSong) MERGING_DATA_TYPE.SONG else MERGING_DATA_TYPE.VIDEO,
             ),
         customCacheKey = this.videoId,
@@ -75,20 +78,16 @@ fun SongEntity.toGenericMediaItem(): GenericMediaItem {
 }
 
 fun Track.toGenericMediaItem(): GenericMediaItem {
-    var thumbUrl =
-        this.thumbnails?.last()?.url
-            ?: "https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg"
-    if (thumbUrl.contains("w120")) {
-        thumbUrl = Regex("([wh])120").replace(thumbUrl, "$1544")
-    }
+    val rawThumb = this.thumbnails?.lastOrNull()?.url
+        ?: "https://i.ytimg.com/vi/${this.videoId}/maxresdefault.jpg"
+    val thumbUrl = rawThumb.toHighResThumbnailUrl()
     val artistName: String = this.artists.toListName().connectArtists()
     val isSong =
         (
-            this.thumbnails?.last()?.height != 0 &&
-                this.thumbnails?.last()?.height == this.thumbnails?.last()?.width &&
-                this.thumbnails?.last()?.height != null
-        ) &&
-            (!thumbUrl.contains("hq720") && !thumbUrl.contains("maxresdefault"))
+            this.thumbnails?.lastOrNull()?.height != 0 &&
+                this.thumbnails?.lastOrNull()?.height == this.thumbnails?.lastOrNull()?.width &&
+                this.thumbnails?.lastOrNull()?.height != null
+        ) && !isVideoThumbnailUrl(thumbUrl)
     return GenericMediaItem(
         mediaId = this.videoId,
         uri = this.videoId,

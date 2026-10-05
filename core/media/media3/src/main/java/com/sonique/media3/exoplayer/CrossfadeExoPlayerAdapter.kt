@@ -318,6 +318,8 @@ internal class CrossfadeExoPlayerAdapter(
 
                 override fun seekToPreviousMediaItem(): Unit = this@CrossfadeExoPlayerAdapter.seekToPreviousMediaItem()
             }
+
+        replenishStandbyPlayerAsync()
     }
 
 
@@ -325,6 +327,41 @@ internal class CrossfadeExoPlayerAdapter(
         val player: ExoPlayer,
         val filter: CrossfadeFilterAudioProcessor,
     )
+
+    @Volatile
+    private var standbyPlayerWithFilter: PlayerWithFilter? = null
+    private val standbyPlayerLock = Any()
+
+    private fun replenishStandbyPlayerAsync() {
+        if (standbyPlayerWithFilter != null) return
+        coroutineScope.launch(kotlinx.coroutines.Dispatchers.Main) {
+            synchronized(standbyPlayerLock) {
+                if (standbyPlayerWithFilter != null) return@synchronized
+                try {
+                    standbyPlayerWithFilter = createExoPlayerInstance()
+                    Logger.d(TAG, "Standby ExoPlayer pre-warmed and ready")
+                } catch (e: Exception) {
+                    Logger.e(TAG, "Failed to pre-warm standby ExoPlayer: ${e.message}")
+                }
+            }
+        }
+    }
+
+    private fun obtainPlayerInstance(): PlayerWithFilter {
+        val standby = synchronized(standbyPlayerLock) {
+            val p = standbyPlayerWithFilter
+            standbyPlayerWithFilter = null
+            p
+        }
+        val pwf = standby ?: createExoPlayerInstance()
+        if (standby != null) {
+            Logger.d(TAG, "Using pre-warmed standby ExoPlayer (0ms allocation)")
+        } else {
+            Logger.d(TAG, "Standby miss: synchronously creating ExoPlayer")
+        }
+        replenishStandbyPlayerAsync()
+        return pwf
+    }
 
     private fun createExoPlayerInstance(): PlayerWithFilter {
         val crossfadeFilter = CrossfadeFilterAudioProcessor()
@@ -376,6 +413,7 @@ internal class CrossfadeExoPlayerAdapter(
                 .setSeekBackIncrementMs(5000)
                 .setMediaSourceFactory(mediaSourceFactory)
                 .setRenderersFactory(perPlayerRenderers)
+                .setLooper(context.mainLooper)
                 .build()
 
         return PlayerWithFilter(player, crossfadeFilter)
@@ -1009,6 +1047,10 @@ internal class CrossfadeExoPlayerAdapter(
         abandonAudioFocusInternal()
         cleanupCurrentPlayerInternal()
         clearAllPrecacheInternal()
+        synchronized(standbyPlayerLock) {
+            standbyPlayerWithFilter?.player?.release()
+            standbyPlayerWithFilter = null
+        }
         listeners.clear()
     }
 
@@ -1131,8 +1173,7 @@ internal class CrossfadeExoPlayerAdapter(
                         player = cachedPlayerEntry.player
                         playerFilter = cachedPlayerEntry.filter
                     } else {
-                        Logger.d(TAG, "Creating new player for $videoId")
-                        val pwf = createExoPlayerInstance()
+                        val pwf = obtainPlayerInstance()
                         player = pwf.player
                         playerFilter = pwf.filter
                         player.setMediaItem(mediaItem.toMedia3MediaItem())
@@ -1482,7 +1523,7 @@ internal class CrossfadeExoPlayerAdapter(
                     nextPlayer = cachedPlayerEntry.player
                     nextFilter = cachedPlayerEntry.filter
                 } else {
-                    val pwf = createExoPlayerInstance()
+                    val pwf = obtainPlayerInstance()
                     nextPlayer = pwf.player
                     nextFilter = pwf.filter
                     nextPlayer.setMediaItem(nextMediaItem.toMedia3MediaItem())
@@ -2122,7 +2163,7 @@ internal class CrossfadeExoPlayerAdapter(
                         val mediaItem = playlist.getOrNull(idx) ?: continue
 
                         try {
-                            val pwf = createExoPlayerInstance()
+                            val pwf = obtainPlayerInstance()
                             pwf.player.setMediaItem(mediaItem.toMedia3MediaItem())
                             pwf.player.prepare()
                             precachedPlayers[mediaItem.mediaId] = PrecachedPlayer(pwf.player, mediaItem, pwf.filter)

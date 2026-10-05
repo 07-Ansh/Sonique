@@ -16,9 +16,11 @@ import com.sonique.domain.extension.now
 import com.sonique.domain.mediaservice.handler.DownloadHandler
 import com.sonique.domain.mediaservice.handler.PlaylistType
 import com.sonique.domain.mediaservice.handler.QueueData
+import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.repository.LocalPlaylistRepository
 import com.sonique.domain.repository.PlaylistRepository
 import com.sonique.domain.repository.SongRepository
+import com.sonique.domain.repository.StreamRepository
 import com.sonique.domain.utils.Resource
 import com.sonique.domain.utils.collectLatestResource
 import com.sonique.domain.utils.toListVideoId
@@ -67,8 +69,19 @@ class PlaylistViewModel(
     private val songRepository: SongRepository,
     private val localPlaylistRepository: LocalPlaylistRepository,
     private val playlistRepository: PlaylistRepository,
+    private val streamRepository: StreamRepository,
+    private val dataStoreManager: DataStoreManager,
 ) : BaseViewModel() {
     val downloadUtils: DownloadHandler by inject<DownloadHandler>()
+
+    private fun prefetchCandidateTracks(tracks: List<Track>) {
+        val candidates = tracks.take(2)
+        viewModelScope.launch(Dispatchers.IO) {
+            for (track in candidates) {
+                streamRepository.prefetchStream(dataStoreManager, track.videoId)
+            }
+        }
+    }
     private var _uiState = MutableStateFlow<PlaylistUIState>(Loading)
     val uiState: StateFlow<PlaylistUIState> = _uiState
 
@@ -205,7 +218,9 @@ class PlaylistViewModel(
                             downloadState = 0
                         )
                         _playlistEntity.value = playlist
-                        _tracks.value = songs.map { it.toTrack() }
+                        val trackList = songs.map { it.toTrack() }
+                        _tracks.value = trackList
+                        prefetchCandidateTracks(trackList)
                         _uiState.value = Success(
                             data = PlaylistState(
                                 id = playlist.id,
@@ -289,6 +304,7 @@ class PlaylistViewModel(
                                             ),
                                     )
                                 _tracks.value = data.first.tracks
+                                prefetchCandidateTracks(data.first.tracks)
                                 _continuation.value = data.second
                                 if (data.second.isNullOrEmpty()) _tracksListState.value = ListState.PAGINATION_EXHAUST
                                 playlistRepository.insertRadioPlaylist(data.first.toPlaylistEntity())
@@ -329,6 +345,7 @@ class PlaylistViewModel(
                                             ),
                                     )
                                 _tracks.value = data.first.tracks
+                                prefetchCandidateTracks(data.first.tracks)
                                 _continuation.value = data.second
                                 if (data.second.isNullOrEmpty()) _tracksListState.value = ListState.PAGINATION_EXHAUST
                                 getPlaylistEntity(id = data.first.id, playlistBrowse = data.first)

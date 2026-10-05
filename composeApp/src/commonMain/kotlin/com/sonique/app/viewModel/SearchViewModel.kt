@@ -13,6 +13,7 @@ import com.sonique.domain.data.entities.SongEntity
 import com.sonique.domain.manager.DataStoreManager
 import com.sonique.domain.repository.SearchRepository
 import com.sonique.domain.repository.SongRepository
+import com.sonique.domain.repository.StreamRepository
 import com.sonique.domain.utils.Resource
 import com.sonique.domain.utils.toQueryList
 import com.sonique.logger.LogLevel
@@ -93,6 +94,7 @@ class SearchViewModel(
     private val dataStoreManager: DataStoreManager,
     private val searchRepository: SearchRepository,
     private val songRepository: SongRepository,
+    private val streamRepository: StreamRepository,
 ) : BaseViewModel() {
     private val _searchScreenUIState = MutableStateFlow<SearchScreenUIState>(SearchScreenUIState.Empty)
     val searchScreenUIState: StateFlow<SearchScreenUIState> get() = _searchScreenUIState.asStateFlow()
@@ -314,6 +316,11 @@ class SearchViewModel(
                      _searchScreenUIState.value = SearchScreenUIState.Error
                 } else {
                      _searchScreenUIState.value = SearchScreenUIState.Success
+                     song.firstOrNull()?.videoId?.let { topVideoId ->
+                         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                             streamRepository.prefetchStream(dataStoreManager, topVideoId)
+                         }
+                     }
                 }
                 
             } catch (e: Exception) {

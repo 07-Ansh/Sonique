@@ -85,8 +85,6 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.parseQueryString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -1155,7 +1153,6 @@ class YouTube {
     suspend fun newPipePlayer(
         videoId: String,
         tempRes: PlayerResponse,
-        preFetchedStreams: List<Pair<Int, String>>? = null,
     ): PlayerResponse? {
         val listUrlSig = mutableListOf<String>()
         var decodedSigResponse: PlayerResponse?
@@ -1166,7 +1163,7 @@ class YouTube {
         } else {
             sigResponse = tempRes
         }
-        val streamsList = preFetchedStreams ?: ytMusic.getNewPipePlayer(videoId)
+        val streamsList = ytMusic.getNewPipePlayer(videoId)
         if (streamsList.isEmpty()) return null
 
         decodedSigResponse =
@@ -1245,8 +1242,9 @@ class YouTube {
         listUrlSig.forEach {
             Logger.d(TAG, "YouTube NewPipe URL $it")
         }
-        if (listUrlSig.isNotEmpty()) {
-            Logger.d(TAG, "YouTube NewPipe Found ${listUrlSig.size} URLs")
+        val randomUrl = listUrlSig.randomOrNull() ?: return null
+        if (listUrlSig.isNotEmpty() && !is403Url(randomUrl)) {
+            Logger.d(TAG, "YouTube NewPipe Found URL $randomUrl")
             return decodedSigResponse
         } else {
             Logger.d(TAG, "YouTube NewPipe No URL Found")
@@ -1276,85 +1274,78 @@ class YouTube {
                     }.joinToString("")
             var decodedSigResponse: PlayerResponse? = null
             if (!noLogIn) {
-                val (tempRes, streamsList) = coroutineScope {
-                    val tempResDeferred = async(Dispatchers.IO) {
-                        ytMusic
-                            .player(
-                                WEB_REMIX,
-                                videoId,
-                                playlistId,
-                                cpn,
-                                signatureTimestamp =
-                                    run {
-                                        val today = Clock.System.todayIn(TimeZone.UTC)
-                                        val epoch =
-                                            Instant
-                                                .fromEpochSeconds(0)
-                                                .toLocalDateTime(TimeZone.UTC)
-                                                .date
-                                        epoch.daysUntil(today)
-                                    },
-                            ).body<PlayerResponse>()
-                            .let {
-                                val fexp =
-                                    it.streamingData
-                                        ?.serverAbrStreamingUrl
-                                        ?.toKmpUri()
-                                        ?.getQueryParameter("fexp")
-                                val playbackTracking = it.playbackTracking
-                                it.copy(
-                                    playbackTracking =
-                                        playbackTracking?.copy(
-                                            atrUrl =
-                                                playbackTracking.atrUrl?.copy(
-                                                    baseUrl =
-                                                        playbackTracking.atrUrl.baseUrl
-                                                            ?.toKmpUri()
-                                                            ?.buildUpon()
-                                                            ?.apply {
-                                                                if (fexp != null) {
-                                                                    appendQueryParameter("fexp", fexp)
-                                                                }
-                                                            }?.build()
-                                                            ?.toString(),
-                                                ),
-                                            videostatsPlaybackUrl =
-                                                playbackTracking.videostatsPlaybackUrl?.copy(
-                                                    baseUrl =
-                                                        playbackTracking.videostatsPlaybackUrl.baseUrl
-                                                            ?.toKmpUri()
-                                                            ?.buildUpon()
-                                                            ?.apply {
-                                                                if (fexp != null) {
-                                                                    appendQueryParameter("fexp", fexp)
-                                                                }
-                                                            }?.build()
-                                                            ?.toString(),
-                                                ),
-                                            videostatsWatchtimeUrl =
-                                                playbackTracking.videostatsWatchtimeUrl?.copy(
-                                                    baseUrl =
-                                                        playbackTracking.videostatsWatchtimeUrl.baseUrl
-                                                            ?.toKmpUri()
-                                                            ?.buildUpon()
-                                                            ?.apply {
-                                                                if (fexp != null) {
-                                                                    appendQueryParameter("fexp", fexp)
-                                                                }
-                                                            }?.build()
-                                                            ?.toString(),
-                                                ),
-                                        ),
-                                )
-                            }
-                    }
-                    val streamsDeferred = async(Dispatchers.IO) {
-                        ytMusic.getNewPipePlayer(videoId)
-                    }
-                    Pair(tempResDeferred.await(), streamsDeferred.await())
-                }
+                val tempRes =
+                    ytMusic
+                        .player(
+                            WEB_REMIX,
+                            videoId,
+                            playlistId,
+                            cpn,
+                            signatureTimestamp =
+                                run {
+                                    val today = Clock.System.todayIn(TimeZone.UTC)
+                                    val epoch =
+                                        Instant
+                                            .fromEpochSeconds(0)
+                                            .toLocalDateTime(TimeZone.UTC)
+                                            .date
+                                    epoch.daysUntil(today)
+                                },
+                        ).body<PlayerResponse>()
+                        .let {
+                            val fexp =
+                                it.streamingData
+                                    ?.serverAbrStreamingUrl
+                                    ?.toKmpUri()
+                                    ?.getQueryParameter("fexp")
+                            val playbackTracking = it.playbackTracking
+                            it.copy(
+                                playbackTracking =
+                                    playbackTracking?.copy(
+                                        atrUrl =
+                                            playbackTracking.atrUrl?.copy(
+                                                baseUrl =
+                                                    playbackTracking.atrUrl.baseUrl
+                                                        ?.toKmpUri()
+                                                        ?.buildUpon()
+                                                        ?.apply {
+                                                            if (fexp != null) {
+                                                                appendQueryParameter("fexp", fexp)
+                                                            }
+                                                        }?.build()
+                                                        ?.toString(),
+                                            ),
+                                        videostatsPlaybackUrl =
+                                            playbackTracking.videostatsPlaybackUrl?.copy(
+                                                baseUrl =
+                                                    playbackTracking.videostatsPlaybackUrl.baseUrl
+                                                        ?.toKmpUri()
+                                                        ?.buildUpon()
+                                                        ?.apply {
+                                                            if (fexp != null) {
+                                                                appendQueryParameter("fexp", fexp)
+                                                            }
+                                                        }?.build()
+                                                        ?.toString(),
+                                            ),
+                                        videostatsWatchtimeUrl =
+                                            playbackTracking.videostatsWatchtimeUrl?.copy(
+                                                baseUrl =
+                                                    playbackTracking.videostatsWatchtimeUrl.baseUrl
+                                                        ?.toKmpUri()
+                                                        ?.buildUpon()
+                                                        ?.apply {
+                                                            if (fexp != null) {
+                                                                appendQueryParameter("fexp", fexp)
+                                                            }
+                                                        }?.build()
+                                                        ?.toString(),
+                                            ),
+                                    ),
+                            )
+                        }
 
-                val response = newPipePlayer(videoId, tempRes, streamsList)
+                val response = newPipePlayer(videoId, tempRes)
                 if (response != null) {
                     decodedSigResponse = response
                     Logger.d(TAG, "YouTube Player found URL with client WEB_REMIX")

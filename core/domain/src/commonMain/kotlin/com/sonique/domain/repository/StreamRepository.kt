@@ -57,14 +57,5 @@ interface StreamRepository {
      * Which extractor and cipher decoder produced this video's stream URLs.
      */
     fun getExtractSource(videoId: String): String?
-
-    /**
-     * Speculatively pre-resolves audio stream URL into local database
-     * so subsequent playback requests hit Room cache in milliseconds.
-     */
-    suspend fun prefetchStream(
-        dataStoreManager: DataStoreManager,
-        videoId: String,
-    )
 }
 

@@ -269,14 +269,18 @@ private fun provideResolvingDataSourceFactory(
         runBlocking(Dispatchers.IO) {
             if (mediaId.contains(MERGING_DATA_TYPE.VIDEO)) {
                 val id = mediaId.removePrefix(MERGING_DATA_TYPE.VIDEO)
-                streamRepository.getNewFormat(id).firstOrNull()?.let {
+                streamRepository.getNewFormat(id).lastOrNull()?.let {
                     val videoUrl = it.videoUrl
                     if (videoUrl != null && it.expiredTime > now()) {
                         Logger.d("Stream", videoUrl)
-                        Logger.w("Stream", "Video from cached format")
-                        dataSpecReturn = dataSpec.withUri(videoUrl.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
-                        resolved = true
-                        return@runBlocking
+                        Logger.w("Stream", "Video from format")
+                        val is403Url = streamRepository.is403Url(videoUrl).firstOrNull() != false
+                        Logger.d("Stream", "is 403 $is403Url")
+                        if (!is403Url) {
+                            dataSpecReturn = dataSpec.withUri(videoUrl.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
+                            resolved = true
+                            return@runBlocking
+                        }
                     }
                 }
                 streamRepository
@@ -293,14 +297,18 @@ private fun provideResolvingDataSourceFactory(
                         resolved = true
                     }
             } else {
-                streamRepository.getNewFormat(mediaId).firstOrNull()?.let {
+                streamRepository.getNewFormat(mediaId).lastOrNull()?.let {
                     val audioUrl = it.audioUrl
                     if (audioUrl != null && it.expiredTime > now()) {
                         Logger.d("Stream", audioUrl)
-                        Logger.w("Stream", "Audio from cached format")
-                        dataSpecReturn = dataSpec.withUri(audioUrl.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
-                        resolved = true
-                        return@runBlocking
+                        Logger.w("Stream", "Audio from format")
+                        val is403Url = streamRepository.is403Url(audioUrl).firstOrNull() != false
+                        Logger.d("Stream", "is 403 $is403Url")
+                        if (!is403Url) {
+                            dataSpecReturn = dataSpec.withUri(audioUrl.toUri()).subrange(dataSpec.uriPositionOffset, chunkLength)
+                            resolved = true
+                            return@runBlocking
+                        }
                     }
                 }
                 streamRepository

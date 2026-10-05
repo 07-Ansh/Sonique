@@ -20,30 +20,24 @@ import com.sonique.kotlinytmusicscraper.YouTube
 import com.sonique.kotlinytmusicscraper.models.MediaType
 import com.sonique.kotlinytmusicscraper.models.response.PlayerResponse
 import com.sonique.logger.Logger
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 internal class StreamRepositoryImpl(
     private val localDataSource: LocalDataSource,
     private val youTube: YouTube,
 ) : StreamRepository {
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
     override suspend fun insertNewFormat(newFormat: NewFormatEntity) =
         withContext(Dispatchers.IO) {
             localDataSource.insertNewFormat(newFormat)
         }
 
-    override fun getNewFormat(videoId: String): Flow<NewFormatEntity?> = flow { emit(localDataSource.getNewFormat(videoId)) }.flowOn(Dispatchers.IO)
+    override fun getNewFormat(videoId: String): Flow<NewFormatEntity?> = flow { emit(localDataSource.getNewFormat(videoId)) }.flowOn(Dispatchers.Main)
 
     override suspend fun getFormatFlow(videoId: String) = localDataSource.getNewFormatAsFlow(videoId)
 
@@ -183,10 +177,39 @@ internal class StreamRepositoryImpl(
                     Logger.w("Stream", "expired at ${now().plusSeconds(response.streamingData?.expiresInSeconds?.toLong() ?: 0L)}")
                     val durationSecond = response.videoDetails?.lengthSeconds?.toIntOrNull()
                     // AutoMix metadata from Tidal official API
-                    val targetVideoId = if (VIDEO_QUALITY.itags.contains(format?.itag)) "${MERGING_DATA_TYPE.VIDEO}$videoId" else videoId
+                    var tidalBpm: Int? = null
+                    var tidalMusicKey: String? = null
+                    var tidalKeyScale: String? = null
+                    if (!isVideo && durationSecond != null && data.third == MediaType.Song) {
+                        val title = response.videoDetails?.title ?: ""
+                        val author = response.videoDetails?.author ?: ""
+                        val q =
+                            "$title $author"
+                                .replace(
+                                    Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
+                                    " ",
+                                ).replace(
+                                    Regex("( và | & | и | e | und |, |和| dan)"),
+                                    " ",
+                                ).replace("  ", " ")
+                                .replace(Regex("([()])"), "")
+                                .replace(".", " ")
+                                .replace("  ", " ")
+                        Logger.d("Stream", "Search Tidal metadata for: $q")
+                        youTube
+                            .searchTidalMetadata(q, durationSecond)
+                            .onSuccess { metadata ->
+                                Logger.w("Stream", "Tidal metadata: $metadata")
+                                tidalBpm = metadata.bpm
+                                tidalMusicKey = metadata.musicKey
+                                tidalKeyScale = metadata.keyScale
+                            }.onFailure {
+                                Logger.e("Stream", "Tidal metadata error: ${it.message}", it)
+                            }
+                    }
                     insertNewFormat(
                         NewFormatEntity(
-                            videoId = targetVideoId,
+                            videoId = if (VIDEO_QUALITY.itags.contains(format?.itag)) "${MERGING_DATA_TYPE.VIDEO}$videoId" else videoId,
                             itag = format?.itag ?: itag ?: ITAG.AUDIO_AAC_HIGH,
                             mimeType =
                                 Regex("""([^;]+);\s*codecs=["']([^"']+)["']""")
@@ -228,13 +251,11 @@ internal class StreamRepositoryImpl(
                             expiredTime = now().plusSeconds(response.streamingData?.expiresInSeconds?.toLong() ?: 0L),
                             audioUrl = if (muxed) response.streamingData?.hlsManifestUrl else format?.url,
                             videoUrl = if (muxed) response.streamingData?.hlsManifestUrl else videoFormat?.url,
-                            bpm = null,
-                            musicKey = null,
-                            keyScale = null,
+                            bpm = tidalBpm,
+                            musicKey = tidalMusicKey,
+                            keyScale = tidalKeyScale,
                         ),
                     )
-
-                    // Emit URL immediately to ExoPlayer so audio buffering starts without waiting for Tidal metadata
                     if (data.first != null) {
                         emit(
                             if (muxed) {
@@ -263,45 +284,6 @@ internal class StreamRepositoryImpl(
                                 }
                             },
                         )
-                    }
-
-                    // AutoMix metadata from Tidal official API - run in background coroutine so it never blocks playback
-                    if (!isVideo && durationSecond != null && data.third == MediaType.Song) {
-                        val title = response.videoDetails?.title ?: ""
-                        val author = response.videoDetails?.author ?: ""
-                        val q =
-                            "$title $author"
-                                .replace(
-                                    Regex("\\((feat\\.|ft.|cùng với|con|mukana|com|avec|合作音乐人: ) "),
-                                    " ",
-                                ).replace(
-                                    Regex("( và | & | и | e | und |, |和| dan)"),
-                                    " ",
-                                ).replace("  ", " ")
-                                .replace(Regex("([()])"), "")
-                                .replace(".", " ")
-                                .replace("  ", " ")
-                        scope.launch {
-                            runCatching {
-                                Logger.d("Stream", "Search Tidal metadata in background for: $q")
-                                youTube
-                                    .searchTidalMetadata(q, durationSecond)
-                                    .onSuccess { metadata ->
-                                        Logger.w("Stream", "Tidal metadata background result: $metadata")
-                                        localDataSource.getNewFormat(targetVideoId)?.let { currentFormat ->
-                                            localDataSource.updateNewFormat(
-                                                currentFormat.copy(
-                                                    bpm = metadata.bpm,
-                                                    musicKey = metadata.musicKey,
-                                                    keyScale = metadata.keyScale,
-                                                ),
-                                            )
-                                        }
-                                    }.onFailure {
-                                        Logger.e("Stream", "Tidal metadata error: ${it.message}", it)
-                                    }
-                            }
-                        }
                     }
                 }.onFailure {
                     it.printStackTrace()
@@ -402,26 +384,6 @@ internal class StreamRepositoryImpl(
                 localDataSource.updateNewFormat(
                     format.copy(expiredTime = now().plusSeconds(-1)),
                 )
-            }
-        }
-    }
-
-    override suspend fun prefetchStream(
-        dataStoreManager: DataStoreManager,
-        videoId: String,
-    ) {
-        if (videoId.isBlank()) return
-        withContext(Dispatchers.IO) {
-            val existing = localDataSource.getNewFormat(videoId)
-            if (existing != null && existing.audioUrl != null && !existing.expiredTime.isBefore(now())) {
-                Logger.d("StreamPrefetch", "Stream already cached & valid for $videoId")
-                return@withContext
-            }
-            runCatching {
-                Logger.d("StreamPrefetch", "Prefetching stream for $videoId")
-                getStream(dataStoreManager, videoId, isDownloading = false, isVideo = false).firstOrNull()
-            }.onFailure {
-                Logger.e("StreamPrefetch", "Failed to prefetch stream for $videoId: ${it.message}")
             }
         }
     }

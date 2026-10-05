@@ -79,6 +79,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -126,10 +127,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.Brush
 import coil3.compose.AsyncImage
 import coil3.compose.LocalPlatformContext
+import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.sonique.app.expect.ui.MediaPlayerView
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -235,6 +240,28 @@ fun NewPlayerScreen(
     var showSleepTimerDialog by remember { mutableStateOf(false) }
     var showMoreOptions by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+
+    val canvasData = currentSongData?.canvasData
+    val isCanvasActive = canvasData != null && !showInlineLyrics
+    var showControls by rememberSaveable { mutableStateOf(true) }
+
+    LaunchedEffect(canvasData, showInlineLyrics) {
+        if (canvasData == null || showInlineLyrics) {
+            showControls = true
+        }
+    }
+
+    val controlsAlpha by animateFloatAsState(
+        targetValue = if (!isCanvasActive || showControls) 1f else 0f,
+        animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+        label = "controlsAlpha"
+    )
+
+    val artworkVisibilityAlpha by animateFloatAsState(
+        targetValue = if (isCanvasActive) 0f else 1f,
+        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        label = "artworkVisibilityAlpha"
+    )
 
     val paletteState = com.kmpalette.rememberPaletteState()
     val defaultBg = MaterialTheme.colorScheme.background
@@ -361,9 +388,23 @@ fun NewPlayerScreen(
             initialAnchor = collapsedAnchor
         )
 
+        LaunchedEffect(queueSheetState.isCollapsed) {
+            if (!queueSheetState.isCollapsed) {
+                showControls = true
+            }
+        }
+
+        val bottomBarBgAlpha by animateFloatAsState(
+            targetValue = if (isCanvasActive && queueSheetState.isCollapsed) controlsAlpha else 1f,
+            animationSpec = tween(300),
+            label = "bottomBarBgAlpha"
+        )
+
         BackHandler(enabled = isVisible && queueSheetState.isCollapsed) {
             if (showInlineLyrics) {
                 showInlineLyrics = false
+            } else if (isCanvasActive && !showControls) {
+                showControls = true
             } else {
                 scope.launch {
                     offsetYAnimatable.animateTo(
@@ -375,12 +416,87 @@ fun NewPlayerScreen(
             }
         }
 
+        if (isCanvasActive) {
+            val currentCanvas = canvasData ?: return@BoxWithConstraints
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        showControls = !showControls
+                    }
+            ) {
+                Crossfade(
+                    targetState = Pair(currentCanvas.isVideo, currentCanvas.url),
+                    animationSpec = tween(400),
+                    label = "CanvasCrossfade"
+                ) { (isVideo, url) ->
+                    if (isVideo) {
+                        MediaPlayerView(
+                            url = url,
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .wrapContentWidth(unbounded = true, align = Alignment.CenterHorizontally)
+                                .align(Alignment.Center)
+                        )
+                    } else {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalPlatformContext.current)
+                                .data(url)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .crossfade(400)
+                                .build(),
+                            contentDescription = "Canvas",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                // Vertical gradient scrim for text/control legibility
+                val scrimAlpha by animateFloatAsState(
+                    targetValue = if (showControls) 0.85f else 0.2f,
+                    animationSpec = tween(300),
+                    label = "canvasScrimAlpha"
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { alpha = scrimAlpha }
+                        .background(
+                            Brush.verticalGradient(
+                                colorStops = arrayOf(
+                                    0.0f to Color.Black.copy(alpha = 0.65f),
+                                    0.22f to Color.Black.copy(alpha = 0.2f),
+                                    0.45f to Color.Transparent,
+                                    0.65f to Color.Black.copy(alpha = 0.45f),
+                                    0.85f to Color.Black.copy(alpha = 0.82f),
+                                    1.0f to Color.Black.copy(alpha = 0.94f)
+                                )
+                            )
+                        )
+                )
+            }
+        }
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
                 .padding(bottom = collapsedBarHeight)
+                .then(
+                    if (isCanvasActive && !showControls) {
+                        Modifier.clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            showControls = true
+                        }
+                    } else Modifier
+                )
                 .then(
                     if (!showInlineLyrics && queueSheetState.isCollapsed) {
                         Modifier.pointerInput(Unit) {
@@ -432,6 +548,7 @@ fun NewPlayerScreen(
                     .fillMaxWidth()
                     .height(48.dp)
                     .padding(horizontal = artworkLeftEdge)
+                    .graphicsLayer { alpha = controlsAlpha }
             ) {
                 FilledIconButton(
                     onClick = {
@@ -653,6 +770,54 @@ fun NewPlayerScreen(
                         }
                     }
                 } else {
+                    if (isCanvasActive) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    showControls = !showControls
+                                }
+                                .pointerInput(Unit) {
+                                    var totalDragX = 0f
+                                    var isSwipeHandled = false
+                                    val threshold = 40.dp.toPx()
+                                    detectHorizontalDragGestures(
+                                        onDragStart = {
+                                            totalDragX = 0f
+                                            isSwipeHandled = false
+                                        },
+                                        onDragEnd = {
+                                            totalDragX = 0f
+                                            isSwipeHandled = false
+                                        },
+                                        onDragCancel = {
+                                            totalDragX = 0f
+                                            isSwipeHandled = false
+                                        },
+                                    ) { change, dragAmount ->
+                                        change.consume()
+                                        if (!isSwipeHandled) {
+                                            totalDragX += dragAmount
+                                            if (totalDragX < -threshold) {
+                                                if (controllerState.isNextAvailable) {
+                                                    sharedViewModel.onUIEvent(UIEvent.Next)
+                                                    isSwipeHandled = true
+                                                }
+                                            } else if (totalDragX > threshold) {
+                                                if (controllerState.isPreviousAvailable) {
+                                                    sharedViewModel.onUIEvent(UIEvent.Previous)
+                                                    isSwipeHandled = true
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                        )
+                    }
+
                     // Album artwork — smooth stable queue-based swipe (zero flicker, fast & slow)
                     val totalPages = if (queue.isNotEmpty()) queue.size else 1
                     val safeInitialPage = currentQueueIndex.coerceIn(0, maxOf(0, totalPages - 1))
@@ -735,6 +900,7 @@ fun NewPlayerScreen(
                                 .graphicsLayer {
                                     scaleX = artworkScale
                                     scaleY = artworkScale
+                                    alpha = artworkVisibilityAlpha
                                 }
                                 .then(
                                     if (totalPages <= 1) {
@@ -861,6 +1027,7 @@ fun NewPlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = dynamicHorizontalPadding)
+                    .graphicsLayer { alpha = controlsAlpha }
             ) {
                 AnimatedContent(
                     targetState = showInlineLyrics,
@@ -1202,15 +1369,21 @@ fun NewPlayerScreen(
 
             Spacer(modifier = Modifier.height(dynamicInfoToSliderSpacing))
 
-            PlayerTimelineSection(
-                sharedViewModel = sharedViewModel,
-                isPlaying = controllerState.isPlaying,
-                sliderActiveColor = animatedSliderActive,
-                sliderInactiveColor = animatedSliderInactive,
-                timestampColor = animatedArtistText,
-                horizontalPadding = dynamicHorizontalPadding,
-                screenHeight = screenHeight,
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = controlsAlpha }
+            ) {
+                PlayerTimelineSection(
+                    sharedViewModel = sharedViewModel,
+                    isPlaying = controllerState.isPlaying,
+                    sliderActiveColor = animatedSliderActive,
+                    sliderInactiveColor = animatedSliderInactive,
+                    timestampColor = animatedArtistText,
+                    horizontalPadding = dynamicHorizontalPadding,
+                    screenHeight = screenHeight,
+                )
+            }
 
             Spacer(modifier = Modifier.height(dynamicSliderToControlsSpacing))
 
@@ -1220,6 +1393,7 @@ fun NewPlayerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = dynamicHorizontalPadding)
+                    .graphicsLayer { alpha = controlsAlpha }
             ) {
                 val backSource = remember { MutableInteractionSource() }
                 val nextSource = remember { MutableInteractionSource() }
@@ -1342,6 +1516,7 @@ fun NewPlayerScreen(
                 Box(
                     Modifier
                         .fillMaxSize()
+                        .graphicsLayer { alpha = bottomBarBgAlpha }
                         .background(sheetBg)
                 )
             },
@@ -1354,6 +1529,7 @@ fun NewPlayerScreen(
                         .padding(horizontal = dynamicHorizontalPadding)
                         .padding(bottom = bottomInsets)
                         .fillMaxHeight()
+                        .graphicsLayer { alpha = controlsAlpha }
                 ) {
                     val buttonSize = dynamicBottomButtonSize
                     val iconSize = 26.dp

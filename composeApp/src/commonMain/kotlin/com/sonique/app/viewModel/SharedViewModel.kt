@@ -193,8 +193,64 @@ class SharedViewModel(
 
     private val _showChangelog = MutableStateFlow(false)
     val showChangelog = _showChangelog.asStateFlow()
+    private val _showChangelogSheet = MutableStateFlow(false)
+    val showChangelogSheet = _showChangelogSheet.asStateFlow()
     private val _changelogText = MutableStateFlow("")
     val changelogText = _changelogText.asStateFlow()
+    private val _changelogVersionName = MutableStateFlow("")
+    val changelogVersionName = _changelogVersionName.asStateFlow()
+
+    fun openChangelogSheet() {
+        _showChangelogSheet.value = true
+    }
+
+    fun dismissChangelogSheet() {
+        _showChangelogSheet.value = false
+        viewModelScope.launch {
+            dataStoreManager.setLastVersionCode(VersionManager.getVersionCode())
+        }
+    }
+
+    fun fetchAndShowChangelog(forceShow: Boolean = true) {
+        viewModelScope.launch {
+            val versionName = VersionManager.getVersionName()
+            val cleanVersion = versionName.removePrefix("v").trim()
+
+            // 1. Try fetching release notes for current version tag from GitHub
+            val specificResult = try {
+                updateRepository.fetchChangelog(cleanVersion)
+            } catch (e: Exception) {
+                null
+            }
+
+            if (!specificResult.isNullOrBlank()) {
+                _changelogText.value = specificResult
+                _changelogVersionName.value = cleanVersion
+                if (forceShow) {
+                    _showChangelog.value = true
+                }
+                return@launch
+            }
+
+            // 2. If tag not found on GitHub yet (e.g. pre-release development build),
+            // dynamically fetch all published releases and display the latest one
+            val allReleases = updateRepository.fetchAllReleases().getOrNull()
+            val latest = allReleases?.firstOrNull()
+            if (latest != null && latest.changelog.isNotBlank()) {
+                _changelogText.value = latest.changelog
+                _changelogVersionName.value = latest.version.removePrefix("v").trim()
+                if (forceShow) {
+                    _showChangelog.value = true
+                }
+            } else {
+                _changelogText.value = ""
+                _changelogVersionName.value = cleanVersion
+                if (forceShow) {
+                    _showChangelog.value = true
+                }
+            }
+        }
+    }
 
     private fun checkChangelog() {
         viewModelScope.launch {
@@ -205,27 +261,21 @@ class SharedViewModel(
                     // First time or restore - mark it as seen silently
                     dataStoreManager.setLastVersionCode(currentVersion)
                 } else {
-                    val versionString = VersionManager.getVersionName()
-                    val fallback = "Updated to version ${versionString}\n• Bug fixes and performance improvements."
-                    try {
-                        val result = updateRepository.fetchChangelog(versionString)
-                        if (!result.isNullOrBlank()) {
-                            _changelogText.value = result
-                        } else {
-                            _changelogText.value = fallback
-                        }
-                    } catch (e: Exception) {
-                        _changelogText.value = fallback
-                    }
-                    _showChangelog.value = true
+                    fetchAndShowChangelog(forceShow = true)
                     dataStoreManager.setLastVersionCode(currentVersion)
                 }
             }
         }
     }
 
+    fun viewFullChangelogFromWhatsNew() {
+        _showChangelog.value = false
+        _showChangelogSheet.value = true
+    }
+
     fun dismissChangelog() {
         _showChangelog.value = false
+        _showChangelogSheet.value = false
         viewModelScope.launch {
             dataStoreManager.setLastVersionCode(VersionManager.getVersionCode())
         }
@@ -384,10 +434,20 @@ class SharedViewModel(
                     setLyricsProvider()
                 }
             }
-
- 
-
- 
+            launch {
+                dataStoreManager.spotifyCanvas.distinctUntilChanged().collectLatest { enabled ->
+                    if (enabled == TRUE) {
+                        val nowPlaying = nowPlayingState.value
+                        val tl = timeline.value
+                        if (nowPlaying != null && tl.total > 0 && nowPlaying.mediaItem.isSong() && nowPlayingScreenData.value.canvasData == null) {
+                            getCanvas(nowPlaying.mediaItem.mediaId, (tl.total / 1000).toInt())
+                        }
+                    } else {
+                        _canvas.value = null
+                        _nowPlayingScreenData.update { it.copy(canvasData = null) }
+                    }
+                }
+            }
         }
         viewModelScope.launch {
             var lastMediaIdForLyrics: String? = null
@@ -972,6 +1032,21 @@ class SharedViewModel(
         _showGitHubPopup.value = false
         viewModelScope.launch {
             dataStoreManager.setNeverShowGithubPopup(true)
+        }
+    }
+
+    fun devSimulateAppUpdate() {
+        viewModelScope.launch {
+            dataStoreManager.setLastVersionCode(1)
+            fetchAndShowChangelog(forceShow = true)
+        }
+    }
+
+    fun devResetGitHubPopup() {
+        viewModelScope.launch {
+            dataStoreManager.setNeverShowGithubPopup(false)
+            dataStoreManager.setGithubPopupShownCount(0)
+            _showGitHubPopup.value = true
         }
     }
 

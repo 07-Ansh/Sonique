@@ -136,6 +136,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.sonique.app.expect.ui.MediaPlayerView
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.runtime.key
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -248,6 +249,13 @@ fun NewPlayerScreen(
     LaunchedEffect(canvasData, showInlineLyrics) {
         if (canvasData == null || showInlineLyrics) {
             showControls = true
+        }
+    }
+
+    LaunchedEffect(isCanvasActive, showControls) {
+        if (isCanvasActive && showControls) {
+            kotlinx.coroutines.delay(4500)
+            showControls = false
         }
     }
 
@@ -433,25 +441,27 @@ fun NewPlayerScreen(
                     animationSpec = tween(400),
                     label = "CanvasCrossfade"
                 ) { (isVideo, url) ->
-                    if (isVideo) {
-                        MediaPlayerView(
-                            url = url,
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .wrapContentWidth(unbounded = true, align = Alignment.CenterHorizontally)
-                                .align(Alignment.Center)
-                        )
-                    } else {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalPlatformContext.current)
-                                .data(url)
-                                .diskCachePolicy(CachePolicy.ENABLED)
-                                .crossfade(400)
-                                .build(),
-                            contentDescription = "Canvas",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
+                    key(url) {
+                        if (isVideo) {
+                            MediaPlayerView(
+                                url = url,
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .wrapContentWidth(unbounded = true, align = Alignment.CenterHorizontally)
+                                    .align(Alignment.Center)
+                            )
+                        } else {
+                            AsyncImage(
+                                model = ImageRequest.Builder(LocalPlatformContext.current)
+                                    .data(url)
+                                    .diskCachePolicy(CachePolicy.ENABLED)
+                                    .crossfade(400)
+                                    .build(),
+                                contentDescription = "Canvas",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                 }
 
@@ -488,12 +498,12 @@ fun NewPlayerScreen(
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
                 .padding(bottom = collapsedBarHeight)
                 .then(
-                    if (isCanvasActive && !showControls) {
+                    if (isCanvasActive) {
                         Modifier.clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
                         ) {
-                            showControls = true
+                            showControls = !showControls
                         }
                     } else Modifier
                 )
@@ -770,54 +780,6 @@ fun NewPlayerScreen(
                         }
                     }
                 } else {
-                    if (isCanvasActive) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clickable(
-                                    indication = null,
-                                    interactionSource = remember { MutableInteractionSource() }
-                                ) {
-                                    showControls = !showControls
-                                }
-                                .pointerInput(Unit) {
-                                    var totalDragX = 0f
-                                    var isSwipeHandled = false
-                                    val threshold = 40.dp.toPx()
-                                    detectHorizontalDragGestures(
-                                        onDragStart = {
-                                            totalDragX = 0f
-                                            isSwipeHandled = false
-                                        },
-                                        onDragEnd = {
-                                            totalDragX = 0f
-                                            isSwipeHandled = false
-                                        },
-                                        onDragCancel = {
-                                            totalDragX = 0f
-                                            isSwipeHandled = false
-                                        },
-                                    ) { change, dragAmount ->
-                                        change.consume()
-                                        if (!isSwipeHandled) {
-                                            totalDragX += dragAmount
-                                            if (totalDragX < -threshold) {
-                                                if (controllerState.isNextAvailable) {
-                                                    sharedViewModel.onUIEvent(UIEvent.Next)
-                                                    isSwipeHandled = true
-                                                }
-                                            } else if (totalDragX > threshold) {
-                                                if (controllerState.isPreviousAvailable) {
-                                                    sharedViewModel.onUIEvent(UIEvent.Previous)
-                                                    isSwipeHandled = true
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                        )
-                    }
-
                     // Album artwork — smooth stable queue-based swipe (zero flicker, fast & slow)
                     val totalPages = if (queue.isNotEmpty()) queue.size else 1
                     val safeInitialPage = currentQueueIndex.coerceIn(0, maxOf(0, totalPages - 1))
@@ -947,7 +909,7 @@ fun NewPlayerScreen(
                                 flingBehavior = flingBehavior,
                                 key = { page -> "${page}_${queue.getOrNull(page)?.videoId ?: page}" },
                                 modifier = Modifier.fillMaxSize(),
-                                userScrollEnabled = totalPages > 1,
+                                userScrollEnabled = !isCanvasActive && totalPages > 1,
                                 pageSpacing = 16.dp,
                             ) { page ->
                                 val song = queue.getOrNull(page)
@@ -1009,6 +971,19 @@ fun NewPlayerScreen(
                                 }
                             }
                         }
+                    }
+
+                    if (isCanvasActive) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clickable(
+                                    indication = null,
+                                    interactionSource = remember { MutableInteractionSource() }
+                                ) {
+                                    showControls = !showControls
+                                }
+                        )
                     }
                 }
             }
@@ -1507,6 +1482,20 @@ fun NewPlayerScreen(
             }
 
             Spacer(modifier = Modifier.height(dynamicControlsToBottomSpacing))
+        }
+
+        if (isCanvasActive && !showControls) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = collapsedBarHeight)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        showControls = true
+                    }
+            )
         }
 
         BottomSheet(

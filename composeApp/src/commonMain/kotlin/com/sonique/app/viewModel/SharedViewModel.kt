@@ -405,17 +405,20 @@ class SharedViewModel(
                                 Pair(timeLine, nowPlayingState)
                             }
                         }.distinctUntilChanged { old, new ->
-                            (old.first.total.toString() + old.second.songEntity?.videoId).hashCode() ==
-                                (new.first.total.toString() + new.second.songEntity?.videoId).hashCode()
+                            val oldId = old.second.mediaItem.mediaId.removePrefix("Video")
+                            val newId = new.second.mediaItem.mediaId.removePrefix("Video")
+                            (old.first.total.toString() + oldId).hashCode() ==
+                                (new.first.total.toString() + newId).hashCode()
                         }.collectLatest {
-                            log("Timeline job ${(it.first.total.toString() + it.second.songEntity?.videoId).hashCode()}")
+                            log("Timeline job ${(it.first.total.toString() + it.second.mediaItem.mediaId).hashCode()}")
                             val nowPlaying = it.second
                             val timeline = it.first
                             if (timeline.total > 0) {
-                                if (nowPlaying.mediaItem.isSong() && nowPlayingScreenData.value.canvasData == null) {
+                                val currentVid = nowPlaying.mediaItem.mediaId.removePrefix("Video")
+                                if (nowPlayingScreenData.value.canvasData == null && currentVid.isNotBlank()) {
                                     Logger.w(tag, "Duration is ${timeline.total}")
-                                    Logger.w(tag, "MediaId is ${nowPlaying.mediaItem.mediaId}")
-                                    getCanvas(nowPlaying.mediaItem.mediaId, (timeline.total / 1000).toInt())
+                                    Logger.w(tag, "MediaId is $currentVid")
+                                    getCanvas(currentVid, (timeline.total / 1000).toInt())
                                 }
                                 if (nowPlayingScreenData.value.lyricsData == null) {
                                     Logger.w(tag, "Get lyrics on timeline update")
@@ -490,9 +493,11 @@ class SharedViewModel(
                         resolvedThumbnail?.toHighResThumbnailUrl()
                     }
 
-                    val isNewTrack = state.mediaItem.mediaId.isNotEmpty() && state.mediaItem.mediaId != lastMediaIdForLyrics
+                    val isNewTrack = videoId.isNotEmpty() && videoId != lastMediaIdForLyrics
                     if (isNewTrack) {
-                        lastMediaIdForLyrics = state.mediaItem.mediaId
+                        lastMediaIdForLyrics = videoId
+                        _canvas.value = null
+                        canvasJob?.cancel()
                     }
 
                     _nowPlayingScreenData.update { currentData ->
@@ -508,6 +513,7 @@ class SharedViewModel(
                                     ?.data
                                     ?.playlistName ?: "",
                             lyricsData = if (isNewTrack) null else currentData.lyricsData,
+                            canvasData = if (isNewTrack) null else currentData.canvasData,
                         )
                     }
 
@@ -667,38 +673,47 @@ class SharedViewModel(
         duration: Int,
     ) {
         Logger.w(tag, "Start getCanvas: $videoId $duration")
- 
-        viewModelScope.launch {
+
+        canvasJob = viewModelScope.launch {
             if (dataStoreManager.spotifyCanvas.first() == TRUE) {
                 lyricsCanvasRepository.getCanvas(dataStoreManager, videoId, duration).cancellable().collect { response ->
+                    val cleanTargetId = videoId.removePrefix("Video")
+                    val currentMediaId = nowPlayingState.value?.mediaItem?.mediaId?.removePrefix("Video")
+                    if (currentMediaId != cleanTargetId) {
+                        Logger.w(tag, "Ignoring canvas response for stale track: $cleanTargetId (current: $currentMediaId)")
+                        return@collect
+                    }
                     val data = response.data
                     when (response) {
-                        is Resource.Success if (data != null && nowPlayingState.value?.mediaItem?.mediaId == videoId) -> {
-                            _canvas.value = data
-                            _nowPlayingScreenData.update {
-                                it.copy(
-                                    canvasData =
-                                        NowPlayingScreenData.CanvasData(
-                                            isVideo = data.isVideo,
-                                            url = data.canvasUrl,
-                                        ),
-                                )
-                            }
-                             
-                            if (data.isVideo) lyricsCanvasRepository.updateCanvasUrl(videoId, data.canvasUrl)
-                             
-                            data.canvasThumbUrl?.let { lyricsCanvasRepository.updateCanvasThumbUrl(videoId, it) }
-                        }
-
-                        else -> {
-                            log("Get canvas error: ${response.message}", LogLevel.WARN)
-                            nowPlayingState.value?.songEntity?.canvasUrl?.let { url ->
+                        is Resource.Success -> {
+                            if (data != null) {
+                                _canvas.value = data
                                 _nowPlayingScreenData.update {
                                     it.copy(
                                         canvasData =
                                             NowPlayingScreenData.CanvasData(
-                                                isVideo = url.contains(".mp4"),
-                                                url = url,
+                                                isVideo = data.isVideo,
+                                                url = data.canvasUrl,
+                                            ),
+                                    )
+                                }
+
+                                if (data.isVideo) lyricsCanvasRepository.updateCanvasUrl(videoId, data.canvasUrl)
+
+                                data.canvasThumbUrl?.let { lyricsCanvasRepository.updateCanvasThumbUrl(videoId, it) }
+                            }
+                        }
+
+                        else -> {
+                            log("Get canvas error: ${response.message}", LogLevel.WARN)
+                            val cachedUrl = nowPlayingState.value?.songEntity?.canvasUrl
+                            if (currentMediaId == cleanTargetId && !cachedUrl.isNullOrBlank()) {
+                                _nowPlayingScreenData.update {
+                                    it.copy(
+                                        canvasData =
+                                            NowPlayingScreenData.CanvasData(
+                                                isVideo = cachedUrl.contains(".mp4"),
+                                                url = cachedUrl,
                                             ),
                                     )
                                 }

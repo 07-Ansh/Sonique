@@ -26,7 +26,6 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
@@ -43,7 +42,7 @@ internal class StreamRepositoryImpl(
             localDataSource.insertNewFormat(newFormat)
         }
 
-    override fun getNewFormat(videoId: String): Flow<NewFormatEntity?> = flow { emit(localDataSource.getNewFormat(videoId)) }.flowOn(Dispatchers.IO)
+    override fun getNewFormat(videoId: String): Flow<NewFormatEntity?> = flow { emit(localDataSource.getNewFormat(videoId)) }.flowOn(Dispatchers.Main)
 
     override suspend fun getFormatFlow(videoId: String) = localDataSource.getNewFormatAsFlow(videoId)
 
@@ -402,26 +401,6 @@ internal class StreamRepositoryImpl(
                 localDataSource.updateNewFormat(
                     format.copy(expiredTime = now().plusSeconds(-1)),
                 )
-            }
-        }
-    }
-
-    override suspend fun prefetchStream(
-        dataStoreManager: DataStoreManager,
-        videoId: String,
-    ) {
-        if (videoId.isBlank()) return
-        withContext(Dispatchers.IO) {
-            val existing = localDataSource.getNewFormat(videoId)
-            if (existing != null && existing.audioUrl != null && !existing.expiredTime.isBefore(now())) {
-                Logger.d("StreamPrefetch", "Stream already cached & valid for $videoId")
-                return@withContext
-            }
-            runCatching {
-                Logger.d("StreamPrefetch", "Prefetching stream for $videoId")
-                getStream(dataStoreManager, videoId, isDownloading = false, isVideo = false).firstOrNull()
-            }.onFailure {
-                Logger.e("StreamPrefetch", "Failed to prefetch stream for $videoId: ${it.message}")
             }
         }
     }

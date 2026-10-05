@@ -34,8 +34,43 @@ actual class Extractor {
     }
 
     actual fun newPipePlayer(videoId: String): List<Pair<Int, String>> {
-        // 1. Try BravePipe FIRST: Reliable, self-contained cipher solving on www.youtube.com
-        val braveResult = runCatching {
+        // Re-register unconditionally: PipePipe drops the local decoder for good the first time it
+        // throws, and the getter is package-private so its state cannot be read from here. Setting
+        // it again each time turns "disabled forever" into "skipped for one track".
+        YoutubeApiDecoder.setLocalDecoder(faradayDecoder)
+        try {
+            val streamInfo =
+                StreamInfo.getInfo(ServiceList.YouTube, "https://music.youtube.com/watch?v=$videoId")
+            val streamsList = streamInfo.audioStreams + streamInfo.videoStreams + streamInfo.videoOnlyStreams
+            val pipeResult =
+                streamsList.mapNotNull {
+                    (it.itagItem?.id ?: return@mapNotNull null) to it.content
+                }
+            if (!pipeResult.hasRequiredItags()) {
+                Logger.d(
+                    TAG,
+                    "PipePipe missing required itags for $videoId (got=${pipeResult.map { it.first }}), falling back to BravePipe",
+                )
+            } else if (!pipeResult.headCheckRandomStream()) {
+                Logger.d(
+                    TAG,
+                    "PipePipe stream URL HEAD check failed (non 2xx) for $videoId, falling back to BravePipe",
+                )
+                // A rejected URL is the symptom of a stale player table.
+                faradayDecoder.invalidate()
+            } else {
+                ExtractSource.record(videoId, "PipePipe · ${faradayDecoder.lastOutcomeLabel}")
+                Logger.d(
+                    TAG,
+                    "extract source=PipePipe decoder=${faradayDecoder.lastOutcome} itags=${pipeResult.map { it.first }} for $videoId",
+                )
+                return pipeResult
+            }
+        } catch (e: Throwable) {
+            Logger.w(TAG, "PipePipe extractor failed for $videoId: ${e.message}, falling back to BravePipe")
+        }
+
+        return runCatching {
             val streamInfo =
                 BraveStreamInfo.getInfo(BraveServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
             val streamsList = streamInfo.audioStreams + streamInfo.videoStreams + streamInfo.videoOnlyStreams
@@ -48,38 +83,7 @@ actual class Extractor {
                 }
         }.onFailure {
             Logger.w(TAG, "BravePipe extractor failed for $videoId: ${it.message}")
-        }.getOrNull()
-
-        if (!braveResult.isNullOrEmpty()) {
-            return braveResult
-        }
-
-        // 2. Fallback to PipePipe only if BravePipe encountered an unexpected failure
-        Logger.w(TAG, "BravePipe failed or returned empty for $videoId, falling back to PipePipe")
-        YoutubeApiDecoder.setLocalDecoder(faradayDecoder)
-        try {
-            val streamInfo =
-                StreamInfo.getInfo(ServiceList.YouTube, "https://music.youtube.com/watch?v=$videoId")
-            val streamsList = streamInfo.audioStreams + streamInfo.videoStreams + streamInfo.videoOnlyStreams
-            val pipeResult =
-                streamsList.mapNotNull {
-                    (it.itagItem?.id ?: return@mapNotNull null) to it.content
-                }
-            if (pipeResult.hasRequiredItags() && pipeResult.headCheckRandomStream()) {
-                ExtractSource.record(videoId, "PipePipe · ${faradayDecoder.lastOutcomeLabel}")
-                Logger.d(
-                    TAG,
-                    "extract source=PipePipe decoder=${faradayDecoder.lastOutcome} itags=${pipeResult.map { it.first }} for $videoId",
-                )
-                return pipeResult
-            } else {
-                faradayDecoder.invalidate()
-            }
-        } catch (e: Throwable) {
-            Logger.w(TAG, "PipePipe extractor failed for $videoId: ${e.message}")
-        }
-
-        return emptyList()
+        }.getOrElse { emptyList() }
     }
 
     actual fun mergeAudioVideoDownload(filePath: String): DownloadProgress {

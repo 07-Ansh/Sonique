@@ -33,6 +33,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -108,6 +114,7 @@ import sonique.composeapp.generated.resources.videos
 import sonique.composeapp.generated.resources.sonique_lyrics
 import sonique.composeapp.generated.resources.you
 import sonique.composeapp.generated.resources.your_youtube_playlists
+import sonique.composeapp.generated.resources.play_all
 
 @Composable
 fun HomeItem(
@@ -146,10 +153,10 @@ fun HomeItem(
                         }
                 } else {
                     Modifier
-                }).padding(horizontal = 16.dp, vertical = 10.dp),
+                }).fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 AnimatedVisibility(visible = (data.subtitle != null && data.subtitle != "")) {
                     Text(
                         text = (data.subtitle ?: "").uppercase(),
@@ -164,6 +171,11 @@ fun HomeItem(
                     color = Color.White,
                     maxLines = 1,
                     modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                )
+            }
+            if (data.playAllEndpoint != null) {
+                PlayAllButton(
+                    onClick = { homeViewModel.playAll(data) },
                 )
             }
         }

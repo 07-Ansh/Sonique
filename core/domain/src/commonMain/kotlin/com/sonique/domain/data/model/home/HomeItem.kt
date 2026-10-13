@@ -1,6 +1,7 @@
 package com.sonique.domain.data.model.home
 
 import com.sonique.domain.data.model.searchResult.songs.Thumbnail
+import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,6 +11,8 @@ data class HomeItem(
     val subtitle: String? = null,
     val thumbnail: List<Thumbnail>? = null,
     val channelId: String? = null,
+    val itemsPerColumn: Int? = null,
+    val playAllEndpoint: YouTubeWatchEndpoint? = null,
 )
 
 

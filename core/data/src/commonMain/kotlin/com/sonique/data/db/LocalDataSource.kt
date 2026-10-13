@@ -125,6 +125,18 @@ internal class LocalDataSource(
 
     fun getMostPlayedSongs() = databaseDao.getMostPlayedSongs()
 
+    fun countLikedSongs() = databaseDao.countLikedSongs()
+
+    fun getLikedSongThumbnails(limit: Int) = databaseDao.getLikedSongThumbnails(limit)
+
+    fun countDownloadedSongs() = databaseDao.countDownloadedSongs()
+
+    fun getDownloadedSongThumbnails(limit: Int) = databaseDao.getDownloadedSongThumbnails(limit)
+
+    fun countFollowedArtists() = databaseDao.countFollowedArtists()
+
+    fun getFollowedArtistThumbnails(limit: Int) = databaseDao.getFollowedArtistThumbnails(limit)
+
     suspend fun updateDownloadState(
         downloadState: Int,
         videoId: String,
@@ -330,7 +342,15 @@ internal class LocalDataSource(
 
     suspend fun insertSetVideoId(setVideoIdEntity: SetVideoIdEntity) = databaseDao.insertSetVideoId(setVideoIdEntity)
 
-    suspend fun getSetVideoId(videoId: String) = databaseDao.getSetVideoId(videoId)
+    suspend fun getSetVideoId(
+        videoId: String,
+        youtubePlaylistIds: List<String>,
+    ) = databaseDao.getSetVideoId(videoId, youtubePlaylistIds)
+
+    suspend fun deleteSetVideoId(
+        videoId: String,
+        youtubePlaylistId: String,
+    ) = databaseDao.deleteSetVideoId(videoId, youtubePlaylistId)
 
     suspend fun insertPairSongLocalPlaylist(pairSongLocalPlaylist: PairSongLocalPlaylist) =
         databaseDao.insertPairSongLocalPlaylist(pairSongLocalPlaylist)

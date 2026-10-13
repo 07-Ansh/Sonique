@@ -3,6 +3,7 @@ package com.sonique.domain.data.model.home
 import com.sonique.domain.data.model.searchResult.songs.Album
 import com.sonique.domain.data.model.searchResult.songs.Artist
 import com.sonique.domain.data.model.searchResult.songs.Thumbnail
+import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
 import com.sonique.domain.data.type.HomeContentType
 import kotlinx.serialization.Serializable
 
@@ -20,6 +21,7 @@ data class Content(
     val views: String?,
     val durationSeconds: Int? = null,
     val radio: String? = null,
+    val playEndpoint: YouTubeWatchEndpoint? = null,
 ) : HomeContentType
 
 

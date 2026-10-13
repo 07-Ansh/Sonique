@@ -1,9 +1,11 @@
 package com.sonique.data.parser
 
+import com.sonique.data.mapping.toYouTubeWatchEndpoint
 import com.sonique.domain.data.model.home.Content
 import com.sonique.domain.data.model.home.HomeItem
 import com.sonique.domain.data.model.searchResult.songs.Album
 import com.sonique.domain.data.model.searchResult.songs.Artist
+import com.sonique.domain.data.model.streams.YouTubeWatchEndpoint
 import com.sonique.kotlinytmusicscraper.models.ArtistItem
 import com.sonique.kotlinytmusicscraper.models.MusicResponsiveListItemRenderer
 import com.sonique.kotlinytmusicscraper.models.MusicTwoRowItemRenderer
@@ -104,6 +106,16 @@ internal fun parseMixedContent(
                         ?.navigationEndpoint
                         ?.browseEndpoint
                         ?.browseId
+                // The same button is "Play all" when it carries a watch endpoint instead of a browse one.
+                val playAllEndpoint =
+                    results1
+                        ?.header
+                        ?.musicCarouselShelfBasicHeaderRenderer
+                        ?.moreContentButton
+                        ?.buttonRenderer
+                        ?.navigationEndpoint
+                        ?.watchEndpoint
+                        ?.toYouTubeWatchEndpoint()
                 val listContent = mutableListOf<Content?>()
                 if (!contentList.isNullOrEmpty()) {
                     val isStationShelf = subtitle?.contains("station", ignoreCase = true) == true ||
@@ -111,6 +123,7 @@ internal fun parseMixedContent(
                     for (result1 in contentList) {
                         val musicTwoRowItemRenderer = result1.musicTwoRowItemRenderer
                         if (musicTwoRowItemRenderer != null) {
+                            val addedBefore = listContent.size
                             val radioPlaylistId = musicTwoRowItemRenderer.playlistId
                                 ?: musicTwoRowItemRenderer.navigationEndpoint?.watchPlaylistEndpoint?.playlistId
                                 ?: musicTwoRowItemRenderer.navigationEndpoint?.watchEndpoint?.playlistId
@@ -395,6 +408,10 @@ internal fun parseMixedContent(
                             } else {
                                 continue
                             }
+                            if (listContent.size > addedBefore) {
+                                listContent[listContent.lastIndex] =
+                                    listContent.last()?.copy(playEndpoint = musicTwoRowItemRenderer.playEndpoint())
+                            }
                         } else if (result1.musicResponsiveListItemRenderer != null) {
                             Logger.w(
                                 "parse Song flat",
@@ -474,6 +491,8 @@ internal fun parseMixedContent(
                             subtitle = subtitle,
                             thumbnail = thumbnail,
                             channelId = if (artistChannelId?.contains("UC") == true) artistChannelId else null,
+                            itemsPerColumn = results1?.numItemsPerColumn?.toIntOrNull(),
+                            playAllEndpoint = playAllEndpoint,
                         ),
                     )
                 }
@@ -744,6 +763,8 @@ internal fun parseNewRelease(
                         videoId = null,
                         views = null,
                         radio = null,
+                        // The album's own track list (OLAK…), so its card can play without opening.
+                        playEndpoint = it.playlistId.takeIf { id -> id.isNotEmpty() }?.let { id -> YouTubeWatchEndpoint(playlistId = id) },
                     )
                 },
         ),
@@ -806,4 +827,15 @@ internal fun parseNewRelease(
     )
     return result
 }
+
+// The card's own play button target: a song's radio, a playlist, or an album's track list.
+private fun MusicTwoRowItemRenderer.playEndpoint(): YouTubeWatchEndpoint? =
+    thumbnailOverlay
+        ?.musicItemThumbnailOverlayRenderer
+        ?.content
+        ?.musicPlayButtonRenderer
+        ?.playNavigationEndpoint
+        ?.let { it.watchEndpoint ?: it.watchPlaylistEndpoint }
+        ?.toYouTubeWatchEndpoint()
+
 

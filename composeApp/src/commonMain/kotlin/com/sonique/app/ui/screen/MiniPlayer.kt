@@ -722,7 +722,7 @@ fun MiniPlayer(
                                 }
                                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                                     Slider(
-                                        value = sliderValue,
+                                        value = sliderValue / 100f,
                                         onValueChangeFinished = {
                                             isSliding = false
                                             sharedViewModel.onUIEvent(
@@ -731,9 +731,8 @@ fun MiniPlayer(
                                         },
                                         onValueChange = {
                                             isSliding = true
-                                            sliderValue = it
+                                            sliderValue = it * 100f
                                         },
-                                        valueRange = 0f..100f,
                                         modifier =
                                             Modifier
                                                 .fillMaxWidth()

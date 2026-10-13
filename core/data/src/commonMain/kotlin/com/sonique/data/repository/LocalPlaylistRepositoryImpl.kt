@@ -516,8 +516,9 @@ internal class LocalPlaylistRepositoryImpl(
                             for (d in data) {
                                 localDataSource.insertSetVideoId(
                                     SetVideoIdEntity(
-                                        d.playlistEditVideoAddedResultData.videoId,
-                                        d.playlistEditVideoAddedResultData.setVideoId,
+                                        videoId = d.playlistEditVideoAddedResultData.videoId,
+                                        setVideoId = d.playlistEditVideoAddedResultData.setVideoId,
+                                        youtubePlaylistId = ytId,
                                     ),
                                 )
                             }
@@ -548,11 +549,15 @@ internal class LocalPlaylistRepositoryImpl(
             emit(LocalResource.Success(successMessage))
             val ytPlaylistId = localPlaylist.youtubePlaylistId
             if (ytPlaylistId != null) {
-                val setVideoId = localDataSource.getSetVideoId(song.videoId)?.setVideoId
-                if (setVideoId != null) {
+                val entry = findSetVideoId(song.videoId, ytPlaylistId)
+                val setVideoId = entry?.setVideoId
+                if (entry != null && setVideoId != null) {
                     youTube
                         .removeItemYouTubePlaylist(ytPlaylistId, song.videoId, setVideoId)
                         .onSuccess {
+                            if (entry.youtubePlaylistId.isNotEmpty()) {
+                                localDataSource.deleteSetVideoId(entry.videoId, entry.youtubePlaylistId)
+                            }
                             emit(LocalResource.Success(successMessage))
                         }.onFailure {
                             emit(LocalResource.Error<String>("$errorMessage: ${it.message}"))
@@ -562,6 +567,23 @@ internal class LocalPlaylistRepositoryImpl(
                 }
             }
         }.flowOn(Dispatchers.IO)
+
+    /**
+     * The stored entry of [videoId] in the YouTube playlist [youtubePlaylistId], matched with and
+     * without the "VL" browse prefix since both spellings are stored.
+     *
+     * Rows written before the playlist id was recorded carry "". Such a row is used only when no row
+     * names this playlist; it is the row every lookup returned first before, so old data with nothing
+     * better resolves exactly as it used to.
+     */
+    private suspend fun findSetVideoId(
+        videoId: String,
+        youtubePlaylistId: String,
+    ): SetVideoIdEntity? {
+        val bareId = youtubePlaylistId.removePrefix("VL")
+        return localDataSource.getSetVideoId(videoId, listOf(bareId, "VL$bareId"))
+            ?: localDataSource.getSetVideoId(videoId, listOf(""))
+    }
 
     override fun getSuggestionsTrackForPlaylist(id: Long): Flow<LocalResource<Pair<String?, List<Track>>>> =
         flow {
@@ -737,8 +759,9 @@ internal class LocalPlaylistRepositoryImpl(
                         for (playlistEditResult in it.playlistEditResults) {
                             localDataSource.insertSetVideoId(
                                 SetVideoIdEntity(
-                                    playlistEditResult.playlistEditVideoAddedResultData.videoId,
-                                    playlistEditResult.playlistEditVideoAddedResultData.setVideoId,
+                                    videoId = playlistEditResult.playlistEditVideoAddedResultData.videoId,
+                                    setVideoId = playlistEditResult.playlistEditVideoAddedResultData.setVideoId,
+                                    youtubePlaylistId = youtubePlaylistId.removePrefix("VL"),
                                 ),
                             )
                         }

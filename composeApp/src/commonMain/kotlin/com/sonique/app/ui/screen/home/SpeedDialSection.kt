@@ -29,6 +29,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.filled.MoreVert
@@ -60,6 +63,7 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.sonique.app.ui.component.HomeItemContentPlaylist
+import com.sonique.app.ui.component.PlayAllButton
 import com.sonique.app.ui.navigation.destination.list.AlbumDestination
 import com.sonique.app.ui.navigation.destination.list.ArtistDestination
 import com.sonique.app.ui.navigation.destination.list.PlaylistDestination
@@ -70,14 +74,17 @@ import com.sonique.domain.mediaservice.handler.PlaylistType
 import com.sonique.domain.mediaservice.handler.QueueData
 import com.sonique.domain.utils.toTrack
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import sonique.composeapp.generated.resources.Res
 import sonique.composeapp.generated.resources.holder
+import sonique.composeapp.generated.resources.play_all
 
 @Composable
 fun SpeedDialSection(
     navController: NavController,
     data: HomeItem,
-    onPlayClick: (Any) -> Unit
+    onPlayClick: (Any) -> Unit,
+    onPlayAll: (() -> Unit)? = null,
 ) {
     if (data.contents.isEmpty()) return
 
@@ -97,10 +104,12 @@ fun SpeedDialSection(
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "PICK UP WHERE YOU LEFT OFF",
                     style = typo().labelLarge,
@@ -113,6 +122,12 @@ fun SpeedDialSection(
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+
+            if (data.contents.isNotEmpty()) {
+                PlayAllButton(
+                    onClick = { onPlayAll?.invoke() },
                 )
             }
         }

@@ -1322,13 +1322,12 @@ fun FullscreenLyricsSheet(
                             }
                             CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                                 Slider(
-                                    value = sliderValue,
+                                    value = sliderValue / 100f,
                                     onValueChange = {
                                         sharedViewModel.onUIEvent(
-                                            UIEvent.UpdateProgress(it),
+                                            UIEvent.UpdateProgress(it * 100f),
                                         )
                                     },
-                                    valueRange = 0f..100f,
                                     modifier =
                                         Modifier
                                             .fillMaxWidth()

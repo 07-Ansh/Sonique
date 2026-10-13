@@ -462,6 +462,27 @@ fun HomeScreen(
                                                      com.sonique.common.Config.SONG_CLICK,
                                                  )
                                              }
+                                         },
+                                         onPlayAll = {
+                                             val currentData = speedDialData ?: com.sonique.domain.data.model.home.HomeItem(title = "Continue Listening", contents = listOf())
+                                             val tracks = currentData.contents.filterNotNull().map { it.toTrack() }
+                                             val firstTrack = tracks.firstOrNull()
+                                             if (firstTrack != null) {
+                                                 viewModel.setQueueData(
+                                                     com.sonique.domain.mediaservice.handler.QueueData.Data(
+                                                         listTracks = ArrayList(tracks),
+                                                         firstPlayedTrack = firstTrack,
+                                                         playlistId = null,
+                                                         playlistName = "Continue Listening",
+                                                         playlistType = com.sonique.domain.mediaservice.handler.PlaylistType.PLAYLIST,
+                                                         continuation = null,
+                                                     )
+                                                 )
+                                                 viewModel.loadMediaItem(
+                                                     firstTrack,
+                                                     com.sonique.common.Config.PLAYLIST_CLICK,
+                                                 )
+                                             }
                                          }
                                      )
                                 } else {
@@ -551,12 +572,12 @@ fun HomeScreen(
                     navController = navController,
                     onChangelogClick = { sharedViewModel.openChangelogSheet() },
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(18.dp))
                 Row(
                     modifier =
                     Modifier
                         .horizontalScroll(chipRowState)
-                        .padding(bottom = 2.dp)
+                        .padding(bottom = 6.dp)
                         .padding(horizontal = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {

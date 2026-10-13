@@ -66,6 +66,7 @@ import com.sonique.kotlinytmusicscraper.pages.RelatedPage
 import com.sonique.kotlinytmusicscraper.pages.SearchPage
 import com.sonique.kotlinytmusicscraper.pages.SearchResult
 import com.sonique.kotlinytmusicscraper.pages.SearchSuggestionPage
+import com.sonique.kotlinytmusicscraper.parser.fromPlaylistContinuationToTrackWithSetVideoId
 import com.sonique.kotlinytmusicscraper.parser.fromPlaylistContinuationToTracks
 import com.sonique.kotlinytmusicscraper.parser.fromPlaylistToTrack
 import com.sonique.kotlinytmusicscraper.parser.fromPlaylistToTrackWithSetVideoId
@@ -642,19 +643,22 @@ class YouTube {
                 response.fromPlaylistToTrackWithSetVideoId(),
             )
             var continuation = response.getPlaylistContinuation()
-            while (continuation != null) {
+            val seenContinuations = mutableSetOf<String>()
+            while (continuation != null && seenContinuations.add(continuation)) {
                 val continuationResponse =
-                    ytMusic
-                        .browse(
-                            client = WEB_REMIX,
-                            setLogin = true,
-                            params = null,
-                            continuation = continuation,
-                        ).body<BrowseResponse>()
+                    runCatching {
+                        ytMusic
+                            .browse(
+                                client = WEB_REMIX,
+                                setLogin = true,
+                                params = null,
+                                continuation = continuation,
+                            ).body<BrowseResponse>()
+                    }.getOrNull() ?: break
                 listPair.addAll(
-                    continuationResponse.fromPlaylistToTrackWithSetVideoId(),
+                    continuationResponse.fromPlaylistContinuationToTrackWithSetVideoId(),
                 )
-                continuation = continuationResponse.getContinuePlaylistContinuation()
+                continuation = continuationResponse.getPlaylistContinuation()
             }
 
             return@runCatching listPair

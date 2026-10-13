@@ -384,6 +384,10 @@ class HomeViewModel(
         )
     }
 
+    fun playAll(item: HomeItem) {
+        item.playAllEndpoint?.let { playFromEndpoint(it, item.title) }
+    }
+
     override fun onCleared() {
         super.onCleared()
         homeJob?.cancel()

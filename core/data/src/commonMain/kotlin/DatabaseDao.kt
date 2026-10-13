@@ -262,6 +262,26 @@ interface DatabaseDao {
     @Query("SELECT * FROM song WHERE totalPlayTime > 1 ORDER BY totalPlayTime DESC LIMIT 50")
     fun getMostPlayedSongs(): Flow<List<SongEntity>>
 
+    // Your library cards: a count and the newest artwork per collection, as Flows so a like, a
+    // follow or a finished download shows on the card straight away.
+    @Query("SELECT COUNT(*) FROM song WHERE liked = 1")
+    fun countLikedSongs(): Flow<Int>
+
+    @Query("SELECT thumbnails FROM song WHERE liked = 1 AND thumbnails IS NOT NULL ORDER BY favoriteAt DESC LIMIT :limit")
+    fun getLikedSongThumbnails(limit: Int): Flow<List<String>>
+
+    @Query("SELECT COUNT(*) FROM song WHERE downloadState = 3")
+    fun countDownloadedSongs(): Flow<Int>
+
+    @Query("SELECT thumbnails FROM song WHERE downloadState = 3 AND thumbnails IS NOT NULL ORDER BY downloadedAt DESC LIMIT :limit")
+    fun getDownloadedSongThumbnails(limit: Int): Flow<List<String>>
+
+    @Query("SELECT COUNT(*) FROM artist WHERE followed = 1")
+    fun countFollowedArtists(): Flow<Int>
+
+    @Query("SELECT thumbnails FROM artist WHERE followed = 1 AND thumbnails IS NOT NULL ORDER BY followedAt DESC LIMIT :limit")
+    fun getFollowedArtistThumbnails(limit: Int): Flow<List<String>>
+
     @Query("UPDATE song SET downloadState = :downloadState, downloadedAt = :downloadedAt WHERE videoId = :videoId")
     suspend fun updateDownloadState(
         downloadState: Int,
@@ -580,8 +600,25 @@ interface DatabaseDao {
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertSetVideoId(setVideoIdEntity: SetVideoIdEntity)
 
-    @Query("SELECT * FROM set_video_id WHERE videoId = :videoId")
-    suspend fun getSetVideoId(videoId: String): SetVideoIdEntity?
+    /**
+     * A setVideoId names one entry of one playlist, so the playlist is part of the key. Looked up by
+     * videoId alone, SQLite returned the row whose playlist id sorts first — an entry of whichever
+     * other playlist also holds the song. Pass every spelling the playlist id is stored under.
+     */
+    @Query(
+        "SELECT * FROM set_video_id WHERE videoId = :videoId AND youtubePlaylistId IN (:youtubePlaylistIds) " +
+            "AND setVideoId IS NOT NULL LIMIT 1",
+    )
+    suspend fun getSetVideoId(
+        videoId: String,
+        youtubePlaylistIds: List<String>,
+    ): SetVideoIdEntity?
+
+    @Query("DELETE FROM set_video_id WHERE videoId = :videoId AND youtubePlaylistId = :youtubePlaylistId")
+    suspend fun deleteSetVideoId(
+        videoId: String,
+        youtubePlaylistId: String,
+    )
 
      
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)

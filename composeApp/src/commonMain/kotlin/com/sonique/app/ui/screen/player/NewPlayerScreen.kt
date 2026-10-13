@@ -1888,9 +1888,8 @@ private fun PlayerTimelineSection(
 
     Column(modifier = modifier) {
         Slider(
-            value = displayPosition.coerceIn(0f, 100f),
-            valueRange = 0f..100f,
-            onValueChange = { sliderPosition = it },
+            value = (displayPosition / 100f).coerceIn(0f, 1f),
+            onValueChange = { sliderPosition = it * 100f },
             onValueChangeFinished = {
                 sliderPosition?.let {
                     sharedViewModel.onUIEvent(UIEvent.UpdateProgress(it))

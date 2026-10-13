@@ -174,5 +174,39 @@ abstract class BaseViewModel :
                 }
         }
     }
+
+    fun playFromEndpoint(
+        endpoint: YouTubeWatchEndpoint,
+        name: String,
+    ) {
+        viewModelScope.launch {
+            baseSongRepository.getRadioFromEndpoint(endpoint).collectLatest { res ->
+                val tracks = res.data?.first
+                if (res is Resource.Success && !tracks.isNullOrEmpty()) {
+                    val isRadio = endpoint.playlistId?.startsWith("RD") == true
+                    val firstTrack = tracks.first()
+                    mediaPlayerHandler.reset()
+                    mediaPlayerHandler.setQueueData(
+                        QueueData.Data(
+                            listTracks = tracks.toCollection(arrayListOf()),
+                            firstPlayedTrack = firstTrack,
+                            playlistId = endpoint.playlistId,
+                            playlistName = name,
+                            playlistType = if (isRadio) PlaylistType.RADIO else PlaylistType.PLAYLIST,
+                            continuation = res.data?.second,
+                        ),
+                    )
+                    mediaPlayerHandler.loadMediaItem(
+                        anyTrack = firstTrack,
+                        type = if (isRadio) RADIO_CLICK else com.sonique.common.Config.PLAYLIST_CLICK,
+                        index = 0,
+                    )
+                } else if (res is Resource.Error) {
+                    Logger.e(tag, "playFromEndpoint error: ${res.message}")
+                    makeToast(res.message)
+                }
+            }
+        }
+    }
 }
 

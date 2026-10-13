@@ -562,10 +562,9 @@ class SharedViewModel(
                             SimpleMediaState.Ended -> {
                                 _timeline.update {
                                     it.copy(
-                                        current = -1L,
-                                        total = -1L,
+                                        current = it.total.coerceAtLeast(0L),
                                         bufferedPercent = 0,
-                                        loading = true,
+                                        loading = false,
                                     )
                                 }
                             }

@@ -582,10 +582,10 @@ fun FullscreenPlayer(
                                 }
                                 CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides Dp.Unspecified) {
                                     Slider(
-                                        value = sliderValue,
+                                        value = sliderValue / 100f,
                                         onValueChange = { value ->
                                             isSliding = true
-                                            sliderValue = value
+                                            sliderValue = value * 100f
                                         },
                                         onValueChangeFinished = {
                                             isSliding = false
@@ -593,7 +593,6 @@ fun FullscreenPlayer(
                                                 UIEvent.UpdateProgress(sliderValue),
                                             )
                                         },
-                                        valueRange = 0f..100f,
                                         modifier =
                                             Modifier
                                                 .fillMaxWidth()

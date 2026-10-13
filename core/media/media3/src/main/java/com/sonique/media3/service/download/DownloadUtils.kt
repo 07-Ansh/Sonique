@@ -193,21 +193,6 @@ internal class DownloadUtils(
             downloadRequest,
             false,
         )
-        if (isVideo) {
-            val id = MERGING_DATA_TYPE.VIDEO + videoId
-            val downloadRequestVideo =
-                DownloadRequest
-                    .Builder(id, id.toUri())
-                    .setData("Video $title".toByteArray())
-                    .setCustomCacheKey(id)
-                    .build()
-            DownloadService.sendAddDownload(
-                context,
-                MusicDownloadService::class.java,
-                downloadRequestVideo,
-                false,
-            )
-        }
     }
 
     override fun removeDownload(videoId: String) {

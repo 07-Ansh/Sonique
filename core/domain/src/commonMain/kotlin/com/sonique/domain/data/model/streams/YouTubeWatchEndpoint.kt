@@ -1,5 +1,8 @@
 package com.sonique.domain.data.model.streams
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class YouTubeWatchEndpoint(
     val videoId: String? = null,
     val playlistId: String? = null,
@@ -8,9 +11,11 @@ data class YouTubeWatchEndpoint(
     val index: Int? = null,
     val watchEndpointMusicSupportedConfigs: WatchEndpointMusicSupportedConfigs? = null,
 ) {
+    @Serializable
     data class WatchEndpointMusicSupportedConfigs(
         val watchEndpointMusicConfig: WatchEndpointMusicConfig,
     ) {
+        @Serializable
         data class WatchEndpointMusicConfig(
             val musicVideoType: String,
         ) {
